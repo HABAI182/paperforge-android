@@ -1,0 +1,36 @@
+PaperForge third-party notices
+
+AndroidX Compose, Material Icons, CameraX, Room, WorkManager, Activity,
+Lifecycle, ExifInterface: Copyright The Android Open Source Project.
+Licensed under the Apache License, Version 2.0.
+
+Kotlin and kotlinx.coroutines: Copyright JetBrains s.r.o. and contributors.
+Licensed under the Apache License, Version 2.0.
+
+OpenCV 4.12.0: Copyright OpenCV contributors.
+Apache-2.0 with bundled third-party notices.
+
+PdfBox-Android 2.0.27.0: Apache-2.0.
+Apache PDFBox
+Copyright 2014 The Apache Software Foundation
+This product includes software developed at The Apache Software Foundation
+(http://www.apache.org/).
+Based on source code originally developed in the PDFBox and FontBox projects.
+Copyright (c) 2002-2007, www.pdfbox.org
+Based on source code originally developed in the PaDaF project.
+Copyright (c) 2010 Atos Worldline SAS
+Includes the Adobe Glyph List
+Copyright 1997, 1998, 2002, 2007, 2010 Adobe Systems Incorporated.
+Includes the Zapf Dingbats Glyph List
+Copyright 2002, 2010 Adobe Systems Incorporated.
+Includes the Script Property (Scripts-10.0.0.txt)
+Copyright 2017 Unicode, Inc.
+Additional font and data licenses are included in licenses/PdfBox-LICENSE.txt.
+
+ML Kit Text Recognition Chinese and Latin 16.0.1:
+Google SDK and bundled proprietary models, governed by ML Kit / Google APIs
+Terms of Service: https://developers.google.com/ml-kit/terms
+They are not represented as Apache-licensed open-source models.
+The application removes Android INTERNET permission.
+
+Full license copies are bundled in assets/licenses and the source package.

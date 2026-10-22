@@ -1,0 +1,33 @@
+{
+  "collected_at": "2026-10-23T07:46:22.859573+08:00",
+  "version": "0.1.0",
+  "application_id": "cn.paperforge.app",
+  "min_sdk": 26,
+  "target_sdk": 36,
+  "abis": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "signing": "Android debug signing key",
+  "apk_bytes": 138109355,
+  "apk_sha256": "98dd8bf1b2dcc3091ec71d1d05a3a9275aa54a1c8f26809b9151d0d386ea04f9",
+  "unit_tests": {
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "device_tests": {
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "lint": {
+    "errors": 0,
+    "warnings": 11
+  },
+  "device": "paperforge_api35 / Android 15 API35 / AOSP x86_64 / no GMS / airplane mode",
+  "physical_device_tested": false,
+  "command": "gradlew.bat assembleDebug testDebugUnitTest lintDebug connectedDebugAndroidTest --continue --console=plain"
+}

@@ -1,0 +1,4 @@
+-keep class org.opencv.** { *; }
+-dontwarn org.bouncycastle.**
+-dontwarn javax.naming.**
+-dontwarn javax.xml.stream.**

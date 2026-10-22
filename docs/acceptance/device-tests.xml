@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="cn.paperforge.app.HomeUiTest" tests="7" failures="0" errors="0" skipped="0" time="17.099" timestamp="2026-10-22T23:45:22" hostname="localhost">
+  <properties>
+    <property name="device" value="paperforge_api35(AVD) - 15" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="homeToolsAndPrivacyAreUsable" classname="cn.paperforge.app.HomeUiTest" time="3.349" />
+  <testcase name="pdfRendersAndCanScrollAndJump" classname="cn.paperforge.app.HomeUiTest" time="3.491" />
+  <testcase name="tenPageDraftSurvivesReloadAndPdfRoundTrip" classname="cn.paperforge.app.PipelineTest" time="1.773" />
+  <testcase name="cancelledRecognitionCanBeRetried" classname="cn.paperforge.app.PipelineTest" time="4.729" />
+  <testcase name="detectAndPerspectiveAndAllFilters" classname="cn.paperforge.app.PipelineTest" time="0.31" />
+  <testcase name="bundledOcrReadsEnglishAndChineseWithoutNetworkPermission" classname="cn.paperforge.app.PipelineTest" time="3.123" />
+  <testcase name="pdfPageToolsPreserveNativeText" classname="cn.paperforge.app.PipelineTest" time="0.059" />
+</testsuite>
