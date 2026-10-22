@@ -2,6 +2,13 @@
 
 原生 Android 离线扫描与 PDF 工作台。按个人、非商业用途开发。无登录、无广告、无水印；不声明网络权限。
 
+源码仓库：[HABAI182/paperforge-android](https://github.com/HABAI182/paperforge-android)（私有）。
+
+```powershell
+git clone https://github.com/HABAI182/paperforge-android.git
+cd paperforge-android
+```
+
 这是第一轮可执行切片，优先实现需求中的 M0 → M1，并加入部分 M2 / M3。完整矩阵与真实测试结果分别见 [PRODUCT_SPEC](docs/PRODUCT_SPEC.md) 和 [TEST_MATRIX](docs/TEST_MATRIX.md)。未完成能力不会以空按钮充数。
 
 验收结果：**8 项单元测试 + 7 项 Android 模拟器测试通过，Lint 0 errors（11 warnings）**。模拟器为无 GMS、飞行模式的 Android 15 / x86_64；没有真实手机测试结论。已在界面实际完成拍摄、四角调整、导出、系统另存和分享面板。
