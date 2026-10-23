@@ -1,0 +1,98 @@
+[
+  {
+    "scene": "uniform",
+    "filter": "v0.2 AUTO",
+    "seal_red_fraction": 0.0,
+    "dark_fill_fraction_under_90": 0.830138906063229,
+    "paper_std": 0.30682080770465603,
+    "paper_mean": 254.98800372062485
+  },
+  {
+    "scene": "uniform",
+    "filter": "v0.3 AUTO",
+    "seal_red_fraction": 0.9939875212705616,
+    "dark_fill_fraction_under_90": 1.0,
+    "paper_std": 0.7335944644271506,
+    "paper_mean": 249.96825238453107
+  },
+  {
+    "scene": "uniform",
+    "filter": "v0.3 Gray",
+    "seal_red_fraction": 0.0,
+    "dark_fill_fraction_under_90": 1.0,
+    "paper_std": 0.7335944644271506,
+    "paper_mean": 249.96825238453107
+  },
+  {
+    "scene": "uniform",
+    "filter": "v0.3 B&W",
+    "seal_red_fraction": 0.0,
+    "dark_fill_fraction_under_90": 0.9995878158361156,
+    "paper_std": 0.0,
+    "paper_mean": 255.0
+  },
+  {
+    "scene": "shadow",
+    "filter": "v0.2 AUTO",
+    "seal_red_fraction": 0.0,
+    "dark_fill_fraction_under_90": 0.8417212810683814,
+    "paper_std": 1.6293079377755375,
+    "paper_mean": 250.91902652232616
+  },
+  {
+    "scene": "shadow",
+    "filter": "v0.3 AUTO",
+    "seal_red_fraction": 0.9939875212705616,
+    "dark_fill_fraction_under_90": 1.0,
+    "paper_std": 6.609786147035153,
+    "paper_mean": 242.70538428486597
+  },
+  {
+    "scene": "shadow",
+    "filter": "v0.3 Gray",
+    "seal_red_fraction": 0.0,
+    "dark_fill_fraction_under_90": 1.0,
+    "paper_std": 6.609786147035153,
+    "paper_mean": 242.70538428486597
+  },
+  {
+    "scene": "shadow",
+    "filter": "v0.3 B&W",
+    "seal_red_fraction": 0.0,
+    "dark_fill_fraction_under_90": 0.999629034252504,
+    "paper_std": 0.0,
+    "paper_mean": 255.0
+  },
+  {
+    "scene": "warm-cast",
+    "filter": "v0.2 AUTO",
+    "seal_red_fraction": 0.0,
+    "dark_fill_fraction_under_90": 0.8312930217221054,
+    "paper_std": 0.31047720367915566,
+    "paper_mean": 254.9886273115106
+  },
+  {
+    "scene": "warm-cast",
+    "filter": "v0.3 AUTO",
+    "seal_red_fraction": 0.9939875212705616,
+    "dark_fill_fraction_under_90": 1.0,
+    "paper_std": 0.7126977264414125,
+    "paper_mean": 249.9694939338688
+  },
+  {
+    "scene": "warm-cast",
+    "filter": "v0.3 Gray",
+    "seal_red_fraction": 0.0,
+    "dark_fill_fraction_under_90": 1.0,
+    "paper_std": 0.7126977264414125,
+    "paper_mean": 249.9694939338688
+  },
+  {
+    "scene": "warm-cast",
+    "filter": "v0.3 B&W",
+    "seal_red_fraction": 0.0,
+    "dark_fill_fraction_under_90": 0.9995878158361156,
+    "paper_std": 0.0,
+    "paper_mean": 255.0
+  }
+]

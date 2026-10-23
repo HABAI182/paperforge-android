@@ -1,0 +1,32 @@
+{
+  "v020": {
+    "n": 9,
+    "mean_page_cer": 0.14284137078254724,
+    "chinese_cer": 0.09472370063736119,
+    "latin_cer": 0.20261437908496732,
+    "p50_ms": 763.8225,
+    "p95_ms": 1184.89076,
+    "sampled_peak_pss_kb": 264380,
+    "regression_prefix_exact": 11,
+    "orientation_corrections": {
+      "ocr-4.png": null,
+      "ocr-5.png": null,
+      "ocr-6.png": null
+    }
+  },
+  "v030": {
+    "n": 9,
+    "mean_page_cer": 0.03349673202614379,
+    "chinese_cer": 0.05118601747815231,
+    "latin_cer": 0.0,
+    "p50_ms": 4944.9424,
+    "p95_ms": 7128.2584799999995,
+    "sampled_peak_pss_kb": 298484,
+    "regression_prefix_exact": 13,
+    "orientation_corrections": {
+      "ocr-4.png": 270,
+      "ocr-5.png": 180,
+      "ocr-6.png": 90
+    }
+  }
+}

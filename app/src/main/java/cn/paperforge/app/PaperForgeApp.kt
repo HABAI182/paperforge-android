@@ -7,12 +7,30 @@ import cn.paperforge.app.data.Repository
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import org.opencv.android.OpenCVLoader
 
-class PaperForgeApp: Application() {
-    lateinit var repository: Repository; private set
+class PaperForgeApp : Application() {
+    val ocrEngine: cn.paperforge.app.ocr.OcrEngine by lazy {
+        cn.paperforge.app.ocr.BundledOcrEngine()
+    }
+    lateinit var repository: Repository
+        private set
+
     override fun onCreate() {
         super.onCreate()
         PDFBoxResourceLoader.init(this)
         OpenCVLoader.initLocal()
-        repository=Repository(this,Room.databaseBuilder(this,PaperDatabase::class.java,"paperforge.db").addMigrations(PaperDatabase.Migration1To2).build())
+        cn.paperforge.app.imaging.ScanConfig.load(assets)
+        repository =
+            Repository(
+                this,
+                Room.databaseBuilder(this, PaperDatabase::class.java, "paperforge.db")
+                    .addMigrations(
+                        PaperDatabase.Migration1To2,
+                        PaperDatabase.Migration2To3,
+                        PaperDatabase.Migration3To4,
+                        PaperDatabase.Migration4To5,
+                        PaperDatabase.Migration5To6,
+                    )
+                    .build(),
+            )
     }
 }

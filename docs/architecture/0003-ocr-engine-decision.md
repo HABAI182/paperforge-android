@@ -1,0 +1,5 @@
+# OCR engine decision for v0.3
+
+Keep bundled Chinese/Latin ML Kit behind OcrEngine. The fixed synthetic benchmark improved mean per-page CER14.28%→3.92%, Chinese-only9.47%→5.87%, and the repeated regression prefix11/13→13/13 using measured angle/scale/variant/page agreement. Raw hypotheses and corrections stay editable; this is not a model-only score or real-photo accuracy claim.
+
+PaddleOCR PP-OCRv6's current Android ONNX route and Tesseract4Android were inspected at the SHAs in UPSTREAM_REFERENCE_MATRIX.md. Neither was run on physical ARM64 hardware. Accordingly there is no honest ML Kit-vs-Paddle latency/peak-memory/model-license-and-size acceptance table yet. Adding ORT/native binaries and a model toggle without measured benefit would add an unverified path after the current acceptance target was met. No optional model is bundled or downloaded. This is a deliberate deferral of optional T8, not an assertion that ML Kit beats those engines. A later local model trial must fix artifact/model licenses and compare the same private owner-phone corpus.

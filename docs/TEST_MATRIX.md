@@ -1,5 +1,17 @@
 # 测试与真实验收状态
 
+## 0.3.0 增量（当前）
+
+- 14项JVM测试通过。API35 AOSP x86_64模拟器，无GMS，飞行模式；9页OCR、65纸边正例/8负例及12MP为合成开发集，详见quality/QUALITY-REPORT.md，不替代真实纸张。
+- 分辨率/EXIF、彩色增强、OCR方向与撤销、RGB/Gray/1bit编码、语义压缩、相机序列、段落DOCX/嵌套提图、中文FTS、100页导出/取消均有集中检查。
+- 原有Pipeline/UpgradeSmoke/HomeUI集中回归通过；版本升级导致旧0.2对话框断言失败，修正只匹配应用名后2项UI重跑通过。
+- 全新隔离applicationId在无GMS/飞行模式首次中英OCR通过，随后卸载隔离包，保留主包资料。
+- 新增最近文档直接删除、取消不删除和不进回收站检查；PDF阅读/跳页与首页工具回归通过，连同最新9页OCR共4项设备测试。最终OCR几何/PDF/历史/相机序列回归5项通过；acceptance/v030保留两轮XML。
+- 100页草稿导出无OOM、取消无残留；没有100页OCR/50MP/真机性能结论。最终assembleDebug/testDebugUnitTest/lintDebug均通过，Lint 0 errors / 29 warnings。
+- 架构专包、签名/Manifest/16KB结构校验见acceptance/v030/apk-verification.json。
+
+以下0.1/0.2记录为历史，不与本轮检查数量相加。
+
 日期：2026-10-23（Asia/Shanghai）。本轮验证将构建、本地单测、模拟器、独立 PDF 引擎和真实手机分开记录。
 
 ## 0.2.0 增量验证

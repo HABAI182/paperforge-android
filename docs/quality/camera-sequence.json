@@ -1,0 +1,14 @@
+{
+  "synthetic": true,
+  "physicalCamera": false,
+  "sharpnessSharp": 19524.37600740741,
+  "sharpnessBlur": 3.0643925925925926,
+  "detailTilesSharp": 6,
+  "detailTilesBlur": 0,
+  "framesPerSequence": 30,
+  "sharpCaptures": 1,
+  "blurCaptures": 0,
+  "focusNotReadyCaptures": 0,
+  "rawCornerMotion": 0.39000020921230316,
+  "displayCornerMotion": 0.18902620673179626
+}
