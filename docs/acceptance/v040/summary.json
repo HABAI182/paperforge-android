@@ -1,0 +1,59 @@
+{
+  "date": "2026-10-23",
+  "timezone": "Asia/Shanghai",
+  "physicalDeviceTested": false,
+  "environment": "API35 AOSP x86_64 emulator; airplane mode; no GMS",
+  "unit": {
+    "tests": 15,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "libraryCameraSettingsUi": {
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "modelAndExistingRegression": {
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "detector": {
+    "dataset": "synthetic-v1 development corpus",
+    "physical_device": false,
+    "positive_count": 65,
+    "negative_count": 8,
+    "mean_iou": 0.9970891086039394,
+    "mean_corner_error_pct": 0.07930380696287521,
+    "failures": 0,
+    "false_positives": 0,
+    "detect_p50_ms": 170.7579,
+    "detect_p95_ms": 217.32603999999998,
+    "sampled_pss_kib": 279940,
+    "ai_consensus_cases": 11,
+    "semantic_override_cases": 0
+  },
+  "lint": {
+    "errors": 0,
+    "warnings": 38
+  },
+  "notes": [
+    "Initial camera UI failure revealed repeated rebind during layout changes; fixed binding lifetime and footer dimensions.",
+    "Initial selection/shortcut UI selectors were corrected to scroll lazy content and target labeled checkboxes.",
+    "CameraX experimental transform APIs are explicitly opted in; no lint baseline suppression.",
+    "One upstream phone photograph is an exploratory check, not held-out evaluation or a new physical-phone run.",
+    "CamScanner APK was statically decompiled locally; packed Java and ARM64 native boundaries prevent claiming recovery of its full algorithm source."
+  ],
+  "manualExports": {
+    "settingsRoundtripCount": 27,
+    "selectedDocuments": 2,
+    "outputPdfPageCounts": [
+      1,
+      3
+    ],
+    "bothPdfsHaveExtractableText": true
+  }
+}

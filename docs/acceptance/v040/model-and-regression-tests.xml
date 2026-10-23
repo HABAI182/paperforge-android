@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="cn.paperforge.app.quality.LearnedDetectorTest" tests="4" failures="0" errors="0" skipped="0" time="17.342" timestamp="2026-10-23T10:42:12" hostname="localhost">
+  <properties>
+    <property name="device" value="paperforge_api35(AVD) - 15" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="bundledModelRunsAndCaptureHintSurvivesStillRefinement" classname="cn.paperforge.app.quality.LearnedDetectorTest" time="0.221" />
+  <testcase name="pdfToolsSignatureRedactionAndEncryption" classname="cn.paperforge.app.UpgradeSmokeTest" time="6.747" />
+  <testcase name="historyAndBackupRestoreRetainOriginals" classname="cn.paperforge.app.UpgradeSmokeTest" time="0.287" />
+  <testcase name="lowContrastAutoCropOcrAndChineseSearchablePdf" classname="cn.paperforge.app.UpgradeSmokeTest" time="9.853" />
+</testsuite>

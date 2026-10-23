@@ -1,0 +1,2179 @@
+{
+  "mode": "current",
+  "dataset": "synthetic-v1",
+  "sampled_peak_pss_kb": 279940,
+  "physical_device": false,
+  "rows": [
+    {
+      "file": "dark-desk-0.jpg",
+      "scene": "dark-desk",
+      "synthetic": true,
+      "decode_ms": 108.2777,
+      "detect_ms": 1036.4556,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.9954321,
+      "method": "inverse-0+refined",
+      "predicted": [
+        [
+          0.24316455,
+          0.07876886
+        ],
+        [
+          0.7601957,
+          0.09744287
+        ],
+        [
+          0.83924276,
+          0.9115613
+        ],
+        [
+          0.17930442,
+          0.98261994
+        ]
+      ],
+      "sampled_pss_kb": 270348
+    },
+    {
+      "file": "dark-desk-1.jpg",
+      "scene": "dark-desk",
+      "synthetic": true,
+      "decode_ms": 22.273,
+      "detect_ms": 295.7869,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.99967873,
+      "method": "paper-luma+refined",
+      "predicted": [
+        [
+          0.2483124,
+          0.08010982
+        ],
+        [
+          0.7597597,
+          0.10413885
+        ],
+        [
+          0.8398397,
+          0.90921223
+        ],
+        [
+          0.18010597,
+          0.9759754
+        ]
+      ],
+      "sampled_pss_kb": 262711
+    },
+    {
+      "file": "dark-desk-2.jpg",
+      "scene": "dark-desk",
+      "synthetic": true,
+      "decode_ms": 9.2621,
+      "detect_ms": 158.3804,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.9957045,
+      "method": "channel-0+refined",
+      "predicted": [
+        [
+          0.25223416,
+          0.079976395
+        ],
+        [
+          0.7607701,
+          0.11090788
+        ],
+        [
+          0.8398398,
+          0.9105474
+        ],
+        [
+          0.18021318,
+          0.9706245
+        ]
+      ],
+      "sampled_pss_kb": 262796
+    },
+    {
+      "file": "dark-desk-3.jpg",
+      "scene": "dark-desk",
+      "synthetic": true,
+      "decode_ms": 7.6751,
+      "detect_ms": 173.5894,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.9992148,
+      "method": "channel-0+refined",
+      "predicted": [
+        [
+          0.2582232,
+          0.08040748
+        ],
+        [
+          0.76050395,
+          0.11782677
+        ],
+        [
+          0.8392086,
+          0.91051817
+        ],
+        [
+          0.18006028,
+          0.96262634
+        ]
+      ],
+      "sampled_pss_kb": 262848
+    },
+    {
+      "file": "dark-desk-4.jpg",
+      "scene": "dark-desk",
+      "synthetic": true,
+      "decode_ms": 9.1239,
+      "detect_ms": 174.6147,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.99317366,
+      "method": "channel-0+refined",
+      "predicted": [
+        [
+          0.2631255,
+          0.08040916
+        ],
+        [
+          0.76056856,
+          0.124571964
+        ],
+        [
+          0.8389624,
+          0.9105389
+        ],
+        [
+          0.18028928,
+          0.95593375
+        ]
+      ],
+      "sampled_pss_kb": 262875
+    },
+    {
+      "file": "dark-desk-5.jpg",
+      "scene": "dark-desk",
+      "synthetic": true,
+      "decode_ms": 6.668,
+      "detect_ms": 168.7897,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.9849625,
+      "method": "channel-0+refined",
+      "predicted": [
+        [
+          0.26764372,
+          0.08004234
+        ],
+        [
+          0.76022226,
+          0.13088886
+        ],
+        [
+          0.84011084,
+          0.91029215
+        ],
+        [
+          0.17947708,
+          0.9499763
+        ]
+      ],
+      "sampled_pss_kb": 262883
+    },
+    {
+      "file": "dark-desk-6.jpg",
+      "scene": "dark-desk",
+      "synthetic": true,
+      "decode_ms": 10.7109,
+      "detect_ms": 158.4379,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.97866094,
+      "method": "inverse-0+refined",
+      "predicted": [
+        [
+          0.27249146,
+          0.079584554
+        ],
+        [
+          0.7602495,
+          0.13688189
+        ],
+        [
+          0.8398319,
+          0.9104987
+        ],
+        [
+          0.17949723,
+          0.9435702
+        ]
+      ],
+      "sampled_pss_kb": 262955
+    },
+    {
+      "file": "dark-desk-7.jpg",
+      "scene": "dark-desk",
+      "synthetic": true,
+      "decode_ms": 12.0232,
+      "detect_ms": 171.3052,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.99774617,
+      "method": "ai+channel-0+refined",
+      "predicted": [
+        [
+          0.27804294,
+          0.08033546
+        ],
+        [
+          0.7603387,
+          0.14449953
+        ],
+        [
+          0.8395234,
+          0.9104166
+        ],
+        [
+          0.18013707,
+          0.93603384
+        ]
+      ],
+      "sampled_pss_kb": 263123
+    },
+    {
+      "file": "white-desk-0.jpg",
+      "scene": "white-desk",
+      "synthetic": true,
+      "decode_ms": 8.7747,
+      "detect_ms": 154.6597,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.9359028,
+      "method": "weak-luma+refined",
+      "predicted": [
+        [
+          0.24320856,
+          0.081469715
+        ],
+        [
+          0.76023966,
+          0.097870685
+        ],
+        [
+          0.83852303,
+          0.9090509
+        ],
+        [
+          0.18066497,
+          0.98197633
+        ]
+      ],
+      "sampled_pss_kb": 263215
+    },
+    {
+      "file": "white-desk-1.jpg",
+      "scene": "white-desk",
+      "synthetic": true,
+      "decode_ms": 8.3762,
+      "detect_ms": 163.7941,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.94039553,
+      "method": "weak-luma+refined",
+      "predicted": [
+        [
+          0.24820332,
+          0.08083206
+        ],
+        [
+          0.75956726,
+          0.10458775
+        ],
+        [
+          0.8388418,
+          0.9095193
+        ],
+        [
+          0.1807475,
+          0.97558963
+        ]
+      ],
+      "sampled_pss_kb": 263175
+    },
+    {
+      "file": "white-desk-2.jpg",
+      "scene": "white-desk",
+      "synthetic": true,
+      "decode_ms": 7.7183,
+      "detect_ms": 157.0802,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.93537647,
+      "method": "weak-luma+refined",
+      "predicted": [
+        [
+          0.25306043,
+          0.08053452
+        ],
+        [
+          0.7594787,
+          0.11129755
+        ],
+        [
+          0.8391658,
+          0.9090056
+        ],
+        [
+          0.18112963,
+          0.9688147
+        ]
+      ],
+      "sampled_pss_kb": 263171
+    },
+    {
+      "file": "white-desk-3.jpg",
+      "scene": "white-desk",
+      "synthetic": true,
+      "decode_ms": 7.3051,
+      "detect_ms": 189.1971,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.9372379,
+      "method": "border-distance-24+refined",
+      "predicted": [
+        [
+          0.2579151,
+          0.08116195
+        ],
+        [
+          0.75944954,
+          0.11771705
+        ],
+        [
+          0.83922297,
+          0.9089205
+        ],
+        [
+          0.18109429,
+          0.96236813
+        ]
+      ],
+      "sampled_pss_kb": 263167
+    },
+    {
+      "file": "white-desk-4.jpg",
+      "scene": "white-desk",
+      "synthetic": true,
+      "decode_ms": 9.2825,
+      "detect_ms": 161.7254,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.9307887,
+      "method": "weak-luma+refined",
+      "predicted": [
+        [
+          0.2634246,
+          0.07879113
+        ],
+        [
+          0.75909173,
+          0.12395607
+        ],
+        [
+          0.83937293,
+          0.90910715
+        ],
+        [
+          0.18029554,
+          0.95570743
+        ]
+      ],
+      "sampled_pss_kb": 263175
+    },
+    {
+      "file": "white-desk-5.jpg",
+      "scene": "white-desk",
+      "synthetic": true,
+      "decode_ms": 7.0867,
+      "detect_ms": 153.2651,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.92466193,
+      "method": "paper-luma+refined",
+      "predicted": [
+        [
+          0.26794255,
+          0.080761604
+        ],
+        [
+          0.7597309,
+          0.13038348
+        ],
+        [
+          0.8394329,
+          0.9096312
+        ],
+        [
+          0.1806646,
+          0.9495346
+        ]
+      ],
+      "sampled_pss_kb": 263127
+    },
+    {
+      "file": "white-desk-6.jpg",
+      "scene": "white-desk",
+      "synthetic": true,
+      "decode_ms": 8.538,
+      "detect_ms": 160.1872,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.91466504,
+      "method": "weak-luma+refined",
+      "predicted": [
+        [
+          0.2729037,
+          0.080414504
+        ],
+        [
+          0.75980294,
+          0.13700362
+        ],
+        [
+          0.8393196,
+          0.9095977
+        ],
+        [
+          0.18120106,
+          0.9430916
+        ]
+      ],
+      "sampled_pss_kb": 263151
+    },
+    {
+      "file": "white-desk-7.jpg",
+      "scene": "white-desk",
+      "synthetic": true,
+      "decode_ms": 10.7737,
+      "detect_ms": 180.6209,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.86721057,
+      "method": "channel-0+refined",
+      "predicted": [
+        [
+          0.27809075,
+          0.080917865
+        ],
+        [
+          0.7599853,
+          0.14409386
+        ],
+        [
+          0.8392551,
+          0.9086963
+        ],
+        [
+          0.18073072,
+          0.93575406
+        ]
+      ],
+      "sampled_pss_kb": 263323
+    },
+    {
+      "file": "wood-0.jpg",
+      "scene": "wood",
+      "synthetic": true,
+      "decode_ms": 12.6637,
+      "detect_ms": 204.9324,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.9953991,
+      "method": "ai+inverse-0+refined",
+      "predicted": [
+        [
+          0.24259861,
+          0.07938236
+        ],
+        [
+          0.76047426,
+          0.0965678
+        ],
+        [
+          0.8391504,
+          0.91063267
+        ],
+        [
+          0.17960653,
+          0.9832511
+        ]
+      ],
+      "sampled_pss_kb": 263395
+    },
+    {
+      "file": "wood-1.jpg",
+      "scene": "wood",
+      "synthetic": true,
+      "decode_ms": 13.8709,
+      "detect_ms": 226.5497,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.999945,
+      "method": "ai+channel-0+refined",
+      "predicted": [
+        [
+          0.24761282,
+          0.079495385
+        ],
+        [
+          0.7603126,
+          0.10443746
+        ],
+        [
+          0.839998,
+          0.9103743
+        ],
+        [
+          0.17976476,
+          0.97617996
+        ]
+      ],
+      "sampled_pss_kb": 263691
+    },
+    {
+      "file": "wood-2.jpg",
+      "scene": "wood",
+      "synthetic": true,
+      "decode_ms": 13.5753,
+      "detect_ms": 208.7861,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.9959552,
+      "method": "ai+inverse-0+refined",
+      "predicted": [
+        [
+          0.25260955,
+          0.07952753
+        ],
+        [
+          0.7600749,
+          0.109870754
+        ],
+        [
+          0.8395851,
+          0.9106714
+        ],
+        [
+          0.17960596,
+          0.9699524
+        ]
+      ],
+      "sampled_pss_kb": 263571
+    },
+    {
+      "file": "wood-3.jpg",
+      "scene": "wood",
+      "synthetic": true,
+      "decode_ms": 12.2386,
+      "detect_ms": 195.2205,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.9991703,
+      "method": "ai+inverse-0+refined",
+      "predicted": [
+        [
+          0.25781056,
+          0.080143996
+        ],
+        [
+          0.7602939,
+          0.1165377
+        ],
+        [
+          0.8395176,
+          0.9108409
+        ],
+        [
+          0.17939772,
+          0.9634268
+        ]
+      ],
+      "sampled_pss_kb": 263679
+    },
+    {
+      "file": "wood-4.jpg",
+      "scene": "wood",
+      "synthetic": true,
+      "decode_ms": 17.5769,
+      "detect_ms": 209.0744,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.99317366,
+      "method": "ai+channel-1+refined",
+      "predicted": [
+        [
+          0.26336426,
+          0.079559624
+        ],
+        [
+          0.76017207,
+          0.12452587
+        ],
+        [
+          0.8398705,
+          0.9103769
+        ],
+        [
+          0.17943686,
+          0.95663786
+        ]
+      ],
+      "sampled_pss_kb": 264383
+    },
+    {
+      "file": "wood-5.jpg",
+      "scene": "wood",
+      "synthetic": true,
+      "decode_ms": 9.9711,
+      "detect_ms": 186.2656,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.98526734,
+      "method": "ai+channel-0+refined",
+      "predicted": [
+        [
+          0.26757884,
+          0.08008042
+        ],
+        [
+          0.7598928,
+          0.12991098
+        ],
+        [
+          0.840161,
+          0.9102218
+        ],
+        [
+          0.1795523,
+          0.94976515
+        ]
+      ],
+      "sampled_pss_kb": 263949
+    },
+    {
+      "file": "wood-6.jpg",
+      "scene": "wood",
+      "synthetic": true,
+      "decode_ms": 8.7149,
+      "detect_ms": 195.3133,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.97749287,
+      "method": "ai+channel-0+refined",
+      "predicted": [
+        [
+          0.27229682,
+          0.08010965
+        ],
+        [
+          0.759891,
+          0.13619667
+        ],
+        [
+          0.840133,
+          0.9103857
+        ],
+        [
+          0.18006083,
+          0.94352055
+        ]
+      ],
+      "sampled_pss_kb": 263785
+    },
+    {
+      "file": "wood-7.jpg",
+      "scene": "wood",
+      "synthetic": true,
+      "decode_ms": 12.1493,
+      "detect_ms": 191.1296,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.99915797,
+      "method": "ai+inverse-0+refined",
+      "predicted": [
+        [
+          0.2777832,
+          0.07936102
+        ],
+        [
+          0.760535,
+          0.14368215
+        ],
+        [
+          0.8393894,
+          0.9108841
+        ],
+        [
+          0.18019415,
+          0.93625945
+        ]
+      ],
+      "sampled_pss_kb": 263981
+    },
+    {
+      "file": "clutter-0.jpg",
+      "scene": "clutter",
+      "synthetic": true,
+      "decode_ms": 9.2359,
+      "detect_ms": 167.6082,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.9986772,
+      "method": "paper-luma+refined",
+      "predicted": [
+        [
+          0.24302763,
+          0.08114788
+        ],
+        [
+          0.7597708,
+          0.09758626
+        ],
+        [
+          0.8392582,
+          0.90950096
+        ],
+        [
+          0.18071468,
+          0.981935
+        ]
+      ],
+      "sampled_pss_kb": 263957
+    },
+    {
+      "file": "clutter-1.jpg",
+      "scene": "clutter",
+      "synthetic": true,
+      "decode_ms": 9.4979,
+      "detect_ms": 168.594,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 1,
+      "method": "paper-luma+refined",
+      "predicted": [
+        [
+          0.24809708,
+          0.08123919
+        ],
+        [
+          0.75960857,
+          0.104199514
+        ],
+        [
+          0.83929044,
+          0.90955454
+        ],
+        [
+          0.18066926,
+          0.975378
+        ]
+      ],
+      "sampled_pss_kb": 264521
+    },
+    {
+      "file": "clutter-2.jpg",
+      "scene": "clutter",
+      "synthetic": true,
+      "decode_ms": 9.0149,
+      "detect_ms": 160.8368,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.9958247,
+      "method": "weak-luma+refined",
+      "predicted": [
+        [
+          0.25315705,
+          0.08038646
+        ],
+        [
+          0.7605464,
+          0.11127046
+        ],
+        [
+          0.8389447,
+          0.910337
+        ],
+        [
+          0.17996602,
+          0.96858335
+        ]
+      ],
+      "sampled_pss_kb": 263797
+    },
+    {
+      "file": "clutter-3.jpg",
+      "scene": "clutter",
+      "synthetic": true,
+      "decode_ms": 8.944,
+      "detect_ms": 163.4296,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.99923307,
+      "method": "channel-0+refined",
+      "predicted": [
+        [
+          0.25815055,
+          0.080316894
+        ],
+        [
+          0.7605964,
+          0.11788021
+        ],
+        [
+          0.83905345,
+          0.91018194
+        ],
+        [
+          0.18018347,
+          0.96228004
+        ]
+      ],
+      "sampled_pss_kb": 263813
+    },
+    {
+      "file": "clutter-4.jpg",
+      "scene": "clutter",
+      "synthetic": true,
+      "decode_ms": 7.5418,
+      "detect_ms": 176.4805,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.99313813,
+      "method": "channel-0+refined",
+      "predicted": [
+        [
+          0.26319382,
+          0.080455154
+        ],
+        [
+          0.76049465,
+          0.12454833
+        ],
+        [
+          0.83904845,
+          0.9099658
+        ],
+        [
+          0.18012518,
+          0.95556605
+        ]
+      ],
+      "sampled_pss_kb": 263761
+    },
+    {
+      "file": "clutter-5.jpg",
+      "scene": "clutter",
+      "synthetic": true,
+      "decode_ms": 6.6771,
+      "detect_ms": 186.2444,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.9866128,
+      "method": "paper-luma+refined",
+      "predicted": [
+        [
+          0.2676462,
+          0.08009919
+        ],
+        [
+          0.7601278,
+          0.13114361
+        ],
+        [
+          0.8397469,
+          0.91020954
+        ],
+        [
+          0.18002373,
+          0.94922775
+        ]
+      ],
+      "sampled_pss_kb": 263757
+    },
+    {
+      "file": "clutter-6.jpg",
+      "scene": "clutter",
+      "synthetic": true,
+      "decode_ms": 44.2147,
+      "detect_ms": 164.679,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.97953373,
+      "method": "threshold-1+refined",
+      "predicted": [
+        [
+          0.27252835,
+          0.07959619
+        ],
+        [
+          0.75993466,
+          0.136846
+        ],
+        [
+          0.8400367,
+          0.91067666
+        ],
+        [
+          0.17981103,
+          0.94308263
+        ]
+      ],
+      "sampled_pss_kb": 264813
+    },
+    {
+      "file": "clutter-7.jpg",
+      "scene": "clutter",
+      "synthetic": true,
+      "decode_ms": 9.9396,
+      "detect_ms": 182.315,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.99935806,
+      "method": "paper-luma+refined",
+      "predicted": [
+        [
+          0.27820385,
+          0.08111304
+        ],
+        [
+          0.75958866,
+          0.14432114
+        ],
+        [
+          0.83932567,
+          0.909551
+        ],
+        [
+          0.1808155,
+          0.9354699
+        ]
+      ],
+      "sampled_pss_kb": 263737
+    },
+    {
+      "file": "shadow-0.jpg",
+      "scene": "shadow",
+      "synthetic": true,
+      "decode_ms": 8.5711,
+      "detect_ms": 164.5763,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.7838158,
+      "method": "border-distance-12+refined",
+      "predicted": [
+        [
+          0.24182113,
+          0.07908977
+        ],
+        [
+          0.7592695,
+          0.09661404
+        ],
+        [
+          0.839235,
+          0.91049224
+        ],
+        [
+          0.1788111,
+          0.9854074
+        ]
+      ],
+      "sampled_pss_kb": 263781
+    },
+    {
+      "file": "shadow-1.jpg",
+      "scene": "shadow",
+      "synthetic": true,
+      "decode_ms": 7.8193,
+      "detect_ms": 153.6434,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.78362167,
+      "method": "border-distance-12+refined",
+      "predicted": [
+        [
+          0.24676277,
+          0.07970104
+        ],
+        [
+          0.7597221,
+          0.10264777
+        ],
+        [
+          0.839867,
+          0.9113542
+        ],
+        [
+          0.17894067,
+          0.9781204
+        ]
+      ],
+      "sampled_pss_kb": 263813
+    },
+    {
+      "file": "shadow-2.jpg",
+      "scene": "shadow",
+      "synthetic": true,
+      "decode_ms": 7.5521,
+      "detect_ms": 149.6558,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.781717,
+      "method": "border-distance-12+refined",
+      "predicted": [
+        [
+          0.25183707,
+          0.07985048
+        ],
+        [
+          0.75926954,
+          0.109575294
+        ],
+        [
+          0.83958375,
+          0.9103566
+        ],
+        [
+          0.17891109,
+          0.97164834
+        ]
+      ],
+      "sampled_pss_kb": 263809
+    },
+    {
+      "file": "shadow-3.jpg",
+      "scene": "shadow",
+      "synthetic": true,
+      "decode_ms": 9.3869,
+      "detect_ms": 175.5951,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.78092927,
+      "method": "border-distance-12+refined",
+      "predicted": [
+        [
+          0.25681388,
+          0.07989443
+        ],
+        [
+          0.7595409,
+          0.115979806
+        ],
+        [
+          0.8393522,
+          0.91100967
+        ],
+        [
+          0.17887865,
+          0.9649884
+        ]
+      ],
+      "sampled_pss_kb": 263837
+    },
+    {
+      "file": "shadow-4.jpg",
+      "scene": "shadow",
+      "synthetic": true,
+      "decode_ms": 8.1173,
+      "detect_ms": 177.0345,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.778397,
+      "method": "border-distance-12+refined",
+      "predicted": [
+        [
+          0.26167604,
+          0.08018193
+        ],
+        [
+          0.7597942,
+          0.12236883
+        ],
+        [
+          0.8389676,
+          0.911386
+        ],
+        [
+          0.17940095,
+          0.9579419
+        ]
+      ],
+      "sampled_pss_kb": 263817
+    },
+    {
+      "file": "shadow-5.jpg",
+      "scene": "shadow",
+      "synthetic": true,
+      "decode_ms": 7.291,
+      "detect_ms": 168.3392,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.776118,
+      "method": "border-distance-12+refined",
+      "predicted": [
+        [
+          0.26717278,
+          0.07970656
+        ],
+        [
+          0.7596854,
+          0.13024507
+        ],
+        [
+          0.8393731,
+          0.9104211
+        ],
+        [
+          0.17916885,
+          0.9507031
+        ]
+      ],
+      "sampled_pss_kb": 263829
+    },
+    {
+      "file": "shadow-6.jpg",
+      "scene": "shadow",
+      "synthetic": true,
+      "decode_ms": 7.0742,
+      "detect_ms": 160.1389,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.7740238,
+      "method": "border-distance-12+refined",
+      "predicted": [
+        [
+          0.27222633,
+          0.07919871
+        ],
+        [
+          0.7595181,
+          0.13647754
+        ],
+        [
+          0.8395729,
+          0.9103606
+        ],
+        [
+          0.17915206,
+          0.94417727
+        ]
+      ],
+      "sampled_pss_kb": 263781
+    },
+    {
+      "file": "shadow-7.jpg",
+      "scene": "shadow",
+      "synthetic": true,
+      "decode_ms": 11.07,
+      "detect_ms": 175.7886,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.8205975,
+      "method": "border-distance-12+refined",
+      "predicted": [
+        [
+          0.2765452,
+          0.0795434
+        ],
+        [
+          0.75903916,
+          0.14346004
+        ],
+        [
+          0.8393002,
+          0.9103122
+        ],
+        [
+          0.1794,
+          0.9389928
+        ]
+      ],
+      "sampled_pss_kb": 263841
+    },
+    {
+      "file": "glare-0.jpg",
+      "scene": "glare",
+      "synthetic": true,
+      "decode_ms": 9.4662,
+      "detect_ms": 145.9567,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.9364263,
+      "method": "weak-luma+refined",
+      "predicted": [
+        [
+          0.24320856,
+          0.081469715
+        ],
+        [
+          0.76023966,
+          0.097870685
+        ],
+        [
+          0.83852303,
+          0.9090509
+        ],
+        [
+          0.18066497,
+          0.98197633
+        ]
+      ],
+      "sampled_pss_kb": 263885
+    },
+    {
+      "file": "glare-1.jpg",
+      "scene": "glare",
+      "synthetic": true,
+      "decode_ms": 7.477,
+      "detect_ms": 146.136,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.940992,
+      "method": "weak-luma+refined",
+      "predicted": [
+        [
+          0.24820332,
+          0.08083206
+        ],
+        [
+          0.75956726,
+          0.10458775
+        ],
+        [
+          0.8388418,
+          0.9095193
+        ],
+        [
+          0.1807475,
+          0.97558963
+        ]
+      ],
+      "sampled_pss_kb": 263885
+    },
+    {
+      "file": "glare-2.jpg",
+      "scene": "glare",
+      "synthetic": true,
+      "decode_ms": 7.7568,
+      "detect_ms": 149.5871,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.93611395,
+      "method": "weak-luma+refined",
+      "predicted": [
+        [
+          0.25306043,
+          0.08053452
+        ],
+        [
+          0.7594787,
+          0.11129755
+        ],
+        [
+          0.8391658,
+          0.9090056
+        ],
+        [
+          0.18112963,
+          0.9688147
+        ]
+      ],
+      "sampled_pss_kb": 263861
+    },
+    {
+      "file": "glare-3.jpg",
+      "scene": "glare",
+      "synthetic": true,
+      "decode_ms": 7.5295,
+      "detect_ms": 152.9408,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.93825436,
+      "method": "border-distance-24+refined",
+      "predicted": [
+        [
+          0.2579151,
+          0.08116195
+        ],
+        [
+          0.75944954,
+          0.11771705
+        ],
+        [
+          0.83922297,
+          0.9089205
+        ],
+        [
+          0.18109429,
+          0.96236813
+        ]
+      ],
+      "sampled_pss_kb": 263869
+    },
+    {
+      "file": "glare-4.jpg",
+      "scene": "glare",
+      "synthetic": true,
+      "decode_ms": 7.5539,
+      "detect_ms": 151.6362,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.93119836,
+      "method": "weak-luma+refined",
+      "predicted": [
+        [
+          0.2634246,
+          0.07879113
+        ],
+        [
+          0.75909173,
+          0.12395607
+        ],
+        [
+          0.83937293,
+          0.90910715
+        ],
+        [
+          0.18029554,
+          0.95570743
+        ]
+      ],
+      "sampled_pss_kb": 263873
+    },
+    {
+      "file": "glare-5.jpg",
+      "scene": "glare",
+      "synthetic": true,
+      "decode_ms": 6.5488,
+      "detect_ms": 164.8804,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.9259152,
+      "method": "paper-luma+refined",
+      "predicted": [
+        [
+          0.26794255,
+          0.080761604
+        ],
+        [
+          0.7597309,
+          0.13038348
+        ],
+        [
+          0.8394329,
+          0.9096312
+        ],
+        [
+          0.1806646,
+          0.9495346
+        ]
+      ],
+      "sampled_pss_kb": 263825
+    },
+    {
+      "file": "glare-6.jpg",
+      "scene": "glare",
+      "synthetic": true,
+      "decode_ms": 7.6828,
+      "detect_ms": 148.1158,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.9157214,
+      "method": "weak-luma+refined",
+      "predicted": [
+        [
+          0.2729037,
+          0.080414504
+        ],
+        [
+          0.75980294,
+          0.13700362
+        ],
+        [
+          0.8393196,
+          0.9095977
+        ],
+        [
+          0.18120106,
+          0.9430916
+        ]
+      ],
+      "sampled_pss_kb": 263837
+    },
+    {
+      "file": "glare-7.jpg",
+      "scene": "glare",
+      "synthetic": true,
+      "decode_ms": 11.4323,
+      "detect_ms": 165.1974,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.8659863,
+      "method": "paper-luma+refined",
+      "predicted": [
+        [
+          0.27795777,
+          0.081095606
+        ],
+        [
+          0.7593443,
+          0.14353345
+        ],
+        [
+          0.8392771,
+          0.90925264
+        ],
+        [
+          0.18090135,
+          0.9358273
+        ]
+      ],
+      "sampled_pss_kb": 263853
+    },
+    {
+      "file": "fills-frame-0.jpg",
+      "scene": "fills-frame",
+      "synthetic": true,
+      "decode_ms": 10.234,
+      "detect_ms": 178.6368,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.9656747,
+      "method": "border-distance-24+refined",
+      "predicted": [
+        [
+          0.0069096093,
+          0.016070163
+        ],
+        [
+          0.9813864,
+          0.007371967
+        ],
+        [
+          0.99512434,
+          0.9832087
+        ],
+        [
+          0.018725073,
+          0.99515986
+        ]
+      ],
+      "sampled_pss_kb": 263949
+    },
+    {
+      "file": "fills-frame-1.jpg",
+      "scene": "fills-frame",
+      "synthetic": true,
+      "decode_ms": 8.096,
+      "detect_ms": 175.4279,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.9716808,
+      "method": "border-distance-24+refined",
+      "predicted": [
+        [
+          0.0069096093,
+          0.016070163
+        ],
+        [
+          0.9813864,
+          0.007371967
+        ],
+        [
+          0.99512434,
+          0.9832087
+        ],
+        [
+          0.018725073,
+          0.99515986
+        ]
+      ],
+      "sampled_pss_kb": 263953
+    },
+    {
+      "file": "fills-frame-2.jpg",
+      "scene": "fills-frame",
+      "synthetic": true,
+      "decode_ms": 10.6942,
+      "detect_ms": 170.7579,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.9656747,
+      "method": "border-distance-24+refined",
+      "predicted": [
+        [
+          0.0069096093,
+          0.016070163
+        ],
+        [
+          0.9813864,
+          0.007371967
+        ],
+        [
+          0.99512434,
+          0.9832087
+        ],
+        [
+          0.018725073,
+          0.99515986
+        ]
+      ],
+      "sampled_pss_kb": 263993
+    },
+    {
+      "file": "fills-frame-3.jpg",
+      "scene": "fills-frame",
+      "synthetic": true,
+      "decode_ms": 10.29,
+      "detect_ms": 164.203,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.9716808,
+      "method": "border-distance-24+refined",
+      "predicted": [
+        [
+          0.0069096093,
+          0.016070163
+        ],
+        [
+          0.9813864,
+          0.007371967
+        ],
+        [
+          0.99512434,
+          0.9832087
+        ],
+        [
+          0.018725073,
+          0.99515986
+        ]
+      ],
+      "sampled_pss_kb": 263993
+    },
+    {
+      "file": "fills-frame-4.jpg",
+      "scene": "fills-frame",
+      "synthetic": true,
+      "decode_ms": 9.7573,
+      "detect_ms": 173.0771,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.9656747,
+      "method": "border-distance-24+refined",
+      "predicted": [
+        [
+          0.0069096093,
+          0.016070163
+        ],
+        [
+          0.9813864,
+          0.007371967
+        ],
+        [
+          0.99512434,
+          0.9832087
+        ],
+        [
+          0.018725073,
+          0.99515986
+        ]
+      ],
+      "sampled_pss_kb": 263997
+    },
+    {
+      "file": "fills-frame-5.jpg",
+      "scene": "fills-frame",
+      "synthetic": true,
+      "decode_ms": 8.8434,
+      "detect_ms": 164.9431,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.9634574,
+      "method": "paper-luma+refined",
+      "predicted": [
+        [
+          0.006813185,
+          0.018395234
+        ],
+        [
+          0.9813223,
+          0.006561612
+        ],
+        [
+          0.9952231,
+          0.98145765
+        ],
+        [
+          0.01864588,
+          0.9943787
+        ]
+      ],
+      "sampled_pss_kb": 263937
+    },
+    {
+      "file": "fills-frame-6.jpg",
+      "scene": "fills-frame",
+      "synthetic": true,
+      "decode_ms": 9.1377,
+      "detect_ms": 162.4849,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.95762986,
+      "method": "paper-luma+refined",
+      "predicted": [
+        [
+          0.006813185,
+          0.018395234
+        ],
+        [
+          0.9813223,
+          0.006561612
+        ],
+        [
+          0.9952231,
+          0.98145765
+        ],
+        [
+          0.01864588,
+          0.9943787
+        ]
+      ],
+      "sampled_pss_kb": 264069
+    },
+    {
+      "file": "fills-frame-7.jpg",
+      "scene": "fills-frame",
+      "synthetic": true,
+      "decode_ms": 9.7247,
+      "detect_ms": 160.463,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.90383846,
+      "method": "border-distance-12+refined",
+      "predicted": [
+        [
+          0.0068788696,
+          0.017929874
+        ],
+        [
+          0.9814234,
+          0.00636793
+        ],
+        [
+          0.9951121,
+          0.9815444
+        ],
+        [
+          0.018806085,
+          0.9945289
+        ]
+      ],
+      "sampled_pss_kb": 264053
+    },
+    {
+      "file": "similar-luminance-color-0.jpg",
+      "scene": "similar-luminance-color",
+      "synthetic": true,
+      "decode_ms": 7.9421,
+      "detect_ms": 204.9647,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 1,
+      "method": "weak-luma+refined",
+      "predicted": [
+        [
+          0.24246329,
+          0.07944818
+        ],
+        [
+          0.7602092,
+          0.09644518
+        ],
+        [
+          0.8398032,
+          0.9107489
+        ],
+        [
+          0.1805366,
+          0.9845983
+        ]
+      ],
+      "sampled_pss_kb": 263993
+    },
+    {
+      "file": "similar-luminance-color-1.jpg",
+      "scene": "similar-luminance-color",
+      "synthetic": true,
+      "decode_ms": 8.7123,
+      "detect_ms": 195.9528,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 1,
+      "method": "weak-luma+refined",
+      "predicted": [
+        [
+          0.2481297,
+          0.07972012
+        ],
+        [
+          0.76010025,
+          0.1038209
+        ],
+        [
+          0.83972144,
+          0.91037095
+        ],
+        [
+          0.17976424,
+          0.9763703
+        ]
+      ],
+      "sampled_pss_kb": 264001
+    },
+    {
+      "file": "similar-luminance-color-2.jpg",
+      "scene": "similar-luminance-color",
+      "synthetic": true,
+      "decode_ms": 7.4478,
+      "detect_ms": 197.4325,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 1,
+      "method": "inverse-3+refined",
+      "predicted": [
+        [
+          0.2527468,
+          0.07969594
+        ],
+        [
+          0.75988406,
+          0.11055739
+        ],
+        [
+          0.83990175,
+          0.9104568
+        ],
+        [
+          0.18041149,
+          0.9699162
+        ]
+      ],
+      "sampled_pss_kb": 264009
+    },
+    {
+      "file": "similar-luminance-color-3.jpg",
+      "scene": "similar-luminance-color",
+      "synthetic": true,
+      "decode_ms": 76.0806,
+      "detect_ms": 206.2708,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 1,
+      "method": "inverse-3+refined",
+      "predicted": [
+        [
+          0.25785744,
+          0.08026683
+        ],
+        [
+          0.7601912,
+          0.11718274
+        ],
+        [
+          0.8400633,
+          0.9109872
+        ],
+        [
+          0.17995965,
+          0.9623119
+        ]
+      ],
+      "sampled_pss_kb": 264005
+    },
+    {
+      "file": "similar-luminance-color-4.jpg",
+      "scene": "similar-luminance-color",
+      "synthetic": true,
+      "decode_ms": 8.2702,
+      "detect_ms": 218.3795,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.99665916,
+      "method": "channel-1+refined",
+      "predicted": [
+        [
+          0.26270953,
+          0.07984318
+        ],
+        [
+          0.7607503,
+          0.12382968
+        ],
+        [
+          0.8397628,
+          0.9107375
+        ],
+        [
+          0.17947456,
+          0.9569052
+        ]
+      ],
+      "sampled_pss_kb": 264005
+    },
+    {
+      "file": "similar-luminance-color-5.jpg",
+      "scene": "similar-luminance-color",
+      "synthetic": true,
+      "decode_ms": 6.929,
+      "detect_ms": 198.6637,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.99222416,
+      "method": "paper-luma+refined",
+      "predicted": [
+        [
+          0.26738194,
+          0.07994568
+        ],
+        [
+          0.7598784,
+          0.12986839
+        ],
+        [
+          0.84021026,
+          0.91031826
+        ],
+        [
+          0.17975722,
+          0.94978637
+        ]
+      ],
+      "sampled_pss_kb": 264025
+    },
+    {
+      "file": "similar-luminance-color-6.jpg",
+      "scene": "similar-luminance-color",
+      "synthetic": true,
+      "decode_ms": 7.0549,
+      "detect_ms": 193.9892,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.98369694,
+      "method": "threshold-1+refined",
+      "predicted": [
+        [
+          0.27241278,
+          0.079662696
+        ],
+        [
+          0.7604122,
+          0.13659559
+        ],
+        [
+          0.84024745,
+          0.9111577
+        ],
+        [
+          0.17937994,
+          0.943586
+        ]
+      ],
+      "sampled_pss_kb": 264001
+    },
+    {
+      "file": "similar-luminance-color-7.jpg",
+      "scene": "similar-luminance-color",
+      "synthetic": true,
+      "decode_ms": 13.2075,
+      "detect_ms": 213.1122,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.9942076,
+      "method": "ai+channel-1+refined",
+      "predicted": [
+        [
+          0.27700847,
+          0.07966857
+        ],
+        [
+          0.7599974,
+          0.14295141
+        ],
+        [
+          0.84017897,
+          0.91101676
+        ],
+        [
+          0.17913572,
+          0.9368427
+        ]
+      ],
+      "sampled_pss_kb": 263989
+    },
+    {
+      "file": "negative-0.jpg",
+      "scene": "no-document",
+      "synthetic": true,
+      "decode_ms": 6.7209,
+      "detect_ms": 93.8524,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0,
+      "method": "none",
+      "predicted": null,
+      "sampled_pss_kb": 276741
+    },
+    {
+      "file": "negative-1.jpg",
+      "scene": "no-document",
+      "synthetic": true,
+      "decode_ms": 7.4631,
+      "detect_ms": 104.3926,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0,
+      "method": "none",
+      "predicted": null,
+      "sampled_pss_kb": 260153
+    },
+    {
+      "file": "negative-2.jpg",
+      "scene": "no-document",
+      "synthetic": true,
+      "decode_ms": 6.4147,
+      "detect_ms": 109.3684,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0,
+      "method": "none",
+      "predicted": null,
+      "sampled_pss_kb": 260169
+    },
+    {
+      "file": "negative-3.jpg",
+      "scene": "no-document",
+      "synthetic": true,
+      "decode_ms": 5.8635,
+      "detect_ms": 109.7216,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0,
+      "method": "none",
+      "predicted": null,
+      "sampled_pss_kb": 260161
+    },
+    {
+      "file": "negative-4.jpg",
+      "scene": "no-document",
+      "synthetic": true,
+      "decode_ms": 11.0593,
+      "detect_ms": 136.9073,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.024751721,
+      "method": "border-distance--1",
+      "predicted": null,
+      "sampled_pss_kb": 257457
+    },
+    {
+      "file": "negative-5.jpg",
+      "scene": "no-document",
+      "synthetic": true,
+      "decode_ms": 11.133,
+      "detect_ms": 109.784,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.005352497,
+      "method": "border-distance--1",
+      "predicted": null,
+      "sampled_pss_kb": 261745
+    },
+    {
+      "file": "negative-6.jpg",
+      "scene": "no-document",
+      "synthetic": true,
+      "decode_ms": 13.0843,
+      "detect_ms": 144.7801,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0.5941867,
+      "method": "border-distance--1",
+      "predicted": null,
+      "sampled_pss_kb": 258421
+    },
+    {
+      "file": "negative-7.jpg",
+      "scene": "no-document",
+      "synthetic": true,
+      "decode_ms": 12.633,
+      "detect_ms": 132.288,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "confidence": 0,
+      "method": "border-distance--1",
+      "predicted": null,
+      "sampled_pss_kb": 258249
+    },
+    {
+      "file": "ocr-0.png",
+      "scene": "ocr-mixed",
+      "synthetic": true,
+      "decode_ms": 47.4978,
+      "detect_ms": 123.4165,
+      "decoded_width": 1000,
+      "decoded_height": 1400,
+      "confidence": 0,
+      "method": "none",
+      "predicted": null,
+      "sampled_pss_kb": 260924
+    },
+    {
+      "file": "ocr-1.png",
+      "scene": "ocr-mixed",
+      "synthetic": true,
+      "decode_ms": 23.4753,
+      "detect_ms": 126.2675,
+      "decoded_width": 1000,
+      "decoded_height": 1400,
+      "confidence": 0,
+      "method": "border-distance-45",
+      "predicted": null,
+      "sampled_pss_kb": 258436
+    },
+    {
+      "file": "ocr-2.png",
+      "scene": "ocr-mixed",
+      "synthetic": true,
+      "decode_ms": 7.5548,
+      "detect_ms": 95.4709,
+      "decoded_width": 650,
+      "decoded_height": 910,
+      "confidence": 0,
+      "method": "none",
+      "predicted": null,
+      "sampled_pss_kb": 259532
+    },
+    {
+      "file": "ocr-3.png",
+      "scene": "ocr-mixed",
+      "synthetic": true,
+      "decode_ms": 25.0786,
+      "detect_ms": 115.244,
+      "decoded_width": 1000,
+      "decoded_height": 1400,
+      "confidence": 0,
+      "method": "none",
+      "predicted": null,
+      "sampled_pss_kb": 260972
+    },
+    {
+      "file": "ocr-4.png",
+      "scene": "ocr-mixed",
+      "synthetic": true,
+      "decode_ms": 17.5542,
+      "detect_ms": 115.6416,
+      "decoded_width": 1400,
+      "decoded_height": 1000,
+      "confidence": 0,
+      "method": "none",
+      "predicted": null,
+      "sampled_pss_kb": 260876
+    },
+    {
+      "file": "ocr-5.png",
+      "scene": "ocr-mixed",
+      "synthetic": true,
+      "decode_ms": 17.3976,
+      "detect_ms": 118.1107,
+      "decoded_width": 1000,
+      "decoded_height": 1400,
+      "confidence": 0,
+      "method": "none",
+      "predicted": null,
+      "sampled_pss_kb": 260804
+    },
+    {
+      "file": "ocr-6.png",
+      "scene": "ocr-mixed",
+      "synthetic": true,
+      "decode_ms": 18.8254,
+      "detect_ms": 116.8159,
+      "decoded_width": 1400,
+      "decoded_height": 1000,
+      "confidence": 0,
+      "method": "none",
+      "predicted": null,
+      "sampled_pss_kb": 260804
+    },
+    {
+      "file": "ocr-7.png",
+      "scene": "ocr-mixed",
+      "synthetic": true,
+      "decode_ms": 16.0433,
+      "detect_ms": 120.9748,
+      "decoded_width": 1000,
+      "decoded_height": 1400,
+      "confidence": 0,
+      "method": "none",
+      "predicted": null,
+      "sampled_pss_kb": 260852
+    },
+    {
+      "file": "regression-v020.jpg",
+      "scene": "ocr-regression",
+      "synthetic": true,
+      "decode_ms": 41.6063,
+      "detect_ms": 162.3455,
+      "decoded_width": 1350,
+      "decoded_height": 1800,
+      "confidence": 1,
+      "method": "ai+weak-luma+refined",
+      "predicted": [
+        [
+          0.08270448,
+          0.08343904
+        ],
+        [
+          0.8998785,
+          0.050232634
+        ],
+        [
+          0.9559369,
+          0.89983433
+        ],
+        [
+          0.11619147,
+          0.95402014
+        ]
+      ],
+      "sampled_pss_kb": 266812
+    },
+    {
+      "file": "resolution-12mp.jpg",
+      "scene": "resolution-12mp",
+      "synthetic": true,
+      "decode_ms": 37.9457,
+      "detect_ms": 120.9672,
+      "decoded_width": 1350,
+      "decoded_height": 1800,
+      "confidence": 0,
+      "method": "none",
+      "predicted": null,
+      "sampled_pss_kb": 279940
+    }
+  ]
+}

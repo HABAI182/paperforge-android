@@ -1,0 +1,38 @@
+{
+  "environment": "API35 AOSP emulator; final universal 0.4.0 debug APK",
+  "physicalDeviceTested": false,
+  "configurationRoundtrip": {
+    "bytes": 718,
+    "format": 1,
+    "effectivePreferenceCount": 27,
+    "systemDocumentPickerImport": "UI reported 27 settings applied"
+  },
+  "batchShare": {
+    "selectedDocuments": 2,
+    "zipBytes": 202791,
+    "entries": [
+      {
+        "name": "001-扫描 10-23 09.43.pdf",
+        "pages": 1,
+        "bytes": 223000,
+        "extractedTextChars": 166,
+        "sha256": "e66d465051c03bbcb66ce4411240d80046a805b62237bd8586b9434f477d3732"
+      },
+      {
+        "name": "002-UI 阅读验收 1792748461213.pdf",
+        "pages": 3,
+        "bytes": 1647,
+        "extractedTextChars": 41,
+        "sha256": "5397ac8dcb6e2fdfa174755e06d5480302c104ad5d63032aa536342fc4109125"
+      }
+    ]
+  },
+  "abiCommonPayload": {
+    "identicalNonNativeNonSignatureEntries": 641,
+    "packages": [
+      "universal",
+      "arm64-v8a",
+      "x86_64"
+    ]
+  }
+}

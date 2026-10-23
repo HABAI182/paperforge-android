@@ -1,0 +1,15 @@
+{
+  "dataset": "synthetic-v1 development corpus",
+  "physical_device": false,
+  "positive_count": 65,
+  "negative_count": 8,
+  "mean_iou": 0.9970891086039394,
+  "mean_corner_error_pct": 0.07930380696287521,
+  "failures": 0,
+  "false_positives": 0,
+  "detect_p50_ms": 170.7579,
+  "detect_p95_ms": 217.32603999999998,
+  "sampled_pss_kib": 279940,
+  "ai_consensus_cases": 11,
+  "semantic_override_cases": 0
+}

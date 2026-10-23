@@ -1,5 +1,7 @@
 # 测试与真实验收状态
 
+0.4.0：15项JVM、3项文档多选/自定义/相机实际UI、4项离线模型/既有OCR-PDF-历史回归通过，Lint0 errors/38 warnings。65正例/8负例固定识边未退步，另有一张上游手机照片探索检查，均不代表连接手机拍摄。证据见acceptance/v040和quality/SCAN-0.4.0.md。
+
 ## 0.3.0 增量（当前）
 
 - 14项JVM测试通过。API35 AOSP x86_64模拟器，无GMS，飞行模式；9页OCR、65纸边正例/8负例及12MP为合成开发集，详见quality/QUALITY-REPORT.md，不替代真实纸张。
