@@ -56,17 +56,28 @@ data class Quad(val points: List<PointN>) {
 }
 
 /** Requires a fresh stable interval after capture, plus cooldown. Monotonic milliseconds only. */
-class AutoCaptureGate(private val stableMs: Long = 1200, private val cooldownMs: Long = 4000) {
+class AutoCaptureGate(
+    private val stableMs: Long = 1200,
+    private val cooldownMs: Long = 4000,
+    private val minimumArea: Float = .08f,
+) {
     private var anchor: Quad? = null
     private var since = 0L
     private var lastCapture = -cooldownMs
     private var captured: Quad? = null
+    private var capturedScene: List<Float>? = null
+    private var changedFrames = 0
     private var absentSince: Long? = null
     var progress = 0f
         private set
 
-    fun update(quad: Quad?, now: Long, qualityReady: Boolean = true): Boolean {
-        if (quad == null || !quad.valid() || quad.area < .18f) {
+    fun update(
+        quad: Quad?,
+        now: Long,
+        qualityReady: Boolean = true,
+        scene: List<Float>? = null,
+    ): Boolean {
+        if (quad == null || !quad.valid() || quad.area < minimumArea) {
             if (absentSince == null) absentSince = now
             if (now - (absentSince ?: now) > 600) captured = null
             reset()
@@ -78,10 +89,28 @@ class AutoCaptureGate(private val stableMs: Long = 1200, private val cooldownMs:
             return false
         }
         captured?.let { old ->
+            val priorScene = capturedScene
+            val contentChanged =
+                scene != null &&
+                    priorScene != null &&
+                    scene.size == priorScene.size &&
+                    scene
+                        .zip(priorScene)
+                        .map { (a, b) -> (a - b).toDouble() }
+                        .let { delta ->
+                            val exposureShift = delta.average()
+                            delta.map { abs(it - exposureShift) }.average() > .025
+                        }
+            changedFrames = if (contentChanged) changedFrames + 1 else 0
+            val changedPage = changedFrames >= 2
             if (
-                quad.points.indices.maxOf { i ->
-                    hypot(quad.points[i].x - old.points[i].x, quad.points[i].y - old.points[i].y)
-                } < .10f
+                !changedPage &&
+                    quad.points.indices.maxOf { i ->
+                        hypot(
+                            quad.points[i].x - old.points[i].x,
+                            quad.points[i].y - old.points[i].y,
+                        )
+                    } < .10f
             ) {
                 progress = 0f
                 return false
@@ -105,13 +134,20 @@ class AutoCaptureGate(private val stableMs: Long = 1200, private val cooldownMs:
         if (progress >= 1 && now - lastCapture >= cooldownMs) {
             lastCapture = now
             captured = quad
+            capturedScene = scene?.toList()
+            changedFrames = 0
             reset()
             return true
         }
         return false
     }
 
-    fun reset() {
+    fun reset(clearCaptured: Boolean = false) {
+        if (clearCaptured) {
+            captured = null
+            capturedScene = null
+            changedFrames = 0
+        }
         anchor = null
         progress = 0f
     }

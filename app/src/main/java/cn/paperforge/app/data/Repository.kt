@@ -36,13 +36,17 @@ class Repository(val context: Context, val database: PaperDatabase) {
         previewQuad: cn.paperforge.app.model.Quad? = null,
     ): PageRow =
         withContext(Dispatchers.IO) {
-            val detection = ScanProcessor.detectFile(file)
+            val detection = ScanProcessor.detectFile(file, previewQuad)
             val page =
                 PageRow(
                     UUID.randomUUID().toString(),
                     id,
                     dao.pages(id).size,
                     file.absolutePath,
+                    filter = cn.paperforge.app.UserSettings.string("filter", "AUTO"),
+                    brightness = cn.paperforge.app.UserSettings.number("brightness", 0f),
+                    contrast = cn.paperforge.app.UserSettings.number("contrast", 1f),
+                    enhanceStrength = cn.paperforge.app.UserSettings.number("enhanceStrength", 1f),
                     corners = (detection.quad ?: cn.paperforge.app.model.Quad.Full).encode(),
                     detectionConfidence = detection.confidence,
                     detectionMethod = detection.method,
@@ -240,6 +244,12 @@ class Repository(val context: Context, val database: PaperDatabase) {
 
     suspend fun restore(doc: DocumentRow) {
         dao.updateDocument(doc.copy(trashedAt = null, modified = System.currentTimeMillis()))
+    }
+
+    suspend fun editDocuments(ids: Set<String>, edit: (DocumentRow) -> DocumentRow) {
+        database.withTransaction {
+            ids.forEach { id -> dao.document(id)?.let { dao.updateDocument(edit(it)) } }
+        }
     }
 
     suspend fun deleteDocument(doc: DocumentRow) {

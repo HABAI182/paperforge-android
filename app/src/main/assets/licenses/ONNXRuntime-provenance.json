@@ -1,0 +1,20 @@
+{
+  "revision": "470ae16099a74fe05e31f2530489332c0525edb5",
+  "records": [
+    {
+      "url": "https://raw.githubusercontent.com/microsoft/onnxruntime/470ae16099a74fe05e31f2530489332c0525edb5/LICENSE",
+      "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c",
+      "bytes": 1073
+    },
+    {
+      "url": "https://raw.githubusercontent.com/microsoft/onnxruntime/470ae16099a74fe05e31f2530489332c0525edb5/ThirdPartyNotices.txt",
+      "sha256": "0e07b95f3a8d6230037707c5c4a2b554d12c4cb67369669ac255635528ffcee2",
+      "bytes": 325054
+    },
+    {
+      "artifact": "com.microsoft.onnxruntime:onnxruntime-android:1.24.1",
+      "sha256": "133134e2b01ffb91f8f66d46a3149f7fe402ac2e3e2d1df4f8fc679e999689f6",
+      "bytes": 40806767
+    }
+  ]
+}

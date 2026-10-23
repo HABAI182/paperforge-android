@@ -5,6 +5,32 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class GeometryTest {
+    @Test
+    fun autoCaptureRecognizesPageChangeAtTheSameCorners() {
+        val gate = AutoCaptureGate(stableMs = 600, cooldownMs = 1500)
+        var captures = 0
+        for (time in 0..5000 step 200) {
+            val scene =
+                List(16) { index -> if (time < 2400) .7f else if (index % 2 == 0) .55f else .8f }
+            if (gate.update(Quad.Full, time.toLong(), true, scene)) captures++
+        }
+        assertEquals(2, captures)
+        val exposureGate = AutoCaptureGate(stableMs = 600, cooldownMs = 1500)
+        var duplicates = 0
+        for (time in 0..5000 step 200) {
+            if (
+                exposureGate.update(
+                    Quad.Full,
+                    time.toLong(),
+                    true,
+                    List(16) { if (time < 2400) .7f else .55f },
+                )
+            )
+                duplicates++
+        }
+        assertEquals(1, duplicates)
+    }
+
     private val quad =
         Quad(listOf(PointN(.1f, .1f), PointN(.9f, .1f), PointN(.9f, .9f), PointN(.1f, .9f)))
 

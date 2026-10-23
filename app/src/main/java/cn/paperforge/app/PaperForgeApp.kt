@@ -16,6 +16,8 @@ class PaperForgeApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        UserSettings.initialize(this)
+        cn.paperforge.app.imaging.LearnedDocumentDetector.initialize(this)
         PDFBoxResourceLoader.init(this)
         OpenCVLoader.initLocal()
         cn.paperforge.app.imaging.ScanConfig.load(assets)

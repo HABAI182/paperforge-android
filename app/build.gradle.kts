@@ -12,8 +12,8 @@ android {
         applicationId = "cn.paperforge.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "0.3.0"
+        versionCode = 4
+        versionName = "0.4.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk {
             abiFilters +=
@@ -22,6 +22,7 @@ android {
         }
     }
     buildFeatures { compose = true }
+    androidResources { noCompress += "ort" }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -68,6 +69,7 @@ dependencies {
     ksp("androidx.room:room-compiler:2.7.1")
     implementation("androidx.work:work-runtime-ktx:2.10.1")
     implementation("org.opencv:opencv:4.12.0")
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.24.1")
     implementation("com.tom-roush:pdfbox-android:2.0.27.0")
     implementation("com.google.mlkit:text-recognition-chinese:16.0.1")
     implementation("com.google.mlkit:text-recognition:16.0.1")
