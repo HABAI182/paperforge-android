@@ -100,7 +100,12 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
             UserSettings.number("captureArea", 0.08f),
         )
     }
-    val outline = remember { OutlineTracker() }
+    val outline = remember {
+        OutlineTracker(
+            UserSettings.number("outlineWeight", 3f),
+            UserSettings.number("outlineSwitchFrames", 2f).roundToInt(),
+        )
+    }
     val qualityTracker = remember { CaptureQualityTracker() }
     var qualityHint by remember { mutableStateOf("") }
     var focusReady by remember { mutableStateOf(false) }
@@ -426,16 +431,13 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                                                     ) {
                                                                         focusAnchor = detected
                                                                         val center =
-                                                                            overlay?.let { p ->
-                                                                                Pair(
-                                                                                    p.map { it.x }
-                                                                                        .average()
-                                                                                        .toFloat(),
-                                                                                    p.map { it.y }
-                                                                                        .average()
-                                                                                        .toFloat(),
-                                                                                )
-                                                                            }
+                                                                            previewCenter(
+                                                                                detected,
+                                                                                frameWidth,
+                                                                                frameHeight,
+                                                                                transform,
+                                                                                preview,
+                                                                            )
                                                                         requestFocus(
                                                                             center?.first
                                                                                 ?: preview.width /
@@ -469,9 +471,9 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                                                                 .toDouble(),
                                                                         )) &&
                                                                         detection.confidence >=
-                                                                            ScanConfig.float(
-                                                                                "confidenceCapture",
-                                                                                .72f,
+                                                                            UserSettings.number(
+                                                                                "captureConfidence",
+                                                                                .60f,
                                                                             )
                                                                 qualityHint =
                                                                     when {
@@ -676,4 +678,22 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
             }
         }
     }
+}
+
+@androidx.annotation.OptIn(androidx.camera.view.TransformExperimental::class)
+private fun previewCenter(
+    quad: Quad,
+    width: Int,
+    height: Int,
+    source: androidx.camera.view.transform.OutputTransform,
+    preview: PreviewView,
+): Pair<Float, Float>? {
+    val target = preview.outputTransform ?: return null
+    val point =
+        floatArrayOf(
+            quad.points.map { it.x }.average().toFloat() * (width - 1),
+            quad.points.map { it.y }.average().toFloat() * (height - 1),
+        )
+    CoordinateTransform(source, target).mapPoints(point)
+    return point[0] to point[1]
 }

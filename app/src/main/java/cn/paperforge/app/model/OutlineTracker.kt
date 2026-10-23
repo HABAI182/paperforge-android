@@ -1,15 +1,18 @@
-// Adapted from phillip9933/open-android-doc-scanner@3ba5c50a64f9be8eaeec47d263b360488e58835b
-// scanner-camera/.../OutlineTracker.kt (Apache-2.0). PaperForge: native Quad/result boundary.
 package cn.paperforge.app.model
 
 import kotlin.math.*
 
-/** Display only. Capture/edits always use raw detection and original still pixels. */
-class OutlineTracker {
-    private var previous: Quad? = null
+/**
+ * Display only. Two candidate buffers reject transient jumps; capture always uses raw corners.
+ * Adapted from the recovered tracker, with explicit milliseconds and configurable switch latency.
+ */
+class OutlineTracker(private val weight: Float = 3f, private val switchFrames: Int = 2) {
     private var displayed: Quad? = null
-    private var anchor: List<Float>? = null
-    private var lastTime: Long? = null
+    private var pending: Quad? = null
+    private var pendingCount = 0
+    private var signature: List<Float> = emptyList()
+    private var lastTime = 0L
+    private var lastSeen = 0L
     private var viewport: Long? = null
 
     @Synchronized
@@ -20,48 +23,63 @@ class OutlineTracker {
         now: Long,
         epoch: Long = 0,
     ): Quad? {
-        if (raw == null || !raw.valid() || !confidence.isFinite() || confidence < .60f) {
-            reset()
-            return null
+        if (viewport != epoch || now <= lastTime || now - lastTime > 600) reset()
+        viewport = epoch
+        lastTime = now
+        if (raw == null || !raw.valid() || !confidence.isFinite() || confidence < .55f) {
+            pending = null
+            pendingCount = 0
+            if (now - lastSeen > 260) displayed = null
+            return displayed
         }
-        val old = previous
-        val scene = anchor
-        val time = lastTime
-        val changed =
-            old == null ||
-                displayed == null ||
-                scene == null ||
-                signature.isEmpty() ||
-                viewport != epoch ||
-                time == null ||
-                now <= time ||
-                now - time > 600 ||
-                old.points.zip(raw.points).any { (a, b) -> hypot(a.x - b.x, a.y - b.y) > .04f } ||
-                signature.size != scene.size ||
-                signature.zip(scene).map { (a, b) -> abs(a - b) }.average() >= .12
-        val result =
-            if (changed) raw
-            else
+        lastSeen = now
+        fun distance(a: Quad, b: Quad) =
+            a.points.zip(b.points).maxOf { (x, y) -> max(abs(x.x - y.x), abs(x.y - y.y)) }
+        val old = displayed
+        val contentChanged =
+            signature.size == this.signature.size &&
+                signature.isNotEmpty() &&
+                signature.zip(this.signature).map { (a, b) -> abs(a - b) }.average() > .12
+        if (old == null || contentChanged) {
+            displayed = raw
+            pending = null
+            pendingCount = 0
+        } else if (distance(old, raw) <= 1f / 15) {
+            val w = weight.coerceIn(1f, 8f)
+            // Recovered EMA's old term is evaluated in double, new / weight in float.
+            fun blend(a: Float, b: Float): Float =
+                (((w - 1).toDouble() * a / w) + (b / w).toDouble()).toFloat()
+            displayed =
                 Quad(
-                        displayed!!.points.zip(raw.points).map { (a, b) ->
-                            PointN(a.x + (b.x - a.x) * .65f, a.y + (b.y - a.y) * .65f)
+                        old.points.zip(raw.points).map { (a, b) ->
+                            PointN(blend(a.x, b.x), blend(a.y, b.y))
                         }
                     )
                     .takeIf { it.valid() } ?: raw
-        if (changed) anchor = signature.toList()
-        previous = raw
-        displayed = result
-        lastTime = now
-        viewport = epoch
-        return result
+            pending = null
+            pendingCount = 0
+        } else {
+            pendingCount =
+                if (pending?.let { distance(it, raw) < 1f / 15 } == true) pendingCount + 1 else 1
+            pending = raw
+            if (pendingCount >= switchFrames.coerceIn(1, 6)) {
+                displayed = raw
+                pending = null
+                pendingCount = 0
+            }
+        }
+        this.signature = signature.toList()
+        return displayed
     }
 
     @Synchronized
     fun reset() {
-        previous = null
         displayed = null
-        anchor = null
-        lastTime = null
+        pending = null
+        pendingCount = 0
+        signature = emptyList()
+        lastTime = 0
+        lastSeen = 0
         viewport = null
     }
 }

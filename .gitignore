@@ -11,3 +11,4 @@ bench-results/
 *.hprof
 __pycache__/
 *.pyc
+.cxx/

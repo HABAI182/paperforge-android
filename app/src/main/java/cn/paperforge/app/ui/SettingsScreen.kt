@@ -62,15 +62,18 @@ fun SettingsScreen(vm: MainViewModel) {
                 SettingChoices(
                     "纸张定位",
                     "detector",
-                    "HYBRID",
-                    listOf("HYBRID" to "AI + 边缘", "STANDARD" to "传统边缘"),
+                    "NEURAL",
+                    listOf("NEURAL" to "神经边缘", "HYBRID" to "AI + 边缘", "STANDARD" to "传统边缘"),
                 )
+                SettingSlider("纸框平滑程度", "outlineWeight", 3f, 1f..8f, "")
+                SettingSlider("切换纸框确认帧数", "outlineSwitchFrames", 2f, 1f..6f, "帧")
                 SettingToggle("默认自动拍摄", "autoShutter", true)
                 SettingToggle("拍一页即进入编辑", "reviewAfterCapture", false)
                 SettingToggle("照片沿用取景纸框", "lockCrop", true)
                 SettingToggle("显示纸边框", "showOutline", true)
                 SettingToggle("自动拍摄检查模糊与亮度", "strictQuality", false)
                 SettingSlider("自动拍摄最小纸张比例", "captureArea", 0.08f, 0.05f..0.4f, "%", 100f)
+                SettingSlider("自动拍摄识边阈值", "captureConfidence", .60f, 0.45f..0.95f, "%", 100f)
                 SettingSlider("稳定后拍摄等待", "stableMs", 600f, 300f..2000f, "ms")
                 SettingSlider("两次自动拍摄最短间隔", "cooldownMs", 1500f, 800f..5000f, "ms")
                 SettingSlider("取景分析间隔", "analysisMs", 160f, 100f..500f, "ms")
@@ -95,6 +98,7 @@ fun SettingsScreen(vm: MainViewModel) {
                 SettingSlider("去阴影强度", "enhanceStrength", 1f, 0f..1f, "", 100f)
                 SettingSlider("默认亮度", "brightness", 0f, -0.5f..0.5f, "", 100f)
                 SettingSlider("默认对比度", "contrast", 1f, 0.5f..1.8f, "", 100f)
+                SettingSlider("默认曲面校正强度", "dewarpStrength", 1f, 0f..1f, "%", 100f)
             }
             if (visible("导出 PDF OCR 文字 识别 DPI")) {
                 Text("导出与识别", style = MaterialTheme.typography.titleLarge)

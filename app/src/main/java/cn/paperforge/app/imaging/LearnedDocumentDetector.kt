@@ -15,6 +15,7 @@ import org.opencv.core.Mat
 
 /** MakeACopy model, letterbox and postprocessor; provenance/license travel in assets. */
 object LearnedDocumentDetector {
+    private var neuralFailure = false
     private var context: Context? = null
     private var session: OrtSession? = null
     private var failure: String? = null
@@ -131,8 +132,24 @@ object LearnedDocumentDetector {
     }
 
     fun detect(source: Mat, preview: Boolean = false): DetectionResult {
-        if (UserSettings.string("detector", "HYBRID") == "STANDARD")
-            return DocumentDetector.detect(source, preview)
+        val engine = UserSettings.string("detector", "NEURAL")
+        if (engine == "STANDARD") return DocumentDetector.detect(source, preview)
+        if (engine == "NEURAL" && !neuralFailure) {
+            try {
+                val result = NeuralEdgeDetector.detect(source, preview)
+                if (result.quad != null) return result
+            } catch (e: Exception) {
+                neuralFailure = true
+                android.util.Log.w("PaperForgeDetector", "Edge model unavailable; using hybrid", e)
+            } catch (e: UnsatisfiedLinkError) {
+                neuralFailure = true
+                android.util.Log.w(
+                    "PaperForgeDetector",
+                    "Scan runtime unavailable; using hybrid",
+                    e,
+                )
+            }
+        }
         val bitmap = Bitmap.createBitmap(source.cols(), source.rows(), Bitmap.Config.ARGB_8888)
         val learned =
             try {

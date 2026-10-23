@@ -44,4 +44,14 @@ aliases for reliable PDF copy/search. Source: google/fonts/ofl/notosanssc.
 
 v0.4 directly adapts DocQuadLetterbox.java, DocQuadScore.java and DocQuadPostprocessor.java from MakeACopy (Christian Kierdorf), fixed revision 01bebd394b9dd6f3a692f28aea7c0638085eb4da, Apache-2.0. Package names changed, Lombok and runner-specific overloads removed; original copyright headers retained. The unmodified DocQuadNet-256 ORT inference artifact is bundled under the upstream NOTICE's explicit Apache-2.0 model grant. Full LICENSE/NOTICE, training-provenance caveats and hashes travel in assets/licenses/MakeACopy-* and assets/docquad/provenance.json. Model training overlap and inherited dataset terms are not independently certified.
 
-ONNX Runtime Android 1.24.1 is the official Microsoft Maven artifact, CPU only, MIT plus third-party notices. Exact upstream revision 470ae16099a74fe05e31f2530489332c0525edb5 and AAR/notice hashes are recorded in assets/licenses/ONNXRuntime-provenance.json. Full texts are bundled. CamScanner's provided APK and extracted binaries/source/assets are local research inputs, not shipped dependencies.
+ONNX Runtime Android 1.24.1 is the official Microsoft Maven artifact, CPU only, MIT plus third-party notices. Exact upstream revision 470ae16099a74fe05e31f2530489332c0525edb5 and AAR/notice hashes are recorded in assets/licenses/ONNXRuntime-provenance.json. Full texts are bundled. In v0.4, CamScanner's provided APK and extracted binaries/source/assets were local research inputs, not shipped dependencies.
+
+v0.5 builds Alibaba MNN 3.6.1 from official source, fixed commit
+d407447ed56c4121a11ccbd266dc184ca1ead0c2 (Apache-2.0), CPU only.
+Full MNN, FlatBuffers and half licenses are bundled in assets/licenses/MNN-*.
+Two recovered third-party model buffers (border.mnn, dewarp.mnn) come from
+the user-provided CamScanner 7.27.5 APK. They are not PaperForge-authored or
+open-source-licensed model weights. APK/model hashes, binary addresses and
+runtime source pin are in assets/scan/provenance.json. No original competitor
+.so or APK shell is bundled or executed. Edge contour fitting is PaperForge's
+implementation; display tracking and dense dewarp core adapt recovered logic.

@@ -154,6 +154,45 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun save(page: PageRow) = perform("正在更新页面") { repo.savePage(page) }
 
+    fun dewarpPage(page: PageRow, strength: Float) =
+        perform("正在校正曲面") {
+            val source =
+                cn.paperforge.app.imaging.ScanProcessor.render(
+                    page.copy(filter = "ORIGINAL", brightness = 0f, contrast = 1f),
+                    2400,
+                )
+            val file = File(repo.folder(page.documentId), "${UUID.randomUUID()}-dewarp.png")
+            var saved = false
+            try {
+                val corrected = cn.paperforge.app.imaging.PageDewarp.apply(source, strength)
+                try {
+                    file.outputStream().use {
+                        check(
+                            corrected.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)
+                        )
+                    }
+                } finally {
+                    corrected.recycle()
+                }
+                repo.savePage(
+                    page.copy(
+                        original = file.path,
+                        corners = cn.paperforge.app.model.Quad.Full.encode(),
+                        rotation = 0,
+                        deskewDegrees = 0f,
+                        detectionConfidence = null,
+                        detectionMethod = "dewarp",
+                    )
+                )
+                saved = true
+                UserSettings.set("dewarpStrength", strength)
+                messages.send("已应用曲面校正，可撤销")
+            } finally {
+                source.recycle()
+                if (!saved) file.delete()
+            }
+        }
+
     fun undo() = perform("撤销") { selected.value?.let { repo.undo(it.id) } }
 
     fun redo() = perform("重做") { selected.value?.let { repo.undo(it.id, true) } }
