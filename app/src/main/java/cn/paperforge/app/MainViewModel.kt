@@ -18,6 +18,7 @@ import java.util.UUID
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainViewModel(app: Application): AndroidViewModel(app) {
     val repo=(app as PaperForgeApp).repository
+    private val ocrEngine=(app as PaperForgeApp).ocrEngine
     val query=MutableStateFlow("")
     val documents=query.flatMapLatest { if(it.isBlank()) repo.documents else repo.dao.search(it) }.stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000),emptyList())
     val trash=repo.dao.observeTrash().stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000),emptyList())
@@ -28,6 +29,7 @@ class MainViewModel(app: Application): AndroidViewModel(app) {
     val progress=MutableStateFlow("")
     val output=MutableStateFlow<File?>(null)
     val ocr=MutableStateFlow<String?>(null)
+    val ocrReview=MutableStateFlow("")
     val canCorrectOcr=MutableStateFlow(false)
     private var ocrPage: PageRow?=null
     val messages=Channel<String>(Channel.BUFFERED)
@@ -74,7 +76,7 @@ class MainViewModel(app: Application): AndroidViewModel(app) {
         if(target==null) { val page=repo.addCapture(selected.value!!.id,file,previewQuad); if(page.corners==cn.paperforge.app.model.Quad.Full.encode()) messages.send("本页未找到完整纸边，已保留全图；可点击自动裁边重试") } else {
             val page=repo.dao.pages(selected.value!!.id).first { it.id==target }
             val detection=cn.paperforge.app.imaging.ScanProcessor.detectFile(file)
-            repo.savePage(page.copy(original=file.path,corners=(detection.quad ?: cn.paperforge.app.model.Quad.Full).encode(),rotation=0,detectionConfidence=detection.confidence,detectionMethod=detection.method))
+            repo.savePage(page.copy(original=file.path,corners=(detection.quad ?: cn.paperforge.app.model.Quad.Full).encode(),rotation=0,deskewDegrees=0f,detectionConfidence=detection.confidence,detectionMethod=detection.method))
             replacement.value=null; screen.value="editor"
         }
     }
@@ -123,15 +125,16 @@ class MainViewModel(app: Application): AndroidViewModel(app) {
     fun cancel() { exportId?.let { WorkManager.getInstance(getApplication()).cancelWorkById(it) }; task?.cancel() }
     fun saveOutput(uri: Uri) { val file=output.value ?: return; perform("正在保存文件") { repo.saveOutput(file,uri); messages.send("文件已保存") } }
     fun recognize(page: PageRow,chinese: Boolean)=perform("正在离线识别文字") {
-        val result=BundledOcrEngine().layout(page,chinese)
-        repo.dao.updatePage(page.copy(ocrText=result.text,ocrLayout=result.encode()))
-        if(result.text.isBlank()) messages.send("没有识别到文字。请将纸面拍清楚、减少反光，或旋转页面后重试。") else { ocrPage=page.copy(ocrLayout=result.encode()); canCorrectOcr.value=true; ocr.value=result.text }
+        val (updated,result)=repo.cacheOcr(page,ocrEngine.layout(page,chinese))
+        val uncertain=result.lines.indices.filter { (result.lines[it].confidence ?: 1f)<.65f }.map { it+1 }
+        ocrReview.value=if(uncertain.isEmpty()) result.warnings.joinToString("；") else "建议核对第 ${uncertain.joinToString("、")} 行。模型分数仅用于提示。"
+        if(result.text.isBlank()) messages.send("没有识别到文字。请将纸面拍清楚、减少反光，或旋转页面后重试。") else { ocrPage=updated; canCorrectOcr.value=true; ocr.value=result.text }
     }
     fun recognizeAll()=perform("正在识别全部页面") {
         val all=repo.dao.pages(selected.value!!.id); val text=mutableListOf<String>()
         all.forEachIndexed { index,page ->
             progress.value="离线 OCR · ${index+1}/${all.size}"
-            val result=BundledOcrEngine().layout(page,true); repo.dao.updatePage(page.copy(ocrText=result.text,ocrLayout=result.encode())); text.add("第 ${index+1} 页\n${result.text}")
+            val (_,result)=repo.cacheOcr(page,ocrEngine.layout(page,true));text.add("第 ${index+1} 页\n${result.text}")
         }; ocrPage=null; canCorrectOcr.value=false; ocr.value=text.joinToString("\n\n")
     }
     fun correctOcr(text: String)=perform("保存文字校正") {
@@ -139,7 +142,8 @@ class MainViewModel(app: Application): AndroidViewModel(app) {
         val current=repo.dao.pages(old.documentId).firstOrNull { it.id==old.id } ?: return@perform
         val layout=old.ocrLayout?.let { cn.paperforge.app.model.OcrLayout.decode(it) }
         val lines=text.lines()
-        val updated=layout?.takeIf { it.lines.size==lines.size }?.let { l -> l.copy(lines=l.lines.mapIndexed { i,line -> line.copy(text=lines[i]) }).encode() }
+        require(current.revision==old.revision) { "页面已修改，请重新识别后再校正" }
+        val updated=layout?.takeIf { it.lines.size==lines.size }?.let { l -> l.copy(lines=l.lines.mapIndexed { i,line -> line.copy(text=lines[i],elements=emptyList(),corrected=true) }).encode() }
         repo.dao.updatePage(current.copy(ocrText=text,ocrLayout=updated)); messages.send("已保存校正文字" + if(updated==null) "；行数改变后，PDF 文字层将重新识别" else "")
     }
     fun detectPage(page: PageRow)=perform("正在自动识别纸张边缘") {

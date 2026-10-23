@@ -21,13 +21,14 @@ object PdfSearchable {
                 ParcelFileDescriptor.open(input,ParcelFileDescriptor.MODE_READ_ONLY).use { fd -> PdfRenderer(fd).use { renderer ->
                     for(i in 0 until renderer.pageCount) {
                         coroutineContext.ensureActive()
-                        val text= com.tom_roush.pdfbox.text.PDFTextStripper().apply { startPage=i+1; endPage=i+1 }.getText(doc)
-                        if(text.isBlank()) renderer.openPage(i).use { view ->
+                        val native=NativeTextCoverage.regions(doc,i)
+                        if(!NativeTextCoverage.substantial(native)) renderer.openPage(i).use { view ->
                             val scale=2400f/maxOf(view.width,view.height)
                             val bitmap=Bitmap.createBitmap((view.width*scale).toInt().coerceAtLeast(1),(view.height*scale).toInt().coerceAtLeast(1),Bitmap.Config.ARGB_8888)
                             try {
                                 bitmap.eraseColor(Color.WHITE); view.render(bitmap,null,null,PdfRenderer.Page.RENDER_MODE_FOR_PRINT)
-                                val layout=BundledOcrEngine().recognizeBitmap(bitmap)
+                                val engine=(context.applicationContext as cn.paperforge.app.PaperForgeApp).ocrEngine
+                                val layout=NativeTextCoverage.removeCovered(engine.recognizeBitmap(bitmap),native)
                                 val page=doc.getPage(i); val box=page.cropBox
                                 // PdfRenderer returns displayed coordinates. Undo page rotation before mapping.
                                 val normalized=PdfCoordinates.unrotate(layout,page.rotation)

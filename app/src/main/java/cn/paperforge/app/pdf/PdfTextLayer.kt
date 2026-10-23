@@ -18,7 +18,10 @@ object PdfTextLayer {
     }
     fun append(doc: PDDocument,page: PDPage,font: PDType0Font,layout: OcrLayout,x: Float,y: Float,w: Float,h: Float) {
         PDPageContentStream(doc,page,PDPageContentStream.AppendMode.APPEND,true,true).use { stream ->
-            layout.lines.forEach { line ->
+            layout.lines.flatMap { line ->
+                if(line.elements.isEmpty() || line.corrected) listOf(line)
+                else line.elements.map { e -> line.copy(text=e.text,corners=e.corners,elements=emptyList()) }
+            }.forEach { line ->
                 if(line.corners.size!=4) return@forEach
                 val p=line.corners
                 val dx=(p[1].x-p[0].x)*w; val dy=-(p[1].y-p[0].y)*h

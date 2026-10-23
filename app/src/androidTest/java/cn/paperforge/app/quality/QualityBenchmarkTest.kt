@@ -27,7 +27,8 @@ class QualityBenchmarkTest {
     fun recordCorpus() = runBlocking {
         val app = ApplicationProvider.getApplicationContext<PaperForgeApp>()
         val baseline = InstrumentationRegistry.getArguments().getString("benchMode", "baseline") == "baseline"
-        val detectionOnly = InstrumentationRegistry.getArguments().getString("benchStage", "all") == "detect"
+        val stage = InstrumentationRegistry.getArguments().getString("benchStage", "all")
+        val detectionOnly = stage == "detect"
         val dataset = File(app.filesDir, "bench")
         val manifest = JSONObject(File(dataset, "manifest.json").readText())
         val cases = manifest.getJSONArray("cases")
@@ -36,6 +37,7 @@ class QualityBenchmarkTest {
         var sampledPeakPssKb = 0
         for (i in 0 until cases.length()) {
             val item = cases.getJSONObject(i)
+            if(stage=="ocr" && item.isNull("ocr")) continue
             val file = File(dataset, item.getString("file"))
             val decodeStart = SystemClock.elapsedRealtimeNanos()
             val image = if (baseline) BaselineScanProcessor.decode(file, 1800) else ScanProcessor.decode(file, 1800)
@@ -59,7 +61,7 @@ class QualityBenchmarkTest {
                 row.put("ocr", layout.text).put("ocr_ms", (SystemClock.elapsedRealtimeNanos() - ocrStart) / 1e6)
                 row.put("layout", JSONObject(layout.encode()))
             }
-            if (!detectionOnly && item.getString("scene") == "resolution-12mp") {
+            if (stage=="all" && item.getString("scene") == "resolution-12mp") {
                 if (baseline) {
                     val legacyDefault = BaselineScanProcessor.render(page, 2800)
                     row.put("pdf_default_render_width", legacyDefault.width).put("pdf_default_render_height", legacyDefault.height)
@@ -72,7 +74,7 @@ class QualityBenchmarkTest {
                 if (baseline) BaselinePdfEngine.scan(listOf(page), File(output, "resolution-export.pdf"))
                 else PdfEngine.scan(listOf(page), File(output, "resolution-export.pdf"),resolution="HIGH")
             }
-            if (!detectionOnly && item.getString("scene") == "ocr-regression") {
+            if (stage=="all" && item.getString("scene") == "ocr-regression") {
                 val all = List(10) { page.copy(id = "bw-$it", filter = "BW") }
                 // The source baseline engine is the production implementation until Stage 0 is recorded.
                 if (baseline) {

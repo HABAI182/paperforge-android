@@ -1,0 +1,10 @@
+file,scene,iou,corner_error_pct,failed,detect_ms,ocr_cer,ocr_ms,high_render_width,high_render_height
+ocr-0.png,ocr-mixed,0.0,100.0,True,240.9508,0.04411764705882353,3026.0513,,
+ocr-1.png,ocr-mixed,0.0,100.0,True,172.187,0.0,2834.6161,,
+ocr-2.png,ocr-mixed,0.0,100.0,True,67.6545,0.051470588235294115,2605.4253,,
+ocr-3.png,ocr-mixed,0.0,100.0,True,89.9408,0.03676470588235294,2815.98,,
+ocr-4.png,ocr-mixed,0.0,100.0,True,85.9831,0.04411764705882353,3470.1315,,
+ocr-5.png,ocr-mixed,0.0,100.0,True,93.2609,0.0661764705882353,3810.3607,,
+ocr-6.png,ocr-mixed,0.0,100.0,True,93.8243,0.0661764705882353,3825.1833,,
+ocr-7.png,ocr-mixed,0.0,100.0,True,92.8176,0.04411764705882353,2806.4758,,
+regression-v020.jpg,ocr-regression,0.998772204687271,0.03622659295797348,False,148.8512,0.0,4449.6617,,

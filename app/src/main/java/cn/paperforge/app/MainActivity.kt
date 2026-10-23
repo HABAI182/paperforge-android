@@ -111,8 +111,12 @@ class MainActivity: ComponentActivity() {
                 } }) }
                 ocr?.let { result ->
                     var text by remember(result) { mutableStateOf(result) }
+                    val review by vm.ocrReview.collectAsState()
                     AlertDialog(onDismissRequest={ vm.ocr.value=null },title={ Text("可复制与校正的文字") },text={
+                        Column {
+                        if(canCorrectOcr && review.isNotBlank()) Text(review,style=MaterialTheme.typography.bodySmall)
                         OutlinedTextField(value=text,onValueChange={ text=it },modifier=Modifier.fillMaxWidth().heightIn(min=160.dp,max=420.dp),label={ Text("识别可能有误，可在此修改") })
+                        }
                     },confirmButton={ TextButton(onClick={ pendingText=text; saveText.launch("纸匠文字.txt") }) { Text("导出 TXT") } },dismissButton={ Row {
                         TextButton(onClick={ clipboard.setText(AnnotatedString(text)); scope.launch { snackbar.showSnackbar("已复制文字") } }) { Text("复制") }
                         if(canCorrectOcr) TextButton(onClick={ vm.correctOcr(text) }) { Text("保存校正") }

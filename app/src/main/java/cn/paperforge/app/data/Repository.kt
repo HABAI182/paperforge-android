@@ -58,6 +58,21 @@ class Repository(val context: Context,val database: PaperDatabase) {
         dao.addHistory(EditHistory(documentId=page.documentId,pageId=page.id,beforeJson=DocumentCodec.page(current).toString(),afterJson=DocumentCodec.page(next).toString()))
         dao.updatePage(next); dao.touch(page.documentId,System.currentTimeMillis())
     }
+    suspend fun cacheOcr(page: PageRow,result: cn.paperforge.app.model.OcrLayout): Pair<PageRow,cn.paperforge.app.model.OcrLayout> = database.withTransaction {
+        var current=dao.pages(page.documentId).firstOrNull { it.id==page.id } ?: error("页面不存在")
+        require(current.revision==page.revision) { "页面已修改，请重新识别" }
+        var adjusted=result
+        if(result.orientationCorrection!=0 || result.deskewDegrees!=0f) {
+            savePage(current.copy(rotation=(current.rotation+result.orientationCorrection)%360,deskewDegrees=current.deskewDegrees+result.deskewDegrees))
+            current=dao.pages(page.documentId).first { it.id==page.id }
+            adjusted=result.rotated(result.orientationCorrection)
+            if(result.deskewDegrees!=0f) adjusted=cn.paperforge.app.model.DeskewGeometry(adjusted.width,adjusted.height,result.deskewDegrees).map(adjusted,true)
+        }
+        adjusted=adjusted.copy(sourceRevision=current.revision,deskewDegrees=0f)
+        val updated=current.copy(ocrText=adjusted.text,ocrLayout=adjusted.encode())
+        dao.updatePage(updated);dao.touch(page.documentId,System.currentTimeMillis())
+        updated to adjusted
+    }
     suspend fun undo(id: String,redo: Boolean=false)=database.withTransaction {
         val history=(if(redo) dao.redoEntry(id) else dao.undoEntry(id)) ?: return@withTransaction
         val p=DocumentCodec.page(JSONObject(if(redo) history.afterJson else history.beforeJson))

@@ -57,7 +57,11 @@ object ScanProcessor {
 
     fun render(page: PageRow,maxEdge: Int=2400): Bitmap {
         val decoded=PageDecoder.crop(File(page.original),Quad.decode(page.corners),maxEdge)
-        try { return transform(decoded.bitmap,decoded.quad,page.filter,page.rotation,page.brightness,page.contrast,maxEdge) }
+        try {
+            val result=transform(decoded.bitmap,decoded.quad,page.filter,page.rotation,page.brightness,page.contrast,maxEdge)
+            if(page.deskewDegrees==0f) return result
+            return try { PageOrientation.rotate(result,page.deskewDegrees) } finally { result.recycle() }
+        }
         finally { decoded.bitmap.recycle() }
     }
 
