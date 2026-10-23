@@ -37,7 +37,16 @@ class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                                 cached.sourceRevision != page.revision ||
                                 (cached.engineId != engine.id && cached.lines.none { it.corrected })
                         )
-                            repo.cacheOcr(page, engine.layout(page))
+                            repo.cacheOcr(
+                                page,
+                                engine.layout(
+                                    page,
+                                    cn.paperforge.app.UserSettings.string(
+                                        "ocrLanguage",
+                                        "CHINESE",
+                                    ) != "LATIN",
+                                ),
+                            )
                         setProgress(workDataOf("progress" to (index + 1) * 30 / pages.size))
                     }
                 }

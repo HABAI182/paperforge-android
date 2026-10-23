@@ -134,7 +134,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     messages.send("本页未找到完整纸边，已保留全图；可点击自动裁边重试")
             } else {
                 val page = repo.dao.pages(selected.value!!.id).first { it.id == target }
-                val detection = cn.paperforge.app.imaging.ScanProcessor.detectFile(file)
+                val detection =
+                    cn.paperforge.app.imaging.ScanProcessor.detectFile(file, previewQuad)
                 repo.savePage(
                     page.copy(
                         original = file.path,
@@ -148,6 +149,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 replacement.value = null
                 screen.value = "editor"
             }
+            if (UserSettings.bool("reviewAfterCapture", false)) screen.value = "editor"
         }
 
     fun save(page: PageRow) = perform("正在更新页面") { repo.savePage(page) }
@@ -187,6 +189,112 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun restore(doc: DocumentRow) = perform("正在恢复") { repo.restore(doc) }
 
+    fun trashDocuments(ids: Set<String>) =
+        perform("批量移入回收站") {
+            repo.editDocuments(ids) { it.copy(trashedAt = System.currentTimeMillis()) }
+            clearSelectedDocument(ids)
+        }
+
+    fun restoreDocuments(ids: Set<String>) =
+        perform("批量恢复") {
+            repo.editDocuments(ids) {
+                it.copy(trashedAt = null, modified = System.currentTimeMillis())
+            }
+        }
+
+    fun purgeDocuments(ids: Set<String>) =
+        perform("批量直接删除") {
+            ids.forEachIndexed { index, id ->
+                currentCoroutineContext().ensureActive()
+                progress.value = "直接删除 ${index+1}/${ids.size}"
+                repo.dao.document(id)?.let { repo.deleteDocument(it) }
+                clearSelectedDocument(setOf(id))
+            }
+        }
+
+    private fun clearSelectedDocument(ids: Set<String>) {
+        if (selected.value?.id in ids) {
+            selected.value = null
+            screen.value = "home"
+        }
+    }
+
+    fun favoriteDocuments(ids: Set<String>, favorite: Boolean) =
+        perform("批量收藏") { repo.editDocuments(ids) { it.copy(favorite = favorite) } }
+
+    fun categorizeDocuments(ids: Set<String>, folder: String, tags: String) =
+        perform("批量分类") {
+            repo.editDocuments(ids) {
+                it.copy(
+                    folder = folder.trim().ifBlank { it.folder },
+                    tags = tags.trim().ifBlank { it.tags },
+                )
+            }
+        }
+
+    fun mergeDocuments(ids: List<String>) =
+        perform("准备合并") {
+            val docs =
+                ids.mapNotNull { repo.dao.document(it) }
+                    .filter { it.trashedAt == null && it.kind == "pdf" }
+            require(docs.size >= 2) { "请选择至少两份 PDF" }
+            mergeSources.value = docs
+            screen.value = "merge"
+        }
+
+    fun shareDocuments(ids: List<String>) =
+        perform("打包所选文档") {
+            val docs = ids.mapNotNull { repo.dao.document(it) }.filter { it.trashedAt == null }
+            require(docs.isNotEmpty()) { "请选择文档" }
+            val file = File(repo.exports, "PaperForge-documents-${System.currentTimeMillis()}.zip")
+            val partial = File(file.path + ".part")
+            val temporary =
+                File(getApplication<Application>().cacheDir, "library-share-${UUID.randomUUID()}")
+                    .apply { mkdirs() }
+            try {
+                java.util.zip.ZipOutputStream(partial.outputStream().buffered()).use { zip ->
+                    docs.forEachIndexed { index, doc ->
+                        currentCoroutineContext().ensureActive()
+                        progress.value = "打包文档 ${index+1}/${docs.size}"
+                        val source =
+                            if (doc.kind == "pdf") File(requireNotNull(doc.pdfPath))
+                            else
+                                File(temporary, "${index}.pdf").also {
+                                    PdfEngine.scan(
+                                        repo.dao.pages(doc.id),
+                                        it,
+                                        context = getApplication(),
+                                        searchable = false,
+                                    )
+                                }
+                        zip.putNextEntry(
+                            java.util.zip.ZipEntry(
+                                "%03d-%s.pdf".format(index + 1, safeFileName(doc.title))
+                            )
+                        )
+                        source.inputStream().use { input ->
+                            val buffer = ByteArray(64 * 1024)
+                            while (true) {
+                                currentCoroutineContext().ensureActive()
+                                val count = input.read(buffer)
+                                if (count < 0) break
+                                zip.write(buffer, 0, count)
+                            }
+                        }
+                        zip.closeEntry()
+                        if (doc.kind != "pdf") source.delete()
+                    }
+                }
+                currentCoroutineContext().ensureActive()
+                check(partial.renameTo(file)) { "无法完成文档包" }
+                outputLocked.value = false
+                output.value = file
+            } finally {
+                partial.delete()
+                temporary.deleteRecursively()
+            }
+        }
+
     fun categorize(doc: DocumentRow, folder: String, tags: String) =
         perform("保存分类") { repo.dao.updateDocument(doc.copy(folder = folder, tags = tags)) }
 
@@ -217,7 +325,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                         "quality" to quality,
                         "title" to (title ?: doc.title),
                         "searchable" to searchable,
-                        "resolution" to resolution,
+                        "resolution" to
+                            if (resolution == "CUSTOM")
+                                "DPI:${cn.paperforge.app.imaging.ScanConfig.dpi(resolution)}"
+                            else resolution,
                     )
                 )
                 .build()
@@ -280,7 +391,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun recognize(page: PageRow, chinese: Boolean) = perform("正在离线识别文字") { showOcr(page, chinese) }
 
     private suspend fun showOcr(page: PageRow, chinese: Boolean) {
-        val (updated, result) = repo.cacheOcr(page, ocrEngine.layout(page, chinese))
+        val (updated, result) =
+            repo.cacheOcr(
+                page,
+                ocrEngine.layout(
+                    page,
+                    chinese && UserSettings.string("ocrLanguage", "CHINESE") != "LATIN",
+                ),
+            )
         ocrReview.value = "${result.lines.size} 行 · 可直接编辑、复制或导出"
         if (result.text.isBlank()) messages.send("没有识别到文字。请将纸面拍清楚、减少反光，或旋转页面后重试。")
         else {
@@ -296,7 +414,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             val text = mutableListOf<String>()
             all.forEachIndexed { index, page ->
                 progress.value = "离线 OCR · ${index+1}/${all.size}"
-                val (_, result) = repo.cacheOcr(page, ocrEngine.layout(page, true))
+                val (_, result) =
+                    repo.cacheOcr(
+                        page,
+                        ocrEngine.layout(
+                            page,
+                            UserSettings.string("ocrLanguage", "CHINESE") != "LATIN",
+                        ),
+                    )
                 text.add("第 ${index+1} 页\n${result.text}")
             }
             ocrPage = null
@@ -522,6 +647,26 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             BackupStore.backup(repo, file)
             outputLocked.value = false
             output.value = file
+        }
+
+    fun exportPreferences() =
+        perform("导出个性化设置") {
+            val file = File(repo.exports, "PaperForge-settings-${System.currentTimeMillis()}.json")
+            file.writeText(UserSettings.exportJson(), Charsets.UTF_8)
+            outputLocked.value = false
+            output.value = file
+        }
+
+    fun importPreferences(uri: Uri) =
+        perform("导入个性化设置") {
+            val text =
+                getApplication<Application>()
+                    .contentResolver
+                    .openInputStream(uri)
+                    ?.bufferedReader(Charsets.UTF_8)
+                    ?.use { it.readText() } ?: error("无法读取设置文件")
+            val count = UserSettings.importJson(text)
+            messages.send("已应用 $count 项个性化设置")
         }
 
     fun restoreBackup(uri: Uri) =

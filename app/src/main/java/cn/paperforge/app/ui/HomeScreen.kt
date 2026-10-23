@@ -1,5 +1,6 @@
 package cn.paperforge.app.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,17 +11,23 @@ import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
+import cn.paperforge.app.UserSettings
 import cn.paperforge.app.data.DocumentRow
 import java.text.SimpleDateFormat
 import java.util.*
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     vm: MainViewModel,
@@ -43,34 +50,174 @@ fun HomeScreen(
     var categorizing by remember { mutableStateOf<DocumentRow?>(null) }
     var deleting by remember { mutableStateOf<DocumentRow?>(null) }
     var renaming by remember { mutableStateOf<DocumentRow?>(null) }
-    Scaffold(
-        bottomBar = {
-            NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
-                listOf(
-                        "首页" to Icons.Default.Home,
-                        "文档" to Icons.AutoMirrored.Filled.Article,
-                        "工具" to Icons.Default.GridView,
-                    )
-                    .forEachIndexed { i, (label, icon) ->
-                        NavigationBarItem(
-                            selected = tab == i,
-                            onClick = {
-                                tab = i
-                                if (i != 1) vm.query.value = ""
-                            },
-                            icon = { Icon(icon, label) },
-                            label = { Text(label) },
-                            colors =
-                                NavigationBarItemDefaults.colors(
-                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                                ),
-                        )
-                    }
+    var selecting by rememberSaveable { mutableStateOf(false) }
+    var selection by rememberSaveable { mutableStateOf(emptyList<String>()) }
+    var bulkDelete by remember { mutableStateOf(emptyList<String>()) }
+    var bulkCategory by remember { mutableStateOf(emptyList<String>()) }
+    var selectionMenu by remember { mutableStateOf(false) }
+    val inTrash = showTrash && tab == 1
+    val filtered =
+        (if (inTrash) trash else docs)
+            .filter {
+                (tab == 0 || !favoritesOnly || it.favorite) &&
+                    (tab == 0 || folder.isEmpty() || it.folder == folder) &&
+                    (!inTrash ||
+                        search.isBlank() ||
+                        listOf(it.title, it.folder, it.tags).any { value ->
+                            value.contains(search, true)
+                        })
             }
+            .let {
+                if (tab == 0)
+                    it.sortedByDescending { row -> row.modified }
+                        .take(UserSettings.number("recentCount", 6f).toInt())
+                else it
+            }
+    val chosen = filtered.filter { it.id in selection }
+    fun finishSelection() {
+        selection = emptyList()
+        selecting = false
+        selectionMenu = false
+    }
+    fun toggle(id: String) {
+        selection = if (id in selection) selection - id else selection + id
+    }
+    BackHandler(selecting) { finishSelection() }
+    LaunchedEffect(tab, search, showTrash, favoritesOnly, folder) { finishSelection() }
+    Scaffold(
+        topBar = {
+            if (selecting)
+                TopAppBar(
+                    title = { Text("已选 ${chosen.size} 项") },
+                    navigationIcon = {
+                        IconButton(onClick = { finishSelection() }) {
+                            Icon(Icons.Default.Close, "退出多选")
+                        }
+                    },
+                    actions = {
+                        TextButton(
+                            onClick = {
+                                selection =
+                                    if (chosen.size == filtered.size) emptyList()
+                                    else filtered.map { it.id }
+                            },
+                            enabled = !busy,
+                        ) {
+                            Text(
+                                if (chosen.size == filtered.size && filtered.isNotEmpty()) "取消全选"
+                                else "全选"
+                            )
+                        }
+                    },
+                )
+        },
+        bottomBar = {
+            if (selecting) {
+                Surface(tonalElevation = 4.dp) {
+                    Row(
+                        Modifier.fillMaxWidth().navigationBarsPadding().padding(8.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                    ) {
+                        if (inTrash) {
+                            ToolAction(Icons.Default.Restore, "恢复", chosen.isNotEmpty() && !busy) {
+                                vm.restoreDocuments(chosen.map { it.id }.toSet())
+                                finishSelection()
+                            }
+                        } else {
+                            ToolAction(Icons.Default.Share, "分享", chosen.isNotEmpty() && !busy) {
+                                vm.shareDocuments(chosen.map { it.id })
+                                finishSelection()
+                            }
+                            ToolAction(
+                                Icons.Default.DeleteOutline,
+                                "回收站",
+                                chosen.isNotEmpty() && !busy,
+                            ) {
+                                vm.trashDocuments(chosen.map { it.id }.toSet())
+                                finishSelection()
+                            }
+                        }
+                        ToolAction(
+                            Icons.Default.DeleteForever,
+                            "直接删除",
+                            chosen.isNotEmpty() && !busy,
+                        ) {
+                            bulkDelete = chosen.map { it.id }
+                        }
+                        if (!inTrash)
+                            Box {
+                                ToolAction(
+                                    Icons.Default.MoreHoriz,
+                                    "更多",
+                                    chosen.isNotEmpty() && !busy,
+                                ) {
+                                    selectionMenu = true
+                                }
+                                DropdownMenu(selectionMenu, { selectionMenu = false }) {
+                                    DropdownMenuItem(
+                                        text = { Text("收藏所选") },
+                                        onClick = {
+                                            vm.favoriteDocuments(chosen.map { it.id }.toSet(), true)
+                                            finishSelection()
+                                        },
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("取消收藏") },
+                                        onClick = {
+                                            vm.favoriteDocuments(
+                                                chosen.map { it.id }.toSet(),
+                                                false,
+                                            )
+                                            finishSelection()
+                                        },
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("文件夹与标签") },
+                                        onClick = {
+                                            bulkCategory = chosen.map { it.id }
+                                            selectionMenu = false
+                                        },
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("合并 PDF") },
+                                        enabled =
+                                            chosen.size >= 2 && chosen.all { it.kind == "pdf" },
+                                        onClick = {
+                                            vm.mergeDocuments(chosen.map { it.id })
+                                            finishSelection()
+                                        },
+                                    )
+                                }
+                            }
+                    }
+                }
+            } else
+                NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
+                    listOf(
+                            "首页" to Icons.Default.Home,
+                            "文档" to Icons.AutoMirrored.Filled.Article,
+                            "工具" to Icons.Default.GridView,
+                        )
+                        .forEachIndexed { i, (label, icon) ->
+                            NavigationBarItem(
+                                selected = tab == i,
+                                onClick = {
+                                    tab = i
+                                    if (i != 1) vm.query.value = ""
+                                },
+                                icon = { Icon(icon, label) },
+                                label = { Text(label) },
+                                colors =
+                                    NavigationBarItemDefaults.colors(
+                                        indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                                    ),
+                            )
+                        }
+                }
         },
         floatingActionButton = {
-            if (tab != 0)
+            if (tab != 0 && !selecting)
                 ExtendedFloatingActionButton(
                     onClick = { if (!busy) vm.newScan() },
                     icon = { Icon(Icons.Default.DocumentScanner, null) },
@@ -79,7 +226,7 @@ fun HomeScreen(
         },
     ) { padding ->
         LazyColumn(
-            Modifier.padding(padding).fillMaxSize(),
+            Modifier.padding(padding).fillMaxSize().testTag("document-list"),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -97,13 +244,19 @@ fun HomeScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
+                    IconButton(onClick = { vm.screen.value = "settings" }) {
+                        Icon(Icons.Default.Settings, "个性化设置")
+                    }
                     IconButton(onClick = onAbout) { Icon(Icons.Default.Info, "关于与隐私") }
                 }
             }
             if (tab == 0) {
                 item {
                     Card(
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFF176B54)),
+                        colors =
+                            CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            ),
                         shape = RoundedCornerShape(26.dp),
                     ) {
                         Row(
@@ -114,13 +267,13 @@ fun HomeScreen(
                             Column(Modifier.weight(1f)) {
                                 Text(
                                     "扫描文档",
-                                    color = Color.White,
+                                    color = MaterialTheme.colorScheme.onPrimary,
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
                                 )
                                 Text(
                                     "自动裁边 · 连续拍摄",
-                                    color = Color(0xFFCEEBDE),
+                                    color = MaterialTheme.colorScheme.onPrimary,
                                     style = MaterialTheme.typography.bodySmall,
                                 )
                             }
@@ -130,7 +283,7 @@ fun HomeScreen(
                                 colors =
                                     ButtonDefaults.buttonColors(
                                         containerColor = Color.White,
-                                        contentColor = Color(0xFF176B54),
+                                        contentColor = MaterialTheme.colorScheme.primary,
                                     ),
                             ) {
                                 Icon(Icons.Default.DocumentScanner, null)
@@ -140,58 +293,43 @@ fun HomeScreen(
                         }
                     }
                 }
-                item {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        QuickCard(
-                            "相册导入",
-                            Icons.Default.AddPhotoAlternate,
-                            Modifier.weight(1f),
-                            !busy,
-                            onImages,
-                        )
-                        QuickCard(
-                            "打开 PDF",
-                            Icons.Default.PictureAsPdf,
-                            Modifier.weight(1f),
-                            !busy,
-                            onPdf,
-                        )
-                        QuickCard(
-                            "图片识字",
-                            Icons.Default.TextFields,
-                            Modifier.weight(1f),
-                            !busy,
-                            onOcrImages,
-                        )
-                    }
-                }
-                item {
-                    Text(
-                        "常用工具",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
-                item {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        QuickCard(
-                            "合并 PDF",
-                            Icons.Default.Merge,
-                            Modifier.weight(1f),
-                            !busy,
-                            onMerge,
-                        )
-                        QuickCard("压缩 PDF", Icons.Default.Compress, Modifier.weight(1f), !busy) {
-                            onPdfTool("compress")
+                val shortcuts =
+                    UserSettings.string("homeTools", "images,pdf,ocr,merge,compress,tools")
+                        .split(',')
+                        .filter {
+                            it in setOf("images", "pdf", "ocr", "merge", "compress", "tools")
                         }
-                        QuickCard("全部工具", Icons.Default.Handyman, Modifier.weight(1f), !busy) {
-                            tab = 2
+                        .distinct()
+                shortcuts.chunked(3).forEach { group ->
+                    item {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            group.forEach { key ->
+                                val (label, icon, action) =
+                                    when (key) {
+                                        "images" ->
+                                            Triple(
+                                                "相册导入",
+                                                Icons.Default.AddPhotoAlternate,
+                                                onImages,
+                                            )
+                                        "pdf" -> Triple("打开 PDF", Icons.Default.PictureAsPdf, onPdf)
+                                        "ocr" ->
+                                            Triple("图片识字", Icons.Default.TextFields, onOcrImages)
+                                        "merge" -> Triple("合并 PDF", Icons.Default.Merge, onMerge)
+                                        "compress" ->
+                                            Triple(
+                                                "压缩 PDF",
+                                                Icons.Default.Compress,
+                                                { onPdfTool("compress") },
+                                            )
+                                        else -> Triple("全部工具", Icons.Default.Handyman, { tab = 2 })
+                                    }
+                                QuickCard(label, icon, Modifier.weight(1f), !busy, action)
+                            }
+                            repeat(3 - group.size) { Spacer(Modifier.weight(1f)) }
                         }
                     }
                 }
@@ -305,8 +443,13 @@ fun HomeScreen(
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.weight(1f),
                         )
+                        if (!selecting) TextButton(onClick = { selecting = true }) { Text("多选") }
                         if (tab == 0) TextButton(onClick = { tab = 1 }) { Text("全部文档") }
-                        else Text("${docs.size} 份", style = MaterialTheme.typography.labelMedium)
+                        else
+                            Text(
+                                "${if(inTrash) trash.size else docs.size} 份",
+                                style = MaterialTheme.typography.labelMedium,
+                            )
                     }
                 }
                 item {
@@ -344,13 +487,6 @@ fun HomeScreen(
                         )
                     }
                 }
-                val filtered =
-                    (if (showTrash && tab == 1) trash else docs)
-                        .filter {
-                            (tab == 0 || !favoritesOnly || it.favorite) &&
-                                (tab == 0 || folder.isEmpty() || it.folder == folder)
-                        }
-                        .let { if (tab == 0) it.take(6) else it }
                 if (filtered.isEmpty())
                     item {
                         Column(
@@ -374,17 +510,43 @@ fun HomeScreen(
                     }
                 items(filtered, key = { it.id }) { doc ->
                     Card(
-                        onClick = { if (showTrash && tab == 1) vm.restore(doc) else vm.open(doc) },
-                        enabled = !busy,
+                        modifier =
+                            Modifier.combinedClickable(
+                                enabled = !busy,
+                                onClick = {
+                                    if (selecting) toggle(doc.id)
+                                    else if (inTrash) vm.restore(doc) else vm.open(doc)
+                                },
+                                onLongClick = {
+                                    selecting = true
+                                    toggle(doc.id)
+                                },
+                            ),
                         colors =
                             CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                                containerColor =
+                                    if (doc.id in selection && selecting)
+                                        MaterialTheme.colorScheme.secondaryContainer
+                                    else MaterialTheme.colorScheme.surfaceContainerLow
                             ),
                     ) {
                         Row(
-                            Modifier.fillMaxWidth().padding(14.dp),
+                            Modifier.fillMaxWidth()
+                                .padding(
+                                    if (UserSettings.bool("compactRows", false)) 8.dp else 14.dp
+                                ),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
+                            if (selecting)
+                                Checkbox(
+                                    checked = doc.id in selection,
+                                    onCheckedChange = { if (!busy) toggle(doc.id) },
+                                    enabled = !busy,
+                                    modifier =
+                                        Modifier.semantics {
+                                            contentDescription = "选择文档 ${doc.title}"
+                                        },
+                                )
                             Surface(
                                 shape = RoundedCornerShape(12.dp),
                                 color = MaterialTheme.colorScheme.primaryContainer,
@@ -420,65 +582,125 @@ fun HomeScreen(
                                     )
                             }
                             var menu by remember { mutableStateOf(false) }
-                            Box {
-                                IconButton(onClick = { menu = true }) {
-                                    Icon(Icons.Default.MoreVert, "文档操作")
-                                }
-                                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                                    DropdownMenuItem(
-                                        text = { Text("重命名") },
-                                        onClick = {
-                                            menu = false
-                                            renaming = doc
-                                        },
-                                    )
-                                    DropdownMenuItem(
-                                        text = { Text(if (doc.favorite) "取消收藏" else "收藏") },
-                                        onClick = {
-                                            menu = false
-                                            vm.favorite(doc)
-                                        },
-                                    )
-                                    DropdownMenuItem(
-                                        text = { Text("文件夹与标签") },
-                                        onClick = {
-                                            menu = false
-                                            categorizing = doc
-                                        },
-                                    )
-                                    if (showTrash && tab == 1)
+                            if (!selecting)
+                                Box {
+                                    IconButton(onClick = { menu = true }) {
+                                        Icon(Icons.Default.MoreVert, "文档操作")
+                                    }
+                                    DropdownMenu(
+                                        expanded = menu,
+                                        onDismissRequest = { menu = false },
+                                    ) {
                                         DropdownMenuItem(
-                                            text = { Text("恢复") },
+                                            text = { Text("重命名") },
                                             onClick = {
                                                 menu = false
-                                                vm.restore(doc)
+                                                renaming = doc
                                             },
                                         )
-                                    if (!(showTrash && tab == 1))
                                         DropdownMenuItem(
-                                            text = { Text("移入回收站") },
+                                            text = { Text(if (doc.favorite) "取消收藏" else "收藏") },
                                             onClick = {
                                                 menu = false
-                                                vm.delete(doc)
+                                                vm.favorite(doc)
                                             },
                                         )
-                                    DropdownMenuItem(
-                                        text = {
-                                            Text("直接删除", color = MaterialTheme.colorScheme.error)
-                                        },
-                                        onClick = {
-                                            menu = false
-                                            deleting = doc
-                                        },
-                                    )
+                                        DropdownMenuItem(
+                                            text = { Text("文件夹与标签") },
+                                            onClick = {
+                                                menu = false
+                                                categorizing = doc
+                                            },
+                                        )
+                                        if (showTrash && tab == 1)
+                                            DropdownMenuItem(
+                                                text = { Text("恢复") },
+                                                onClick = {
+                                                    menu = false
+                                                    vm.restore(doc)
+                                                },
+                                            )
+                                        if (!(showTrash && tab == 1))
+                                            DropdownMenuItem(
+                                                text = { Text("移入回收站") },
+                                                onClick = {
+                                                    menu = false
+                                                    vm.delete(doc)
+                                                },
+                                            )
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    "直接删除",
+                                                    color = MaterialTheme.colorScheme.error,
+                                                )
+                                            },
+                                            onClick = {
+                                                menu = false
+                                                deleting = doc
+                                            },
+                                        )
+                                    }
                                 }
-                            }
                         }
                     }
                 }
             }
             item { Spacer(Modifier.height(12.dp)) }
         }
+    }
+    if (bulkDelete.isNotEmpty())
+        AlertDialog(
+            onDismissRequest = { bulkDelete = emptyList() },
+            title = { Text("直接删除 ${bulkDelete.size} 份文档？") },
+            text = { Text("永久删除所选文档及应用内原图，无法从回收站恢复。") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        vm.purgeDocuments(bulkDelete.toSet())
+                        bulkDelete = emptyList()
+                        finishSelection()
+                    },
+                    enabled = !busy,
+                ) {
+                    Text("直接删除", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = { TextButton(onClick = { bulkDelete = emptyList() }) { Text("取消") } },
+        )
+    if (bulkCategory.isNotEmpty()) {
+        var targetFolder by remember { mutableStateOf("") }
+        var targetTags by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { bulkCategory = emptyList() },
+            title = { Text("分类 ${bulkCategory.size} 份文档") },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        targetFolder,
+                        { targetFolder = it },
+                        label = { Text("文件夹，留空不改") },
+                    )
+                    OutlinedTextField(
+                        targetTags,
+                        { targetTags = it },
+                        label = { Text("标签，逗号分隔；留空不改") },
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        vm.categorizeDocuments(bulkCategory.toSet(), targetFolder, targetTags)
+                        bulkCategory = emptyList()
+                        finishSelection()
+                    }
+                ) {
+                    Text("保存")
+                }
+            },
+            dismissButton = { TextButton(onClick = { bulkCategory = emptyList() }) { Text("取消") } },
+        )
     }
     deleting?.let { d ->
         AlertDialog(
