@@ -1,0 +1,4679 @@
+{
+  "mode": "baseline",
+  "dataset": "synthetic-v1",
+  "sampled_peak_pss_kb": 264380,
+  "physical_device": false,
+  "rows": [
+    {
+      "file": "dark-desk-0.jpg",
+      "scene": "dark-desk",
+      "synthetic": true,
+      "decode_ms": 21.0758,
+      "detect_ms": 46.1707,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.24249166,
+          0.08011869
+        ],
+        [
+          0.759733,
+          0.09643917
+        ],
+        [
+          0.83982205,
+          0.90949553
+        ],
+        [
+          0.18020022,
+          0.98367953
+        ]
+      ],
+      "sampled_pss_kb": 189734
+    },
+    {
+      "file": "dark-desk-1.jpg",
+      "scene": "dark-desk",
+      "synthetic": true,
+      "decode_ms": 7.9402,
+      "detect_ms": 9.9404,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.24805339,
+          0.078635015
+        ],
+        [
+          0.76084536,
+          0.10385757
+        ],
+        [
+          0.83870965,
+          0.9109792
+        ],
+        [
+          0.17908788,
+          0.97477746
+        ]
+      ],
+      "sampled_pss_kb": 190101
+    },
+    {
+      "file": "dark-desk-2.jpg",
+      "scene": "dark-desk",
+      "synthetic": true,
+      "decode_ms": 6.2194,
+      "detect_ms": 11.0103,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.25250277,
+          0.08011869
+        ],
+        [
+          0.759733,
+          0.109792285
+        ],
+        [
+          0.83982205,
+          0.90949553
+        ],
+        [
+          0.18020022,
+          0.9703264
+        ]
+      ],
+      "sampled_pss_kb": 190269
+    },
+    {
+      "file": "dark-desk-3.jpg",
+      "scene": "dark-desk",
+      "synthetic": true,
+      "decode_ms": 7.0323,
+      "detect_ms": 12.6337,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.25917685,
+          0.078635015
+        ],
+        [
+          0.76084536,
+          0.117210686
+        ],
+        [
+          0.83870965,
+          0.9109792
+        ],
+        [
+          0.17908788,
+          0.96142435
+        ]
+      ],
+      "sampled_pss_kb": 190437
+    },
+    {
+      "file": "dark-desk-4.jpg",
+      "scene": "dark-desk",
+      "synthetic": true,
+      "decode_ms": 7.3434,
+      "detect_ms": 13.7679,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.26362625,
+          0.078635015
+        ],
+        [
+          0.76084536,
+          0.12462908
+        ],
+        [
+          0.83870965,
+          0.9109792
+        ],
+        [
+          0.17908788,
+          0.95548964
+        ]
+      ],
+      "sampled_pss_kb": 190633
+    },
+    {
+      "file": "dark-desk-5.jpg",
+      "scene": "dark-desk",
+      "synthetic": true,
+      "decode_ms": 6.0572,
+      "detect_ms": 12.4861,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.269188,
+          0.078635015
+        ],
+        [
+          0.76084536,
+          0.1305638
+        ],
+        [
+          0.83870965,
+          0.9109792
+        ],
+        [
+          0.17908788,
+          0.94807124
+        ]
+      ],
+      "sampled_pss_kb": 190813
+    },
+    {
+      "file": "dark-desk-6.jpg",
+      "scene": "dark-desk",
+      "synthetic": true,
+      "decode_ms": 6.8748,
+      "detect_ms": 12.2179,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.27363738,
+          0.078635015
+        ],
+        [
+          0.76084536,
+          0.13798219
+        ],
+        [
+          0.83870965,
+          0.9109792
+        ],
+        [
+          0.17908788,
+          0.9421365
+        ]
+      ],
+      "sampled_pss_kb": 191041
+    },
+    {
+      "file": "dark-desk-7.jpg",
+      "scene": "dark-desk",
+      "synthetic": true,
+      "decode_ms": 9.3062,
+      "detect_ms": 11.4334,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.27919912,
+          0.078635015
+        ],
+        [
+          0.76084536,
+          0.14391692
+        ],
+        [
+          0.83870965,
+          0.9109792
+        ],
+        [
+          0.17908788,
+          0.9347181
+        ]
+      ],
+      "sampled_pss_kb": 191273
+    },
+    {
+      "file": "white-desk-0.jpg",
+      "scene": "white-desk",
+      "synthetic": true,
+      "decode_ms": 6.4468,
+      "detect_ms": 12.3835,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.24249166,
+          0.08011869
+        ],
+        [
+          0.759733,
+          0.09643917
+        ],
+        [
+          0.83870965,
+          0.9109792
+        ],
+        [
+          0.18131258,
+          0.98367953
+        ]
+      ],
+      "sampled_pss_kb": 191537
+    },
+    {
+      "file": "white-desk-1.jpg",
+      "scene": "white-desk",
+      "synthetic": true,
+      "decode_ms": 6.8296,
+      "detect_ms": 9.4172,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": null,
+      "sampled_pss_kb": 191689
+    },
+    {
+      "file": "white-desk-2.jpg",
+      "scene": "white-desk",
+      "synthetic": true,
+      "decode_ms": 6.8279,
+      "detect_ms": 10.5838,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.25250277,
+          0.08011869
+        ],
+        [
+          0.759733,
+          0.109792285
+        ],
+        [
+          0.83648497,
+          0.9124629
+        ],
+        [
+          0.17908788,
+          0.96735907
+        ]
+      ],
+      "sampled_pss_kb": 191797
+    },
+    {
+      "file": "white-desk-3.jpg",
+      "scene": "white-desk",
+      "synthetic": true,
+      "decode_ms": 7.1723,
+      "detect_ms": 11.2305,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.2580645,
+          0.08308605
+        ],
+        [
+          0.76084536,
+          0.120178044
+        ],
+        [
+          0.8375973,
+          0.9109792
+        ],
+        [
+          0.18020022,
+          0.96142435
+        ]
+      ],
+      "sampled_pss_kb": 191981
+    },
+    {
+      "file": "white-desk-4.jpg",
+      "scene": "white-desk",
+      "synthetic": true,
+      "decode_ms": 6.3091,
+      "detect_ms": 11.5404,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.26362625,
+          0.08011869
+        ],
+        [
+          0.759733,
+          0.1231454
+        ],
+        [
+          0.83870965,
+          0.90949553
+        ],
+        [
+          0.18242492,
+          0.9569733
+        ]
+      ],
+      "sampled_pss_kb": 192205
+    },
+    {
+      "file": "white-desk-5.jpg",
+      "scene": "white-desk",
+      "synthetic": true,
+      "decode_ms": 5.7014,
+      "detect_ms": 12.4432,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": null,
+      "sampled_pss_kb": 192389
+    },
+    {
+      "file": "white-desk-6.jpg",
+      "scene": "white-desk",
+      "synthetic": true,
+      "decode_ms": 6.1412,
+      "detect_ms": 11.0516,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.27363738,
+          0.08160237
+        ],
+        [
+          0.759733,
+          0.13798219
+        ],
+        [
+          0.8375973,
+          0.9109792
+        ],
+        [
+          0.18242492,
+          0.9436202
+        ]
+      ],
+      "sampled_pss_kb": 192629
+    },
+    {
+      "file": "white-desk-7.jpg",
+      "scene": "white-desk",
+      "synthetic": true,
+      "decode_ms": 9.0387,
+      "detect_ms": 10.4246,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": null,
+      "sampled_pss_kb": 192793
+    },
+    {
+      "file": "wood-0.jpg",
+      "scene": "wood",
+      "synthetic": true,
+      "decode_ms": 9.1236,
+      "detect_ms": 13.8536,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.24249166,
+          0.08011869
+        ],
+        [
+          0.759733,
+          0.09643917
+        ],
+        [
+          0.83982205,
+          0.90949553
+        ],
+        [
+          0.18020022,
+          0.98367953
+        ]
+      ],
+      "sampled_pss_kb": 193109
+    },
+    {
+      "file": "wood-1.jpg",
+      "scene": "wood",
+      "synthetic": true,
+      "decode_ms": 10.2754,
+      "detect_ms": 10.9206,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.24805339,
+          0.08011869
+        ],
+        [
+          0.759733,
+          0.10385757
+        ],
+        [
+          0.83982205,
+          0.90949553
+        ],
+        [
+          0.18020022,
+          0.97626114
+        ]
+      ],
+      "sampled_pss_kb": 193389
+    },
+    {
+      "file": "wood-2.jpg",
+      "scene": "wood",
+      "synthetic": true,
+      "decode_ms": 9.9094,
+      "detect_ms": 12.4349,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.25250277,
+          0.08011869
+        ],
+        [
+          0.759733,
+          0.109792285
+        ],
+        [
+          0.83982205,
+          0.90949553
+        ],
+        [
+          0.18020022,
+          0.9703264
+        ]
+      ],
+      "sampled_pss_kb": 193709
+    },
+    {
+      "file": "wood-3.jpg",
+      "scene": "wood",
+      "synthetic": true,
+      "decode_ms": 8.9976,
+      "detect_ms": 11.8331,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.2580645,
+          0.08011869
+        ],
+        [
+          0.759733,
+          0.117210686
+        ],
+        [
+          0.83982205,
+          0.90949553
+        ],
+        [
+          0.18020022,
+          0.962908
+        ]
+      ],
+      "sampled_pss_kb": 193985
+    },
+    {
+      "file": "wood-4.jpg",
+      "scene": "wood",
+      "synthetic": true,
+      "decode_ms": 9.5703,
+      "detect_ms": 13.0775,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.26362625,
+          0.078635015
+        ],
+        [
+          0.76084536,
+          0.12462908
+        ],
+        [
+          0.83870965,
+          0.9109792
+        ],
+        [
+          0.17908788,
+          0.95548964
+        ]
+      ],
+      "sampled_pss_kb": 194317
+    },
+    {
+      "file": "wood-5.jpg",
+      "scene": "wood",
+      "synthetic": true,
+      "decode_ms": 8.364,
+      "detect_ms": 10.8634,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.269188,
+          0.078635015
+        ],
+        [
+          0.76084536,
+          0.13204747
+        ],
+        [
+          0.83870965,
+          0.9109792
+        ],
+        [
+          0.17908788,
+          0.94807124
+        ]
+      ],
+      "sampled_pss_kb": 194641
+    },
+    {
+      "file": "wood-6.jpg",
+      "scene": "wood",
+      "synthetic": true,
+      "decode_ms": 7.9086,
+      "detect_ms": 12.3494,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.27252504,
+          0.08011869
+        ],
+        [
+          0.759733,
+          0.13649851
+        ],
+        [
+          0.83982205,
+          0.90949553
+        ],
+        [
+          0.18020022,
+          0.9436202
+        ]
+      ],
+      "sampled_pss_kb": 194989
+    },
+    {
+      "file": "wood-7.jpg",
+      "scene": "wood",
+      "synthetic": true,
+      "decode_ms": 9.9936,
+      "detect_ms": 11.84,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.27919912,
+          0.078635015
+        ],
+        [
+          0.76084536,
+          0.1454006
+        ],
+        [
+          0.83870965,
+          0.9109792
+        ],
+        [
+          0.17908788,
+          0.9347181
+        ]
+      ],
+      "sampled_pss_kb": 195329
+    },
+    {
+      "file": "clutter-0.jpg",
+      "scene": "clutter",
+      "synthetic": true,
+      "decode_ms": 6.4818,
+      "detect_ms": 13.3606,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": null,
+      "sampled_pss_kb": 195701
+    },
+    {
+      "file": "clutter-1.jpg",
+      "scene": "clutter",
+      "synthetic": true,
+      "decode_ms": 6.5034,
+      "detect_ms": 11.5025,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": null,
+      "sampled_pss_kb": 196049
+    },
+    {
+      "file": "clutter-2.jpg",
+      "scene": "clutter",
+      "synthetic": true,
+      "decode_ms": 6.9003,
+      "detect_ms": 13.3537,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.024471635,
+          0.029673591
+        ],
+        [
+          0.96996665,
+          0.029673591
+        ],
+        [
+          0.96996665,
+          0.96735907
+        ],
+        [
+          0.024471635,
+          0.96735907
+        ]
+      ],
+      "sampled_pss_kb": 196465
+    },
+    {
+      "file": "clutter-3.jpg",
+      "scene": "clutter",
+      "synthetic": true,
+      "decode_ms": 6.9704,
+      "detect_ms": 12.6006,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.024471635,
+          0.029673591
+        ],
+        [
+          0.96996665,
+          0.029673591
+        ],
+        [
+          0.96996665,
+          0.96735907
+        ],
+        [
+          0.024471635,
+          0.96735907
+        ]
+      ],
+      "sampled_pss_kb": 196837
+    },
+    {
+      "file": "clutter-4.jpg",
+      "scene": "clutter",
+      "synthetic": true,
+      "decode_ms": 7.2383,
+      "detect_ms": 13.9924,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.023359288,
+          0.03115727
+        ],
+        [
+          0.9688543,
+          0.02818991
+        ],
+        [
+          0.96996665,
+          0.96735907
+        ],
+        [
+          0.025583982,
+          0.96884274
+        ]
+      ],
+      "sampled_pss_kb": 197257
+    },
+    {
+      "file": "clutter-5.jpg",
+      "scene": "clutter",
+      "synthetic": true,
+      "decode_ms": 6.0165,
+      "detect_ms": 13.1536,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.023359288,
+          0.03115727
+        ],
+        [
+          0.9688543,
+          0.02818991
+        ],
+        [
+          0.96996665,
+          0.96735907
+        ],
+        [
+          0.025583982,
+          0.96884274
+        ]
+      ],
+      "sampled_pss_kb": 197653
+    },
+    {
+      "file": "clutter-6.jpg",
+      "scene": "clutter",
+      "synthetic": true,
+      "decode_ms": 6.359,
+      "detect_ms": 13.3201,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.025583982,
+          0.02818991
+        ],
+        [
+          0.96996665,
+          0.029673591
+        ],
+        [
+          0.96996665,
+          0.96735907
+        ],
+        [
+          0.024471635,
+          0.96735907
+        ]
+      ],
+      "sampled_pss_kb": 198101
+    },
+    {
+      "file": "clutter-7.jpg",
+      "scene": "clutter",
+      "synthetic": true,
+      "decode_ms": 8.4517,
+      "detect_ms": 12.3456,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.023359288,
+          0.03115727
+        ],
+        [
+          0.9688543,
+          0.02818991
+        ],
+        [
+          0.96996665,
+          0.96735907
+        ],
+        [
+          0.025583982,
+          0.96884274
+        ]
+      ],
+      "sampled_pss_kb": 198513
+    },
+    {
+      "file": "shadow-0.jpg",
+      "scene": "shadow",
+      "synthetic": true,
+      "decode_ms": 6.5901,
+      "detect_ms": 13.285,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.24249166,
+          0.078635015
+        ],
+        [
+          0.6051168,
+          0.39910978
+        ],
+        [
+          0.512792,
+          0.9451039
+        ],
+        [
+          0.17908788,
+          0.98367953
+        ]
+      ],
+      "sampled_pss_kb": 198797
+    },
+    {
+      "file": "shadow-1.jpg",
+      "scene": "shadow",
+      "synthetic": true,
+      "decode_ms": 6.2604,
+      "detect_ms": 10.6809,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.24805339,
+          0.078635015
+        ],
+        [
+          0.5061179,
+          0.09347181
+        ],
+        [
+          0.51724136,
+          0.94065285
+        ],
+        [
+          0.17908788,
+          0.97626114
+        ]
+      ],
+      "sampled_pss_kb": 199057
+    },
+    {
+      "file": "shadow-2.jpg",
+      "scene": "shadow",
+      "synthetic": true,
+      "decode_ms": 6.6163,
+      "detect_ms": 10.2612,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.25250277,
+          0.078635015
+        ],
+        [
+          0.5773081,
+          0.28041542
+        ],
+        [
+          0.5183537,
+          0.9376855
+        ],
+        [
+          0.17908788,
+          0.9703264
+        ]
+      ],
+      "sampled_pss_kb": 199301
+    },
+    {
+      "file": "shadow-3.jpg",
+      "scene": "shadow",
+      "synthetic": true,
+      "decode_ms": 6.3699,
+      "detect_ms": 9.8178,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.2580645,
+          0.078635015
+        ],
+        [
+          0.56618464,
+          0.25074184
+        ],
+        [
+          0.51724136,
+          0.9347181
+        ],
+        [
+          0.17908788,
+          0.962908
+        ]
+      ],
+      "sampled_pss_kb": 199585
+    },
+    {
+      "file": "shadow-4.jpg",
+      "scene": "shadow",
+      "synthetic": true,
+      "decode_ms": 6.9542,
+      "detect_ms": 12.5578,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.2625139,
+          0.078635015
+        ],
+        [
+          0.5595106,
+          0.19287834
+        ],
+        [
+          0.5194661,
+          0.93026704
+        ],
+        [
+          0.17908788,
+          0.9569733
+        ]
+      ],
+      "sampled_pss_kb": 199885
+    },
+    {
+      "file": "shadow-5.jpg",
+      "scene": "shadow",
+      "synthetic": true,
+      "decode_ms": 6.5301,
+      "detect_ms": 9.6104,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.26807564,
+          0.078635015
+        ],
+        [
+          0.5939933,
+          0.2833828
+        ],
+        [
+          0.5250278,
+          0.9272997
+        ],
+        [
+          0.17908788,
+          0.9495549
+        ]
+      ],
+      "sampled_pss_kb": 200173
+    },
+    {
+      "file": "shadow-6.jpg",
+      "scene": "shadow",
+      "synthetic": true,
+      "decode_ms": 5.9268,
+      "detect_ms": 11.0694,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.27252504,
+          0.078635015
+        ],
+        [
+          0.59510565,
+          0.28635016
+        ],
+        [
+          0.5183537,
+          0.925816
+        ],
+        [
+          0.17908788,
+          0.9421365
+        ]
+      ],
+      "sampled_pss_kb": 200513
+    },
+    {
+      "file": "shadow-7.jpg",
+      "scene": "shadow",
+      "synthetic": true,
+      "decode_ms": 8.7048,
+      "detect_ms": 9.3602,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.27808675,
+          0.078635015
+        ],
+        [
+          0.56618464,
+          0.20029673
+        ],
+        [
+          0.52614015,
+          0.92136496
+        ],
+        [
+          0.17908788,
+          0.93620175
+        ]
+      ],
+      "sampled_pss_kb": 200853
+    },
+    {
+      "file": "glare-0.jpg",
+      "scene": "glare",
+      "synthetic": true,
+      "decode_ms": 6.1581,
+      "detect_ms": 11.5314,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.24249166,
+          0.08011869
+        ],
+        [
+          0.759733,
+          0.09643917
+        ],
+        [
+          0.83870965,
+          0.9109792
+        ],
+        [
+          0.18131258,
+          0.98367953
+        ]
+      ],
+      "sampled_pss_kb": 201181
+    },
+    {
+      "file": "glare-1.jpg",
+      "scene": "glare",
+      "synthetic": true,
+      "decode_ms": 6.5706,
+      "detect_ms": 9.6197,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": null,
+      "sampled_pss_kb": 201425
+    },
+    {
+      "file": "glare-2.jpg",
+      "scene": "glare",
+      "synthetic": true,
+      "decode_ms": 7.7032,
+      "detect_ms": 11.7018,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.25250277,
+          0.08011869
+        ],
+        [
+          0.759733,
+          0.109792285
+        ],
+        [
+          0.83648497,
+          0.9124629
+        ],
+        [
+          0.17908788,
+          0.96735907
+        ]
+      ],
+      "sampled_pss_kb": 201765
+    },
+    {
+      "file": "glare-3.jpg",
+      "scene": "glare",
+      "synthetic": true,
+      "decode_ms": 7.0868,
+      "detect_ms": 10.7338,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.2580645,
+          0.08308605
+        ],
+        [
+          0.76084536,
+          0.120178044
+        ],
+        [
+          0.8375973,
+          0.9109792
+        ],
+        [
+          0.18020022,
+          0.96142435
+        ]
+      ],
+      "sampled_pss_kb": 202077
+    },
+    {
+      "file": "glare-4.jpg",
+      "scene": "glare",
+      "synthetic": true,
+      "decode_ms": 7.0631,
+      "detect_ms": 10.5524,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.26362625,
+          0.08011869
+        ],
+        [
+          0.759733,
+          0.1231454
+        ],
+        [
+          0.83870965,
+          0.90949553
+        ],
+        [
+          0.18242492,
+          0.9569733
+        ]
+      ],
+      "sampled_pss_kb": 202417
+    },
+    {
+      "file": "glare-5.jpg",
+      "scene": "glare",
+      "synthetic": true,
+      "decode_ms": 5.9822,
+      "detect_ms": 10.1973,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": null,
+      "sampled_pss_kb": 202697
+    },
+    {
+      "file": "glare-6.jpg",
+      "scene": "glare",
+      "synthetic": true,
+      "decode_ms": 5.8496,
+      "detect_ms": 11.8222,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.27363738,
+          0.08160237
+        ],
+        [
+          0.759733,
+          0.13798219
+        ],
+        [
+          0.8375973,
+          0.9109792
+        ],
+        [
+          0.18242492,
+          0.9436202
+        ]
+      ],
+      "sampled_pss_kb": 203049
+    },
+    {
+      "file": "glare-7.jpg",
+      "scene": "glare",
+      "synthetic": true,
+      "decode_ms": 8.9989,
+      "detect_ms": 10.4142,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": null,
+      "sampled_pss_kb": 203305
+    },
+    {
+      "file": "fills-frame-0.jpg",
+      "scene": "fills-frame",
+      "synthetic": true,
+      "decode_ms": 7.3265,
+      "detect_ms": 13.8638,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.0077864295,
+          0.017804155
+        ],
+        [
+          0.9810901,
+          0.008902078
+        ],
+        [
+          0.9944383,
+          0.98219585
+        ],
+        [
+          0.017797552,
+          0.9910979
+        ]
+      ],
+      "sampled_pss_kb": 203793
+    },
+    {
+      "file": "fills-frame-1.jpg",
+      "scene": "fills-frame",
+      "synthetic": true,
+      "decode_ms": 7.8971,
+      "detect_ms": 12.849,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.0077864295,
+          0.017804155
+        ],
+        [
+          0.9810901,
+          0.008902078
+        ],
+        [
+          0.9944383,
+          0.98219585
+        ],
+        [
+          0.017797552,
+          0.9910979
+        ]
+      ],
+      "sampled_pss_kb": 204165
+    },
+    {
+      "file": "fills-frame-2.jpg",
+      "scene": "fills-frame",
+      "synthetic": true,
+      "decode_ms": 7.5988,
+      "detect_ms": 15.1021,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.0077864295,
+          0.017804155
+        ],
+        [
+          0.9810901,
+          0.008902078
+        ],
+        [
+          0.9944383,
+          0.98219585
+        ],
+        [
+          0.017797552,
+          0.9910979
+        ]
+      ],
+      "sampled_pss_kb": 204629
+    },
+    {
+      "file": "fills-frame-3.jpg",
+      "scene": "fills-frame",
+      "synthetic": true,
+      "decode_ms": 8.067,
+      "detect_ms": 12.0165,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.0077864295,
+          0.017804155
+        ],
+        [
+          0.9810901,
+          0.008902078
+        ],
+        [
+          0.9944383,
+          0.98219585
+        ],
+        [
+          0.017797552,
+          0.9910979
+        ]
+      ],
+      "sampled_pss_kb": 205021
+    },
+    {
+      "file": "fills-frame-4.jpg",
+      "scene": "fills-frame",
+      "synthetic": true,
+      "decode_ms": 7.3389,
+      "detect_ms": 12.5451,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.0077864295,
+          0.017804155
+        ],
+        [
+          0.9810901,
+          0.008902078
+        ],
+        [
+          0.9944383,
+          0.98219585
+        ],
+        [
+          0.017797552,
+          0.9910979
+        ]
+      ],
+      "sampled_pss_kb": 205437
+    },
+    {
+      "file": "fills-frame-5.jpg",
+      "scene": "fills-frame",
+      "synthetic": true,
+      "decode_ms": 6.5597,
+      "detect_ms": 12.4252,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.008898776,
+          0.017804155
+        ],
+        [
+          0.9810901,
+          0.008902078
+        ],
+        [
+          0.9933259,
+          0.98219585
+        ],
+        [
+          0.0189099,
+          0.9925816
+        ]
+      ],
+      "sampled_pss_kb": 205973
+    },
+    {
+      "file": "fills-frame-6.jpg",
+      "scene": "fills-frame",
+      "synthetic": true,
+      "decode_ms": 7.3098,
+      "detect_ms": 14.011,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": [
+        [
+          0.008898776,
+          0.017804155
+        ],
+        [
+          0.9810901,
+          0.008902078
+        ],
+        [
+          0.9933259,
+          0.98219585
+        ],
+        [
+          0.0189099,
+          0.9925816
+        ]
+      ],
+      "sampled_pss_kb": 206433
+    },
+    {
+      "file": "fills-frame-7.jpg",
+      "scene": "fills-frame",
+      "synthetic": true,
+      "decode_ms": 9.2189,
+      "detect_ms": 14.0973,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": null,
+      "sampled_pss_kb": 206841
+    },
+    {
+      "file": "similar-luminance-color-0.jpg",
+      "scene": "similar-luminance-color",
+      "synthetic": true,
+      "decode_ms": 7.5133,
+      "detect_ms": 9.1578,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": null,
+      "sampled_pss_kb": 207145
+    },
+    {
+      "file": "similar-luminance-color-1.jpg",
+      "scene": "similar-luminance-color",
+      "synthetic": true,
+      "decode_ms": 6.6926,
+      "detect_ms": 9.9474,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": null,
+      "sampled_pss_kb": 207429
+    },
+    {
+      "file": "similar-luminance-color-2.jpg",
+      "scene": "similar-luminance-color",
+      "synthetic": true,
+      "decode_ms": 6.534,
+      "detect_ms": 11.2367,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": null,
+      "sampled_pss_kb": 207717
+    },
+    {
+      "file": "similar-luminance-color-3.jpg",
+      "scene": "similar-luminance-color",
+      "synthetic": true,
+      "decode_ms": 7.3816,
+      "detect_ms": 10.6839,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": null,
+      "sampled_pss_kb": 208013
+    },
+    {
+      "file": "similar-luminance-color-4.jpg",
+      "scene": "similar-luminance-color",
+      "synthetic": true,
+      "decode_ms": 7.9523,
+      "detect_ms": 8.7702,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": null,
+      "sampled_pss_kb": 208333
+    },
+    {
+      "file": "similar-luminance-color-5.jpg",
+      "scene": "similar-luminance-color",
+      "synthetic": true,
+      "decode_ms": 6.8379,
+      "detect_ms": 11.2372,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": null,
+      "sampled_pss_kb": 208653
+    },
+    {
+      "file": "similar-luminance-color-6.jpg",
+      "scene": "similar-luminance-color",
+      "synthetic": true,
+      "decode_ms": 6.319,
+      "detect_ms": 10.7932,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": null,
+      "sampled_pss_kb": 208977
+    },
+    {
+      "file": "similar-luminance-color-7.jpg",
+      "scene": "similar-luminance-color",
+      "synthetic": true,
+      "decode_ms": 8.3564,
+      "detect_ms": 9.3051,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": null,
+      "sampled_pss_kb": 209285
+    },
+    {
+      "file": "negative-0.jpg",
+      "scene": "no-document",
+      "synthetic": true,
+      "decode_ms": 5.788,
+      "detect_ms": 6.7276,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": null,
+      "sampled_pss_kb": 209497
+    },
+    {
+      "file": "negative-1.jpg",
+      "scene": "no-document",
+      "synthetic": true,
+      "decode_ms": 5.2015,
+      "detect_ms": 7.2911,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": null,
+      "sampled_pss_kb": 209701
+    },
+    {
+      "file": "negative-2.jpg",
+      "scene": "no-document",
+      "synthetic": true,
+      "decode_ms": 5.4437,
+      "detect_ms": 6.7689,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": null,
+      "sampled_pss_kb": 209905
+    },
+    {
+      "file": "negative-3.jpg",
+      "scene": "no-document",
+      "synthetic": true,
+      "decode_ms": 5.0533,
+      "detect_ms": 6.2712,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": null,
+      "sampled_pss_kb": 210113
+    },
+    {
+      "file": "negative-4.jpg",
+      "scene": "no-document",
+      "synthetic": true,
+      "decode_ms": 9.7362,
+      "detect_ms": 7.5154,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": null,
+      "sampled_pss_kb": 210369
+    },
+    {
+      "file": "negative-5.jpg",
+      "scene": "no-document",
+      "synthetic": true,
+      "decode_ms": 9.6246,
+      "detect_ms": 7.5557,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": null,
+      "sampled_pss_kb": 210657
+    },
+    {
+      "file": "negative-6.jpg",
+      "scene": "no-document",
+      "synthetic": true,
+      "decode_ms": 9.4424,
+      "detect_ms": 7.9582,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": null,
+      "sampled_pss_kb": 210881
+    },
+    {
+      "file": "negative-7.jpg",
+      "scene": "no-document",
+      "synthetic": true,
+      "decode_ms": 11.3339,
+      "detect_ms": 6.8981,
+      "decoded_width": 1600,
+      "decoded_height": 1200,
+      "predicted": null,
+      "sampled_pss_kb": 211109
+    },
+    {
+      "file": "ocr-0.png",
+      "scene": "ocr-mixed",
+      "synthetic": true,
+      "decode_ms": 10.2239,
+      "detect_ms": 11.4984,
+      "decoded_width": 1000,
+      "decoded_height": 1400,
+      "predicted": null,
+      "ocr": "纸匠女档质量实验\n中文与English 0123456789\n漬晰讲义·第1行\n清晰讲义·第2行\n清晰讲义·第3行\n|清晰讲义·第4行\n|清晰讲义·第5行\n清晰讲义·第6行\n清晰讲义·第7行\n清晰讲义·第8行\n清晰讲义·第9行\n清晰讲义·第10行\n请晰讲义·第11行\n请晰讲义·第12行\n清晰讲义·第13行",
+      "ocr_ms": 948.4112,
+      "layout": {
+        "width": 999,
+        "height": 1399,
+        "lines": [
+          {
+            "text": "纸匠女档质量实验",
+            "corners": [
+              [
+                0.082082085,
+                0.06862044
+              ],
+              [
+                0.4784785,
+                0.06862044
+              ],
+              [
+                0.4784785,
+                0.10150107
+              ],
+              [
+                0.082082085,
+                0.10150107
+              ]
+            ]
+          },
+          {
+            "text": "中文与English 0123456789",
+            "corners": [
+              [
+                0.066066064,
+                0.12437455
+              ],
+              [
+                0.5785786,
+                0.12437455
+              ],
+              [
+                0.5785786,
+                0.15582559
+              ],
+              [
+                0.066066064,
+                0.15582559
+              ]
+            ]
+          },
+          {
+            "text": "漬晰讲义·第1行",
+            "corners": [
+              [
+                0.082082085,
+                0.20872052
+              ],
+              [
+                0.34234235,
+                0.20872052
+              ],
+              [
+                0.34234235,
+                0.231594
+              ],
+              [
+                0.082082085,
+                0.231594
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第2行",
+            "corners": [
+              [
+                0.082082085,
+                0.25732666
+              ],
+              [
+                0.34234235,
+                0.25732666
+              ],
+              [
+                0.34234235,
+                0.28020015
+              ],
+              [
+                0.082082085,
+                0.28020015
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第3行",
+            "corners": [
+              [
+                0.082082085,
+                0.3073624
+              ],
+              [
+                0.34234235,
+                0.3073624
+              ],
+              [
+                0.34234235,
+                0.33023587
+              ],
+              [
+                0.082082085,
+                0.33023587
+              ]
+            ]
+          },
+          {
+            "text": "|清晰讲义·第4行",
+            "corners": [
+              [
+                0.06006006,
+                0.35525376
+              ],
+              [
+                0.35135135,
+                0.35239458
+              ],
+              [
+                0.35135135,
+                0.38098642
+              ],
+              [
+                0.06006006,
+                0.3838456
+              ]
+            ]
+          },
+          {
+            "text": "|清晰讲义·第5行",
+            "corners": [
+              [
+                0.062062062,
+                0.4038599
+              ],
+              [
+                0.35035035,
+                0.4010007
+              ],
+              [
+                0.35035035,
+                0.42959258
+              ],
+              [
+                0.062062062,
+                0.43245175
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第6行",
+            "corners": [
+              [
+                0.082082085,
+                0.45461044
+              ],
+              [
+                0.34234235,
+                0.45461044
+              ],
+              [
+                0.34234235,
+                0.47891352
+              ],
+              [
+                0.082082085,
+                0.47891352
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第7行",
+            "corners": [
+              [
+                0.082082085,
+                0.5046462
+              ],
+              [
+                0.34234235,
+                0.5046462
+              ],
+              [
+                0.34234235,
+                0.52751964
+              ],
+              [
+                0.082082085,
+                0.52751964
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第8行",
+            "corners": [
+              [
+                0.062062062,
+                0.55039316
+              ],
+              [
+                0.35235235,
+                0.55039316
+              ],
+              [
+                0.35235235,
+                0.578985
+              ],
+              [
+                0.062062062,
+                0.578985
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第9行",
+            "corners": [
+              [
+                0.082082085,
+                0.60328805
+              ],
+              [
+                0.34234235,
+                0.60328805
+              ],
+              [
+                0.34234235,
+                0.6261615
+              ],
+              [
+                0.082082085,
+                0.6261615
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第10行",
+            "corners": [
+              [
+                0.08108108,
+                0.6518942
+              ],
+              [
+                0.36136135,
+                0.6518942
+              ],
+              [
+                0.36136135,
+                0.6747677
+              ],
+              [
+                0.08108108,
+                0.6747677
+              ]
+            ]
+          },
+          {
+            "text": "请晰讲义·第11行",
+            "corners": [
+              [
+                0.082082085,
+                0.7019299
+              ],
+              [
+                0.36036035,
+                0.7019299
+              ],
+              [
+                0.36036035,
+                0.72480345
+              ],
+              [
+                0.082082085,
+                0.72480345
+              ]
+            ]
+          },
+          {
+            "text": "请晰讲义·第12行",
+            "corners": [
+              [
+                0.08108108,
+                0.7505361
+              ],
+              [
+                0.36136135,
+                0.7505361
+              ],
+              [
+                0.36136135,
+                0.7734096
+              ],
+              [
+                0.08108108,
+                0.7734096
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第13行",
+            "corners": [
+              [
+                0.082082085,
+                0.80057186
+              ],
+              [
+                0.36236235,
+                0.80057186
+              ],
+              [
+                0.36236235,
+                0.8234453
+              ],
+              [
+                0.082082085,
+                0.8234453
+              ]
+            ]
+          }
+        ]
+      },
+      "sampled_pss_kb": 260194
+    },
+    {
+      "file": "ocr-1.png",
+      "scene": "ocr-mixed",
+      "synthetic": true,
+      "decode_ms": 11.6837,
+      "detect_ms": 8.4119,
+      "decoded_width": 1000,
+      "decoded_height": 1400,
+      "predicted": null,
+      "ocr": "|纸匠文档质量实验\n中文与English 0123456789\n濱晰讲义·第1行\n清晰讲义·第2行\n清晰讲义·第3行\n清晰讲义·第4行\n|清晰讲义·第5行\n|清晰讲义·第6行\n濱晰讲义·第7行\n|清晰讲义·第8行\n清晰讲义·第9行\n|清晰讲义·第10行\n清晰讲义·第11行\n清晰讲义·第12行\n清晰讲义·第13行",
+      "ocr_ms": 763.8225,
+      "layout": {
+        "width": 999,
+        "height": 1399,
+        "lines": [
+          {
+            "text": "|纸匠文档质量实验",
+            "corners": [
+              [
+                0.082082085,
+                0.06862044
+              ],
+              [
+                0.4764765,
+                0.06862044
+              ],
+              [
+                0.4764765,
+                0.10150107
+              ],
+              [
+                0.082082085,
+                0.10150107
+              ]
+            ]
+          },
+          {
+            "text": "中文与English 0123456789",
+            "corners": [
+              [
+                0.07007007,
+                0.12508935
+              ],
+              [
+                0.5765766,
+                0.12508935
+              ],
+              [
+                0.5765766,
+                0.15725519
+              ],
+              [
+                0.07007007,
+                0.15725519
+              ]
+            ]
+          },
+          {
+            "text": "濱晰讲义·第1行",
+            "corners": [
+              [
+                0.06406406,
+                0.20586133
+              ],
+              [
+                0.35235235,
+                0.20586133
+              ],
+              [
+                0.35235235,
+                0.23302358
+              ],
+              [
+                0.06406406,
+                0.23302358
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第2行",
+            "corners": [
+              [
+                0.08108108,
+                0.25732666
+              ],
+              [
+                0.34234235,
+                0.25732666
+              ],
+              [
+                0.34234235,
+                0.28091493
+              ],
+              [
+                0.08108108,
+                0.28091493
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第3行",
+            "corners": [
+              [
+                0.082082085,
+                0.3073624
+              ],
+              [
+                0.34234235,
+                0.3073624
+              ],
+              [
+                0.34234235,
+                0.33023587
+              ],
+              [
+                0.082082085,
+                0.33023587
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第4行",
+            "corners": [
+              [
+                0.082082085,
+                0.35596853
+              ],
+              [
+                0.34234235,
+                0.35596853
+              ],
+              [
+                0.34234235,
+                0.37955683
+              ],
+              [
+                0.082082085,
+                0.37955683
+              ]
+            ]
+          },
+          {
+            "text": "|清晰讲义·第5行",
+            "corners": [
+              [
+                0.062062062,
+                0.4038599
+              ],
+              [
+                0.35335335,
+                0.4010007
+              ],
+              [
+                0.35335335,
+                0.42959258
+              ],
+              [
+                0.062062062,
+                0.43245175
+              ]
+            ]
+          },
+          {
+            "text": "|清晰讲义·第6行",
+            "corners": [
+              [
+                0.062062062,
+                0.45389563
+              ],
+              [
+                0.34834835,
+                0.45175126
+              ],
+              [
+                0.34834835,
+                0.47891352
+              ],
+              [
+                0.062062062,
+                0.4810579
+              ]
+            ]
+          },
+          {
+            "text": "濱晰讲义·第7行",
+            "corners": [
+              [
+                0.06406406,
+                0.501787
+              ],
+              [
+                0.35235235,
+                0.501787
+              ],
+              [
+                0.35235235,
+                0.52894926
+              ],
+              [
+                0.06406406,
+                0.52894926
+              ]
+            ]
+          },
+          {
+            "text": "|清晰讲义·第8行",
+            "corners": [
+              [
+                0.062062062,
+                0.5518227
+              ],
+              [
+                0.35235235,
+                0.5518227
+              ],
+              [
+                0.35235235,
+                0.5804146
+              ],
+              [
+                0.062062062,
+                0.5804146
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第9行",
+            "corners": [
+              [
+                0.08008008,
+                0.60328805
+              ],
+              [
+                0.34234235,
+                0.60328805
+              ],
+              [
+                0.34234235,
+                0.6261615
+              ],
+              [
+                0.08008008,
+                0.6261615
+              ]
+            ]
+          },
+          {
+            "text": "|清晰讲义·第10行",
+            "corners": [
+              [
+                0.062062062,
+                0.6504646
+              ],
+              [
+                0.37037036,
+                0.6504646
+              ],
+              [
+                0.37037036,
+                0.67762685
+              ],
+              [
+                0.062062062,
+                0.67762685
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第11行",
+            "corners": [
+              [
+                0.082082085,
+                0.70121515
+              ],
+              [
+                0.36136135,
+                0.70121515
+              ],
+              [
+                0.36136135,
+                0.7240886
+              ],
+              [
+                0.082082085,
+                0.7240886
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第12行",
+            "corners": [
+              [
+                0.08108108,
+                0.7505361
+              ],
+              [
+                0.36136135,
+                0.7505361
+              ],
+              [
+                0.36136135,
+                0.7734096
+              ],
+              [
+                0.08108108,
+                0.7734096
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第13行",
+            "corners": [
+              [
+                0.082082085,
+                0.80057186
+              ],
+              [
+                0.36036035,
+                0.80057186
+              ],
+              [
+                0.36036035,
+                0.8234453
+              ],
+              [
+                0.082082085,
+                0.8234453
+              ]
+            ]
+          }
+        ]
+      },
+      "sampled_pss_kb": 256850
+    },
+    {
+      "file": "ocr-2.png",
+      "scene": "ocr-mixed",
+      "synthetic": true,
+      "decode_ms": 4.3059,
+      "detect_ms": 9.2653,
+      "decoded_width": 650,
+      "decoded_height": 910,
+      "predicted": null,
+      "ocr": "纸匠文档质量实验\n中文与English 0123456789\n清晰讲义·第1行\n清晰讲义·第2行\n清晰讲义·第3行\n清晰讲义·第4行\n请晰讲义·第5行\n清晰讲义·第6行\n请晰讲义·第7行\n请晰讲义·第8行\n请晰讲义·第9行\n请晰讲义·第10行\n请晰讲义·第11行\n请晰讲义·第12行\n请晰讲义·第13行",
+      "ocr_ms": 737.7101,
+      "layout": {
+        "width": 649,
+        "height": 909,
+        "lines": [
+          {
+            "text": "纸匠文档质量实验",
+            "corners": [
+              [
+                0.0816641,
+                0.068206824
+              ],
+              [
+                0.47765794,
+                0.068206824
+              ],
+              [
+                0.47765794,
+                0.10121012
+              ],
+              [
+                0.0816641,
+                0.10121012
+              ]
+            ]
+          },
+          {
+            "text": "中文与English 0123456789",
+            "corners": [
+              [
+                0.06317411,
+                0.12651265
+              ],
+              [
+                0.57935286,
+                0.12651265
+              ],
+              [
+                0.57935286,
+                0.15841584
+              ],
+              [
+                0.06317411,
+                0.15841584
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第1行",
+            "corners": [
+              [
+                0.0816641,
+                0.20792079
+              ],
+              [
+                0.3420647,
+                0.20792079
+              ],
+              [
+                0.3420647,
+                0.2310231
+              ],
+              [
+                0.0816641,
+                0.2310231
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第2行",
+            "corners": [
+              [
+                0.0816641,
+                0.25742576
+              ],
+              [
+                0.3420647,
+                0.25742576
+              ],
+              [
+                0.3420647,
+                0.28052804
+              ],
+              [
+                0.0816641,
+                0.28052804
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第3行",
+            "corners": [
+              [
+                0.0816641,
+                0.3069307
+              ],
+              [
+                0.3420647,
+                0.3069307
+              ],
+              [
+                0.3420647,
+                0.330033
+              ],
+              [
+                0.0816641,
+                0.330033
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第4行",
+            "corners": [
+              [
+                0.0816641,
+                0.35643566
+              ],
+              [
+                0.34052387,
+                0.35643566
+              ],
+              [
+                0.34052387,
+                0.37953794
+              ],
+              [
+                0.0816641,
+                0.37953794
+              ]
+            ]
+          },
+          {
+            "text": "请晰讲义·第5行",
+            "corners": [
+              [
+                0.0816641,
+                0.40484047
+              ],
+              [
+                0.3420647,
+                0.40484047
+              ],
+              [
+                0.3420647,
+                0.4290429
+              ],
+              [
+                0.0816641,
+                0.4290429
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第6行",
+            "corners": [
+              [
+                0.0816641,
+                0.45434543
+              ],
+              [
+                0.3420647,
+                0.45434543
+              ],
+              [
+                0.3420647,
+                0.47744775
+              ],
+              [
+                0.0816641,
+                0.47744775
+              ]
+            ]
+          },
+          {
+            "text": "请晰讲义·第7行",
+            "corners": [
+              [
+                0.0816641,
+                0.5038504
+              ],
+              [
+                0.3420647,
+                0.5038504
+              ],
+              [
+                0.3420647,
+                0.5269527
+              ],
+              [
+                0.0816641,
+                0.5269527
+              ]
+            ]
+          },
+          {
+            "text": "请晰讲义·第8行",
+            "corners": [
+              [
+                0.0816641,
+                0.55335534
+              ],
+              [
+                0.3420647,
+                0.55335534
+              ],
+              [
+                0.3420647,
+                0.5764576
+              ],
+              [
+                0.0816641,
+                0.5764576
+              ]
+            ]
+          },
+          {
+            "text": "请晰讲义·第9行",
+            "corners": [
+              [
+                0.0816641,
+                0.6028603
+              ],
+              [
+                0.3420647,
+                0.6028603
+              ],
+              [
+                0.3420647,
+                0.6259626
+              ],
+              [
+                0.0816641,
+                0.6259626
+              ]
+            ]
+          },
+          {
+            "text": "请晰讲义·第10行",
+            "corners": [
+              [
+                0.0816641,
+                0.65126514
+              ],
+              [
+                0.36209553,
+                0.65126514
+              ],
+              [
+                0.36209553,
+                0.67546755
+              ],
+              [
+                0.0816641,
+                0.67546755
+              ]
+            ]
+          },
+          {
+            "text": "请晰讲义·第11行",
+            "corners": [
+              [
+                0.0816641,
+                0.7007701
+              ],
+              [
+                0.36209553,
+                0.7007701
+              ],
+              [
+                0.36209553,
+                0.72387236
+              ],
+              [
+                0.0816641,
+                0.72387236
+              ]
+            ]
+          },
+          {
+            "text": "请晰讲义·第12行",
+            "corners": [
+              [
+                0.0816641,
+                0.750275
+              ],
+              [
+                0.36209553,
+                0.750275
+              ],
+              [
+                0.36209553,
+                0.77337736
+              ],
+              [
+                0.0816641,
+                0.77337736
+              ]
+            ]
+          },
+          {
+            "text": "请晰讲义·第13行",
+            "corners": [
+              [
+                0.0816641,
+                0.79977995
+              ],
+              [
+                0.36209553,
+                0.79977995
+              ],
+              [
+                0.36209553,
+                0.8228823
+              ],
+              [
+                0.0816641,
+                0.8228823
+              ]
+            ]
+          }
+        ]
+      },
+      "sampled_pss_kb": 247152
+    },
+    {
+      "file": "ocr-3.png",
+      "scene": "ocr-mixed",
+      "synthetic": true,
+      "decode_ms": 11.0815,
+      "detect_ms": 8.4986,
+      "decoded_width": 1000,
+      "decoded_height": 1400,
+      "predicted": null,
+      "ocr": "纸匠女档质量实验\n中文与English 0123456789\n清晰讲义·第1行\n清晰讲义·第2行\n清晰讲义·第3行\n清晰讲义·第4行\n|清晰讲义·第5行\n|清晰讲义·第6行\n清晰讲义·第7行\n清晰讲义·第8行\n清晰讲义·第9行\n清晰讲义·第10行\n|清晰讲义·第11行\n请晰讲义·第12行\n清晰讲义·第13行",
+      "ocr_ms": 754.5359,
+      "layout": {
+        "width": 999,
+        "height": 1399,
+        "lines": [
+          {
+            "text": "纸匠女档质量实验",
+            "corners": [
+              [
+                0.082082085,
+                0.06862044
+              ],
+              [
+                0.4784785,
+                0.06862044
+              ],
+              [
+                0.4784785,
+                0.10150107
+              ],
+              [
+                0.082082085,
+                0.10150107
+              ]
+            ]
+          },
+          {
+            "text": "中文与English 0123456789",
+            "corners": [
+              [
+                0.068068065,
+                0.12508935
+              ],
+              [
+                0.5765766,
+                0.12508935
+              ],
+              [
+                0.5765766,
+                0.15654038
+              ],
+              [
+                0.068068065,
+                0.15654038
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第1行",
+            "corners": [
+              [
+                0.082082085,
+                0.20872052
+              ],
+              [
+                0.34234235,
+                0.20872052
+              ],
+              [
+                0.34234235,
+                0.231594
+              ],
+              [
+                0.082082085,
+                0.231594
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第2行",
+            "corners": [
+              [
+                0.082082085,
+                0.25732666
+              ],
+              [
+                0.34234235,
+                0.25732666
+              ],
+              [
+                0.34234235,
+                0.28091493
+              ],
+              [
+                0.082082085,
+                0.28091493
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第3行",
+            "corners": [
+              [
+                0.082082085,
+                0.3073624
+              ],
+              [
+                0.34234235,
+                0.3073624
+              ],
+              [
+                0.34234235,
+                0.33023587
+              ],
+              [
+                0.082082085,
+                0.33023587
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第4行",
+            "corners": [
+              [
+                0.082082085,
+                0.35596853
+              ],
+              [
+                0.34234235,
+                0.35596853
+              ],
+              [
+                0.34234235,
+                0.37955683
+              ],
+              [
+                0.082082085,
+                0.37955683
+              ]
+            ]
+          },
+          {
+            "text": "|清晰讲义·第5行",
+            "corners": [
+              [
+                0.062062062,
+                0.4031451
+              ],
+              [
+                0.35235235,
+                0.4031451
+              ],
+              [
+                0.35235235,
+                0.43173695
+              ],
+              [
+                0.062062062,
+                0.43173695
+              ]
+            ]
+          },
+          {
+            "text": "|清晰讲义·第6行",
+            "corners": [
+              [
+                0.06006006,
+                0.45175126
+              ],
+              [
+                0.35235235,
+                0.45175126
+              ],
+              [
+                0.35235235,
+                0.4803431
+              ],
+              [
+                0.06006006,
+                0.4803431
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第7行",
+            "corners": [
+              [
+                0.082082085,
+                0.5046462
+              ],
+              [
+                0.34234235,
+                0.5046462
+              ],
+              [
+                0.34234235,
+                0.52751964
+              ],
+              [
+                0.082082085,
+                0.52751964
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第8行",
+            "corners": [
+              [
+                0.082082085,
+                0.55325234
+              ],
+              [
+                0.34234235,
+                0.55325234
+              ],
+              [
+                0.34234235,
+                0.5775554
+              ],
+              [
+                0.082082085,
+                0.5775554
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第9行",
+            "corners": [
+              [
+                0.062062062,
+                0.6004289
+              ],
+              [
+                0.35235235,
+                0.6004289
+              ],
+              [
+                0.35235235,
+                0.62902075
+              ],
+              [
+                0.062062062,
+                0.62902075
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第10行",
+            "corners": [
+              [
+                0.062062062,
+                0.64903504
+              ],
+              [
+                0.37037036,
+                0.64903504
+              ],
+              [
+                0.37037036,
+                0.67762685
+              ],
+              [
+                0.062062062,
+                0.67762685
+              ]
+            ]
+          },
+          {
+            "text": "|清晰讲义·第11行",
+            "corners": [
+              [
+                0.062062062,
+                0.70050037
+              ],
+              [
+                0.37037036,
+                0.70050037
+              ],
+              [
+                0.37037036,
+                0.726233
+              ],
+              [
+                0.062062062,
+                0.726233
+              ]
+            ]
+          },
+          {
+            "text": "请晰讲义·第12行",
+            "corners": [
+              [
+                0.08108108,
+                0.7505361
+              ],
+              [
+                0.36136135,
+                0.7505361
+              ],
+              [
+                0.36136135,
+                0.7734096
+              ],
+              [
+                0.08108108,
+                0.7734096
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第13行",
+            "corners": [
+              [
+                0.082082085,
+                0.80057186
+              ],
+              [
+                0.36236235,
+                0.80057186
+              ],
+              [
+                0.36236235,
+                0.8234453
+              ],
+              [
+                0.082082085,
+                0.8234453
+              ]
+            ]
+          }
+        ]
+      },
+      "sampled_pss_kb": 250028
+    },
+    {
+      "file": "ocr-4.png",
+      "scene": "ocr-mixed",
+      "synthetic": true,
+      "decode_ms": 9.5894,
+      "detect_ms": 8.1389,
+      "decoded_width": 1400,
+      "decoded_height": 1000,
+      "predicted": null,
+      "ocr": "濱晰讲义·第13行\n清晰讲义·第12行\n清晰进义·第11行\n清晰讲义·第10行\n清晰讲义·第9行\n|清晰讲义·第8行\n|清晰讲义·第7行\n清晰讲义·第6行\n|清晰讲义·第5行\n|清晰讲义·第4行\n请晰讲义·第3行\n清晰讲义·第2行\n清晰讲义·第1行\n中文与English\n0123456789\n纸匠文档质量实验",
+      "ocr_ms": 757.2027,
+      "layout": {
+        "width": 1399,
+        "height": 999,
+        "lines": [
+          {
+            "text": "濱晰讲义·第13行",
+            "corners": [
+              [
+                0.20157255,
+                0.06406406
+              ],
+              [
+                0.20228735,
+                0.36936936
+              ],
+              [
+                0.1744103,
+                0.36936936
+              ],
+              [
+                0.17369549,
+                0.06406406
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第12行",
+            "corners": [
+              [
+                0.2501787,
+                0.082082085
+              ],
+              [
+                0.2487491,
+                0.35935935
+              ],
+              [
+                0.22301644,
+                0.35835835
+              ],
+              [
+                0.22444603,
+                0.08108108
+              ]
+            ]
+          },
+          {
+            "text": "清晰进义·第11行",
+            "corners": [
+              [
+                0.29878485,
+                0.082082085
+              ],
+              [
+                0.29735526,
+                0.36036035
+              ],
+              [
+                0.2716226,
+                0.35935935
+              ],
+              [
+                0.2730522,
+                0.08108108
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第10行",
+            "corners": [
+              [
+                0.34739098,
+                0.08108108
+              ],
+              [
+                0.34739098,
+                0.35935935
+              ],
+              [
+                0.3238027,
+                0.35935935
+              ],
+              [
+                0.3238027,
+                0.08108108
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第9行",
+            "corners": [
+              [
+                0.3988563,
+                0.062062062
+              ],
+              [
+                0.3988563,
+                0.35035035
+              ],
+              [
+                0.37026447,
+                0.35035035
+              ],
+              [
+                0.37026447,
+                0.062062062
+              ]
+            ]
+          },
+          {
+            "text": "|清晰讲义·第8行",
+            "corners": [
+              [
+                0.44746247,
+                0.062062062
+              ],
+              [
+                0.44746247,
+                0.35035035
+              ],
+              [
+                0.42030022,
+                0.35035035
+              ],
+              [
+                0.42030022,
+                0.062062062
+              ]
+            ]
+          },
+          {
+            "text": "|清晰讲义·第7行",
+            "corners": [
+              [
+                0.49606863,
+                0.062062062
+              ],
+              [
+                0.4967834,
+                0.35035035
+              ],
+              [
+                0.46890637,
+                0.35035035
+              ],
+              [
+                0.46819156,
+                0.062062062
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第6行",
+            "corners": [
+              [
+                0.54467475,
+                0.082082085
+              ],
+              [
+                0.54396,
+                0.34034035
+              ],
+              [
+                0.5196569,
+                0.33933935
+              ],
+              [
+                0.5203717,
+                0.08108108
+              ]
+            ]
+          },
+          {
+            "text": "|清晰讲义·第5行",
+            "corners": [
+              [
+                0.5947105,
+                0.06006006
+              ],
+              [
+                0.5954253,
+                0.35035035
+              ],
+              [
+                0.5675483,
+                0.35035035
+              ],
+              [
+                0.56683344,
+                0.06006006
+              ]
+            ]
+          },
+          {
+            "text": "|清晰讲义·第4行",
+            "corners": [
+              [
+                0.6433166,
+                0.062062062
+              ],
+              [
+                0.64403147,
+                0.35135135
+              ],
+              [
+                0.6147248,
+                0.35135135
+              ],
+              [
+                0.61401004,
+                0.062062062
+              ]
+            ]
+          },
+          {
+            "text": "请晰讲义·第3行",
+            "corners": [
+              [
+                0.6926376,
+                0.082082085
+              ],
+              [
+                0.6933524,
+                0.34034035
+              ],
+              [
+                0.66833454,
+                0.34034035
+              ],
+              [
+                0.6676197,
+                0.082082085
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第2行",
+            "corners": [
+              [
+                0.74267334,
+                0.08108108
+              ],
+              [
+                0.74195856,
+                0.34134135
+              ],
+              [
+                0.7169407,
+                0.34034035
+              ],
+              [
+                0.7176555,
+                0.08008008
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第1行",
+            "corners": [
+              [
+                0.7905647,
+                0.082082085
+              ],
+              [
+                0.7912795,
+                0.34134135
+              ],
+              [
+                0.76626164,
+                0.34134135
+              ],
+              [
+                0.7655468,
+                0.082082085
+              ]
+            ]
+          },
+          {
+            "text": "中文与English",
+            "corners": [
+              [
+                0.87276626,
+                0.068068065
+              ],
+              [
+                0.87348104,
+                0.34034035
+              ],
+              [
+                0.84203005,
+                0.34034035
+              ],
+              [
+                0.8413152,
+                0.068068065
+              ]
+            ]
+          },
+          {
+            "text": "0123456789",
+            "corners": [
+              [
+                0.87348104,
+                0.35535535
+              ],
+              [
+                0.87348104,
+                0.5735736
+              ],
+              [
+                0.84203005,
+                0.5735736
+              ],
+              [
+                0.84203005,
+                0.35535535
+              ]
+            ]
+          },
+          {
+            "text": "纸匠文档质量实验",
+            "corners": [
+              [
+                0.9306648,
+                0.082082085
+              ],
+              [
+                0.92994994,
+                0.4764765
+              ],
+              [
+                0.89635456,
+                0.4754755
+              ],
+              [
+                0.89706933,
+                0.08108108
+              ]
+            ]
+          }
+        ]
+      },
+      "sampled_pss_kb": 260592
+    },
+    {
+      "file": "ocr-5.png",
+      "scene": "ocr-mixed",
+      "synthetic": true,
+      "decode_ms": 10.6414,
+      "detect_ms": 9.1098,
+      "decoded_width": 1000,
+      "decoded_height": 1400,
+      "predicted": null,
+      "ocr": "濟晰讲义·第13行\n请晰讲义·第12行\n请晰讲义·第11行\n清晰讲义·第10行\n漬晰讲义·第9行\n清晰讲义·第8行\n清晰讲义·第7行\n清晰讲义·第6行\n清晰讲义·第5行\n清晰讲义·第4行\n清晰讲义·第3行\n清晰讲义·第2行\n清晰讲义·第1行\n中文与 English 0123456789\n纸匠文档质量实验",
+      "ocr_ms": 977.7688,
+      "layout": {
+        "width": 999,
+        "height": 1399,
+        "lines": [
+          {
+            "text": "濟晰讲义·第13行",
+            "corners": [
+              [
+                0.9279279,
+                0.20228735
+              ],
+              [
+                0.6216216,
+                0.20228735
+              ],
+              [
+                0.6216216,
+                0.1729807
+              ],
+              [
+                0.9279279,
+                0.1729807
+              ]
+            ]
+          },
+          {
+            "text": "请晰讲义·第12行",
+            "corners": [
+              [
+                0.9279279,
+                0.2494639
+              ],
+              [
+                0.6236236,
+                0.2494639
+              ],
+              [
+                0.6236236,
+                0.22301644
+              ],
+              [
+                0.9279279,
+                0.22301644
+              ]
+            ]
+          },
+          {
+            "text": "请晰讲义·第11行",
+            "corners": [
+              [
+                0.9279279,
+                0.29949963
+              ],
+              [
+                0.6236236,
+                0.29949963
+              ],
+              [
+                0.6236236,
+                0.2716226
+              ],
+              [
+                0.9279279,
+                0.2716226
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第10行",
+            "corners": [
+              [
+                0.9299299,
+                0.35096496
+              ],
+              [
+                0.6216216,
+                0.35096496
+              ],
+              [
+                0.6216216,
+                0.3216583
+              ],
+              [
+                0.9299299,
+                0.3216583
+              ]
+            ]
+          },
+          {
+            "text": "漬晰讲义·第9行",
+            "corners": [
+              [
+                0.9279279,
+                0.3988563
+              ],
+              [
+                0.6446446,
+                0.3988563
+              ],
+              [
+                0.6446446,
+                0.37169406
+              ],
+              [
+                0.9279279,
+                0.37169406
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第8行",
+            "corners": [
+              [
+                0.9299299,
+                0.44817728
+              ],
+              [
+                0.6396396,
+                0.44817728
+              ],
+              [
+                0.6396396,
+                0.42030022
+              ],
+              [
+                0.9299299,
+                0.42030022
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第7行",
+            "corners": [
+              [
+                0.9279279,
+                0.49821302
+              ],
+              [
+                0.6436436,
+                0.49821302
+              ],
+              [
+                0.6436436,
+                0.47033596
+              ],
+              [
+                0.9279279,
+                0.47033596
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第6行",
+            "corners": [
+              [
+                0.9289289,
+                0.5475339
+              ],
+              [
+                0.6446446,
+                0.5475339
+              ],
+              [
+                0.6446446,
+                0.5189421
+              ],
+              [
+                0.9289289,
+                0.5189421
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第5行",
+            "corners": [
+              [
+                0.9289289,
+                0.5961401
+              ],
+              [
+                0.6426426,
+                0.5918513
+              ],
+              [
+                0.6426426,
+                0.56397426
+              ],
+              [
+                0.9289289,
+                0.56826305
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第4行",
+            "corners": [
+              [
+                0.9299299,
+                0.645461
+              ],
+              [
+                0.6446446,
+                0.645461
+              ],
+              [
+                0.6446446,
+                0.617584
+              ],
+              [
+                0.9299299,
+                0.617584
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第3行",
+            "corners": [
+              [
+                0.9299299,
+                0.6940672
+              ],
+              [
+                0.6436436,
+                0.6940672
+              ],
+              [
+                0.6436436,
+                0.66619015
+              ],
+              [
+                0.9299299,
+                0.66619015
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第2行",
+            "corners": [
+              [
+                0.9289289,
+                0.74267334
+              ],
+              [
+                0.6456456,
+                0.74267334
+              ],
+              [
+                0.6456456,
+                0.7155111
+              ],
+              [
+                0.9289289,
+                0.7155111
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第1行",
+            "corners": [
+              [
+                0.9279279,
+                0.7934239
+              ],
+              [
+                0.6426426,
+                0.7934239
+              ],
+              [
+                0.6426426,
+                0.7655468
+              ],
+              [
+                0.9279279,
+                0.7655468
+              ]
+            ]
+          },
+          {
+            "text": "中文与 English 0123456789",
+            "corners": [
+              [
+                0.9279279,
+                0.8741959
+              ],
+              [
+                0.4174174,
+                0.8741959
+              ],
+              [
+                0.4174174,
+                0.84203005
+              ],
+              [
+                0.9279279,
+                0.84203005
+              ]
+            ]
+          },
+          {
+            "text": "纸匠文档质量实验",
+            "corners": [
+              [
+                0.9329329,
+                0.93566835
+              ],
+              [
+                0.5005005,
+                0.93566835
+              ],
+              [
+                0.5005005,
+                0.89492494
+              ],
+              [
+                0.9329329,
+                0.89492494
+              ]
+            ]
+          }
+        ]
+      },
+      "sampled_pss_kb": 264380
+    },
+    {
+      "file": "ocr-6.png",
+      "scene": "ocr-mixed",
+      "synthetic": true,
+      "decode_ms": 10.6637,
+      "detect_ms": 11.2888,
+      "decoded_width": 1400,
+      "decoded_height": 1000,
+      "predicted": null,
+      "ocr": "纸匠文档质量实验\n中文与 English 0123456789\n漬晰讲义·第1行\n清晰讲义·第2行\n清晰讲义·第3行\n清晰讲义·第4行\n清晰讲义·第5行\n清晰讲义·第6行\n漬晰讲义·第7行\n清晰讲义·第8行\n清晰讲义·第9行\n清晰讲义·第10行\n漬晰讲义·第11行\n请晰讲义·第12行\n请晰讲义·第13行",
+      "ocr_ms": 1203.4376,
+      "layout": {
+        "width": 1399,
+        "height": 999,
+        "lines": [
+          {
+            "text": "纸匠文档质量实验",
+            "corners": [
+              [
+                0.06361687,
+                0.9319319
+              ],
+              [
+                0.06361687,
+                0.5025025
+              ],
+              [
+                0.10221587,
+                0.5025025
+              ],
+              [
+                0.10221587,
+                0.9319319
+              ]
+            ]
+          },
+          {
+            "text": "中文与 English 0123456789",
+            "corners": [
+              [
+                0.12365976,
+                0.9299299
+              ],
+              [
+                0.12294496,
+                0.4194194
+              ],
+              [
+                0.1536812,
+                0.4184184
+              ],
+              [
+                0.154396,
+                0.9289289
+              ]
+            ]
+          },
+          {
+            "text": "漬晰讲义·第1行",
+            "corners": [
+              [
+                0.20586133,
+                0.9269269
+              ],
+              [
+                0.20586133,
+                0.6426426
+              ],
+              [
+                0.231594,
+                0.6426426
+              ],
+              [
+                0.231594,
+                0.9269269
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第2行",
+            "corners": [
+              [
+                0.25589707,
+                0.9279279
+              ],
+              [
+                0.25518227,
+                0.6456456
+              ],
+              [
+                0.28091493,
+                0.6446446
+              ],
+              [
+                0.28162974,
+                0.9269269
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第3行",
+            "corners": [
+              [
+                0.3045032,
+                0.9299299
+              ],
+              [
+                0.3045032,
+                0.6436436
+              ],
+              [
+                0.33238026,
+                0.6436436
+              ],
+              [
+                0.33238026,
+                0.9299299
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第4行",
+            "corners": [
+              [
+                0.35382417,
+                0.9299299
+              ],
+              [
+                0.35310936,
+                0.6426426
+              ],
+              [
+                0.37955683,
+                0.6416416
+              ],
+              [
+                0.3802716,
+                0.9289289
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第5行",
+            "corners": [
+              [
+                0.4024303,
+                0.9279279
+              ],
+              [
+                0.4024303,
+                0.6456456
+              ],
+              [
+                0.42887777,
+                0.6456456
+              ],
+              [
+                0.42887777,
+                0.9279279
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第6行",
+            "corners": [
+              [
+                0.45103645,
+                0.9279279
+              ],
+              [
+                0.45175126,
+                0.6436436
+              ],
+              [
+                0.4781987,
+                0.6436436
+              ],
+              [
+                0.47748393,
+                0.9279279
+              ]
+            ]
+          },
+          {
+            "text": "漬晰讲义·第7行",
+            "corners": [
+              [
+                0.50107217,
+                0.9269269
+              ],
+              [
+                0.5025018,
+                0.6426426
+              ],
+              [
+                0.5282345,
+                0.6426426
+              ],
+              [
+                0.52680486,
+                0.9269269
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第8行",
+            "corners": [
+              [
+                0.55039316,
+                0.9299299
+              ],
+              [
+                0.5496783,
+                0.6406406
+              ],
+              [
+                0.5768406,
+                0.6396396
+              ],
+              [
+                0.5775554,
+                0.9289289
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第9行",
+            "corners": [
+              [
+                0.6004289,
+                0.9269269
+              ],
+              [
+                0.6004289,
+                0.6446446
+              ],
+              [
+                0.62544674,
+                0.6446446
+              ],
+              [
+                0.62544674,
+                0.9269269
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第10行",
+            "corners": [
+              [
+                0.64832026,
+                0.9269269
+              ],
+              [
+                0.64689064,
+                0.6256256
+              ],
+              [
+                0.6747677,
+                0.6246246
+              ],
+              [
+                0.6761973,
+                0.9259259
+              ]
+            ]
+          },
+          {
+            "text": "漬晰讲义·第11行",
+            "corners": [
+              [
+                0.698356,
+                0.9269269
+              ],
+              [
+                0.6997856,
+                0.6246246
+              ],
+              [
+                0.7255182,
+                0.6246246
+              ],
+              [
+                0.7240886,
+                0.9269269
+              ]
+            ]
+          },
+          {
+            "text": "请晰讲义·第12行",
+            "corners": [
+              [
+                0.7483917,
+                0.9269269
+              ],
+              [
+                0.7483917,
+                0.6236236
+              ],
+              [
+                0.7741244,
+                0.6236236
+              ],
+              [
+                0.7741244,
+                0.9269269
+              ]
+            ]
+          },
+          {
+            "text": "请晰讲义·第13行",
+            "corners": [
+              [
+                0.7977126,
+                0.9269269
+              ],
+              [
+                0.7977126,
+                0.6226226
+              ],
+              [
+                0.8241601,
+                0.6226226
+              ],
+              [
+                0.8241601,
+                0.9269269
+              ]
+            ]
+          }
+        ]
+      },
+      "sampled_pss_kb": 258272
+    },
+    {
+      "file": "ocr-7.png",
+      "scene": "ocr-mixed",
+      "synthetic": true,
+      "decode_ms": 10.4022,
+      "detect_ms": 12.6968,
+      "decoded_width": 1000,
+      "decoded_height": 1400,
+      "predicted": null,
+      "ocr": "纸匠女档质量实验\n中文与English 0123456789\n漬晰讲义·第1行\n清晰讲义·第2行\n清晰讲义·第3行\n|清晰讲义·第4行\n|清晰讲义·第5行\n清晰讲义·第6行\n清晰讲义·第7行\n清晰讲义·第8行\n清晰讲义·第9行\n清晰讲义·第10行\n请晰讲义·第11行\n请晰讲义·第12行\n清晰讲义·第13行",
+      "ocr_ms": 752.1666,
+      "layout": {
+        "width": 999,
+        "height": 1399,
+        "lines": [
+          {
+            "text": "纸匠女档质量实验",
+            "corners": [
+              [
+                0.082082085,
+                0.06862044
+              ],
+              [
+                0.4784785,
+                0.06862044
+              ],
+              [
+                0.4784785,
+                0.10150107
+              ],
+              [
+                0.082082085,
+                0.10150107
+              ]
+            ]
+          },
+          {
+            "text": "中文与English 0123456789",
+            "corners": [
+              [
+                0.066066064,
+                0.12437455
+              ],
+              [
+                0.5785786,
+                0.12437455
+              ],
+              [
+                0.5785786,
+                0.15582559
+              ],
+              [
+                0.066066064,
+                0.15582559
+              ]
+            ]
+          },
+          {
+            "text": "漬晰讲义·第1行",
+            "corners": [
+              [
+                0.082082085,
+                0.20872052
+              ],
+              [
+                0.34234235,
+                0.20872052
+              ],
+              [
+                0.34234235,
+                0.231594
+              ],
+              [
+                0.082082085,
+                0.231594
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第2行",
+            "corners": [
+              [
+                0.082082085,
+                0.25732666
+              ],
+              [
+                0.34234235,
+                0.25732666
+              ],
+              [
+                0.34234235,
+                0.28020015
+              ],
+              [
+                0.082082085,
+                0.28020015
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第3行",
+            "corners": [
+              [
+                0.082082085,
+                0.3073624
+              ],
+              [
+                0.34234235,
+                0.3073624
+              ],
+              [
+                0.34234235,
+                0.33023587
+              ],
+              [
+                0.082082085,
+                0.33023587
+              ]
+            ]
+          },
+          {
+            "text": "|清晰讲义·第4行",
+            "corners": [
+              [
+                0.06006006,
+                0.35525376
+              ],
+              [
+                0.35135135,
+                0.35239458
+              ],
+              [
+                0.35135135,
+                0.38098642
+              ],
+              [
+                0.06006006,
+                0.3838456
+              ]
+            ]
+          },
+          {
+            "text": "|清晰讲义·第5行",
+            "corners": [
+              [
+                0.062062062,
+                0.4038599
+              ],
+              [
+                0.35035035,
+                0.4010007
+              ],
+              [
+                0.35035035,
+                0.42959258
+              ],
+              [
+                0.062062062,
+                0.43245175
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第6行",
+            "corners": [
+              [
+                0.082082085,
+                0.45461044
+              ],
+              [
+                0.34234235,
+                0.45461044
+              ],
+              [
+                0.34234235,
+                0.47891352
+              ],
+              [
+                0.082082085,
+                0.47891352
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第7行",
+            "corners": [
+              [
+                0.082082085,
+                0.5046462
+              ],
+              [
+                0.34234235,
+                0.5046462
+              ],
+              [
+                0.34234235,
+                0.52751964
+              ],
+              [
+                0.082082085,
+                0.52751964
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第8行",
+            "corners": [
+              [
+                0.062062062,
+                0.55039316
+              ],
+              [
+                0.35235235,
+                0.55039316
+              ],
+              [
+                0.35235235,
+                0.578985
+              ],
+              [
+                0.062062062,
+                0.578985
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第9行",
+            "corners": [
+              [
+                0.082082085,
+                0.60328805
+              ],
+              [
+                0.34234235,
+                0.60328805
+              ],
+              [
+                0.34234235,
+                0.6261615
+              ],
+              [
+                0.082082085,
+                0.6261615
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第10行",
+            "corners": [
+              [
+                0.08108108,
+                0.6518942
+              ],
+              [
+                0.36136135,
+                0.6518942
+              ],
+              [
+                0.36136135,
+                0.6747677
+              ],
+              [
+                0.08108108,
+                0.6747677
+              ]
+            ]
+          },
+          {
+            "text": "请晰讲义·第11行",
+            "corners": [
+              [
+                0.082082085,
+                0.7019299
+              ],
+              [
+                0.36036035,
+                0.7019299
+              ],
+              [
+                0.36036035,
+                0.72480345
+              ],
+              [
+                0.082082085,
+                0.72480345
+              ]
+            ]
+          },
+          {
+            "text": "请晰讲义·第12行",
+            "corners": [
+              [
+                0.08108108,
+                0.7505361
+              ],
+              [
+                0.36136135,
+                0.7505361
+              ],
+              [
+                0.36136135,
+                0.7734096
+              ],
+              [
+                0.08108108,
+                0.7734096
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第13行",
+            "corners": [
+              [
+                0.082082085,
+                0.80057186
+              ],
+              [
+                0.36236235,
+                0.80057186
+              ],
+              [
+                0.36236235,
+                0.8234453
+              ],
+              [
+                0.082082085,
+                0.8234453
+              ]
+            ]
+          }
+        ]
+      },
+      "sampled_pss_kb": 236391
+    },
+    {
+      "file": "regression-v020.jpg",
+      "scene": "ocr-regression",
+      "synthetic": true,
+      "decode_ms": 12.8713,
+      "detect_ms": 18.7752,
+      "decoded_width": 1800,
+      "decoded_height": 2400,
+      "predicted": [
+        [
+          0.08160237,
+          0.08342603
+        ],
+        [
+          0.8991098,
+          0.04894327
+        ],
+        [
+          0.9569733,
+          0.89988875
+        ],
+        [
+          0.117210686,
+          0.95550615
+        ]
+      ],
+      "ocr": "纸匠自动扫描与离线识别\n中文识别测试 2026\nPAPERFORGE OCR 123456\n清晰讲义·第1行\n清晰讲义·第2行\n清晰讲义·第3行\n漬晰讲义·第4行\n清晰讲义·第5行\n清晰讲义·第6行\n请晰讲义·第7行\n清晰讲义·第8行\n清晰讲义·第9行\n清晰讲义·第10行\n清晰讲义·第11行\n清晰讲义·第12行\n清晰讲义·第13行",
+      "ocr_ms": 1157.0705,
+      "layout": {
+        "width": 1515,
+        "height": 2090,
+        "lines": [
+          {
+            "text": "纸匠自动扫描与离线识别",
+            "corners": [
+              [
+                0.06666667,
+                0.07799043
+              ],
+              [
+                0.6567657,
+                0.07799043
+              ],
+              [
+                0.6567657,
+                0.11339713
+              ],
+              [
+                0.06666667,
+                0.11339713
+              ]
+            ]
+          },
+          {
+            "text": "中文识别测试 2026",
+            "corners": [
+              [
+                0.0679868,
+                0.14832535
+              ],
+              [
+                0.520132,
+                0.14832535
+              ],
+              [
+                0.520132,
+                0.18325359
+              ],
+              [
+                0.0679868,
+                0.18325359
+              ]
+            ]
+          },
+          {
+            "text": "PAPERFORGE OCR 123456",
+            "corners": [
+              [
+                0.0679868,
+                0.23971292
+              ],
+              [
+                0.52541256,
+                0.23971292
+              ],
+              [
+                0.52541256,
+                0.26076555
+              ],
+              [
+                0.0679868,
+                0.26076555
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第1行",
+            "corners": [
+              [
+                0.0660066,
+                0.3272727
+              ],
+              [
+                0.3881188,
+                0.3272727
+              ],
+              [
+                0.3881188,
+                0.35215312
+              ],
+              [
+                0.0660066,
+                0.35215312
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第2行",
+            "corners": [
+              [
+                0.0660066,
+                0.36698565
+              ],
+              [
+                0.3881188,
+                0.36698565
+              ],
+              [
+                0.3881188,
+                0.3923445
+              ],
+              [
+                0.0660066,
+                0.3923445
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第3行",
+            "corners": [
+              [
+                0.0660066,
+                0.40717703
+              ],
+              [
+                0.3881188,
+                0.40717703
+              ],
+              [
+                0.3881188,
+                0.4320574
+              ],
+              [
+                0.0660066,
+                0.4320574
+              ]
+            ]
+          },
+          {
+            "text": "漬晰讲义·第4行",
+            "corners": [
+              [
+                0.06534653,
+                0.44688997
+              ],
+              [
+                0.3881188,
+                0.44688997
+              ],
+              [
+                0.3881188,
+                0.4722488
+              ],
+              [
+                0.06534653,
+                0.4722488
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第5行",
+            "corners": [
+              [
+                0.06534653,
+                0.48708135
+              ],
+              [
+                0.38547856,
+                0.48708135
+              ],
+              [
+                0.38547856,
+                0.5124402
+              ],
+              [
+                0.06534653,
+                0.5124402
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第6行",
+            "corners": [
+              [
+                0.06534653,
+                0.5272727
+              ],
+              [
+                0.38547856,
+                0.5272727
+              ],
+              [
+                0.38547856,
+                0.55263156
+              ],
+              [
+                0.06534653,
+                0.55263156
+              ]
+            ]
+          },
+          {
+            "text": "请晰讲义·第7行",
+            "corners": [
+              [
+                0.0660066,
+                0.56698567
+              ],
+              [
+                0.38679868,
+                0.56698567
+              ],
+              [
+                0.38679868,
+                0.5923445
+              ],
+              [
+                0.0660066,
+                0.5923445
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第8行",
+            "corners": [
+              [
+                0.0660066,
+                0.607177
+              ],
+              [
+                0.3881188,
+                0.607177
+              ],
+              [
+                0.3881188,
+                0.6325359
+              ],
+              [
+                0.0660066,
+                0.6325359
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第9行",
+            "corners": [
+              [
+                0.06534653,
+                0.6468899
+              ],
+              [
+                0.38877887,
+                0.6468899
+              ],
+              [
+                0.38877887,
+                0.6722488
+              ],
+              [
+                0.06534653,
+                0.6722488
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第10行",
+            "corners": [
+              [
+                0.0660066,
+                0.68708134
+              ],
+              [
+                0.409901,
+                0.68708134
+              ],
+              [
+                0.409901,
+                0.7124402
+              ],
+              [
+                0.0660066,
+                0.7124402
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第11行",
+            "corners": [
+              [
+                0.06534653,
+                0.7263158
+              ],
+              [
+                0.409901,
+                0.7263158
+              ],
+              [
+                0.409901,
+                0.75167465
+              ],
+              [
+                0.06534653,
+                0.75167465
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第12行",
+            "corners": [
+              [
+                0.0660066,
+                0.76698565
+              ],
+              [
+                0.409901,
+                0.76698565
+              ],
+              [
+                0.409901,
+                0.7923445
+              ],
+              [
+                0.0660066,
+                0.7923445
+              ]
+            ]
+          },
+          {
+            "text": "清晰讲义·第13行",
+            "corners": [
+              [
+                0.06534653,
+                0.8062201
+              ],
+              [
+                0.409901,
+                0.8062201
+              ],
+              [
+                0.409901,
+                0.83157897
+              ],
+              [
+                0.06534653,
+                0.83157897
+              ]
+            ]
+          }
+        ]
+      },
+      "sampled_pss_kb": 236459
+    },
+    {
+      "file": "resolution-12mp.jpg",
+      "scene": "resolution-12mp",
+      "synthetic": true,
+      "decode_ms": 14.4709,
+      "detect_ms": 12.0197,
+      "decoded_width": 1512,
+      "decoded_height": 2016,
+      "predicted": null,
+      "pdf_default_render_width": 1481,
+      "pdf_default_render_height": 1975,
+      "high_render_width": 2963,
+      "high_render_height": 3950,
+      "sampled_pss_kb": 254755
+    }
+  ]
+}

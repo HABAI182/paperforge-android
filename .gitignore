@@ -9,3 +9,5 @@ captures/
 bench-private/
 bench-results/
 *.hprof
+__pycache__/
+*.pyc
