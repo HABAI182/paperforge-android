@@ -19,5 +19,5 @@
   "ocrLowConfidence": 0.82,
   "ocrMinCharacterHeight": 48,
   "captureStableMs": 1200,
-  "captureSharpnessFloor": 45.0
+  "captureSharpnessFloor": 60.0
 }

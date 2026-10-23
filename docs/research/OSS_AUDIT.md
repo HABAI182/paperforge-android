@@ -20,6 +20,8 @@
 | Coroutines / Play task adapter | 1.10.2 / Maven Central | Apache-2.0 | Task 适配层不等于依赖 Play services 安装 | suspend await，处理取消 |
 | AndroidX Test / JUnit | runner1.6.2、core1.6.1、ext1.2.1 / JUnit4.13.2 | Apache-2.0 / EPL-1.0 | 仅测试 | 不随主 APK 引入 JUnit |
 
+v0.3: tracker/capture policy adapted from phillip9933/open-android-doc-scanner@3ba5c50a64f9be8eaeec47d263b360488e58835b (Apache-2.0), source headers and original NOTICE packaged. No upstream binaries/models/dependencies added. Other detector/enhancement/OCR/PDF implementations are independent; exact inspected files and decisions: UPSTREAM_REFERENCE_MATRIX.md. Full before/after evidence: docs/quality/. PdfBox pinned v2.0.27.0 tag SHA45da92629dad5b3c9887eceefecc89a1423f5457 was also checked against actual AAR APIs.
+
 参考但不引入代码：ClearPDF、zynkware scanner、shaunxiao scanner。未加入 GPL/AGPL 引擎。用户非商用指示不被扩张成免除第三方版权声明，也不触发额外购买商业 SDK 的流程。
 
 传递组件的版本见 `docs/acceptance/dependencies.txt`（构建解析生成）；Google Play 标识的基础 Task/API 工件可被 ML Kit 传递引入，并不说明设备必须安装 GMS。只以无 GMS 实际运行结果判定本版离线能力。

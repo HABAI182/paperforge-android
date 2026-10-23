@@ -1,0 +1,9 @@
+# Camera quality gate
+
+CameraX 1.4.2 analysis explicitly requests1280×960 with closest-lower/higher fallback and RGBA output. Packed rows are copied in bulk respecting rowStride. RGBA channel order follows the [Android ImageAnalysis contract](https://developer.android.com/reference/androidx/camera/core/ImageAnalysis#OUTPUT_IMAGE_FORMAT_RGBA_8888). Detection now receives color, not only luma; actual chosen size/FOV and device conversion performance remain hardware acceptance.
+
+Raw quads/confidence feed capture. A display-only tracker smooths corners, resetting on viewport/time/scene/large-step changes. Still detection always re-runs on the original capture. Adapted tracker/policy provenance and original NOTICE are packaged and recorded in LICENSE_NOTICES.md.
+
+Paper interior is normalized to450×600 for Laplacian sharpness,3×3 detail-tile counts and brightness. Automatic capture requires detection confidence, stable geometry, absolute/relative sharpness and focus readiness. Unknown first-frame low-detail paper cannot label a blurred image as a blank reference. AF is requested at scene acquisition and taps; supported AF must succeed, unsupported AF relies on image quality. Manual shutter remains available. Glare fraction is a gentle hint, not proof of recoverable highlights.
+
+`CameraQualityTest` records30×200ms repeated-frame sequences from generated sharp/blurred text and a separate focus-not-ready replay. Actual OpenCV metric: sharp variance19524.38/detail6, Gaussian-blur variance3.06/detail0. Automatic captures: **sharp1; blurred0; focus-not-ready0**. Alternating ±.005 corner motion: raw0.39000, displayed0.18903 (**51.53% reduction**). See camera-sequence.json. These are deterministic synthetic replay measurements, not autofocus or camera-hardware results. The first real device should calibrate the60 sharpness floor, glare hint, throughput, preview mapping and continuous capture.

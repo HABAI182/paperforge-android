@@ -34,13 +34,14 @@ class AutoCaptureGate(private val stableMs: Long=1200, private val cooldownMs: L
     private var captured: Quad?=null
     private var absentSince: Long?=null
     var progress=0f; private set
-    fun update(quad: Quad?, now: Long): Boolean {
+    fun update(quad: Quad?, now: Long,qualityReady: Boolean=true): Boolean {
         if(quad==null || !quad.valid() || quad.area<.18f) {
             if(absentSince==null) absentSince=now
             if(now-(absentSince ?: now)>600) captured=null
             reset(); return false
         }
         absentSince=null
+        if(!qualityReady) { reset();return false }
         captured?.let { old ->
             if(quad.points.indices.maxOf { i -> hypot(quad.points[i].x-old.points[i].x,quad.points[i].y-old.points[i].y) } < .10f) { progress=0f; return false }
             captured=null; reset()
