@@ -20,7 +20,7 @@ class MainViewModel(app: Application): AndroidViewModel(app) {
     val repo=(app as PaperForgeApp).repository
     private val ocrEngine=(app as PaperForgeApp).ocrEngine
     val query=MutableStateFlow("")
-    val documents=query.flatMapLatest { if(it.isBlank()) repo.documents else repo.dao.search(it) }.stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000),emptyList())
+    val documents=query.flatMapLatest { if(it.isBlank()) repo.documents else repo.dao.search(cn.paperforge.app.model.CjkSearch.normalize(it)) }.stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000),emptyList())
     val trash=repo.dao.observeTrash().stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000),emptyList())
     val selected=MutableStateFlow<DocumentRow?>(null)
     val pages=selected.flatMapLatest { it?.let { d -> repo.dao.observePages(d.id) } ?: flowOf(emptyList()) }.stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000),emptyList())

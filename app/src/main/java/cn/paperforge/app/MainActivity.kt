@@ -32,13 +32,49 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 class MainActivity: ComponentActivity() {
+    private var appLocked by mutableStateOf(false)
+    private var authenticating=false
+    private val securityPreferences by lazy { getSharedPreferences("security",0) }
+    private val authentication=registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        authenticating=false
+        if(result.resultCode==RESULT_OK) { LocalAppLock.authorized=true;appLocked=false }
+    }
+    fun securitySettingsChanged(forceLock: Boolean=false) {
+        if(securityPreferences.getBoolean("secureScreen",false)) window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
+        else window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
+        val available=getSystemService(android.app.KeyguardManager::class.java).isDeviceSecure
+        if(!available) securityPreferences.edit().putBoolean("appLock",false).apply()
+        val enabled=available && securityPreferences.getBoolean("appLock",false)
+        if(!enabled) appLocked=false
+        else if(forceLock || !LocalAppLock.authorized) { LocalAppLock.authorized=false;appLocked=true }
+    }
+    override fun onStart() {
+        super.onStart();securitySettingsChanged()
+        if(!authenticating && securityPreferences.getBoolean("appLock",false) && LocalAppLock.backgroundAt>0 && android.os.SystemClock.elapsedRealtime()-LocalAppLock.backgroundAt>30_000) { LocalAppLock.authorized=false;appLocked=true }
+    }
+    override fun onStop() {
+        if(!isChangingConfigurations && !authenticating) LocalAppLock.backgroundAt=android.os.SystemClock.elapsedRealtime()
+        super.onStop()
+    }
     private var incoming by mutableStateOf<Intent?>(null)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState); enableEdgeToEdge(); incoming=if(savedInstanceState==null) intent else null
+        securitySettingsChanged()
         setContent {
             val dark=isSystemInDarkTheme()
             val scheme=if(dark) darkColorScheme(primary=Color(0xFF88D6B7),secondary=Color(0xFFB5CDBE)) else lightColorScheme(primary=Color(0xFF176B54),primaryContainer=Color(0xFFD5EEE1),secondary=Color(0xFF5E7569),background=Color(0xFFFAF9F5),surface=Color(0xFFFAF9F5),surfaceContainerLow=Color(0xFFF0F1EA))
             MaterialTheme(colorScheme=scheme) {
+                if(appLocked) {
+                    Surface(Modifier.fillMaxSize()) { Column(Modifier.fillMaxSize().systemBarsPadding(),verticalArrangement=Arrangement.Center,horizontalAlignment=Alignment.CenterHorizontally) {
+                        Text("纸匠已锁定",style=MaterialTheme.typography.headlineSmall)
+                        Button(onClick={
+                            @Suppress("DEPRECATION")
+                            val intent=getSystemService(android.app.KeyguardManager::class.java).createConfirmDeviceCredentialIntent("解锁纸匠","请使用系统设备凭据验证")
+                            if(intent!=null) { authenticating=true;authentication.launch(intent) } else securitySettingsChanged()
+                        }) { Text("使用设备凭据解锁") }
+                    } }
+                    return@MaterialTheme
+                }
                 val vm: MainViewModel=viewModel()
                 val screen by vm.screen.collectAsState()
                 val busy by vm.busy.collectAsState()
@@ -132,7 +168,9 @@ class MainActivity: ComponentActivity() {
                     AlertDialog(onDismissRequest={ vm.formFields.value=null },title={ Text("填写 PDF 表单") },text={ Column(Modifier.heightIn(max=420.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)) { fields.forEach { (name,_) -> OutlinedTextField(values[name] ?: "",{ values=values+(name to it) },label={ Text(name) }) } } },confirmButton={ TextButton(enabled=!busy,onClick={ vm.fillForms(values) }) { Text("保存副本") } },dismissButton={ TextButton(onClick={ vm.formFields.value=null }) { Text("取消") } })
                 }
                 if(about) AlertDialog(onDismissRequest={ about=false },title={ Text("纸匠 PaperForge · 0.2.0") },text={ Column(Modifier.verticalScroll(rememberScrollState())) {
-                    Text("非商用个人项目\n\n无需账户、无广告、无水印。扫描与识别在本机完成。应用没有网络权限，不上传文档。\n\n通过系统文件选择器导入副本；删除应用内文档不会删除外部原件。卸载会删除应用私有草稿，请先导出或备份重要文件。\n\n扫描自动裁边、去阴影、中英文 OCR、可搜索 PDF；阅读与搜索、页面整理、批注签名、安全脱敏、密码、表单、图片和文字导出、备份恢复。高保真 Office 转换、曲面书页展平和原生文字原位编辑尚未提供。\n\n开源与模型声明：",style=MaterialTheme.typography.bodyMedium)
+                    Text("非商用个人项目\n\n无需账户、无广告、无水印。扫描与识别在本机完成。应用没有网络权限，不上传文档。\n\n通过系统文件选择器导入副本；删除应用内文档不会删除外部原件。卸载会删除应用私有草稿，请先导出或备份重要文件。\n\n扫描自动裁边、去阴影、中英文 OCR、可搜索 PDF；阅读与搜索、页面整理、批注签名、安全脱敏、密码、表单、图片和文字导出、备份恢复。高保真 Office 转换、曲面书页展平和原生文字原位编辑尚未提供。",style=MaterialTheme.typography.bodyMedium)
+                    SecuritySettings()
+                    Text("开源与模型声明：")
                     Text(remember { runCatching { assets.open("LICENSE_NOTICES.txt").bufferedReader().use { it.readText() } }.getOrDefault("见源码 LICENSE_NOTICES.md") },style=MaterialTheme.typography.bodySmall)
                 } },confirmButton={ TextButton(onClick={ about=false }) { Text("知道了") } })
             }
@@ -140,5 +178,7 @@ class MainActivity: ComponentActivity() {
     }
     override fun onNewIntent(intent: Intent) { super.onNewIntent(intent); incoming=intent }
 }
+
+private object LocalAppLock { var authorized=false;var backgroundAt=0L }
 
 private fun mime(file: File)=when(file.extension.lowercase()) { "pdf" -> "application/pdf"; "zip" -> "application/zip"; "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"; "html" -> "text/html"; "md" -> "text/markdown"; else -> "text/plain" }

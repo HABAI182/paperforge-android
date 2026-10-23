@@ -4,6 +4,7 @@ import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import cn.paperforge.app.model.CjkSearch
 
 @Entity(tableName="documents")
 data class DocumentRow(@PrimaryKey val id: String, val title: String, val modified: Long=System.currentTimeMillis(), val kind: String="scan", val pdfPath: String?=null,
@@ -20,11 +21,15 @@ data class PageRow(@PrimaryKey val id: String, val documentId: String, val posit
 @Entity(tableName="edit_history",indices=[Index("documentId")])
 data class EditHistory(@PrimaryKey(autoGenerate=true) val id: Long=0,val documentId: String,val pageId: String,val beforeJson: String,val afterJson: String,val applied: Boolean=true)
 
+@Fts4(tokenizer=FtsOptions.TOKENIZER_UNICODE61)
+@Entity(tableName="page_search")
+data class PageSearch(val pageId: String,val documentId: String,val tokens: String)
+
 @Dao
 interface DocumentDao {
     @Query("SELECT * FROM documents WHERE trashedAt IS NULL ORDER BY favorite DESC,modified DESC") fun observeDocuments(): Flow<List<DocumentRow>>
     @Query("SELECT * FROM documents WHERE trashedAt IS NOT NULL ORDER BY trashedAt DESC") fun observeTrash(): Flow<List<DocumentRow>>
-    @Query("SELECT DISTINCT d.* FROM documents d LEFT JOIN pages p ON d.id=p.documentId WHERE d.trashedAt IS NULL AND (d.title LIKE '%'||:query||'%' OR d.tags LIKE '%'||:query||'%' OR d.folder LIKE '%'||:query||'%' OR p.ocrText LIKE '%'||:query||'%') ORDER BY d.favorite DESC,d.modified DESC") fun search(query: String): Flow<List<DocumentRow>>
+    @Query("SELECT DISTINCT d.* FROM documents d WHERE d.trashedAt IS NULL AND (d.title LIKE '%'||:query||'%' OR d.tags LIKE '%'||:query||'%' OR d.folder LIKE '%'||:query||'%' OR d.id IN (SELECT documentId FROM page_search WHERE page_search MATCH :expression)) ORDER BY d.favorite DESC,d.modified DESC") fun search(query: String,expression: String=CjkSearch.expression(query)): Flow<List<DocumentRow>>
     @Query("SELECT * FROM pages WHERE documentId=:id ORDER BY position") fun observePages(id: String): Flow<List<PageRow>>
     @Query("SELECT * FROM pages WHERE documentId=:id ORDER BY position") suspend fun pages(id: String): List<PageRow>
     @Query("SELECT * FROM documents WHERE id=:id") suspend fun document(id: String): DocumentRow?
@@ -35,8 +40,14 @@ interface DocumentDao {
     @Query("SELECT * FROM edit_history ORDER BY id") suspend fun allHistory(): List<EditHistory>
     @Query("SELECT COUNT(*) FROM pages WHERE original=:path") suspend fun originalReferences(path: String): Int
     @Insert(onConflict=OnConflictStrategy.REPLACE) suspend fun putDocument(doc: DocumentRow)
-    @Insert(onConflict=OnConflictStrategy.REPLACE) suspend fun putPage(page: PageRow)
-    @Update suspend fun updatePage(page: PageRow)
+    @Insert(onConflict=OnConflictStrategy.REPLACE) suspend fun putPageRaw(page: PageRow)
+    @Update suspend fun updatePageRaw(page: PageRow)
+    @Insert suspend fun insertSearch(row: PageSearch)
+    @Query("DELETE FROM page_search WHERE pageId=:id") suspend fun deleteSearch(id: String)
+    @Query("DELETE FROM page_search WHERE documentId=:id") suspend fun deleteDocumentSearch(id: String)
+    @Transaction suspend fun putPage(page: PageRow) { putPageRaw(page);index(page) }
+    @Transaction suspend fun updatePage(page: PageRow) { updatePageRaw(page);index(page) }
+    suspend fun index(page: PageRow) { deleteSearch(page.id);if(!page.ocrText.isNullOrBlank()) insertSearch(PageSearch(page.id,page.documentId,CjkSearch.tokens(page.ocrText))) }
     @Update suspend fun updateDocument(doc: DocumentRow)
     @Insert suspend fun addHistory(history: EditHistory)
     @Update suspend fun updateHistory(history: EditHistory)
@@ -46,14 +57,24 @@ interface DocumentDao {
     @Query("DELETE FROM edit_history WHERE documentId=:id") suspend fun clearHistory(id: String)
     @Query("UPDATE documents SET title=:title, modified=:now WHERE id=:id") suspend fun rename(id: String,title: String,now: Long)
     @Query("UPDATE documents SET modified=:now WHERE id=:id") suspend fun touch(id: String,now: Long)
-    @Query("DELETE FROM pages WHERE id=:id") suspend fun deletePage(id: String)
-    @Query("DELETE FROM documents WHERE id=:id") suspend fun deleteDocument(id: String)
+    @Query("DELETE FROM pages WHERE id=:id") suspend fun deletePageRaw(id: String)
+    @Query("DELETE FROM documents WHERE id=:id") suspend fun deleteDocumentRaw(id: String)
+    @Transaction suspend fun deletePage(id: String) { deleteSearch(id);deletePageRaw(id) }
+    @Transaction suspend fun deleteDocument(id: String) { deleteDocumentSearch(id);deleteDocumentRaw(id) }
 }
 
-@Database(entities=[DocumentRow::class,PageRow::class,EditHistory::class],version=4,exportSchema=true)
+@Database(entities=[DocumentRow::class,PageRow::class,EditHistory::class,PageSearch::class],version=5,exportSchema=true)
 abstract class PaperDatabase: RoomDatabase() {
     abstract fun dao(): DocumentDao
     companion object {
+        val Migration4To5=object: Migration(4,5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS page_search USING FTS4(pageId TEXT NOT NULL, documentId TEXT NOT NULL, tokens TEXT NOT NULL, tokenize=unicode61)")
+                db.query("SELECT id,documentId,ocrText FROM pages WHERE ocrText IS NOT NULL").use { cursor ->
+                    while(cursor.moveToNext()) db.execSQL("INSERT INTO page_search(pageId,documentId,tokens) VALUES(?,?,?)",arrayOf(cursor.getString(0),cursor.getString(1),CjkSearch.tokens(cursor.getString(2))))
+                }
+            }
+        }
         val Migration3To4=object: Migration(3,4) {
             override fun migrate(db: SupportSQLiteDatabase) { db.execSQL("ALTER TABLE pages ADD COLUMN deskewDegrees REAL NOT NULL DEFAULT 0") }
         }
