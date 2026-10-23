@@ -1,0 +1,9 @@
+# Color and document enhancement
+
+AUTO, COLOR and WHITEBOARD now preserve RGB. A small tile-percentile illumination field removes lighting/color cast; very dark tiles are filled from surrounding paper before interpolation. Gain is bounded. CLEAN and GRAY are separate grayscale outputs. BW uses resolution-scaled Sauvola plus a bounded dark-fill floor; no morphological speck removal deletes punctuation.
+
+The first Sauvola prototype retained only 77.6% of a large black title interior. The accepted dark-fill floor retains 99.96% on these fixtures. AUTO retains 100% below gray90, versus 83.0–84.2% in v0.2. Red seal pixel recall is 99.4% (v0.2 grayscale AUTO: 0%). A synthetic horizontal shadow has remaining paper standard deviation 6.61 gray levels. The old grayscale method removes that shadow more completely (1.63), but loses color and damages the solid fill. The chosen color tradeoff is intentional and reversible.
+
+See enhancement-v030/{uniform,shadow,warm-cast}.jpg and metrics.json. Left to right: source, frozen old AUTO, new AUTO, new gray, new BW. These are generated documents with printed text, table, seal, blue pen line and solid dark title; they are not a licensed DIBCO dataset or photographed Chinese-paper acceptance set. Source/parameter/metric scripts are in scripts/bench/enhance_v2.py and enhancement_report.py. Shared parameters are scan_params.json.
+
+Android API35 AOSP emulator EnhancementTest passes with a synthetic lighting gradient, red/blue patches and a solid black header through the actual Kotlin/OpenCV path. No additional runtime dependency or model. Native image operations remain bounded by the existing decoder pixel budget, with one image processed at a time. Black-box commercial-app comparisons and private real-photo evaluation are pending owner-device access.

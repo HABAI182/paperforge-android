@@ -9,7 +9,7 @@
   "refineBandFraction": 0.008,
   "illuminationEdge": 480,
   "illuminationTilePercentile": 0.88,
-  "illuminationStrength": 0.85,
+  "illuminationStrength": 1.0,
   "sauvolaWindowFraction": 0.05,
   "sauvolaK": 0.22,
   "draftDpi": 150,

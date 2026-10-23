@@ -81,33 +81,7 @@ object ScanProcessor {
             source.release()
             if(max(warped.cols(),warped.rows())>targetEdge) { val ratio=targetEdge.toDouble()/max(warped.cols(),warped.rows()); Imgproc.resize(warped,warped,Size(),ratio,ratio,Imgproc.INTER_AREA) }
             Imgproc.cvtColor(warped,rgb,Imgproc.COLOR_RGBA2RGB)
-            when(filter) {
-                "GRAY","BW","AUTO","CLEAN","WHITEBOARD" -> {
-                    Imgproc.cvtColor(rgb,gray,Imgproc.COLOR_RGB2GRAY)
-                    when(filter) {
-                        "BW" -> Imgproc.adaptiveThreshold(gray,dst,255.0,Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,Imgproc.THRESH_BINARY,41,13.0)
-                        "AUTO","CLEAN","WHITEBOARD" -> {
-                            val background=Mat(); val smooth=Mat(); val norm=Mat(); val sharp=Mat()
-                            val backgroundSize=(min(gray.cols(),gray.rows())/25).coerceIn(21,81).let { if(it%2==0) it+1 else it }
-                            val k=Imgproc.getStructuringElement(Imgproc.MORPH_RECT,Size(backgroundSize.toDouble(),backgroundSize.toDouble()))
-                            try {
-                                // Suppress JPEG/bicubic bright ringing before the max filter; otherwise
-                                // that overshoot becomes a false light source and creates dark halos.
-                                Imgproc.medianBlur(gray,smooth,5)
-                                Imgproc.dilate(smooth,background,k); Imgproc.GaussianBlur(background,background,Size(51.0,51.0),0.0)
-                                Core.divide(gray,background,norm,255.0)
-                                Imgproc.GaussianBlur(norm,smooth,Size(3.0,3.0),0.0); Core.addWeighted(norm,1.2,smooth,-.2,0.0,sharp)
-                                if(filter=="WHITEBOARD") Imgproc.adaptiveThreshold(sharp,dst,255.0,Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,Imgproc.THRESH_BINARY,51,10.0)
-                                else if(filter=="CLEAN") sharp.convertTo(dst,-1,1.08,-8.0)
-                                else sharp.copyTo(dst)
-                            } finally { listOf(background,smooth,norm,sharp,k).forEach { it.release() } }
-                        }
-                        else -> gray.copyTo(dst)
-                    }
-                }
-                "COLOR" -> rgb.convertTo(dst,-1,1.12,6.0)
-                else -> rgb.copyTo(dst)
-            }
+            EnhancePipeline.apply(rgb,dst,filter)
             if(brightness!=0f || contrast!=1f) dst.convertTo(dst,-1,contrast.toDouble(),brightness*100.0)
             when(((rotation%360)+360)%360) {
                 90 -> Core.rotate(dst,dst,Core.ROTATE_90_CLOCKWISE)
