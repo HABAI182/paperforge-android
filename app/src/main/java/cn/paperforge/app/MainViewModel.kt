@@ -192,7 +192,7 @@ class MainViewModel(app: Application): AndroidViewModel(app) {
     fun reorder(order: List<PageRow>)=perform("保存页序") { selected.value?.let { repo.reorder(it.id,order) } }
     fun duplicate(page: PageRow)=perform("复制页面") { repo.duplicate(page) }
     fun splitBook(page: PageRow)=perform("分割双页") { repo.splitBook(page) }
-    fun applyAll(page: PageRow)=perform("应用到所有页") { repo.dao.pages(page.documentId).forEach { repo.savePage(it.copy(filter=page.filter,brightness=page.brightness,contrast=page.contrast)) } }
+    fun applyAll(page: PageRow)=perform("应用到所有页") { repo.dao.pages(page.documentId).forEach { repo.savePage(it.copy(filter=page.filter,brightness=page.brightness,contrast=page.contrast,enhanceStrength=page.enhanceStrength)) } }
     fun rotateMany(ids: Set<String>)=perform("批量旋转") { pages.value.filter { it.id in ids }.forEach { repo.savePage(it.copy(rotation=(it.rotation+90)%360)) } }
     fun deleteMany(ids: Set<String>)=perform("批量删除") { pages.value.filter { it.id in ids }.forEach { repo.deletePage(it) } }
     fun images(format: String)=perform("导出扫描图片") {

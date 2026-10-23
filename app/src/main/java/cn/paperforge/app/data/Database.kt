@@ -16,7 +16,8 @@ data class PageRow(@PrimaryKey val id: String, val documentId: String, val posit
     val corners: String="0.0,0.0;1.0,0.0;1.0,1.0;0.0,1.0", val filter: String="AUTO", val rotation: Int=0,
     val brightness: Float=0f, val contrast: Float=1f, val revision: Int=0, val ocrText: String?=null,val ocrLayout: String?=null,
     val detectionConfidence: Float?=null,val detectionMethod: String?=null,
-    @ColumnInfo(defaultValue="0") val deskewDegrees: Float=0f)
+    @ColumnInfo(defaultValue="0") val deskewDegrees: Float=0f,
+    @ColumnInfo(defaultValue="1") val enhanceStrength: Float=1f)
 
 @Entity(tableName="edit_history",indices=[Index("documentId")])
 data class EditHistory(@PrimaryKey(autoGenerate=true) val id: Long=0,val documentId: String,val pageId: String,val beforeJson: String,val afterJson: String,val applied: Boolean=true)
@@ -63,10 +64,13 @@ interface DocumentDao {
     @Transaction suspend fun deleteDocument(id: String) { deleteDocumentSearch(id);deleteDocumentRaw(id) }
 }
 
-@Database(entities=[DocumentRow::class,PageRow::class,EditHistory::class,PageSearch::class],version=5,exportSchema=true)
+@Database(entities=[DocumentRow::class,PageRow::class,EditHistory::class,PageSearch::class],version=6,exportSchema=true)
 abstract class PaperDatabase: RoomDatabase() {
     abstract fun dao(): DocumentDao
     companion object {
+        val Migration5To6=object: Migration(5,6) {
+            override fun migrate(db: SupportSQLiteDatabase) { db.execSQL("ALTER TABLE pages ADD COLUMN enhanceStrength REAL NOT NULL DEFAULT 1") }
+        }
         val Migration4To5=object: Migration(4,5) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS page_search USING FTS4(pageId TEXT NOT NULL, documentId TEXT NOT NULL, tokens TEXT NOT NULL, tokenize=unicode61)")

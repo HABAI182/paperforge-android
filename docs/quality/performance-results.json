@@ -1,0 +1,14 @@
+{
+  "physicalDevice": false,
+  "inputWidth": 3024,
+  "inputHeight": 4032,
+  "pages": 100,
+  "preset": "DRAFT150dpi",
+  "hundredPageBytes": 1259678,
+  "elapsedMsIncludingCancellationAndHighProbe": 23606,
+  "sampledPeakPssKiB50ms": 337412,
+  "highWidth": 2631,
+  "highHeight": 3508,
+  "cancelledOutputAbsent": true,
+  "cancelledPartAbsent": true
+}

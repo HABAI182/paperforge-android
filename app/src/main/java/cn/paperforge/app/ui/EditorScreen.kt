@@ -127,10 +127,12 @@ fun EditorScreen(vm: MainViewModel,onImport: ()->Unit) {
     if(adjust && active!=null) {
         var brightness by remember { mutableFloatStateOf(active.brightness) }
         var contrast by remember { mutableFloatStateOf(active.contrast) }
-        AlertDialog(onDismissRequest={ adjust=false },title={ Text("亮度与对比度") },text={ Column {
+        var strength by remember { mutableFloatStateOf(active.enhanceStrength) }
+        AlertDialog(onDismissRequest={ adjust=false },title={ Text("增强与明暗") },text={ Column {
+            Text("去阴影强度 %.0f%%".format(strength*100));Slider(value=strength,onValueChange={ strength=it },valueRange=0f..1f,enabled=active.filter!="ORIGINAL")
             Text("亮度 %+.0f".format(brightness*100)); Slider(value=brightness,onValueChange={ brightness=it },valueRange=-.5f.. .5f)
             Text("对比度 %.2f".format(contrast)); Slider(value=contrast,onValueChange={ contrast=it },valueRange=.5f..1.8f)
-        } },confirmButton={ TextButton(onClick={ vm.save(active.copy(brightness=brightness,contrast=contrast)); adjust=false }) { Text("应用") } },dismissButton={ TextButton(onClick={ adjust=false }) { Text("取消") } })
+        } },confirmButton={ TextButton(onClick={ vm.save(active.copy(brightness=brightness,contrast=contrast,enhanceStrength=strength)); adjust=false }) { Text("应用") } },dismissButton={ TextButton(onClick={ adjust=false }) { Text("取消") } })
     }
     if(export) AlertDialog(onDismissRequest={ export=false },title={ Text("导出多页 PDF") },text={ Column {
         Text("所有 ${pages.size} 页")

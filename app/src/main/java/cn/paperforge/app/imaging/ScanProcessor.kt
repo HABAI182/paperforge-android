@@ -58,14 +58,14 @@ object ScanProcessor {
     fun render(page: PageRow,maxEdge: Int=2400): Bitmap {
         val decoded=PageDecoder.crop(File(page.original),Quad.decode(page.corners),maxEdge)
         try {
-            val result=transform(decoded.bitmap,decoded.quad,page.filter,page.rotation,page.brightness,page.contrast,maxEdge)
+            val result=transform(decoded.bitmap,decoded.quad,page.filter,page.rotation,page.brightness,page.contrast,maxEdge,page.enhanceStrength)
             if(page.deskewDegrees==0f) return result
             return try { PageOrientation.rotate(result,page.deskewDegrees) } finally { result.recycle() }
         }
         finally { decoded.bitmap.recycle() }
     }
 
-    fun transform(bitmap: Bitmap,quad: Quad,filter: String,rotation: Int=0,brightness: Float=0f,contrast: Float=1f,targetEdge: Int=Int.MAX_VALUE): Bitmap {
+    fun transform(bitmap: Bitmap,quad: Quad,filter: String,rotation: Int=0,brightness: Float=0f,contrast: Float=1f,targetEdge: Int=Int.MAX_VALUE,strength: Float?=null): Bitmap {
         require(quad.valid()) { "裁切四角不能交叉或重合" }
         val w=bitmap.width.toFloat(); val h=bitmap.height.toFloat()
         val p=quad.points.map { Point((it.x*(w-1)).toDouble(),(it.y*(h-1)).toDouble()) }
@@ -85,7 +85,7 @@ object ScanProcessor {
             source.release()
             if(max(warped.cols(),warped.rows())>targetEdge) { val ratio=targetEdge.toDouble()/max(warped.cols(),warped.rows()); Imgproc.resize(warped,warped,Size(),ratio,ratio,Imgproc.INTER_AREA) }
             Imgproc.cvtColor(warped,rgb,Imgproc.COLOR_RGBA2RGB)
-            EnhancePipeline.apply(rgb,dst,filter)
+            EnhancePipeline.apply(rgb,dst,filter,strength)
             if(brightness!=0f || contrast!=1f) dst.convertTo(dst,-1,contrast.toDouble(),brightness*100.0)
             when(((rotation%360)+360)%360) {
                 90 -> Core.rotate(dst,dst,Core.ROTATE_90_CLOCKWISE)

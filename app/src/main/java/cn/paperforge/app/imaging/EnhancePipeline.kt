@@ -11,7 +11,7 @@ import kotlin.math.*
  */
 object EnhancePipeline {
     /** RGB input, caller owns destination. ORIGINAL never changes channel count. */
-    fun apply(rgb: Mat, destination: Mat, mode: String) {
+    fun apply(rgb: Mat, destination: Mat, mode: String,strengthOverride: Float?=null) {
         if (mode == "ORIGINAL") { rgb.copyTo(destination); return }
         val owned = mutableListOf<Mat>()
         fun mat() = Mat().also { owned.add(it) }
@@ -47,7 +47,7 @@ object EnhancePipeline {
             Imgproc.resize(smooth,field,rgb.size(),0.0,0.0,Imgproc.INTER_LINEAR)
             val input=ByteArray(rgb.rows()*rgb.cols()*3); val illumination=ByteArray(input.size)
             rgb.get(0,0,input);field.get(0,0,illumination)
-            val strength=if(mode=="WHITEBOARD") 1f else ScanConfig.float("illuminationStrength",1f)
+            val strength=strengthOverride?.coerceIn(0f,1f) ?: if(mode=="WHITEBOARD") 1f else ScanConfig.float("illuminationStrength",1f)
             for(i in input.indices) {
                 val gain=(250f/max(70,illumination[i].toInt() and 255)).coerceIn(.85f,3f)
                 input[i]=((input[i].toInt() and 255)*(1+(gain-1)*strength)).toInt().coerceIn(0,255).toByte()

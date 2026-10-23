@@ -53,7 +53,7 @@ def detect_result(image,params=None):
     def features(q):
         if np.any(q<[-1,-1]) or np.any(q>[sw,sh]): return None
         q=np.clip(q,[0,0],[sw-1,sh-1]).astype(np.float32);area=abs(cv2.contourArea(q))/(sw*sh)
-        if area<.07 or area>.9999: return None
+        if area<params.get('minimumArea',.07) or area>.9999: return None
         lengths=np.linalg.norm(np.roll(q,-1,axis=0)-q,axis=1)
         if lengths.min()<min(sh,sw)*.06: return None
         edge_hits=[]; band_hits=[]; contrasts=[]; shape=[]
@@ -89,7 +89,7 @@ def detect_result(image,params=None):
         seen.add(key);f=features(q)
         if f:scored.append((f[0],q,method,f[1]))
     # Line candidates rescue a broken contour. Keep a small fixed candidate budget.
-    if not scored or max(c[0] for c in scored)<.88:
+    if not scored or max(c[0] for c in scored)<params.get('houghFallbackScore',.88):
         lines=cv2.HoughLinesP(edge,1,np.pi/180,70,minLineLength=min(sw,sh)*.22,maxLineGap=min(sw,sh)*.06)
         if lines is not None:
             lines=sorted(lines[:,0],key=lambda l:np.linalg.norm(l[:2]-l[2:]),reverse=True)[:24]
@@ -111,7 +111,7 @@ def detect_result(image,params=None):
     if not scored:return {'quad':None,'confidence':0.,'method':'none','diagnostics':{}}
     score,q,method,diag=max(scored,key=lambda c:c[0])
     confidence=max(0.,min(1.,(score-.35)/.6))
-    if score<.71 or diag['edge_support']<.25:return {'quad':None,'confidence':confidence,'method':method,'diagnostics':diag}
+    if score<params.get('detectorScoreMinimum',.71) or diag['edge_support']<params.get('detectorEdgeMinimum',.25):return {'quad':None,'confidence':confidence,'method':method,'diagnostics':diag}
     return {'quad':(q/[sw-1,sh-1]).tolist(),'confidence':confidence,'method':method,'diagnostics':diag}
 
 def detect(image,params=None): return detect_result(image,params)['quad']

@@ -3,7 +3,7 @@ import argparse,re,subprocess
 from pathlib import Path
 
 p=argparse.ArgumentParser();p.add_argument('--adb',required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
-for directory in ['quality-encoding','quality-semantics','quality-camera']:
+for directory in ['quality-encoding','quality-semantics','quality-camera','quality-conversion','quality-performance']:
     listing=subprocess.run([a.adb,'exec-out','run-as','cn.paperforge.app','ls','-1','files/'+directory],capture_output=True)
     if listing.returncode:continue
     output=a.output/directory;output.mkdir(parents=True,exist_ok=True)

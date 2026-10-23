@@ -146,7 +146,7 @@ object DocumentDetector {
             }
             var best: Candidate? = null; var bestScore: Score? = null
             candidates.forEach { candidate -> evaluate(candidate)?.let { if (it.value > (bestScore?.value ?: -1f)) { best=candidate; bestScore=it } } }
-            if (!preview && (bestScore?.value ?: 0f) < .88f) {
+            if (!preview && (bestScore?.value ?: 0f) < ScanConfig.float("houghFallbackScore",.88f)) {
                 lineCandidates(edge, w, h).forEach { candidate -> evaluate(candidate)?.let { measured ->
                     val penalized = measured.copy(value = measured.value - .015f)
                     if (penalized.value > (bestScore?.value ?: -1f)) { best=candidate; bestScore=penalized }
@@ -156,7 +156,7 @@ object DocumentDetector {
             val elapsed = (System.nanoTime()-started)/1e6f
             if (chosen == null || measured == null) return DetectionResult(null,0f,"none",elapsedMs=elapsed)
             val confidence = ((measured.value-.35f)/.6f).coerceIn(0f,1f)
-            if (measured.value < .71f || (measured.evidence["edge_support"] ?: 0f) < .25f) return DetectionResult(null,confidence,chosen.method,measured.evidence,elapsed)
+            if (measured.value < ScanConfig.float("detectorScoreMinimum",.71f) || (measured.evidence["edge_support"] ?: 0f) < ScanConfig.float("detectorEdgeMinimum",.25f)) return DetectionResult(null,confidence,chosen.method,measured.evidence,elapsed)
             val refined = if (!preview && max(source.cols(),source.rows()) > maximum * 1.2) refine(source,chosen.quad) else chosen.quad
             return DetectionResult(refined,confidence,chosen.method + if(refined != chosen.quad) "+refined" else "",measured.evidence,elapsed)
         } finally { owned.forEach { it.release() } }
@@ -173,7 +173,7 @@ object DocumentDetector {
     private fun score(q: Quad,w: Int,h: Int,gray: ByteArray,lab: ByteArray,support: ByteArray): Score? {
         val p=q.points.map { Point(it.x*(w-1).toDouble(),it.y*(h-1).toDouble()) }
         val area=q.area
-        if (area < .07f || area > .9999f) return null
+        if (area < ScanConfig.float("minimumArea",.07f) || area > .9999f) return null
         val lengths=List(4) { i -> hypot(p[(i+1)%4].x-p[i].x,p[(i+1)%4].y-p[i].y) }
         if(lengths.min()<min(w,h)*.06) return null
         var cannyHits=0;var bandHits=0;val contrasts=mutableListOf<Float>();var cosine=0.0
