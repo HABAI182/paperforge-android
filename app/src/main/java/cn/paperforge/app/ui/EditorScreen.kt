@@ -70,6 +70,7 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
     var searchable by remember { mutableStateOf(UserSettings.bool("searchable", true)) }
     var original by remember { mutableStateOf(false) }
     var more by remember { mutableStateOf(false) }
+    var dewarp by remember { mutableStateOf(false) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -220,6 +221,7 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                     }
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                    ToolAction(Icons.AutoMirrored.Filled.MenuBook, "曲面校正", !busy) { dewarp = true }
                     ToolAction(Icons.Default.RotateRight, "旋转", !busy) {
                         vm.save(active.copy(rotation = (active.rotation + 90) % 360))
                     }
@@ -294,6 +296,85 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                 crop = false
             },
         )
+    if (dewarp && active != null) {
+        val page = active
+        var strength by remember { mutableFloatStateOf(UserSettings.number("dewarpStrength", 1f)) }
+        var previewStrength by remember { mutableFloatStateOf(strength) }
+        var previewError by remember { mutableStateOf<String?>(null) }
+        val preview by
+            produceState<Bitmap?>(null, page, previewStrength) {
+                value = null
+                previewError = null
+                value =
+                    withContext(Dispatchers.Default) {
+                        runCatching {
+                                val image =
+                                    ScanProcessor.render(
+                                        page.copy(
+                                            filter = "ORIGINAL",
+                                            brightness = 0f,
+                                            contrast = 1f,
+                                        ),
+                                        1000,
+                                    )
+                                try {
+                                    cn.paperforge.app.imaging.PageDewarp.apply(
+                                        image,
+                                        previewStrength,
+                                    )
+                                } finally {
+                                    image.recycle()
+                                }
+                            }
+                            .onFailure { previewError = it.message ?: "曲面预览未完成" }
+                            .getOrNull()
+                    }
+            }
+        val previewBitmap = preview
+        DisposableEffect(previewBitmap) { onDispose { previewBitmap?.recycle() } }
+        AlertDialog(
+            onDismissRequest = { dewarp = false },
+            title = { Text("曲面校正") },
+            text = {
+                Column {
+                    Box(
+                        Modifier.fillMaxWidth().height(240.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (preview != null)
+                            Image(
+                                preview!!.asImageBitmap(),
+                                "曲面校正预览",
+                                Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Fit,
+                            )
+                        else if (previewError != null) Text(previewError!!)
+                        else CircularProgressIndicator()
+                    }
+                    Text("强度 %.0f%%".format(strength * 100))
+                    Slider(
+                        strength,
+                        { strength = it },
+                        valueRange = 0f..1f,
+                        onValueChangeFinished = { previewStrength = strength },
+                    )
+                    Text("适合弯曲书页。预览满意后应用，可用撤销恢复。", style = MaterialTheme.typography.bodySmall)
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = preview != null && !busy,
+                    onClick = {
+                        dewarp = false
+                        vm.dewarpPage(page, strength)
+                    },
+                ) {
+                    Text("应用")
+                }
+            },
+            dismissButton = { TextButton(onClick = { dewarp = false }) { Text("取消") } },
+        )
+    }
     if (confirmDelete && active != null)
         AlertDialog(
             onDismissRequest = { confirmDelete = false },

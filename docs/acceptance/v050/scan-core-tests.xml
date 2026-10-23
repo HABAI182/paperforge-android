@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="cn.paperforge.app.ScanCoreWorkflowTest" tests="2" failures="0" errors="0" skipped="0" time="9.406" timestamp="2026-10-23T15:26:51" hostname="localhost">
+  <properties>
+    <property name="device" value="paperforge_api35(AVD) - 15" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="nativeModelsFindRepresentativePaperEdgesAndZeroStrengthPreservesPixels" classname="cn.paperforge.app.ScanCoreWorkflowTest" time="3.409" />
+  <testcase name="curvePreviewApplyUndoRedoRetainOriginalAndInvalidateOcr" classname="cn.paperforge.app.ScanCoreWorkflowTest" time="5.575" />
+</testsuite>

@@ -1,4 +1,5 @@
 -keep class org.opencv.** { *; }
+-keep class cn.paperforge.app.imaging.ScanModel { native <methods>; }
 -dontwarn org.bouncycastle.**
 -dontwarn javax.naming.**
 -dontwarn javax.xml.stream.**

@@ -2,9 +2,15 @@
 
 原生 Android 离线扫描与 PDF 工作台，供个人非商业使用。无登录、广告或水印，应用不声明 INTERNET 权限。
 
-当前版本 **0.4.0**，公开源码：[HABAI182/paperforge-android](https://github.com/HABAI182/paperforge-android)。安装包与源码见 [Releases](https://github.com/HABAI182/paperforge-android/releases)。旧 tag 和发布附件保留。
+当前版本 **0.5.0**，公开源码：[HABAI182/paperforge-android](https://github.com/HABAI182/paperforge-android)。安装包与源码见 [Releases](https://github.com/HABAI182/paperforge-android/releases)。旧 tag 和发布附件保留。
 
-## 0.4.0 新增
+## 0.5.0 新增
+
+默认改用神经边缘模型识别纸张，无候选时回退到现有定位方式。取景纸框使用双候选缓冲和平滑，设置可调平滑程度、切换确认帧数、自动拍摄阈值。默认阈值降至60%，模糊与亮度拦截仍默认关闭。
+
+编辑页直接进入「曲面校正」，先看预览再调强度，保存后支持撤销/重做并保留原图。只针对新扫描链路做必要验证，未重复整套OCR或压力测试。见[本轮记录](docs/quality/SCAN-0.5.0.md)及[模型来源](docs/research/MODEL-INTEGRATION-0.5.0.md)。
+
+## 0.4.0 已有功能
 
 首页右上角齿轮进入个性化设置，可调扫描/拍摄/增强/OCR/导出/主题字体及首页快捷入口，支持设置JSON导入导出。最近文档和文档库点“多选”或长按，批量分享、收藏、分类、回收和直接删除；回收站可批量恢复。已有PDF可直接进入合并排序。
 
@@ -34,13 +40,13 @@
 
 API35 无 GMS 模拟器已在飞行模式下运行内置中英 OCR；100 页草稿导出及取消已测。没有 ARM64 真机相机、国内 ROM、真实纸张弱光/反光、50MP 或电池/温升结论。
 
-DOCX 提供段落和可选参考图，不重建原始复杂版面或表格。曲面展平、去手指/手写、超分、结构表格/XLSX、高保真 Office、证书签名和 XFA 尚未实现。Paddle/Tesseract 备用引擎未交付；保持首开可用的内置 ML Kit。黑白使用实际测量的 1-bit Flate，未宣称 CCITT G4。
+DOCX 提供段落和可选参考图，不重建原始复杂版面或表格。自动曲面判断、去手指/手写、超分、结构表格/XLSX、高保真 Office、证书签名和 XFA 尚未实现。Paddle/Tesseract 备用引擎未交付；保持首开可用的内置 ML Kit。黑白使用实际测量的 1-bit Flate，未宣称 CCITT G4。
 
 原图和草稿位于应用私有目录，卸载会丢失，请导出重要内容。普通 PDF 工具生成副本；手动脱敏和明确标记的扁平化生成图像 PDF。系统另存先生成完整本地文件；外部提供程序写入失败可重试。
 
 ## 构建
 
-Android 8.0+（API26），target/compile36；JDK17、SDK Platform36、Build Tools35.0.0、Gradle8.13、AGP8.13.2、Kotlin2.1.20。Android Studio 打开本目录并选择 JDK17，或：
+Android 8.0+（API26），target/compile36；JDK17、SDK Platform36、Build Tools35.0.0、Gradle8.13、AGP8.13.2、Kotlin2.1.20。新增 NDK28.2.13676358、CMake3.22.1；首次原生构建下载固定SHA256的官方MNN3.6.1源码。Android Studio 打开本目录并选择 JDK17，或：
 
 ```powershell
 git clone https://github.com/HABAI182/paperforge-android.git
@@ -59,4 +65,4 @@ macOS/Linux 使用 `./gradlew`。首次构建需下载依赖，已安装应用�
 - [架构](docs/ARCHITECTURE.md)、[技术选型](docs/architecture/0001-architecture.md)
 - [上游研究矩阵](docs/research/UPSTREAM_REFERENCE_MATRIX.md)、[审计](docs/research/OSS_AUDIT.md)、[许可](LICENSE_NOTICES.md)
 - [测试矩阵](docs/TEST_MATRIX.md)、[隐私](docs/PRIVACY.md)、[发布检查](docs/RELEASE_CHECKLIST.md)
-- [0.4.0 改动](docs/CHANGELOG-0.4.0.md)、[接续记录](docs/DEVELOPMENT_LOG.md)
+- [0.5.0 改动](docs/CHANGELOG-0.5.0.md)、[接续记录](docs/DEVELOPMENT_LOG.md)

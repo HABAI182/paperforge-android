@@ -1,0 +1,70 @@
+{
+  "source": "User-provided CamScanner.apk",
+  "package": "com.intsig.camscanner",
+  "version": "7.27.5.2610150000",
+  "apkSha256": "344eb2b67ada9ef436ad6b40cba58232b24ed099c8b849171f94063737d2891e",
+  "library": "libpagescanner.so",
+  "models": [
+    {
+      "asset": "border.mnn",
+      "sourceBuffer": "pagescanner-3cd920.mnn",
+      "elfVirtualAddress": "0x3cd920",
+      "bytes": 1584816,
+      "sha256": "b9bde1e5d346f063018443bd3d54fca8b3316ef53e114cd5f8e13564590489e8",
+      "input": [
+        1,
+        3,
+        240,
+        240
+      ],
+      "output": [
+        1,
+        2,
+        240,
+        240
+      ]
+    },
+    {
+      "asset": "dewarp.mnn",
+      "sourceBuffer": "pagescanner-61fa60.mnn",
+      "elfVirtualAddress": "0x61fa60",
+      "bytes": 1584744,
+      "sha256": "9d1f68861920f0c0de9f6aa9ac55214276eec0d1856016d8ae741deff2992194",
+      "input": [
+        1,
+        3,
+        240,
+        240
+      ],
+      "output": [
+        1,
+        2,
+        240,
+        240
+      ]
+    }
+  ],
+  "modelLicense": "No open-source model license established; recovered third-party weights, not PaperForge-authored or Apache-licensed weights.",
+  "runtime": {
+    "project": "https://github.com/alibaba/MNN",
+    "version": "3.6.1",
+    "tagObject": "ea44a3ebd5dd6348eea501047b17c43aa3ecccb6",
+    "commit": "d407447ed56c4121a11ccbd266dc184ca1ead0c2",
+    "sourceArchiveSha256": "aa744c452e2b1b39e9442b1862051a02bdf3481193d26c9c1acb1380dba38ec8",
+    "license": "Apache-2.0",
+    "backend": "CPU, 2 threads, high precision; GPU, KleidiAI, SME2 disabled"
+  },
+  "implemented": [
+    "BGR preprocessing",
+    "PaperForge contour fitting from channel 0",
+    "original-pixel edge refinement",
+    "configurable display-only dual-candidate tracker",
+    "dense displacement grid with preview and strength"
+  ],
+  "notClaimed": [
+    "Original EDLine equivalence",
+    "Full native quality/mask policy",
+    "Java orchestration equivalence",
+    "Physical-phone or curved-book accuracy"
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "date": "2026-10-23",
+  "environment": "API35 AOSP x86_64 emulator, no GMS, airplane mode",
+  "physicalDeviceTested": false,
+  "unit": {
+    "tests": 1,
+    "failures": 0
+  },
+  "nativeModelAndZeroStrength": {
+    "tests": 1,
+    "failures": 0
+  },
+  "curvePreviewSaveUndoRedo": {
+    "tests": 1,
+    "failures": 0
+  },
+  "cameraManualShutter": {
+    "tests": 1,
+    "failures": 0,
+    "evidence": "camera-test.xml",
+    "detector": "NEURAL"
+  },
+  "representativeSyntheticImages": [
+    {
+      "image": "dark-desk-0.jpg",
+      "method": "neural-edge",
+      "ms": 389.3273,
+      "corners": "0.23849373,0.07531381;0.76987445,0.09623431;0.84518826,0.92050207;0.17573221,0.9916318"
+    },
+    {
+      "image": "white-desk-0.jpg",
+      "method": "neural-edge",
+      "ms": 176.8044,
+      "corners": "0.23849373,0.07531381;0.76987445,0.09623431;0.84518826,0.92050207;0.17573221,0.9874477"
+    },
+    {
+      "image": "clutter-0.jpg",
+      "method": "neural-edge",
+      "ms": 106.7214,
+      "corners": "0.23849373,0.07531381;0.76987445,0.09205021;0.8493724,0.92050207;0.17573221,0.9790795"
+    }
+  ],
+  "notes": [
+    "Only focused tests for changed scan paths; no repeat of the full development corpus or OCR/stress suite.",
+    "Initial zero-strength resampling changed pixels; fixed by a pixel-preserving copy and retested.",
+    "Undo intentionally invalidates OCR for the new revision; initial test expectation corrected.",
+    "Dialog screenshot selector corrected to target the dialog root; workflow retested.",
+    "One existing phone photograph was inspected locally; no new physical phone camera or curved-page quality measurement.",
+    "Camera UI test now waits for the editor's first displayed frame; rerun passed.",
+    "A concurrent source edit invalidated a lint snapshot; lint was rerun after freezing source."
+  ],
+  "lint": {
+    "errors": 0,
+    "warnings": 42
+  },
+  "defaultCmakeFetchContentBuildPassed": true,
+  "packaging": {
+    "apks": 3,
+    "sameSigningCertificate": true,
+    "zeroInternetPermission": true,
+    "zipAndElf16KiBAligned": true,
+    "bundledModelHashesMatch": true,
+    "universalAndSplitNativePayloadsMatch": true
+  }
+}

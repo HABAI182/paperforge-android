@@ -1,0 +1,232 @@
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\gradle\wrapper\gradle-wrapper.properties:4: Warning: A newer version of Gradle than 8.13 is available: 8.14.6 [AndroidGradlePluginVersion]
+distributionUrl=https\://downloads.gradle.org/distributions/gradle-8.13-bin.zip
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "AndroidGradlePluginVersion":
+   This detector looks for usage of the Android Gradle Plugin where the
+   version you are using is not the current stable release. Using older
+   versions is fine, and there are cases where you deliberately want to stick
+   with an older version. However, you may simply not be aware that a more
+   recent version is available, and that is what this lint check helps find.
+
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\build.gradle.kts:86: Warning: A newer version of org.opencv:opencv than 4.12.0 is available: 5.0.0.1 [NewerVersionAvailable]
+    implementation("org.opencv:opencv:4.12.0")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\build.gradle.kts:87: Warning: A newer version of com.microsoft.onnxruntime:onnxruntime-android than 1.24.1 is available: 1.31.0 [NewerVersionAvailable]
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.24.1")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\build.gradle.kts:91: Warning: A newer version of org.jetbrains.kotlinx:kotlinx-coroutines-play-services than 1.10.2 is available: 1.11.0 [NewerVersionAvailable]
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "NewerVersionAvailable":
+   This detector checks with a central repository to see if there are newer
+   versions available for the dependencies used by this project. This is
+   similar to the GradleDependency check, which checks for newer versions
+   available in the Android SDK tools and libraries, but this works with any
+   MavenCentral dependency, and connects to the library every time, which
+   makes it more flexible but also much slower.
+
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\work\toolchain\gradle-home\caches\modules-2\files-2.1\org.bouncycastle\bcpkix-jdk15to18\1.72\32faf4d74dbc333fb3a7a6c80c30417cf888fc7a\bcpkix-jdk15to18-1.72.jar: Warning: checkClientTrusted is empty, which could cause insecure network traffic due to trusting arbitrary TLS/SSL certificates presented by peers [TrustAllX509TrustManager]
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\work\toolchain\gradle-home\caches\modules-2\files-2.1\org.bouncycastle\bcpkix-jdk15to18\1.72\32faf4d74dbc333fb3a7a6c80c30417cf888fc7a\bcpkix-jdk15to18-1.72.jar: Warning: checkClientTrusted is empty, which could cause insecure network traffic due to trusting arbitrary TLS/SSL certificates presented by peers [TrustAllX509TrustManager]
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\work\toolchain\gradle-home\caches\modules-2\files-2.1\org.bouncycastle\bcpkix-jdk15to18\1.72\32faf4d74dbc333fb3a7a6c80c30417cf888fc7a\bcpkix-jdk15to18-1.72.jar: Warning: checkServerTrusted is empty, which could cause insecure network traffic due to trusting arbitrary TLS/SSL certificates presented by peers [TrustAllX509TrustManager]
+
+   Explanation for issues of type "TrustAllX509TrustManager":
+   This check looks for X509TrustManager implementations whose
+   checkServerTrusted or checkClientTrusted methods do nothing (thus trusting
+   any certificate chain) which could result in insecure network traffic
+   caused by trusting arbitrary TLS/SSL certificates presented by peers.
+
+   https://goo.gle/TrustAllX509TrustManager
+
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\imaging\LearnedDocumentDetector.kt:16: Warning: Do not place Android context classes in static fields (static reference to LearnedDocumentDetector which has field context pointing to Context); this is a memory leak [StaticFieldLeak]
+/** MakeACopy model, letterbox and postprocessor; provenance/license travel in assets. */
+^
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\imaging\LearnedDocumentDetector.kt:19: Warning: Do not place Android context classes in static fields; this is a memory leak [StaticFieldLeak]
+    private var context: Context? = null
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\imaging\ScanModel.kt:7: Warning: Do not place Android context classes in static fields (static reference to ScanModel which has field context pointing to Context); this is a memory leak [StaticFieldLeak]
+/** CPU sessions for the two recovered 240px models. Inputs are planar BGR / 255. */
+^
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\imaging\ScanModel.kt:9: Warning: Do not place Android context classes in static fields; this is a memory leak [StaticFieldLeak]
+    private var context: Context? = null
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "StaticFieldLeak":
+   A static field will leak contexts.
+
+   Non-static inner classes have an implicit reference to their outer class.
+   If that outer class is for example a Fragment or Activity, then this
+   reference means that the long-running handler/loader/task will hold a
+   reference to the activity which prevents it from getting garbage
+   collected.
+
+   Similarly, direct field references to activities and fragments from these
+   longer running instances can cause leaks.
+
+   ViewModel classes should never point to Views or non-application Contexts.
+
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\ui\ReaderScreen.kt:121: Warning: Frequently changing state should not be directly read in composable function [FrequentlyChangedStateReadInComposition from androidx.compose.foundation]
+    LaunchedEffect(list.firstVisibleItemIndex) {
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "FrequentlyChangedStateReadInComposition":
+   This property is observable and is updated after every scroll or remeasure.
+   If you use it in the composable function directly, it will be recomposed on
+   every change, causing potential performance issues including infinity
+   recomposition loops. Prefer wrapping it with derivedStateOf to use
+   calculation based on this property in composition or collect changes inside
+   LaunchedEffect instead.
+
+   Vendor: Jetpack Compose
+   Identifier: androidx.compose.foundation
+   Feedback: https://issuetracker.google.com/issues/new?component=612128
+
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\ui\AnnotationScreen.kt:331: Warning: Use the KTX extension function SharedPreferences.edit instead? [UseKtx]
+                        prefs
+                        ^
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\data\BackupStore.kt:190: Warning: Use the KTX extension function SharedPreferences.edit instead? [UseKtx]
+                    signatures.edit().putString("strokes", metadata.getString("signature")).apply()
+                    ~~~~~~~~~~~~~~~~~
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\ui\CameraScreen.kt:190: Warning: Use the KTX extension function SharedPreferences.edit instead? [UseKtx]
+                    prefs.edit().putBoolean("auto", auto).apply()
+                    ~~~~~~~~~~~~
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\imaging\LearnedDocumentDetector.kt:55: Warning: Use the KTX function createBitmap instead? [UseKtx]
+            val input = Bitmap.createBitmap(256, 256, Bitmap.Config.ARGB_8888)
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\imaging\LearnedDocumentDetector.kt:153: Warning: Use the KTX function createBitmap instead? [UseKtx]
+        val bitmap = Bitmap.createBitmap(source.cols(), source.rows(), Bitmap.Config.ARGB_8888)
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\MainActivity.kt:50: Warning: Use the KTX extension function SharedPreferences.edit instead? [UseKtx]
+        if (!available) securityPreferences.edit().putBoolean("appLock", false).apply()
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\MainViewModel.kt:387: Warning: Use the KTX extension function SharedPreferences.edit instead? [UseKtx]
+        getApplication<Application>()
+        ^
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\MainViewModel.kt:408: Warning: Use the KTX extension function SharedPreferences.edit instead? [UseKtx]
+                        getApplication<Application>()
+                        ^
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\MainViewModel.kt:587: Warning: Use the KTX extension function SharedPreferences.edit instead? [UseKtx]
+        getApplication<Application>()
+        ^
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\ocr\OcrEngine.kt:196: Warning: Use the KTX extension function Bitmap.scale instead? [UseKtx]
+                        Bitmap.createScaledBitmap(
+                        ^
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\ocr\OcrEngine.kt:366: Warning: Use the KTX function createBitmap instead? [UseKtx]
+            Bitmap.createBitmap(
+            ^
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\imaging\PageDecoder.kt:115: Warning: Use the KTX function createBitmap instead? [UseKtx]
+        return Bitmap.createBitmap(rotated.width, rotated.height, Bitmap.Config.ARGB_8888).also {
+               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\imaging\PageDewarp.kt:70: Warning: Use the KTX function createBitmap instead? [UseKtx]
+            return Bitmap.createBitmap(result.cols(), result.rows(), Bitmap.Config.ARGB_8888).also {
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\imaging\PageOrientation.kt:9: Warning: Use the KTX function createBitmap instead? [UseKtx]
+        return Bitmap.createBitmap(plan.outputWidth, plan.outputHeight, Bitmap.Config.ARGB_8888)
+               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\pdf\PdfEngine.kt:233: Warning: Use the KTX function createBitmap instead? [UseKtx]
+                                    Bitmap.createBitmap(
+                                    ^
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\pdf\PdfImageOptimizer.kt:239: Warning: Use the KTX extension function Bitmap.scale instead? [UseKtx]
+                                            Bitmap.createScaledBitmap(
+                                            ^
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\pdf\PdfMarks.kt:185: Warning: Use the KTX function createBitmap instead? [UseKtx]
+                                    Bitmap.createBitmap(
+                                    ^
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\pdf\PdfSearchable.kt:34: Warning: Use the KTX function createBitmap instead? [UseKtx]
+                                        Bitmap.createBitmap(
+                                        ^
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\pdf\PdfTextExport.kt:98: Warning: Use the KTX function createBitmap instead? [UseKtx]
+                                                Bitmap.createBitmap(
+                                                ^
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\pdf\PdfTools.kt:262: Warning: Use the KTX function createBitmap instead? [UseKtx]
+                                    Bitmap.createBitmap(
+                                    ^
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\ui\ReaderScreen.kt:53: Warning: Use the KTX function createBitmap instead? [UseKtx]
+                Bitmap.createBitmap(
+                ^
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\imaging\ScanProcessor.kt:70: Warning: Use the KTX function createBitmap instead? [UseKtx]
+            return Bitmap.createBitmap(resized.cols(), resized.rows(), Bitmap.Config.ARGB_8888)
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\imaging\ScanProcessor.kt:208: Warning: Use the KTX function createBitmap instead? [UseKtx]
+            return Bitmap.createBitmap(dst.cols(), dst.rows(), Bitmap.Config.ARGB_8888).also {
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\ui\SecuritySettings.kt:25: Warning: Use the KTX extension function SharedPreferences.edit instead? [UseKtx]
+                    preferences.edit().putBoolean("secureScreen", value).apply()
+                    ~~~~~~~~~~~~~~~~~~
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\ui\SecuritySettings.kt:36: Warning: Use the KTX extension function SharedPreferences.edit instead? [UseKtx]
+                    preferences.edit().putBoolean("appLock", value).apply()
+                    ~~~~~~~~~~~~~~~~~~
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\UserSettings.kt:52: Warning: Use the KTX extension function SharedPreferences.edit instead? [UseKtx]
+            prefs
+            ^
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\UserSettings.kt:71: Warning: Use the KTX extension function SharedPreferences.edit instead? [UseKtx]
+        prefs.edit().putString(key, value).apply()
+        ~~~~~~~~~~~~
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\UserSettings.kt:76: Warning: Use the KTX extension function SharedPreferences.edit instead? [UseKtx]
+        prefs.edit().putBoolean(key, value).apply()
+        ~~~~~~~~~~~~
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\UserSettings.kt:81: Warning: Use the KTX extension function SharedPreferences.edit instead? [UseKtx]
+        prefs.edit().putFloat(key, value).apply()
+        ~~~~~~~~~~~~
+C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\src\main\java\cn\paperforge\app\UserSettings.kt:86: Warning: Use the KTX extension function SharedPreferences.edit instead? [UseKtx]
+        prefs.edit().clear().putBoolean("autoShutter", true).apply()
+        ~~~~~~~~~~~~
+
+   Explanation for issues of type "UseKtx":
+   The Android KTX libraries decorates the Android platform SDK as well as
+   various libraries with more convenient extension functions available from
+   Kotlin, allowing you to use default parameters, named parameters, and
+   more.
+
+   Available options:
+
+   **remove-defaults** (default is true):
+   Whether to skip arguments that match the defaults provided by the extension.
+
+   Extensions often provide default values for some of the parameters. For example:
+   ```kotlin
+   fun Path.readLines(charset: Charset = Charsets.UTF_8): List<String> { return Files.readAllLines(this, charset) }
+   ```
+   This lint check will by default automatically omit parameters that match the default, so if your code was calling
+
+   ```kotlin
+   Files.readAllLines(file, Charset.UTF_8)
+   ```
+   lint would replace this with
+   ```kotlin
+   file.readLines()
+   ```
+   rather than
+
+   ```kotlin
+   file.readLines(Charset.UTF_8
+   ```
+   You can turn this behavior off using this option.
+
+   To configure this option, use a `lint.xml` file with an <option> like this:
+
+   ```xml
+   <lint>
+       <issue id="UseKtx">
+           <option name="remove-defaults" value="true" />
+       </issue>
+   </lint>
+   ```
+
+   **require-present** (default is true):
+   Whether to only offer extensions already available.
+
+   This option lets you only have lint suggest extension replacements if those extensions are already available on the class path (in other words, you're already depending on the library containing the extension method.)
+
+   To configure this option, use a `lint.xml` file with an <option> like this:
+
+   ```xml
+   <lint>
+       <issue id="UseKtx">
+           <option name="require-present" value="true" />
+       </issue>
+   </lint>
+   ```
+
+0 errors, 42 warnings

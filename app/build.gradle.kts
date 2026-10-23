@@ -12,8 +12,16 @@ android {
         applicationId = "cn.paperforge.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "0.4.0"
+        versionCode = 5
+        versionName = "0.5.0"
+        externalNativeBuild {
+            cmake {
+                arguments += "-DANDROID_STL=c++_static"
+                providers.gradleProperty("paperforgeMnnSource").orNull?.let {
+                    arguments += "-DPAPERFORGE_MNN_SOURCE=$it"
+                }
+            }
+        }
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk {
             abiFilters +=
@@ -22,7 +30,14 @@ android {
         }
     }
     buildFeatures { compose = true }
-    androidResources { noCompress += "ort" }
+    ndkVersion = "28.2.13676358"
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
+    }
+    androidResources { noCompress += listOf("ort", "mnn") }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

@@ -9,13 +9,17 @@ import org.json.JSONObject
 object UserSettings {
     private val defaults: Map<String, Any> =
         linkedMapOf(
-            "detector" to "HYBRID",
+            "detector" to "NEURAL",
+            "outlineWeight" to 3f,
+            "outlineSwitchFrames" to 2f,
+            "dewarpStrength" to 1f,
             "autoShutter" to true,
             "reviewAfterCapture" to false,
             "lockCrop" to true,
             "showOutline" to true,
             "strictQuality" to false,
             "captureArea" to .08f,
+            "captureConfidence" to .60f,
             "stableMs" to 600f,
             "cooldownMs" to 1500f,
             "analysisMs" to 160f,
@@ -97,6 +101,7 @@ object UserSettings {
             mapOf(
                 "stableMs" to 300f..2000f,
                 "captureArea" to 0.05f..0.4f,
+                "captureConfidence" to 0.45f..0.95f,
                 "cooldownMs" to 800f..5000f,
                 "analysisMs" to 100f..500f,
                 "cameraJpeg" to 75f..100f,
@@ -107,10 +112,13 @@ object UserSettings {
                 "quality" to 40f..100f,
                 "fontScale" to 0.85f..1.3f,
                 "recentCount" to 4f..20f,
+                "outlineWeight" to 1f..8f,
+                "outlineSwitchFrames" to 1f..6f,
+                "dewarpStrength" to 0f..1f,
             )
         val options =
             mapOf(
-                "detector" to setOf("HYBRID", "STANDARD"),
+                "detector" to setOf("NEURAL", "HYBRID", "STANDARD"),
                 "filter" to setOf("ORIGINAL", "AUTO", "CLEAN", "GRAY", "BW", "COLOR", "WHITEBOARD"),
                 "ocrLanguage" to setOf("CHINESE", "LATIN"),
                 "paper" to setOf("Auto", "A4", "A5", "Letter"),

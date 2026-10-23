@@ -1,5 +1,7 @@
 # 发布检查
 
+0.5.0使用固定官方MNN3.6.1源码与两份恢复模型，随包来源不等于模型开源许可。只验证本轮扫描链路，详细结果见acceptance/v050。发布流程继续生成同证书通用/ARM64/x86_64包、源码ZIP、报告及SHA256；逐附件回读后公开新预发布。新v0.5.0 tag保留旧版本不变，最终以上传目录release-0.5.0-verification.json为准。
+
 0.4.0新增定位模型与ONNX Runtime：完整许可/固定来源/模型及AAR哈希保存在assets。通用、ARM64、x86_64分别检查签名、权限和16KB结构对齐，source.zip按原始Git blob验证；新tag和预发布不覆盖历史。最终Release上传结果以交付目录release-0.4.0-verification.json为准。
 
 ## 0.3.0 当前发布

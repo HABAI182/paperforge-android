@@ -1,0 +1,169 @@
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:compressDebugAssets
+> Task :app:kspDebugKotlin
+> Task :app:configureCMakeDebug[arm64-v8a]
+
+> Task :app:compileDebugKotlin
+w: file:///C:/Users/18769/Documents/Codex/2026-10-23/new-chat/outputs/PaperForge/app/src/main/java/cn/paperforge/app/ui/EditorScreen.kt:152:39 'val Icons.Filled.NoteAdd: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.NoteAdd.
+w: file:///C:/Users/18769/Documents/Codex/2026-10-23/new-chat/outputs/PaperForge/app/src/main/java/cn/paperforge/app/ui/EditorScreen.kt:225:46 'val Icons.Filled.RotateRight: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.RotateRight.
+
+> Task :app:buildCMakeDebug[arm64-v8a]
+C/C++: ninja: Entering directory `C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\.cxx\Debug\4c2w406f\arm64-v8a'
+C/C++: C:/Users/18769/Documents/Codex/2026-10-23/new-chat/outputs/PaperForge/app/.cxx/Debug/4c2w406f/arm64-v8a/_deps/mnn-src/source/backend/cpu/CPUDequantize.cpp:109:81: warning: implicit conversion from 'type' (aka 'int') to 'float' changes value from 2147483647 to 2147483648 [-Wimplicit-const-int-float-conversion]
+C/C++:   109 |                 : std::max(minRange / std::numeric_limits<T>::min(), maxRange / std::numeric_limits<T>::max());
+C/C++:       |                                                                               ~ ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C/C++: C:/Users/18769/Documents/Codex/2026-10-23/new-chat/outputs/PaperForge/app/.cxx/Debug/4c2w406f/arm64-v8a/_deps/mnn-src/source/backend/cpu/CPUDequantize.cpp:33:19: note: in instantiation of member function 'MNN::CPUDequantize<int>::onExecute' requested here
+C/C++:    33 | CPUDequantize<T>::CPUDequantize(Backend* backend, QuantizeMode mode, const Op* op) :  Execution(backend), mMode(mode) {
+C/C++:       |                   ^
+C/C++: C:/Users/18769/Documents/Codex/2026-10-23/new-chat/outputs/PaperForge/app/.cxx/Debug/4c2w406f/arm64-v8a/_deps/mnn-src/source/backend/cpu/CPUDequantize.cpp:132:28: note: in instantiation of member function 'MNN::CPUDequantize<int>::CPUDequantize' requested here
+C/C++:   132 |                 return new CPUDequantize<int32_t>(backend, dequantize->mode(), op);
+C/C++:       |                            ^
+C/C++: 1 warning generated.
+C/C++: C:/Users/18769/Documents/Codex/2026-10-23/new-chat/outputs/PaperForge/app/.cxx/Debug/4c2w406f/arm64-v8a/_deps/mnn-src/source/backend/cpu/CPURuntime.cpp:1146:9: warning: array designators are a C99 extension [-Wc99-designator]
+C/C++:  1146 |         [cpuinfo_android_chipset_property_proc_cpuinfo_hardware] =
+C/C++:       |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C/C++: 1 warning generated.
+C/C++: C:/Users/18769/Documents/Codex/2026-10-23/new-chat/outputs/PaperForge/app/.cxx/Debug/4c2w406f/arm64-v8a/_deps/mnn-src/source/core/Pipeline.cpp:947:51: warning: format specifies type 'int' but the argument has type 'size_t' (aka 'unsigned long') [-Wformat]
+C/C++:   947 |     MNN_PRINT("Fix: %d - Total: %d, rate = %f\n", fixNumber, totalNumber, (float)fixNumber / (float)totalNumber);
+C/C++:       |                     ~~                            ^~~~~~~~~
+C/C++:       |                     %zu
+C/C++: C:/Users/18769/Documents/Codex/2026-10-23/new-chat/outputs/PaperForge/app/.cxx/Debug/4c2w406f/arm64-v8a/_deps/mnn-src/include/MNN/MNNDefine.h:30:90: note: expanded from macro 'MNN_PRINT'
+C/C++:    30 | #define MNN_PRINT(format, ...) __android_log_print(ANDROID_LOG_INFO, "MNNJNI", format, ##__VA_ARGS__)
+C/C++:       |                                                                                ~~~~~~    ^~~~~~~~~~~
+C/C++: C:/Users/18769/Documents/Codex/2026-10-23/new-chat/outputs/PaperForge/app/.cxx/Debug/4c2w406f/arm64-v8a/_deps/mnn-src/source/core/Pipeline.cpp:947:62: warning: format specifies type 'int' but the argument has type 'size_t' (aka 'unsigned long') [-Wformat]
+C/C++:   947 |     MNN_PRINT("Fix: %d - Total: %d, rate = %f\n", fixNumber, totalNumber, (float)fixNumber / (float)totalNumber);
+C/C++:       |                                 ~~                           ^~~~~~~~~~~
+C/C++:       |                                 %zu
+C/C++: C:/Users/18769/Documents/Codex/2026-10-23/new-chat/outputs/PaperForge/app/.cxx/Debug/4c2w406f/arm64-v8a/_deps/mnn-src/include/MNN/MNNDefine.h:30:90: note: expanded from macro 'MNN_PRINT'
+C/C++:    30 | #define MNN_PRINT(format, ...) __android_log_print(ANDROID_LOG_INFO, "MNNJNI", format, ##__VA_ARGS__)
+C/C++:       |                                                                                ~~~~~~    ^~~~~~~~~~~
+C/C++: 2 warnings generated.
+
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:dexBuilderDebug
+> Task :app:mergeDebugGlobalSynthetics UP-TO-DATE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:mergeDebugJavaResource UP-TO-DATE
+> Task :app:mergeProjectDexDebug
+> Task :app:configureCMakeDebug[x86_64]
+
+> Task :app:buildCMakeDebug[x86_64]
+C/C++: ninja: Entering directory `C:\Users\18769\Documents\Codex\2026-10-23\new-chat\outputs\PaperForge\app\.cxx\Debug\4c2w406f\x86_64'
+C/C++: C:/Users/18769/Documents/Codex/2026-10-23/new-chat/outputs/PaperForge/app/.cxx/Debug/4c2w406f/x86_64/_deps/mnn-src/source/backend/cpu/CPUDequantize.cpp:109:81: warning: implicit conversion from 'type' (aka 'int') to 'float' changes value from 2147483647 to 2147483648 [-Wimplicit-const-int-float-conversion]
+C/C++:   109 |                 : std::max(minRange / std::numeric_limits<T>::min(), maxRange / std::numeric_limits<T>::max());
+C/C++:       |                                                                               ~ ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C/C++: C:/Users/18769/Documents/Codex/2026-10-23/new-chat/outputs/PaperForge/app/.cxx/Debug/4c2w406f/x86_64/_deps/mnn-src/source/backend/cpu/CPUDequantize.cpp:33:19: note: in instantiation of member function 'MNN::CPUDequantize<int>::onExecute' requested here
+C/C++:    33 | CPUDequantize<T>::CPUDequantize(Backend* backend, QuantizeMode mode, const Op* op) :  Execution(backend), mMode(mode) {
+C/C++:       |                   ^
+C/C++: C:/Users/18769/Documents/Codex/2026-10-23/new-chat/outputs/PaperForge/app/.cxx/Debug/4c2w406f/x86_64/_deps/mnn-src/source/backend/cpu/CPUDequantize.cpp:132:28: note: in instantiation of member function 'MNN::CPUDequantize<int>::CPUDequantize' requested here
+C/C++:   132 |                 return new CPUDequantize<int32_t>(backend, dequantize->mode(), op);
+C/C++:       |                            ^
+C/C++: 1 warning generated.
+C/C++: C:/Users/18769/Documents/Codex/2026-10-23/new-chat/outputs/PaperForge/app/.cxx/Debug/4c2w406f/x86_64/_deps/mnn-src/source/backend/cpu/x86_x64/sse/GemmInt8.cpp:478:13: warning: 'COMPUTE' macro redefined [-Wmacro-redefined]
+C/C++:   478 |     #define COMPUTE(i, j)\
+C/C++:       |             ^
+C/C++: C:/Users/18769/Documents/Codex/2026-10-23/new-chat/outputs/PaperForge/app/.cxx/Debug/4c2w406f/x86_64/_deps/mnn-src/source/backend/cpu/x86_x64/sse/GemmInt8.cpp:126:13: note: previous definition is here
+C/C++:   126 |     #define COMPUTE(i, j)\
+C/C++:       |             ^
+C/C++: 1 warning generated.
+C/C++: C:/Users/18769/Documents/Codex/2026-10-23/new-chat/outputs/PaperForge/app/.cxx/Debug/4c2w406f/x86_64/_deps/mnn-src/source/core/Pipeline.cpp:947:51: warning: format specifies type 'int' but the argument has type 'size_t' (aka 'unsigned long') [-Wformat]
+C/C++:   947 |     MNN_PRINT("Fix: %d - Total: %d, rate = %f\n", fixNumber, totalNumber, (float)fixNumber / (float)totalNumber);
+C/C++:       |                     ~~                            ^~~~~~~~~
+C/C++:       |                     %zu
+C/C++: C:/Users/18769/Documents/Codex/2026-10-23/new-chat/outputs/PaperForge/app/.cxx/Debug/4c2w406f/x86_64/_deps/mnn-src/include/MNN/MNNDefine.h:30:90: note: expanded from macro 'MNN_PRINT'
+C/C++:    30 | #define MNN_PRINT(format, ...) __android_log_print(ANDROID_LOG_INFO, "MNNJNI", format, ##__VA_ARGS__)
+C/C++:       |                                                                                ~~~~~~    ^~~~~~~~~~~
+C/C++: C:/Users/18769/Documents/Codex/2026-10-23/new-chat/outputs/PaperForge/app/.cxx/Debug/4c2w406f/x86_64/_deps/mnn-src/source/core/Pipeline.cpp:947:62: warning: format specifies type 'int' but the argument has type 'size_t' (aka 'unsigned long') [-Wformat]
+C/C++:   947 |     MNN_PRINT("Fix: %d - Total: %d, rate = %f\n", fixNumber, totalNumber, (float)fixNumber / (float)totalNumber);
+C/C++:       |                                 ~~                           ^~~~~~~~~~~
+C/C++:       |                                 %zu
+C/C++: C:/Users/18769/Documents/Codex/2026-10-23/new-chat/outputs/PaperForge/app/.cxx/Debug/4c2w406f/x86_64/_deps/mnn-src/include/MNN/MNNDefine.h:30:90: note: expanded from macro 'MNN_PRINT'
+C/C++:    30 | #define MNN_PRINT(format, ...) __android_log_print(ANDROID_LOG_INFO, "MNNJNI", format, ##__VA_ARGS__)
+C/C++:       |                                                                                ~~~~~~    ^~~~~~~~~~~
+C/C++: 2 warnings generated.
+
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:generateDebugAndroidTestResValues UP-TO-DATE
+> Task :app:extractProguardFiles UP-TO-DATE
+> Task :app:generateDebugLintReportModel
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:checkDebugAndroidTestAarMetadata UP-TO-DATE
+> Task :app:processDebugAndroidTestNavigationResources UP-TO-DATE
+> Task :app:compileDebugAndroidTestNavigationResources UP-TO-DATE
+> Task :app:mapDebugAndroidTestSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugAndroidTestResources UP-TO-DATE
+> Task :app:mergeDebugAndroidTestResources UP-TO-DATE
+> Task :app:processDebugAndroidTestManifest UP-TO-DATE
+> Task :app:processDebugAndroidTestResources UP-TO-DATE
+> Task :app:javaPreCompileDebugAndroidTest UP-TO-DATE
+> Task :app:mergeDebugAndroidTestShaders UP-TO-DATE
+> Task :app:compileDebugAndroidTestShaders NO-SOURCE
+> Task :app:generateDebugAndroidTestAssets UP-TO-DATE
+> Task :app:mergeDebugAndroidTestAssets
+> Task :app:desugarDebugAndroidTestFileDependencies UP-TO-DATE
+> Task :app:compressDebugAndroidTestAssets
+> Task :app:checkDebugAndroidTestDuplicateClasses UP-TO-DATE
+> Task :app:mergeExtDexDebugAndroidTest UP-TO-DATE
+> Task :app:mergeLibDexDebugAndroidTest UP-TO-DATE
+> Task :app:mergeDebugAndroidTestJniLibFolders UP-TO-DATE
+> Task :app:validateSigningDebugAndroidTest UP-TO-DATE
+> Task :app:writeDebugAndroidTestSigningConfigVersions UP-TO-DATE
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:generateDebugAndroidTestLintModel
+> Task :app:generateDebugUnitTestLintModel
+> Task :app:kspDebugAndroidTestKotlin
+> Task :app:compileDebugAndroidTestKotlin
+> Task :app:compileDebugAndroidTestJavaWithJavac NO-SOURCE
+> Task :app:dexBuilderDebugAndroidTest
+> Task :app:mergeDebugAndroidTestGlobalSynthetics UP-TO-DATE
+> Task :app:processDebugAndroidTestJavaRes UP-TO-DATE
+> Task :app:mergeDebugAndroidTestJavaResource UP-TO-DATE
+> Task :app:mergeProjectDexDebugAndroidTest
+> Task :app:mergeDebugNativeLibs
+> Task :app:mergeDebugAndroidTestNativeLibs NO-SOURCE
+> Task :app:stripDebugAndroidTestDebugSymbols NO-SOURCE
+> Task :app:packageDebugAndroidTest
+> Task :app:createDebugAndroidTestApkListingFileRedirect UP-TO-DATE
+> Task :app:stripDebugDebugSymbols
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleDebug
+> Task :app:lintAnalyzeDebugUnitTest
+
+> Task :app:connectedDebugAndroidTest
+Starting 2 tests on paperforge_api35(AVD) - 15
+
+> Task :app:lintAnalyzeDebugAndroidTest
+Finished 2 tests on paperforge_api35(AVD) - 15
+> Task :app:lintAnalyzeDebug

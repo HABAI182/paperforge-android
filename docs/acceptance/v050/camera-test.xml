@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="cn.paperforge.app.LibraryWorkflowTest" tests="1" failures="0" errors="0" skipped="0" time="11.071" timestamp="2026-10-23T15:30:36" hostname="localhost">
+  <properties>
+    <property name="device" value="paperforge_api35(AVD) - 15" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="cameraBindsSharedViewportAndManualShutterStillWorks" classname="cn.paperforge.app.LibraryWorkflowTest" time="10.742" />
+</testsuite>

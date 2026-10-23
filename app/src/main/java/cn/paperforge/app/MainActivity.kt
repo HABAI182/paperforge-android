@@ -433,11 +433,11 @@ class MainActivity : ComponentActivity() {
                 if (about)
                     AlertDialog(
                         onDismissRequest = { about = false },
-                        title = { Text("纸匠 PaperForge · 0.4.0") },
+                        title = { Text("纸匠 PaperForge · 0.5.0") },
                         text = {
                             Column(Modifier.verticalScroll(rememberScrollState())) {
                                 Text(
-                                    "非商用个人项目\n\n无需账户、无广告、无水印。扫描与识别在本机完成。应用没有网络权限，不上传文档。\n\n通过系统文件选择器导入副本；删除应用内文档不会删除外部原件。卸载会删除应用私有草稿，请先导出或备份重要文件。\n\n扫描自动裁边、去阴影、中英文 OCR、可搜索 PDF；阅读与搜索、页面整理、批注签名、安全脱敏、密码、表单、图片和文字导出、备份恢复。高保真 Office 转换、曲面书页展平和原生文字原位编辑尚未提供。",
+                                    "非商用个人项目\n\n无需账户、无广告、无水印。扫描与识别在本机完成。应用没有网络权限，不上传文档。\n\n通过系统文件选择器导入副本；删除应用内文档不会删除外部原件。卸载会删除应用私有草稿，请先导出或备份重要文件。\n\n扫描自动裁边、去阴影、中英文 OCR、可搜索 PDF；阅读与搜索、页面整理、批注签名、安全脱敏、密码、表单、图片和文字导出、备份恢复。曲面校正支持预览与强度调整。高保真 Office 转换和原生文字原位编辑尚未提供。",
                                     style = MaterialTheme.typography.bodyMedium,
                                 )
                                 SecuritySettings()

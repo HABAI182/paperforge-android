@@ -66,7 +66,9 @@ class LibraryWorkflowTest {
         val model = vm()
         val repo = model.repo
         val previousAuto = UserSettings.bool("autoShutter", true)
+        val previousDetector = UserSettings.string("detector", "NEURAL")
         UserSettings.set("autoShutter", false)
+        UserSettings.set("detector", "NEURAL")
         compose.runOnIdle { model.newScan() }
         compose.waitUntil(20000) {
             compose.onAllNodesWithContentDescription("拍照").fetchSemanticsNodes().isNotEmpty() &&
@@ -80,11 +82,16 @@ class LibraryWorkflowTest {
             compose.onNodeWithContentDescription("拍照").performClick()
             compose.waitUntil(20000) { !model.busy.value && model.pages.value.isNotEmpty() }
             compose.onNodeWithText("完成 1").performClick()
+            compose.waitUntil(10000) {
+                model.screen.value == "editor" &&
+                    runCatching { compose.onNodeWithText("整理扫描").assertIsDisplayed() }.isSuccess
+            }
             compose.onNodeWithText("整理扫描").assertIsDisplayed()
             assertEquals(1, runBlocking { repo.dao.pages(doc.id).size })
         } finally {
             runBlocking { repo.deleteDocument(doc) }
             UserSettings.set("autoShutter", previousAuto)
+            UserSettings.set("detector", previousDetector)
         }
     }
 

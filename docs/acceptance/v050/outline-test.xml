@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="cn.paperforge.app.OutlineTrackerTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-23T15:14:55.330Z" hostname="DESKTOP-DVV8TM5" time="0.031">
+  <properties/>
+  <testcase name="transientJumpsDoNotMoveTheOutlineAndLossExpiresInMilliseconds" classname="cn.paperforge.app.OutlineTrackerTest" time="0.031"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
