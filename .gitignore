@@ -6,3 +6,6 @@ local.properties
 *.jks
 *.keystore
 captures/
+bench-private/
+bench-results/
+*.hprof

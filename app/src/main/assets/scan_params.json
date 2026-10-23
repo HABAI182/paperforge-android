@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "detectorMaxEdge": 1000,
+  "previewDetectorMaxEdge": 720,
+  "minimumArea": 0.07,
+  "confidenceHint": 0.60,
+  "confidenceCapture": 0.72,
+  "candidateLimit": 40,
+  "refineBandFraction": 0.008,
+  "illuminationEdge": 480,
+  "illuminationTilePercentile": 0.88,
+  "illuminationStrength": 0.85,
+  "sauvolaWindowFraction": 0.05,
+  "sauvolaK": 0.22,
+  "draftDpi": 150,
+  "standardDpi": 220,
+  "highDpi": 300,
+  "maxDecodePixels": 18000000,
+  "ocrLowConfidence": 0.82,
+  "ocrMinCharacterHeight": 28,
+  "captureStableMs": 1200,
+  "captureSharpnessFloor": 45.0
+}
