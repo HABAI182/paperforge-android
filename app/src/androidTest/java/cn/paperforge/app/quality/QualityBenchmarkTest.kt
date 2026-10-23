@@ -67,7 +67,7 @@ class QualityBenchmarkTest {
                 File(output, "high-resolution.jpg").outputStream().use { render.compress(Bitmap.CompressFormat.JPEG, 95, it) }
                 render.recycle()
                 if (baseline) BaselinePdfEngine.scan(listOf(page), File(output, "resolution-export.pdf"))
-                else PdfEngine.scan(listOf(page), File(output, "resolution-export.pdf"))
+                else PdfEngine.scan(listOf(page), File(output, "resolution-export.pdf"),resolution="HIGH")
             }
             if (item.getString("scene") == "ocr-regression") {
                 val all = List(10) { page.copy(id = "bw-$it", filter = "BW") }

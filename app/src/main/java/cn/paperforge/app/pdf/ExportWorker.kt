@@ -16,7 +16,7 @@ class ExportWorker(context: Context,params: WorkerParameters): CoroutineWorker(c
             var doc=repo.dao.document(inputData.getString("document") ?: error("缺少文档")) ?: error("草稿不存在")
             inputData.getString("title")?.let { title -> repo.rename(doc,title); doc=doc.copy(title=safeFileName(title)) }
             val file=File(repo.exports,"${safeFileName(doc.title)}-${id.toString().take(8)}.pdf")
-            PdfEngine.scan(repo.dao.pages(doc.id),file,inputData.getString("paper") ?: "A4",inputData.getInt("quality",90),applicationContext,inputData.getBoolean("searchable",false)) { setProgress(workDataOf("progress" to it)) }
+            PdfEngine.scan(repo.dao.pages(doc.id),file,inputData.getString("paper") ?: "Auto",inputData.getInt("quality",90),applicationContext,inputData.getBoolean("searchable",false),inputData.getString("resolution") ?: "STANDARD") { setProgress(workDataOf("progress" to it)) }
             repo.registerPdf(file,doc.title)
             Result.success(workDataOf("path" to file.path))
         } catch(e: CancellationException) { throw e }

@@ -22,20 +22,22 @@ import cn.paperforge.app.ocr.BundledOcrEngine
 import cn.paperforge.app.model.OcrLayout
 
 object PdfEngine {
-    suspend fun scan(pages: List<PageRow>,output: File,paper: String="A4",quality: Int=90,context: Context?=null,searchable: Boolean=false,progress: suspend (Int)->Unit={}) {
+    suspend fun scan(pages: List<PageRow>,output: File,paper: String="Auto",quality: Int=90,context: Context?=null,searchable: Boolean=false,resolution: String="STANDARD",progress: suspend (Int)->Unit={}) {
         require(pages.isNotEmpty()) { "请先添加页面" }
         atomic(output) { temp ->
             PDDocument(MemoryUsageSetting.setupTempFileOnly()).use { doc ->
                 val font=if(searchable) PdfTextLayer.font(requireNotNull(context),doc) else null
                 pages.forEachIndexed { index,page ->
                     coroutineContext.ensureActive()
-                    val bitmap=ScanProcessor.render(page,if(quality<70) 1600 else 2800)
+                    val dpi=cn.paperforge.app.imaging.ScanConfig.dpi(resolution)
+                    val bitmap=ScanProcessor.render(page,cn.paperforge.app.imaging.ScanConfig.edge(resolution))
                     try {
-                        val size=when(paper) { "A5" -> PDRectangle.A5; "Letter" -> PDRectangle.LETTER; "Original" -> PDRectangle(bitmap.width*.24f,bitmap.height*.24f); else -> PDRectangle.A4 }
+                        val matched=paper in listOf("Auto","Original")
+                        val size=when(paper) { "A5" -> PDRectangle.A5; "Letter" -> PDRectangle.LETTER; "Auto","Original" -> PDRectangle(bitmap.width*72f/dpi,bitmap.height*72f/dpi); else -> PDRectangle.A4 }
                         val card=paper=="ID"
                         val pdfPage=if(card && index%2==1) doc.getPage(doc.numberOfPages-1) else PDPage(size).also { doc.addPage(it) }
                         val image=JPEGFactory.createFromImage(doc,bitmap,quality/100f)
-                        val margin=if(paper=="Original") 0f else 12f
+                        val margin=if(matched) 0f else 12f
                         val scale=if(card) minOf(242.65f/bitmap.width,153.07f/bitmap.height) else minOf((size.width-2*margin)/bitmap.width,(size.height-2*margin)/bitmap.height)
                         val w=bitmap.width*scale; val h=bitmap.height*scale
                         val x=(size.width-w)/2; val y=if(card) (if(index%2==0) size.height*.66f else size.height*.33f)-h/2 else (size.height-h)/2

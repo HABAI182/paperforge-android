@@ -95,10 +95,10 @@ class MainViewModel(app: Application): AndroidViewModel(app) {
     fun categorize(doc: DocumentRow,folder: String,tags: String)=perform("保存分类") { repo.dao.updateDocument(doc.copy(folder=folder,tags=tags)) }
     fun favorite(doc: DocumentRow)=perform("更新收藏") { repo.dao.updateDocument(doc.copy(favorite=!doc.favorite)) }
     fun rename(doc: DocumentRow,title: String)=perform("正在重命名") { repo.rename(doc,title); selected.value=doc.copy(title=safeFileName(title)) }
-    fun export(paper: String,quality: Int,title: String?=null,searchable: Boolean=false) {
+    fun export(paper: String,quality: Int,title: String?=null,searchable: Boolean=false,resolution: String="STANDARD") {
         val doc=selected.value ?: return
         if(busy.value) return
-        val request=OneTimeWorkRequestBuilder<ExportWorker>().setInputData(workDataOf("document" to doc.id,"paper" to paper,"quality" to quality,"title" to (title ?: doc.title),"searchable" to searchable)).build()
+        val request=OneTimeWorkRequestBuilder<ExportWorker>().setInputData(workDataOf("document" to doc.id,"paper" to paper,"quality" to quality,"title" to (title ?: doc.title),"searchable" to searchable,"resolution" to resolution)).build()
         WorkManager.getInstance(getApplication()).enqueueUniqueWork("export-${doc.id}",ExistingWorkPolicy.KEEP,request)
         getApplication<Application>().getSharedPreferences("session",0).edit().putString("export",request.id.toString()).apply()
         watchExport(request.id)

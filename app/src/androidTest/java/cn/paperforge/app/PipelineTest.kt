@@ -63,7 +63,7 @@ class PipelineTest {
         repo.savePage(edited)
         assertEquals(90,repo.dao.pages(doc.id).first().rotation)
         val output=File(repo.exports,"acceptance-ten-pages.pdf")
-        PdfEngine.scan(repo.dao.pages(doc.id),output)
+        PdfEngine.scan(repo.dao.pages(doc.id),output,paper="A4")
         PDDocument.load(output).use { pdf -> assertEquals(10,pdf.numberOfPages); assertEquals(PDRectangle.A4.width,pdf.getPage(0).mediaBox.width,.01f) }
         val extraction=File(repo.exports,"acceptance-selected.pdf")
         PdfEngine.extract(output,"10,1-2",extraction,90)
