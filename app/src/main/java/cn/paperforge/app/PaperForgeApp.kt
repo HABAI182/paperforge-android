@@ -14,6 +14,6 @@ class PaperForgeApp: Application() {
         PDFBoxResourceLoader.init(this)
         OpenCVLoader.initLocal()
         cn.paperforge.app.imaging.ScanConfig.load(assets)
-        repository=Repository(this,Room.databaseBuilder(this,PaperDatabase::class.java,"paperforge.db").addMigrations(PaperDatabase.Migration1To2).build())
+        repository=Repository(this,Room.databaseBuilder(this,PaperDatabase::class.java,"paperforge.db").addMigrations(PaperDatabase.Migration1To2,PaperDatabase.Migration2To3).build())
     }
 }

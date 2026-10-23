@@ -92,6 +92,7 @@ fun EditorScreen(vm: MainViewModel,onImport: ()->Unit) {
                         }
                     }
                 }
+                if(active.detectionConfidence!=null && active.detectionConfidence<.72f) Text("边缘证据不足，请检查四角；原图已保留。",color=MaterialTheme.colorScheme.error,style=MaterialTheme.typography.bodySmall)
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceEvenly) {
                     ToolAction(Icons.Default.Crop,"调四角",!busy) { crop=true }
                     ToolAction(Icons.Default.RotateRight,"旋转",!busy) { vm.save(active.copy(rotation=(active.rotation+90)%360)) }
@@ -121,7 +122,7 @@ fun EditorScreen(vm: MainViewModel,onImport: ()->Unit) {
             Spacer(Modifier.height(12.dp))
         }
     }
-    if(crop && active!=null) CropDialog(active,onDismiss={ crop=false },onSave={ vm.save(active.copy(corners=it.encode())); crop=false })
+    if(crop && active!=null) CropDialog(active,onDismiss={ crop=false },onSave={ vm.save(active.copy(corners=it.encode(),detectionConfidence=null,detectionMethod="manual")); crop=false })
     if(confirmDelete && active!=null) AlertDialog(onDismissRequest={ confirmDelete=false },title={ Text("删除这一页？") },text={ Text("会删除这页的私有原图和编辑参数。") },confirmButton={ TextButton(onClick={ vm.deletePage(active); confirmDelete=false }) { Text("删除") } },dismissButton={ TextButton(onClick={ confirmDelete=false }) { Text("保留") } })
     if(adjust && active!=null) {
         var brightness by remember { mutableFloatStateOf(active.brightness) }

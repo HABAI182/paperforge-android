@@ -1,0 +1,90 @@
+{
+  "dataset": "synthetic-v1",
+  "physical_device": false,
+  "n": 65,
+  "mean_iou": 0.9970891086039394,
+  "mean_corner_error_pct": 0.07930380696287521,
+  "failures": 0,
+  "negative_n": 8,
+  "false_positives": 0,
+  "p50_ms": 136.4871,
+  "p95_ms": 182.30148,
+  "sampled_peak_pss_kb": 242950,
+  "scenes": {
+    "clutter": {
+      "n": 8,
+      "mean_iou": 0.9970067603598889,
+      "failures": 0
+    },
+    "dark-desk": {
+      "n": 8,
+      "mean_iou": 0.997890716872595,
+      "failures": 0
+    },
+    "fills-frame": {
+      "n": 8,
+      "mean_iou": 0.9970832972052033,
+      "failures": 0
+    },
+    "glare": {
+      "n": 8,
+      "mean_iou": 0.9957565321990534,
+      "failures": 0
+    },
+    "ocr-regression": {
+      "n": 1,
+      "mean_iou": 0.998772204687271,
+      "failures": 0
+    },
+    "shadow": {
+      "n": 8,
+      "mean_iou": 0.995985174309121,
+      "failures": 0
+    },
+    "similar-luminance-color": {
+      "n": 8,
+      "mean_iou": 0.9982999428432553,
+      "failures": 0
+    },
+    "white-desk": {
+      "n": 8,
+      "mean_iou": 0.9957531043406682,
+      "failures": 0
+    },
+    "wood": {
+      "n": 8,
+      "mean_iou": 0.9987269536913128,
+      "failures": 0
+    }
+  },
+  "confidence_bins": [
+    {
+      "low": 0,
+      "high": 0.6,
+      "n": 8,
+      "successes": 8,
+      "accepted": 0
+    },
+    {
+      "low": 0.6,
+      "high": 0.72,
+      "n": 0,
+      "successes": 0,
+      "accepted": 0
+    },
+    {
+      "low": 0.72,
+      "high": 0.9,
+      "n": 10,
+      "successes": 10,
+      "accepted": 10
+    },
+    {
+      "low": 0.9,
+      "high": 1,
+      "n": 55,
+      "successes": 55,
+      "accepted": 55
+    }
+  ]
+}

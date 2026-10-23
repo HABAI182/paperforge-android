@@ -1,0 +1,54 @@
+{
+  "engine": "detector_v2",
+  "dataset": "synthetic-v1",
+  "cases": 82,
+  "detection_cases": 65,
+  "synthetic_cases": 82,
+  "device": "desktop Windows-11-10.0.26300-SP0",
+  "opencv": "4.12.0",
+  "mean_iou": 0.9951003397595761,
+  "mean_corner_error_pct": 0.1482571257994725,
+  "failure_rate": 0.0,
+  "detect_ms_p50": 83.02679999906104,
+  "detect_ms_p95": 99.31697999854804,
+  "scenes": {
+    "clutter": {
+      "n": 8,
+      "mean_iou": 0.9923797132890334
+    },
+    "dark-desk": {
+      "n": 8,
+      "mean_iou": 0.9964140430485707
+    },
+    "fills-frame": {
+      "n": 8,
+      "mean_iou": 0.9945663221369107
+    },
+    "glare": {
+      "n": 8,
+      "mean_iou": 0.993923451801933
+    },
+    "ocr-regression": {
+      "n": 1,
+      "mean_iou": 0.9990970845817074
+    },
+    "shadow": {
+      "n": 8,
+      "mean_iou": 0.9976431458657147
+    },
+    "similar-luminance-color": {
+      "n": 8,
+      "mean_iou": 0.9949091500339209
+    },
+    "white-desk": {
+      "n": 8,
+      "mean_iou": 0.9944379369517986
+    },
+    "wood": {
+      "n": 8,
+      "mean_iou": 0.9960293618459597
+    }
+  },
+  "negative_cases": 8,
+  "false_positive_rate": 0.0
+}

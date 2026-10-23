@@ -44,50 +44,15 @@ object ScanProcessor {
         } finally { upright.recycle(); source.release(); resized.release() }
     }
 
-    fun detect(bitmap: Bitmap): Quad? {
-        val rgba=Mat()
-        try { Utils.bitmapToMat(bitmap,rgba); return detectMat(rgba) } finally { rgba.release() }
-    }
-    fun detectMat(source: Mat): Quad? {
-        val small=Mat(); val gray=Mat(); val blur=Mat(); val edges=Mat(); val binary=Mat(); val hierarchy=Mat()
-        val kernel=Imgproc.getStructuringElement(Imgproc.MORPH_RECT,Size(5.0,5.0))
-        try {
-            val scale=min(1.0,900.0/max(source.cols(),source.rows()))
-            Imgproc.resize(source,small,Size(),scale,scale)
-            if(small.channels()==1) small.copyTo(gray) else Imgproc.cvtColor(small,gray,if(small.channels()==4) Imgproc.COLOR_RGBA2GRAY else Imgproc.COLOR_RGB2GRAY)
-            Imgproc.GaussianBlur(gray,blur,Size(5.0,5.0),0.0)
-            val candidates=mutableListOf<Pair<Quad,Float>>()
-            fun collect(mask: Mat) {
-                val contours=mutableListOf<MatOfPoint>()
-                try {
-                    Imgproc.findContours(mask,contours,hierarchy,Imgproc.RETR_LIST,Imgproc.CHAIN_APPROX_SIMPLE)
-                    contours.filter { Imgproc.contourArea(it)>small.total()*.07 }.sortedByDescending { Imgproc.contourArea(it) }.take(30).forEach { contour ->
-                        val c=MatOfPoint2f(*contour.toArray()); val approx=MatOfPoint2f()
-                        try {
-                            for(epsilon in listOf(.012,.022,.035,.05)) {
-                                Imgproc.approxPolyDP(c,approx,epsilon*Imgproc.arcLength(c,true),true)
-                                val p=approx.toArray(); if(p.size!=4) continue
-                                val q=Quad.ordered(p.map { PointN((it.x/(small.cols()-1)).toFloat().coerceIn(0f,1f),(it.y/(small.rows()-1)).toFloat().coerceIn(0f,1f)) })
-                                if(!q.valid() || q.area !in .08f.. .995f) continue
-                                // Reject a full image border introduced by thresholding and thin text boxes.
-                                val touches=q.points.count { it.x<.008f || it.x>.992f || it.y<.008f || it.y>.992f }
-                                if(touches>=3) continue
-                                val sides=q.points.indices.map { i -> val a=q.points[i]; val b=q.points[(i+1)%4]; hypot((a.x-b.x)*small.cols(),(a.y-b.y)*small.rows()) }
-                                if(sides.min()<min(small.cols(),small.rows())*.12) continue
-                                val rectangularity=(Imgproc.contourArea(contour)/(q.area*small.total())).toFloat().coerceIn(0f,1f)
-                                candidates.add(q to q.area*(.7f+.3f*rectangularity)); break
-                            }
-                        } finally { c.release(); approx.release() }
-                    }
-                } finally { contours.forEach { it.release() } }
-            }
-            // Edges find coloured paper; Otsu masks recover bright sheets with weak or broken edges.
-            Imgproc.Canny(blur,edges,28.0,92.0); Imgproc.morphologyEx(edges,edges,Imgproc.MORPH_CLOSE,kernel); collect(edges)
-            Imgproc.threshold(blur,binary,0.0,255.0,Imgproc.THRESH_BINARY+Imgproc.THRESH_OTSU)
-            Imgproc.morphologyEx(binary,binary,Imgproc.MORPH_CLOSE,kernel); collect(binary)
-            Core.bitwise_not(binary,binary); collect(binary)
-            return candidates.maxByOrNull { it.second }?.first
-        } finally { listOf(small,gray,blur,edges,binary,hierarchy,kernel).forEach { it.release() } }
+    fun detect(bitmap: Bitmap): Quad? = detectResult(bitmap).quad
+
+    fun detectResult(bitmap: Bitmap, preview: Boolean = false): DetectionResult = DocumentDetector.detect(bitmap, preview)
+
+    fun detectMat(source: Mat): Quad? = DocumentDetector.detect(source, preview = true).quad
+
+    fun detectFile(file: File): DetectionResult {
+        val image = decode(file, 4000)
+        return try { DocumentDetector.detect(image) } finally { image.recycle() }
     }
 
     fun render(page: PageRow,maxEdge: Int=2400): Bitmap {

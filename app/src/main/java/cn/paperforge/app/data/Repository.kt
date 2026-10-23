@@ -22,9 +22,8 @@ class Repository(val context: Context,val database: PaperDatabase) {
     fun folder(id: String)=File(root,id).apply { mkdirs() }
     fun captureFile(id: String)=File(folder(id),"${UUID.randomUUID()}.jpg")
     suspend fun addCapture(id: String,file: File,previewQuad: cn.paperforge.app.model.Quad?=null): PageRow=withContext(Dispatchers.IO) {
-        val bitmap=ScanProcessor.decode(file,1800)
-        val quad=try { ScanProcessor.detect(bitmap) } finally { bitmap.recycle() }
-        val page=PageRow(UUID.randomUUID().toString(),id,dao.pages(id).size,file.absolutePath,corners=(quad?:previewQuad?:cn.paperforge.app.model.Quad.Full).encode())
+        val detection=ScanProcessor.detectFile(file)
+        val page=PageRow(UUID.randomUUID().toString(),id,dao.pages(id).size,file.absolutePath,corners=(detection.quad?:cn.paperforge.app.model.Quad.Full).encode(),detectionConfidence=detection.confidence,detectionMethod=detection.method)
         database.withTransaction { dao.putPage(page); dao.touch(id,System.currentTimeMillis()) }; page
     }
     suspend fun importImages(id: String,uris: List<Uri>)=withContext(Dispatchers.IO) {

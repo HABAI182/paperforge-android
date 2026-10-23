@@ -13,7 +13,8 @@ data class DocumentRow(@PrimaryKey val id: String, val title: String, val modifi
 @Entity(tableName="pages", foreignKeys=[ForeignKey(entity=DocumentRow::class,parentColumns=["id"],childColumns=["documentId"],onDelete=ForeignKey.CASCADE)], indices=[Index("documentId")])
 data class PageRow(@PrimaryKey val id: String, val documentId: String, val position: Int, val original: String,
     val corners: String="0.0,0.0;1.0,0.0;1.0,1.0;0.0,1.0", val filter: String="AUTO", val rotation: Int=0,
-    val brightness: Float=0f, val contrast: Float=1f, val revision: Int=0, val ocrText: String?=null,val ocrLayout: String?=null)
+    val brightness: Float=0f, val contrast: Float=1f, val revision: Int=0, val ocrText: String?=null,val ocrLayout: String?=null,
+    val detectionConfidence: Float?=null,val detectionMethod: String?=null)
 
 @Entity(tableName="edit_history",indices=[Index("documentId")])
 data class EditHistory(@PrimaryKey(autoGenerate=true) val id: Long=0,val documentId: String,val pageId: String,val beforeJson: String,val afterJson: String,val applied: Boolean=true)
@@ -48,10 +49,16 @@ interface DocumentDao {
     @Query("DELETE FROM documents WHERE id=:id") suspend fun deleteDocument(id: String)
 }
 
-@Database(entities=[DocumentRow::class,PageRow::class,EditHistory::class],version=2,exportSchema=true)
+@Database(entities=[DocumentRow::class,PageRow::class,EditHistory::class],version=3,exportSchema=true)
 abstract class PaperDatabase: RoomDatabase() {
     abstract fun dao(): DocumentDao
     companion object {
+        val Migration2To3=object: Migration(2,3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE pages ADD COLUMN detectionConfidence REAL")
+                db.execSQL("ALTER TABLE pages ADD COLUMN detectionMethod TEXT")
+            }
+        }
         val Migration1To2=object: Migration(1,2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE documents ADD COLUMN folder TEXT NOT NULL DEFAULT ''")

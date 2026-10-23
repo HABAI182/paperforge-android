@@ -19,7 +19,8 @@ if not a.collect_only:
     raise SystemExit(0)
 a.output.mkdir(parents=True,exist_ok=True)
 for name in ['results.json','high-resolution.jpg','bw-ten-pages.pdf','searchable.pdf','resolution-export.pdf']:
-    (a.output/name).write_bytes(adb('exec-out','run-as','cn.paperforge.app','cat',remote+'/quality-'+a.mode+'/'+name))
+    result=subprocess.run([a.adb,'exec-out','run-as','cn.paperforge.app','cat',remote+'/quality-'+a.mode+'/'+name],capture_output=True)
+    if result.returncode==0: (a.output/name).write_bytes(result.stdout)
 data=json.loads((a.output/'results.json').read_text(encoding='utf-8')); manifest=json.loads((a.dataset/'manifest.json').read_text(encoding='utf-8')); cases={c['file']:c for c in manifest['cases']}
 rows=[]
 for r in data['rows']:

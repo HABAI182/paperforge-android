@@ -73,9 +73,8 @@ class MainViewModel(app: Application): AndroidViewModel(app) {
         val target=replacement.value
         if(target==null) { val page=repo.addCapture(selected.value!!.id,file,previewQuad); if(page.corners==cn.paperforge.app.model.Quad.Full.encode()) messages.send("本页未找到完整纸边，已保留全图；可点击自动裁边重试") } else {
             val page=repo.dao.pages(selected.value!!.id).first { it.id==target }
-            val image=cn.paperforge.app.imaging.ScanProcessor.decode(file,1800)
-            val quad=try { cn.paperforge.app.imaging.ScanProcessor.detect(image) } finally { image.recycle() }
-            repo.savePage(page.copy(original=file.path,corners=(quad ?: previewQuad ?: cn.paperforge.app.model.Quad.Full).encode(),rotation=0))
+            val detection=cn.paperforge.app.imaging.ScanProcessor.detectFile(file)
+            repo.savePage(page.copy(original=file.path,corners=(detection.quad ?: cn.paperforge.app.model.Quad.Full).encode(),rotation=0,detectionConfidence=detection.confidence,detectionMethod=detection.method))
             replacement.value=null; screen.value="editor"
         }
     }
@@ -144,9 +143,9 @@ class MainViewModel(app: Application): AndroidViewModel(app) {
         repo.dao.updatePage(current.copy(ocrText=text,ocrLayout=updated)); messages.send("已保存校正文字" + if(updated==null) "；行数改变后，PDF 文字层将重新识别" else "")
     }
     fun detectPage(page: PageRow)=perform("正在自动识别纸张边缘") {
-        val bitmap=cn.paperforge.app.imaging.ScanProcessor.decode(File(page.original),1800)
-        val q=try { cn.paperforge.app.imaging.ScanProcessor.detect(bitmap) } finally { bitmap.recycle() }
-        if(q!=null) { repo.savePage(page.copy(corners=q.encode())); messages.send("已自动裁切纸张") }
+        val detection=cn.paperforge.app.imaging.ScanProcessor.detectFile(File(page.original))
+        val q=detection.quad
+        if(q!=null) { repo.savePage(page.copy(corners=q.encode(),detectionConfidence=detection.confidence,detectionMethod=detection.method)); messages.send("已自动裁切纸张") }
         else messages.send("未找到完整纸边，已保留当前页面。建议纸张四周留出一点背景。")
     }
     fun merge(uris: List<Uri>)=perform("正在合并 PDF") {

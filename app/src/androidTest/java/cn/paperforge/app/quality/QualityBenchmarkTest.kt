@@ -27,6 +27,7 @@ class QualityBenchmarkTest {
     fun recordCorpus() = runBlocking {
         val app = ApplicationProvider.getApplicationContext<PaperForgeApp>()
         val baseline = InstrumentationRegistry.getArguments().getString("benchMode", "baseline") == "baseline"
+        val detectionOnly = InstrumentationRegistry.getArguments().getString("benchStage", "all") == "detect"
         val dataset = File(app.filesDir, "bench")
         val manifest = JSONObject(File(dataset, "manifest.json").readText())
         val cases = manifest.getJSONArray("cases")
@@ -40,23 +41,25 @@ class QualityBenchmarkTest {
             val image = if (baseline) BaselineScanProcessor.decode(file, 1800) else ScanProcessor.decode(file, 1800)
             val decodeMs = (SystemClock.elapsedRealtimeNanos() - decodeStart) / 1e6
             val start = SystemClock.elapsedRealtimeNanos()
-            val detected = if (baseline) BaselineScanProcessor.detect(image) else ScanProcessor.detect(image)
+            val result = if (baseline) null else ScanProcessor.detectResult(image)
+            val detected = if (baseline) BaselineScanProcessor.detect(image) else result?.quad
             val row = JSONObject().put("file", file.name).put("scene", item.getString("scene"))
                 .put("synthetic", item.optBoolean("synthetic", false)).put("decode_ms", decodeMs)
                 .put("detect_ms", (SystemClock.elapsedRealtimeNanos() - start) / 1e6)
                 .put("decoded_width", image.width).put("decoded_height", image.height)
+                .put("confidence", result?.confidence ?: JSONObject.NULL).put("method",result?.method ?: "v020")
                 .put("predicted", detected?.let { JSONArray(it.points.map { p -> JSONArray(listOf(p.x, p.y)) }) } ?: JSONObject.NULL)
             image.recycle()
             val points = item.optJSONArray("quad")
             val quad = points?.let { a -> Quad(List(4) { n -> a.getJSONArray(n).let { PointN(it.getDouble(0).toFloat(), it.getDouble(1).toFloat()) } }) } ?: Quad.Full
             val page = PageRow("bench", "bench", 0, file.path, corners = quad.encode(), filter = "ORIGINAL")
-            if (!item.isNull("ocr")) {
+            if (!detectionOnly && !item.isNull("ocr")) {
                 val ocrStart = SystemClock.elapsedRealtimeNanos()
                 val layout = if (baseline) BaselineOcrEngine().layout(page) else BundledOcrEngine().layout(page)
                 row.put("ocr", layout.text).put("ocr_ms", (SystemClock.elapsedRealtimeNanos() - ocrStart) / 1e6)
                 row.put("layout", JSONObject(layout.encode()))
             }
-            if (item.getString("scene") == "resolution-12mp") {
+            if (!detectionOnly && item.getString("scene") == "resolution-12mp") {
                 if (baseline) {
                     val legacyDefault = BaselineScanProcessor.render(page, 2800)
                     row.put("pdf_default_render_width", legacyDefault.width).put("pdf_default_render_height", legacyDefault.height)
@@ -69,7 +72,7 @@ class QualityBenchmarkTest {
                 if (baseline) BaselinePdfEngine.scan(listOf(page), File(output, "resolution-export.pdf"))
                 else PdfEngine.scan(listOf(page), File(output, "resolution-export.pdf"),resolution="HIGH")
             }
-            if (item.getString("scene") == "ocr-regression") {
+            if (!detectionOnly && item.getString("scene") == "ocr-regression") {
                 val all = List(10) { page.copy(id = "bw-$it", filter = "BW") }
                 // The source baseline engine is the production implementation until Stage 0 is recorded.
                 if (baseline) {
