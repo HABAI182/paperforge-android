@@ -28,6 +28,9 @@ android {
     }
     kotlinOptions { jvmTarget = "17" }
     buildTypes {
+        debug {
+            providers.gradleProperty("paperforgeIdSuffix").orNull?.let { applicationIdSuffix = it }
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true

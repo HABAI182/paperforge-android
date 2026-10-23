@@ -36,6 +36,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             .flatMapLatest { it?.let { d -> repo.dao.observePages(d.id) } ?: flowOf(emptyList()) }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val screen = MutableStateFlow("home")
+    val pdfEntry = MutableStateFlow<String?>(null)
     val busy = MutableStateFlow(false)
     val progress = MutableStateFlow("")
     val output = MutableStateFlow<File?>(null)
@@ -95,7 +96,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         screen.value = if (doc.kind == "pdf") "reader" else "editor"
     }
 
-    fun importImages(uris: List<Uri>) {
+    fun importImages(uris: List<Uri>, recognizeFirst: Boolean = false) {
         if (uris.isEmpty()) return
         perform("正在导入图片") {
             val doc =
@@ -105,6 +106,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             selected.value = doc
             repo.importImages(doc.id, uris)
             screen.value = "editor"
+            if (recognizeFirst) {
+                progress.value = "正在离线识别文字"
+                repo.dao.pages(doc.id).lastOrNull()?.let { showOcr(it, true) }
+            }
         }
     }
 
@@ -171,7 +176,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
 
-    fun purge(doc: DocumentRow) = perform("正在永久删除") { repo.deleteDocument(doc) }
+    fun purge(doc: DocumentRow) =
+        perform("正在永久删除") {
+            repo.deleteDocument(doc)
+            if (selected.value?.id == doc.id) {
+                selected.value = null
+                screen.value = "home"
+            }
+        }
 
     fun restore(doc: DocumentRow) = perform("正在恢复") { repo.restore(doc) }
 
@@ -265,23 +277,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun recognize(page: PageRow, chinese: Boolean) =
-        perform("正在离线识别文字") {
-            val (updated, result) = repo.cacheOcr(page, ocrEngine.layout(page, chinese))
-            val uncertain =
-                result.lines.indices
-                    .filter { (result.lines[it].confidence ?: 1f) < .65f }
-                    .map { it + 1 }
-            ocrReview.value =
-                if (uncertain.isEmpty()) result.warnings.joinToString("；")
-                else "建议核对第 ${uncertain.joinToString("、")} 行。模型分数仅用于提示。"
-            if (result.text.isBlank()) messages.send("没有识别到文字。请将纸面拍清楚、减少反光，或旋转页面后重试。")
-            else {
-                ocrPage = updated
-                canCorrectOcr.value = true
-                ocr.value = result.text
-            }
+    fun recognize(page: PageRow, chinese: Boolean) = perform("正在离线识别文字") { showOcr(page, chinese) }
+
+    private suspend fun showOcr(page: PageRow, chinese: Boolean) {
+        val (updated, result) = repo.cacheOcr(page, ocrEngine.layout(page, chinese))
+        ocrReview.value = "${result.lines.size} 行 · 可直接编辑、复制或导出"
+        if (result.text.isBlank()) messages.send("没有识别到文字。请将纸面拍清楚、减少反光，或旋转页面后重试。")
+        else {
+            ocrPage = updated
+            canCorrectOcr.value = true
+            ocr.value = result.text
         }
+    }
 
     fun recognizeAll() =
         perform("正在识别全部页面") {

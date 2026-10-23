@@ -94,11 +94,26 @@ fun ReaderScreen(vm: MainViewModel, onShare: (File) -> Unit) {
     var jump by remember { mutableStateOf(false) }
     var jumpText by remember { mutableStateOf("1") }
     var tools by remember { mutableStateOf(false) }
+    var toolMode by remember { mutableStateOf("") }
     var thumbnails by remember { mutableStateOf(false) }
     var search by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
     var hitIndex by remember { mutableIntStateOf(0) }
     val hits by vm.searchHits.collectAsState()
+    LaunchedEffect(doc?.id) {
+        val entry = vm.pdfEntry.value
+        vm.pdfEntry.value = null
+        when (entry) {
+            "compress" -> compressDialog = true
+            "range" -> rangeDialog = true
+            "annotate" -> vm.beginMarks()
+            null -> Unit
+            else -> {
+                toolMode = entry
+                tools = true
+            }
+        }
+    }
     LaunchedEffect(hits) {
         hitIndex = 0
         hits.firstOrNull()?.let { list.scrollToItem(it.page) }
@@ -122,7 +137,12 @@ fun ReaderScreen(vm: MainViewModel, onShare: (File) -> Unit) {
                     IconButton(onClick = { search = !search }) {
                         Icon(Icons.Default.Search, "搜索文字")
                     }
-                    IconButton(onClick = { tools = true }) {
+                    IconButton(
+                        onClick = {
+                            toolMode = ""
+                            tools = true
+                        }
+                    ) {
                         Icon(Icons.Default.MoreVert, "PDF 工具")
                     }
                 },
@@ -141,6 +161,42 @@ fun ReaderScreen(vm: MainViewModel, onShare: (File) -> Unit) {
         },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
+            Row(
+                Modifier.fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                AssistChip(
+                    onClick = {
+                        toolMode = "searchable"
+                        tools = true
+                    },
+                    label = { Text("OCR 识字") },
+                    enabled = !busy,
+                )
+                AssistChip(
+                    onClick = {
+                        toolMode = "docx"
+                        tools = true
+                    },
+                    label = { Text("转 Word") },
+                    enabled = !busy,
+                )
+                AssistChip(
+                    onClick = {
+                        toolMode = "images-jpg"
+                        tools = true
+                    },
+                    label = { Text("转图片") },
+                    enabled = !busy,
+                )
+                AssistChip(
+                    onClick = { vm.screen.value = "pdf-pages" },
+                    label = { Text("页面管理") },
+                    enabled = !busy,
+                )
+            }
             if (search)
                 Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
                     OutlinedTextField(
@@ -425,7 +481,7 @@ fun ReaderScreen(vm: MainViewModel, onShare: (File) -> Unit) {
                 }
             },
         )
-    if (tools) PdfToolsDialog(vm) { tools = false }
+    if (tools) PdfToolsDialog(vm, toolMode) { tools = false }
     if (thumbnails)
         AlertDialog(
             onDismissRequest = { thumbnails = false },

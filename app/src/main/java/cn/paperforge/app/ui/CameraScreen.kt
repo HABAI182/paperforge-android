@@ -84,7 +84,7 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
         }
     }
     val snapping = remember { AtomicBoolean(false) }
-    val gate = remember { AutoCaptureGate() }
+    val gate = remember { AutoCaptureGate(ScanConfig.int("captureStableMs", 1200).toLong()) }
     val outline = remember { OutlineTracker() }
     val qualityTracker = remember { CaptureQualityTracker() }
     var qualityHint by remember { mutableStateOf("") }
@@ -356,7 +356,11 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                                                     quality.sample,
                                                                     quality.signature,
                                                                     now,
-                                                                    focusReady,
+                                                                    focusReady ||
+                                                                        (lastFocusAttempt > 0 &&
+                                                                            now -
+                                                                                lastFocusAttempt >=
+                                                                                1200),
                                                                     ScanConfig.float(
                                                                             "captureSharpnessFloor",
                                                                             60f,
@@ -371,21 +375,17 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                                             qualityHint =
                                                                 when {
                                                                     detected == null -> ""
-                                                                    !focusReady -> "正在对焦 · 也可手动拍摄"
                                                                     quality.sample != null &&
                                                                         quality.sample.sharpness <
                                                                             ScanConfig.float(
                                                                                 "captureSharpnessFloor",
                                                                                 60f,
-                                                                            ) -> "画面较模糊，请持稳或点击文字对焦"
+                                                                            ) -> "点击文字对焦"
                                                                     quality.sample != null &&
                                                                         quality.sample
                                                                             .glareFraction in
                                                                             0.03..0.45 ->
-                                                                        "纸面可能反光，请稍微调整角度"
-                                                                    detection.confidence < .72f ->
-                                                                        "请检查纸边，或手动拍摄"
-                                                                    !acceptable -> "请让文字清楚后再自动拍摄"
+                                                                        "调整角度可减少反光"
                                                                     else -> ""
                                                                 }
                                                             val fire =
@@ -517,8 +517,7 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
         Text(
             if (qualityHint.isNotBlank()) qualityHint
             else if (light < 65) "光线偏暗，建议补光 · 点击画面对焦"
-            else if (quad == null) "请让四周纸边完整入镜，背景与纸面尽量有色差"
-            else if (auto) "已识别纸张 · 保持稳定自动裁切拍摄" else "已找到纸张 · 拍摄后自动裁边",
+            else if (quad == null) "对准纸张 · 随时可拍" else if (auto) "保持稳定，自动拍摄" else "拍摄后自动裁边",
             color = Color.White,
             modifier = Modifier.align(Alignment.CenterHorizontally).padding(12.dp),
         )

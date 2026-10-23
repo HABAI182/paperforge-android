@@ -12,8 +12,10 @@ import cn.paperforge.app.MainViewModel
 import org.json.JSONObject
 
 @Composable
-fun PdfToolsDialog(vm: MainViewModel, onDismiss: () -> Unit) {
-    var mode by remember { mutableStateOf("") }
+fun PdfToolsDialog(vm: MainViewModel, initialMode: String = "", onDismiss: () -> Unit) {
+    var mode by remember { mutableStateOf(initialMode) }
+    var query by remember { mutableStateOf("") }
+    var group by remember { mutableStateOf("全部") }
     var range by remember { mutableStateOf("") }
     var text by remember { mutableStateOf("") }
     var second by remember { mutableStateOf("") }
@@ -54,19 +56,53 @@ fun PdfToolsDialog(vm: MainViewModel, onDismiss: () -> Unit) {
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                if (mode.isEmpty())
-                    titles.forEach { (key, title) ->
-                        OutlinedButton(
-                            onClick = {
-                                mode = key
-                                number = if (key == "blank") "1" else "5"
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text(title)
+                if (mode.isEmpty()) {
+                    OutlinedTextField(
+                        query,
+                        { query = it },
+                        label = { Text("搜索工具，如水印、Word、页码") },
+                        singleLine = true,
+                    )
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        listOf("全部", "转换", "页面", "其他").forEach { name ->
+                            FilterChip(group == name, { group = name }, label = { Text(name) })
                         }
                     }
-                else {
+                    val conversion =
+                        setOf(
+                            "searchable",
+                            "images-jpg",
+                            "images-png",
+                            "extract-images",
+                            "txt",
+                            "md",
+                            "html",
+                            "docx",
+                            "docx-image",
+                        )
+                    val pageTools = setOf("split-each", "crop", "blank", "nup2", "nup4", "number")
+                    titles
+                        .filter { (key, title) ->
+                            val category =
+                                if (key in conversion) "转换"
+                                else if (key in pageTools) "页面" else "其他"
+                            (group == "全部" || category == group) &&
+                                (query.isBlank() ||
+                                    title.contains(query, true) ||
+                                    (query.equals("word", true) && key.startsWith("docx")))
+                        }
+                        .forEach { (key, title) ->
+                            OutlinedButton(
+                                onClick = {
+                                    mode = key
+                                    number = if (key == "blank") "1" else "5"
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Text(title)
+                            }
+                        }
+                } else {
                     if (mode in listOf("images-jpg", "images-png", "watermark", "number", "crop"))
                         OutlinedTextField(
                             value = range,

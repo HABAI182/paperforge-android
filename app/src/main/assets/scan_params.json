@@ -4,7 +4,7 @@
   "previewDetectorMaxEdge": 720,
   "minimumArea": 0.07,
   "confidenceHint": 0.60,
-  "confidenceCapture": 0.72,
+  "confidenceCapture": 0.60,
   "candidateLimit": 40,
   "detectorScoreMinimum": 0.71,
   "detectorEdgeMinimum": 0.25,
@@ -22,5 +22,5 @@
   "ocrLowConfidence": 0.82,
   "ocrMinCharacterHeight": 48,
   "captureStableMs": 1200,
-  "captureSharpnessFloor": 60.0
+  "captureSharpnessFloor": 45.0
 }

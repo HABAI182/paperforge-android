@@ -6,7 +6,9 @@ import com.tom_roush.pdfbox.pdmodel.*
 import com.tom_roush.pdfbox.pdmodel.common.PDRectangle
 import com.tom_roush.pdfbox.pdmodel.font.PDType1Font
 import java.io.File
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 
@@ -22,6 +24,31 @@ class HomeUiTest {
         compose.onNodeWithContentDescription("关于与隐私").performClick()
         compose.onNodeWithText("纸匠 PaperForge", substring = true).assertIsDisplayed()
         compose.onNodeWithText("知道了").performClick()
+    }
+
+    @Test
+    fun recentDocumentOffersTrashAndDirectDelete() {
+        val repo = (compose.activity.application as PaperForgeApp).repository
+        val doc = runBlocking { repo.newScan() }
+        val title = "直接删除验收 ${System.currentTimeMillis()}"
+        runBlocking { repo.rename(doc, title) }
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText(title).fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText(title).performScrollTo()
+        compose.onAllNodesWithContentDescription("文档操作").onFirst().performClick()
+        compose.onNodeWithText("移入回收站").assertIsDisplayed()
+        compose.onNodeWithText("直接删除").performClick()
+        compose.onNodeWithText("取消").performClick()
+        assertTrue(runBlocking { repo.dao.observeDocuments().first().any { it.id == doc.id } })
+        compose.onAllNodesWithContentDescription("文档操作").onFirst().performClick()
+        compose.onNodeWithText("直接删除").performClick()
+        compose.onNodeWithText("直接删除").performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText(title).fetchSemanticsNodes().isEmpty()
+        }
+        assertFalse(runBlocking { repo.dao.observeTrash().first().any { it.id == doc.id } })
+        assertFalse(File(compose.activity.filesDir, "documents/${doc.id}").exists())
     }
 
     @Test

@@ -130,6 +130,16 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                 },
                 modifier = Modifier.fillMaxWidth(),
             )
+            if (active != null)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                    ToolAction(Icons.Default.AutoFixHigh, "自动裁边", !busy) { vm.detectPage(active) }
+                    ToolAction(Icons.Default.Crop, "调四角", !busy) { crop = true }
+                    ToolAction(Icons.Default.TextFields, "识文字", !busy) {
+                        vm.recognize(active, true)
+                    }
+                    ToolAction(Icons.Default.Tune, "调参数", !busy) { adjust = true }
+                    ToolAction(Icons.Default.MoreHoriz, "更多", !busy) { more = true }
+                }
             if (active == null) {
                 Column(
                     Modifier.fillMaxWidth().height(320.dp),
@@ -148,7 +158,7 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                 val bitmap = pageBitmap(active, original = original)
                 Box(
                     Modifier.fillMaxWidth()
-                        .height(340.dp)
+                        .height(280.dp)
                         .background(
                             MaterialTheme.colorScheme.surfaceContainer,
                             RoundedCornerShape(20.dp),
@@ -208,27 +218,13 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                         }
                     }
                 }
-                if (active.detectionConfidence != null && active.detectionConfidence < .72f)
-                    Text(
-                        "边缘证据不足，请检查四角；原图已保留。",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    ToolAction(Icons.Default.Crop, "调四角", !busy) { crop = true }
                     ToolAction(Icons.Default.RotateRight, "旋转", !busy) {
                         vm.save(active.copy(rotation = (active.rotation + 90) % 360))
-                    }
-                    ToolAction(Icons.Default.Tune, "调参数", !busy) { adjust = true }
-                    ToolAction(Icons.Default.TextFields, "识文字", !busy) {
-                        vm.recognize(active, true)
                     }
                     ToolAction(Icons.Default.DeleteOutline, "删除", !busy) { confirmDelete = true }
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    TextButton(onClick = { vm.detectPage(active) }, enabled = !busy) {
-                        Text("自动裁边")
-                    }
                     TextButton(onClick = { vm.applyAll(active) }, enabled = !busy) {
                         Text("滤镜应用全部")
                     }
@@ -241,7 +237,6 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                     ) {
                         Text("重拍本页")
                     }
-                    TextButton(onClick = { more = true }, enabled = !busy) { Text("更多") }
                 }
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     val names = listOf("原图", "自动增强", "去阴影", "灰度", "黑白文档", "彩色增强", "白板")
@@ -275,7 +270,7 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                     }
                 }
                 Text(
-                    "按住预览对比原图 · 调整自动保存 · 撤销历史可跨进程恢复",
+                    "按住预览对比原图 · 修改自动保存",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

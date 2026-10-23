@@ -29,6 +29,8 @@ fun HomeScreen(
     onMerge: () -> Unit,
     onAbout: () -> Unit,
     onRestoreBackup: () -> Unit = {},
+    onPdfTool: (String) -> Unit = { onPdf() },
+    onOcrImages: () -> Unit = onImages,
 ) {
     val docs by vm.documents.collectAsState()
     val busy by vm.busy.collectAsState()
@@ -66,12 +68,20 @@ fun HomeScreen(
                         )
                     }
             }
-        }
+        },
+        floatingActionButton = {
+            if (tab != 0)
+                ExtendedFloatingActionButton(
+                    onClick = { if (!busy) vm.newScan() },
+                    icon = { Icon(Icons.Default.DocumentScanner, null) },
+                    text = { Text("扫描") },
+                )
+        },
     ) { padding ->
         LazyColumn(
             Modifier.padding(padding).fillMaxSize(),
-            contentPadding = PaddingValues(22.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -96,21 +106,24 @@ fun HomeScreen(
                         colors = CardDefaults.cardColors(containerColor = Color(0xFF176B54)),
                         shape = RoundedCornerShape(26.dp),
                     ) {
-                        Column(
-                            Modifier.fillMaxWidth().padding(24.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        Row(
+                            Modifier.fillMaxWidth().padding(18.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
-                            Text(
-                                "把纸张，\n收进日常。",
-                                color = Color.White,
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                            )
-                            Text(
-                                "拍下灵感、讲义和每一份重要。",
-                                color = Color(0xFFCEEBDE),
-                                style = MaterialTheme.typography.bodyMedium,
-                            )
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    "扫描文档",
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Text(
+                                    "自动裁边 · 连续拍摄",
+                                    color = Color(0xFFCEEBDE),
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                            }
                             Button(
                                 onClick = { vm.newScan() },
                                 enabled = !busy,
@@ -122,7 +135,7 @@ fun HomeScreen(
                             ) {
                                 Icon(Icons.Default.DocumentScanner, null)
                                 Spacer(Modifier.width(8.dp))
-                                Text("扫描文档")
+                                Text("开始扫描")
                             }
                         }
                     }
@@ -146,9 +159,13 @@ fun HomeScreen(
                             !busy,
                             onPdf,
                         )
-                        QuickCard("本地文档", Icons.Default.FolderOpen, Modifier.weight(1f), !busy) {
-                            tab = 1
-                        }
+                        QuickCard(
+                            "图片识字",
+                            Icons.Default.TextFields,
+                            Modifier.weight(1f),
+                            !busy,
+                            onOcrImages,
+                        )
                     }
                 }
                 item {
@@ -170,7 +187,10 @@ fun HomeScreen(
                             !busy,
                             onMerge,
                         )
-                        QuickCard("PDF 工具", Icons.Default.Handyman, Modifier.weight(1f), !busy) {
+                        QuickCard("压缩 PDF", Icons.Default.Compress, Modifier.weight(1f), !busy) {
+                            onPdfTool("compress")
+                        }
+                        QuickCard("全部工具", Icons.Default.Handyman, Modifier.weight(1f), !busy) {
                             tab = 2
                         }
                     }
@@ -214,11 +234,13 @@ fun HomeScreen(
                         "打开 PDF → 底部抽页工具 → 输入页码",
                         Icons.Default.ContentCut,
                         !busy,
-                        onPdf,
+                        { onPdfTool("range") },
                     )
                 }
                 item {
-                    ToolCard("PDF 图片压缩", "保留文字、链接和表单，比较实际体积", Icons.Default.Compress, !busy, onPdf)
+                    ToolCard("PDF 图片压缩", "保留文字、链接和表单，比较实际体积", Icons.Default.Compress, !busy) {
+                        onPdfTool("compress")
+                    }
                 }
                 item {
                     ToolCard(
@@ -226,7 +248,7 @@ fun HomeScreen(
                         "保留可提取的原有文本；扫描图可单独 OCR",
                         Icons.Default.TextSnippet,
                         !busy,
-                        onPdf,
+                        { onPdfTool("txt") },
                     )
                 }
                 item {
@@ -235,7 +257,7 @@ fun HomeScreen(
                         "导入图片 → 整理扫描 → 识文字",
                         Icons.Default.Translate,
                         !busy,
-                        onImages,
+                        onOcrImages,
                     )
                 }
                 item {
@@ -244,7 +266,7 @@ fun HomeScreen(
                         "打开 PDF → 工具箱，或扫描导出时开启 OCR",
                         Icons.Default.ManageSearch,
                         !busy,
-                        onPdf,
+                        { onPdfTool("searchable") },
                     )
                 }
                 item {
@@ -253,7 +275,7 @@ fun HomeScreen(
                         "打开 PDF → 批注，画笔、荧光笔、形状和文本",
                         Icons.Default.Draw,
                         !busy,
-                        onPdf,
+                        { onPdfTool("annotate") },
                     )
                 }
                 item {
@@ -283,20 +305,21 @@ fun HomeScreen(
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.weight(1f),
                         )
-                        Text("${docs.size} 份", style = MaterialTheme.typography.labelMedium)
+                        if (tab == 0) TextButton(onClick = { tab = 1 }) { Text("全部文档") }
+                        else Text("${docs.size} 份", style = MaterialTheme.typography.labelMedium)
                     }
                 }
+                item {
+                    OutlinedTextField(
+                        value = search,
+                        onValueChange = { vm.query.value = it },
+                        label = { Text("搜索文档与文字") },
+                        leadingIcon = { Icon(Icons.Default.Search, null) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                    )
+                }
                 if (tab == 1) {
-                    item {
-                        OutlinedTextField(
-                            value = search,
-                            onValueChange = { vm.query.value = it },
-                            label = { Text("搜索名称、标签、文件夹与 OCR 全文") },
-                            leadingIcon = { Icon(Icons.Default.Search, null) },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                        )
-                    }
                     item {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             FilterChip(
@@ -324,8 +347,8 @@ fun HomeScreen(
                 val filtered =
                     (if (showTrash && tab == 1) trash else docs)
                         .filter {
-                            (!favoritesOnly || it.favorite) &&
-                                (folder.isEmpty() || it.folder == folder)
+                            (tab == 0 || !favoritesOnly || it.favorite) &&
+                                (tab == 0 || folder.isEmpty() || it.folder == folder)
                         }
                         .let { if (tab == 0) it.take(6) else it }
                 if (filtered.isEmpty())
@@ -351,7 +374,7 @@ fun HomeScreen(
                     }
                 items(filtered, key = { it.id }) { doc ->
                     Card(
-                        onClick = { if (showTrash) vm.restore(doc) else vm.open(doc) },
+                        onClick = { if (showTrash && tab == 1) vm.restore(doc) else vm.open(doc) },
                         enabled = !busy,
                         colors =
                             CardDefaults.cardColors(
@@ -423,7 +446,7 @@ fun HomeScreen(
                                             categorizing = doc
                                         },
                                     )
-                                    if (showTrash)
+                                    if (showTrash && tab == 1)
                                         DropdownMenuItem(
                                             text = { Text("恢复") },
                                             onClick = {
@@ -431,8 +454,18 @@ fun HomeScreen(
                                                 vm.restore(doc)
                                             },
                                         )
+                                    if (!(showTrash && tab == 1))
+                                        DropdownMenuItem(
+                                            text = { Text("移入回收站") },
+                                            onClick = {
+                                                menu = false
+                                                vm.delete(doc)
+                                            },
+                                        )
                                     DropdownMenuItem(
-                                        text = { Text(if (showTrash) "永久删除" else "移入回收站") },
+                                        text = {
+                                            Text("直接删除", color = MaterialTheme.colorScheme.error)
+                                        },
                                         onClick = {
                                             menu = false
                                             deleting = doc
@@ -450,16 +483,16 @@ fun HomeScreen(
     deleting?.let { d ->
         AlertDialog(
             onDismissRequest = { deleting = null },
-            title = { Text(if (showTrash) "永久删除「${d.title}」？" else "移入回收站？") },
-            text = { Text(if (showTrash) "删除本地副本及原图。系统另存的文件保留。" else "文档与原图会保留，可从回收站恢复。") },
+            title = { Text("直接删除「${d.title}」？") },
+            text = { Text("永久删除应用内文档和原图，无法从回收站恢复。已另存或分享的文件保留。") },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        if (showTrash) vm.purge(d) else vm.delete(d)
+                        vm.purge(d)
                         deleting = null
                     }
                 ) {
-                    Text(if (showTrash) "永久删除" else "移入回收站")
+                    Text("直接删除", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = { TextButton(onClick = { deleting = null }) { Text("取消") } },
@@ -530,7 +563,7 @@ private fun QuickCard(
         shape = RoundedCornerShape(16.dp),
     ) {
         Column(
-            Modifier.fillMaxWidth().padding(vertical = 20.dp, horizontal = 8.dp),
+            Modifier.fillMaxWidth().padding(vertical = 14.dp, horizontal = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {

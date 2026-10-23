@@ -144,15 +144,17 @@ class MainActivity : ComponentActivity() {
                 var about by remember { mutableStateOf(false) }
                 var pendingText by remember { mutableStateOf("") }
                 val clipboard = LocalClipboardManager.current
+                var recognizeImport by remember { mutableStateOf(false) }
                 val images =
                     rememberLauncherForActivityResult(
                         ActivityResultContracts.OpenMultipleDocuments()
                     ) {
-                        vm.importImages(it)
+                        vm.importImages(it, recognizeImport)
+                        recognizeImport = false
                     }
                 val pdf =
                     rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
-                        it?.let { uri -> vm.importPdf(uri) }
+                        if (it != null) vm.importPdf(it) else vm.pdfEntry.value = null
                     }
                 val merge =
                     rememberLauncherForActivityResult(
@@ -272,6 +274,14 @@ class MainActivity : ComponentActivity() {
                                         arrayOf("application/zip", "application/octet-stream")
                                     )
                                 },
+                                onPdfTool = { mode ->
+                                    vm.pdfEntry.value = mode
+                                    pdf.launch(arrayOf("application/pdf"))
+                                },
+                                onOcrImages = {
+                                    recognizeImport = true
+                                    images.launch(arrayOf("image/*"))
+                                },
                             )
                     }
                     SnackbarHost(
@@ -333,7 +343,7 @@ class MainActivity : ComponentActivity() {
                     val review by vm.ocrReview.collectAsState()
                     AlertDialog(
                         onDismissRequest = { vm.ocr.value = null },
-                        title = { Text("可复制与校正的文字") },
+                        title = { Text("识别结果") },
                         text = {
                             Column {
                                 if (canCorrectOcr && review.isNotBlank())
@@ -344,7 +354,7 @@ class MainActivity : ComponentActivity() {
                                     modifier =
                                         Modifier.fillMaxWidth()
                                             .heightIn(min = 160.dp, max = 420.dp),
-                                    label = { Text("识别可能有误，可在此修改") },
+                                    label = { Text("文字内容") },
                                 )
                             }
                         },
