@@ -69,7 +69,7 @@ fun HomeScreen(vm: MainViewModel,onImages: ()->Unit,onPdf: ()->Unit,onMerge: ()-
                 item { ToolCard("合并 PDF","选择两份或更多 PDF，按选择器返回顺序合并",Icons.Default.Merge,!busy,onMerge) }
                 item { ToolCard("图片转 PDF","批量导图、调四角、滤镜、排序与纸张尺寸",Icons.Default.Collections,!busy,onImages) }
                 item { ToolCard("抽页 / 拆分 / 旋转","打开 PDF → 底部抽页工具 → 输入页码",Icons.Default.ContentCut,!busy,onPdf) }
-                item { ToolCard("PDF 图像压缩","打开 PDF → 图像压缩 → 对比真实体积",Icons.Default.Compress,!busy,onPdf) }
+                item { ToolCard("PDF 图片压缩","保留文字、链接和表单，比较实际体积",Icons.Default.Compress,!busy,onPdf) }
                 item { ToolCard("提取 PDF 文字","保留可提取的原有文本；扫描图可单独 OCR",Icons.Default.TextSnippet,!busy,onPdf) }
                 item { ToolCard("中英文离线 OCR","导入图片 → 整理扫描 → 识文字",Icons.Default.Translate,!busy,onImages) }
                 item { ToolCard("可搜索 PDF / 水印 / 密码","打开 PDF → 工具箱，或扫描导出时开启 OCR",Icons.Default.ManageSearch,!busy,onPdf) }

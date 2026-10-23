@@ -91,7 +91,10 @@ object PdfEngine {
     }
     fun text(input: File): String=PDDocument.load(input,MemoryUsageSetting.setupTempFileOnly()).use { PDFTextStripper().apply { sortByPosition=true }.getText(it) }
     suspend fun compress(input: File,output: File,quality: Int,progress: suspend (Int)->Unit={}) {
-        // Explicit image PDF conversion. Used only when the UI explains loss of text/annotations.
+        PdfImageOptimizer.compress(input,output,quality,progress)
+    }
+    suspend fun flatten(input: File,output: File,quality: Int,progress: suspend (Int)->Unit={}) {
+        // Explicit destructive conversion, separate from normal image-only compression.
         atomic(output) { tmp ->
             ParcelFileDescriptor.open(input,ParcelFileDescriptor.MODE_READ_ONLY).use { fd ->
                 PdfRenderer(fd).use { renderer ->
@@ -104,7 +107,7 @@ object PdfEngine {
                                 try {
                                     b.eraseColor(Color.WHITE); page.render(b,null,null,PdfRenderer.Page.RENDER_MODE_FOR_PRINT)
                                     val p=PDPage(PDRectangle(page.width.toFloat(),page.height.toFloat())); doc.addPage(p)
-                                    PDPageContentStream(doc,p).use { it.drawImage(JPEGFactory.createFromImage(doc,b,quality/100f),0f,0f,p.mediaBox.width,p.mediaBox.height) }
+                                    PDPageContentStream(doc,p).use { it.drawImage(PdfImageEncoder.jpeg(doc,b,false,quality,150),0f,0f,p.mediaBox.width,p.mediaBox.height) }
                                 } finally { b.recycle() }
                             }
                             progress((n+1)*100/renderer.pageCount)

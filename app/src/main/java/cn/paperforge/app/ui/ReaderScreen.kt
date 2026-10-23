@@ -79,7 +79,7 @@ fun ReaderScreen(vm: MainViewModel,onShare: (File)->Unit) {
         IconButton(onClick={ tools=true }) { Icon(Icons.Default.MoreVert,"PDF 工具") }
     }) },bottomBar={ Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(6.dp),horizontalArrangement=Arrangement.SpaceEvenly) {
         ToolAction(Icons.Default.ContentCut,"抽页 / 旋转",!busy) { rangeDialog=true }
-        ToolAction(Icons.Default.Compress,"图像压缩",!busy) { compressDialog=true }
+        ToolAction(Icons.Default.Compress,"压缩图片",!busy) { compressDialog=true }
         ToolAction(Icons.Default.Draw,"批注签名",!busy) { vm.beginMarks() }
         ToolAction(Icons.Default.FindInPage,"跳页",session!=null) { jump=true }
     } }) { padding ->
@@ -137,7 +137,7 @@ fun ReaderScreen(vm: MainViewModel,onShare: (File)->Unit) {
         Text("按输入顺序输出，源文件保留。若源 PDF 有数字签名，生成副本会改变签名状态。",style=MaterialTheme.typography.bodySmall,modifier=Modifier.padding(vertical=12.dp))
         Row { listOf(0,90,180,270).forEach { angle -> FilterChip(selected=rotation==angle,onClick={ rotation=angle },label={ Text("$angle°") }) } }
     } },confirmButton={ TextButton(onClick={ rangeDialog=false; vm.extract(range,rotation) },enabled=!busy) { Text("创建副本") } },dismissButton={ TextButton(onClick={ rangeDialog=false }) { Text("取消") } })
-    if(compressDialog) AlertDialog(onDismissRequest={ compressDialog=false },title={ Text("压缩为图像 PDF") },text={ Text("此模式将页面重绘为图片，原有可搜索文字、链接、批注对象和签名会丢失。源 PDF 保留。生成后显示真实文件大小，部分文件可能变大。") },confirmButton={ TextButton(onClick={ compressDialog=false; vm.compress(75) },enabled=!busy) { Text("均衡画质") } },dismissButton={ Row { TextButton(onClick={ compressDialog=false; vm.compress(45) },enabled=!busy) { Text("小体积") }; TextButton(onClick={ compressDialog=false }) { Text("取消") } } })
+    if(compressDialog) AlertDialog(onDismissRequest={ compressDialog=false },title={ Text("压缩嵌入图片") },text={ Text("保留原生文字、矢量、链接和表单，只重编码可安全处理的嵌入图片。透明、特殊色彩和签名文档会保留，无法减小时输出原件副本。生成后显示实际体积。") },confirmButton={ TextButton(onClick={ compressDialog=false; vm.compress(75) },enabled=!busy) { Text("均衡画质") } },dismissButton={ Row { TextButton(onClick={ compressDialog=false; vm.compress(45) },enabled=!busy) { Text("小体积") }; TextButton(onClick={ compressDialog=false }) { Text("取消") } } })
     if(jump) AlertDialog(onDismissRequest={ jump=false },title={ Text("跳到页码") },text={ OutlinedTextField(value=jumpText,onValueChange={ jumpText=it },singleLine=true,label={ Text("1 – ${session?.count ?: 0}") }) },confirmButton={ TextButton(onClick={
         val n=jumpText.toIntOrNull(); val s=session
         if(n!=null && s!=null && n in 1..s.count) { scope.launch { list.scrollToItem(n-1) }; jump=false }

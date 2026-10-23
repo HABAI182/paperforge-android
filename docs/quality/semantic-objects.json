@@ -1,0 +1,49 @@
+{
+  "inputBytes": 6329327,
+  "outputBytes": 44607,
+  "pageContentSha256": [
+    "5b8ae7d2c35c8572df6aa1a05ac9b875c2499f13e9e03acbc664901d9a36501c",
+    "fdbea2f89ca10241137c3d7bde810933c3bcf7962bcf0b04e7dc6c5f63c12bbe"
+  ],
+  "text": [
+    "NATIVE TEXT PAGE 1\n",
+    "NATIVE TEXT PAGE 2\n"
+  ],
+  "links": [
+    [
+      "https://example.org/paperforge-test"
+    ],
+    [
+      "https://example.org/paperforge-test"
+    ]
+  ],
+  "fields": {
+    "owner": "Owner value"
+  },
+  "nativeTopBottomRenderMAE": [
+    0.0,
+    0.0
+  ],
+  "imageReport": {
+    "inputBytes": 6329327,
+    "images": [
+      {
+        "index": 1,
+        "width": 2000,
+        "height": 2600,
+        "inputBytes": 6325932,
+        "targetDpi": 160,
+        "displayWidthPt": 200,
+        "displayHeightPt": 260,
+        "outputBytes": 41218,
+        "outputWidth": 444,
+        "outputHeight": 578
+      }
+    ],
+    "flattened": false,
+    "inlineImagesSkipped": 0,
+    "targetDpi": 160,
+    "outputBytes": 44607,
+    "originalCopied": false
+  }
+}

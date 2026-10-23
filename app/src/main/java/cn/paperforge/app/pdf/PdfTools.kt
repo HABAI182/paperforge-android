@@ -89,7 +89,7 @@ object PdfTools {
         if(after==doc.numberOfPages) doc.addPage(page) else doc.pages.insertBefore(page,doc.getPage(after))
     }
     fun metadata(input: File,output: File,title: String,author: String)=write(input,output) { doc -> doc.documentInformation.title=title; doc.documentInformation.author=author }
-    fun optimize(input: File,output: File)=write(input,output) { doc -> doc.documentInformation.producer="PaperForge / PDFBox" }
+    suspend fun optimize(input: File,output: File) { PdfImageOptimizer.compress(input,output,90) }
     fun nup(input: File,output: File,count: Int) {
         require(count==2 || count==4)
         val temp=File(output.path+".part")

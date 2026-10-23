@@ -1,0 +1,62 @@
+[
+  {
+    "file": "AUTO.pdf",
+    "bytes": 5336,
+    "pages": 1,
+    "first_page_images": [
+      {
+        "width": 600,
+        "height": 800,
+        "bits": 8,
+        "colorspace": "/DeviceRGB",
+        "filter": "/DCTDecode",
+        "smask": false,
+        "page_width_pt": 144.0,
+        "page_height_pt": 192.0,
+        "dpi_y": 300.0
+      }
+    ],
+    "text": "",
+    "cross_renderer_mae": 0.42513125
+  },
+  {
+    "file": "BW.pdf",
+    "bytes": 1013,
+    "pages": 1,
+    "first_page_images": [
+      {
+        "width": 600,
+        "height": 800,
+        "bits": 1,
+        "colorspace": "/DeviceGray",
+        "filter": "/FlateDecode",
+        "smask": false,
+        "page_width_pt": 144.0,
+        "page_height_pt": 192.0,
+        "dpi_y": 300.0
+      }
+    ],
+    "text": "",
+    "cross_renderer_mae": 0.4251354166666667
+  },
+  {
+    "file": "GRAY.pdf",
+    "bytes": 8372,
+    "pages": 1,
+    "first_page_images": [
+      {
+        "width": 600,
+        "height": 800,
+        "bits": 8,
+        "colorspace": "/DeviceGray",
+        "filter": "/DCTDecode",
+        "smask": false,
+        "page_width_pt": 144.0,
+        "page_height_pt": 192.0,
+        "dpi_y": 300.0
+      }
+    ],
+    "text": "",
+    "cross_renderer_mae": 0.42513125
+  }
+]

@@ -160,12 +160,12 @@ class MainViewModel(app: Application): AndroidViewModel(app) {
         PdfEngine.extract(File(doc.pdfPath!!),range,file,rotate)
         selected.value=repo.registerPdf(file,doc.title+if(rotate==0) " · 抽页" else " · 旋转"); output.value=file
     }
-    fun compress(quality: Int)=perform("正在转换为压缩图像 PDF") {
+    fun compress(quality: Int)=perform("正在压缩嵌入图片") {
         val doc=selected.value ?: return@perform; val source=File(doc.pdfPath!!); val file=File(repo.exports,"压缩-${System.currentTimeMillis()}.pdf")
         PdfEngine.compress(source,file,quality) { progress.value="压缩 · $it%" }
         val change=100f*(source.length()-file.length())/source.length().coerceAtLeast(1)
         messages.send("${source.length()/1024} KB → ${file.length()/1024} KB；"+if(change>0) "减少 %.1f%%".format(change) else "本次未减小体积")
-        selected.value=repo.registerPdf(file,doc.title+" · 图像压缩"); output.value=file
+        selected.value=repo.registerPdf(file,doc.title+" · 图片压缩"); output.value=file
     }
     fun extractText()=perform("正在提取 PDF 文字") { ocrPage=null; canCorrectOcr.value=false; ocr.value=PdfEngine.text(File(selected.value!!.pdfPath!!)).ifBlank { "这份 PDF 没有可提取文字。扫描图请使用离线 OCR。" } }
     fun previewOutput(file: File)=perform("正在打开 PDF") {

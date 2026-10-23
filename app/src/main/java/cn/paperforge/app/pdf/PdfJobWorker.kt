@@ -37,6 +37,7 @@ class PdfJobWorker(context: Context,params: WorkerParameters): CoroutineWorker(c
                 "searchable" -> PdfSearchable.convert(applicationContext,input,file) { setProgress(workDataOf("progress" to it)) }
                 "txt","md","html","docx" -> PdfTools.exportText(input,file,mode)
                 "compress" -> PdfEngine.compress(input,file,p.optInt("quality",75)) { setProgress(workDataOf("progress" to it)) }
+                "flatten" -> PdfEngine.flatten(input,file,p.optInt("quality",75)) { setProgress(workDataOf("progress" to it)) }
                 "split-each" -> PdfTools.splitEach(input,file)
                 "marks" -> {
                     val data=File(p.getString("marksFile"))
