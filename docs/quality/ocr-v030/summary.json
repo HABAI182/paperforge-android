@@ -16,12 +16,12 @@
   },
   "v030": {
     "n": 9,
-    "mean_page_cer": 0.0392156862745098,
-    "chinese_cer": 0.05867665418227216,
+    "mean_page_cer": 0.03349673202614379,
+    "chinese_cer": 0.05118601747815231,
     "latin_cer": 0.0,
-    "p50_ms": 3026.0513,
-    "p95_ms": 4199.8703399999995,
-    "sampled_peak_pss_kb": 298246,
+    "p50_ms": 4944.9424,
+    "p95_ms": 7128.2584799999995,
+    "sampled_peak_pss_kb": 298484,
     "regression_prefix_exact": 13,
     "orientation_corrections": {
       "ocr-4.png": 270,

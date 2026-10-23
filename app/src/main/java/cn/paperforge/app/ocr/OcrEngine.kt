@@ -38,7 +38,85 @@ class BundledOcrEngine : OcrEngine {
                 3200,
             )
         return try {
-            val result = recognizeBitmap(bitmap, chinese)
+            var result = recognizeBitmap(bitmap, chinese)
+            if ((result.meanConfidence ?: 1f) < ScanConfig.float("ocrLowConfidence", .82f)) {
+                var alternative =
+                    ScanProcessor.render(
+                        page.copy(filter = "ORIGINAL", brightness = 0f, contrast = 1f),
+                        3200,
+                        ocrSampling = true,
+                    )
+                try {
+                    val rotation = result.orientationCorrection
+                    if (rotation != 0) {
+                        val old = alternative
+                        alternative =
+                            cn.paperforge.app.imaging.PageOrientation.rotate(
+                                old,
+                                rotation.toFloat(),
+                            )
+                        old.recycle()
+                    }
+                    var candidate = pass(alternative, chinese, "cubic-sample")
+                    if (rotation != 0)
+                        candidate = unrotate(candidate, bitmap.width, bitmap.height, rotation)
+                    result = OcrPageVoting.apply(merge(result, candidate))
+                } finally {
+                    alternative.recycle()
+                }
+                // A second view of the untouched sensor pixels avoids making every OCR
+                // hypothesis depend on the same perspective resampling. Geometry is mapped
+                // back into the existing crop; text outside that crop cannot enter the page.
+                if (
+                    page.rotation == 0 &&
+                        page.deskewDegrees == 0f &&
+                        result.orientationCorrection == 0
+                ) {
+                    val source = ScanProcessor.decode(java.io.File(page.original), 3200)
+                    try {
+                        val quad = Quad.decode(page.corners)
+                        val mapping = Matrix()
+                        val from = quad.points.flatMap { listOf(it.x, it.y) }.toFloatArray()
+                        val to = floatArrayOf(0f, 0f, 1f, 0f, 1f, 1f, 0f, 1f)
+                        if (mapping.setPolyToPoly(from, 0, to, 0, 4)) {
+                            fun mapped(points: List<PointN>): List<PointN> {
+                                val xy = points.flatMap { listOf(it.x, it.y) }.toFloatArray()
+                                mapping.mapPoints(xy)
+                                return xy.toList().chunked(2).map { PointN(it[0], it[1]) }
+                            }
+                            val raw = pass(source, chinese, "source-pixels")
+                            val candidate =
+                                raw.copy(
+                                    width = bitmap.width,
+                                    height = bitmap.height,
+                                    lines =
+                                        raw.lines.mapNotNull { line ->
+                                            val corners = mapped(line.corners)
+                                            if (
+                                                corners.any {
+                                                    !it.x.isFinite() || !it.y.isFinite()
+                                                } ||
+                                                    corners.map { it.x }.average() !in 0.0..1.0 ||
+                                                    corners.map { it.y }.average() !in 0.0..1.0
+                                            )
+                                                null
+                                            else
+                                                line.copy(
+                                                    corners = corners,
+                                                    elements =
+                                                        line.elements.map {
+                                                            it.copy(corners = mapped(it.corners))
+                                                        },
+                                                )
+                                        },
+                                )
+                            result = OcrPageVoting.apply(merge(result, candidate))
+                        }
+                    } finally {
+                        source.recycle()
+                    }
+                }
+            }
             result.copy(
                 sourceRevision = page.revision,
                 deskewDegrees = if (page.deskewDegrees == 0f) result.deskewDegrees else 0f,
@@ -129,6 +207,13 @@ class BundledOcrEngine : OcrEngine {
                 }
                 val lineAlternative = recognizeLineTiles(upright, normalized, chinese)
                 if (lineAlternative != null) normalized = merge(normalized, lineAlternative)
+                val binary = ScanProcessor.transform(upright, Quad.Full, "BW")
+                try {
+                    val alternative = recognizeLineTiles(binary, normalized, chinese, "line-bw")
+                    if (alternative != null) normalized = merge(normalized, alternative)
+                } finally {
+                    binary.recycle()
+                }
             }
             val skew = median(normalized.lines.mapNotNull { it.angle })
             val spread = median(normalized.lines.mapNotNull { it.angle }.map { abs(it - skew) })
@@ -243,6 +328,7 @@ class BundledOcrEngine : OcrEngine {
         source: Bitmap,
         layout: OcrLayout,
         chinese: Boolean,
+        variant: String = "line-scale",
     ): OcrLayout? {
         data class Tile(val source: android.graphics.Rect, val destination: android.graphics.Rect)
         val selected = layout.lines.filter { (it.confidence ?: 1f) < .70f }.take(24)
@@ -287,7 +373,7 @@ class BundledOcrEngine : OcrEngine {
             canvas.drawColor(android.graphics.Color.WHITE)
             val paint = android.graphics.Paint(android.graphics.Paint.FILTER_BITMAP_FLAG)
             tiles.forEach { canvas.drawBitmap(source, it.source, it.destination, paint) }
-            val result = pass(bitmap, chinese, "line-scale")
+            val result = pass(bitmap, chinese, variant)
             fun mapped(points: List<PointN>, tile: Tile) =
                 points.map { p ->
                     PointN(

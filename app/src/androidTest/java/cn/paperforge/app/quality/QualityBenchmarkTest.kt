@@ -30,6 +30,7 @@ class QualityBenchmarkTest {
             InstrumentationRegistry.getArguments().getString("benchMode", "baseline") == "baseline"
         val stage = InstrumentationRegistry.getArguments().getString("benchStage", "all")
         val detectionOnly = stage == "detect"
+        val selectedFile = InstrumentationRegistry.getArguments().getString("benchFile")
         val dataset = File(app.filesDir, "bench")
         val manifest = JSONObject(File(dataset, "manifest.json").readText())
         val cases = manifest.getJSONArray("cases")
@@ -41,6 +42,7 @@ class QualityBenchmarkTest {
         var sampledPeakPssKb = 0
         for (i in 0 until cases.length()) {
             val item = cases.getJSONObject(i)
+            if (selectedFile != null && item.getString("file") != selectedFile) continue
             if (stage == "ocr" && item.isNull("ocr")) continue
             val file = File(dataset, item.getString("file"))
             val decodeStart = SystemClock.elapsedRealtimeNanos()
@@ -97,6 +99,14 @@ class QualityBenchmarkTest {
                 row.put("ocr", layout.text)
                     .put("ocr_ms", (SystemClock.elapsedRealtimeNanos() - ocrStart) / 1e6)
                 row.put("layout", JSONObject(layout.encode()))
+                if (!baseline && item.getString("scene") == "ocr-regression") {
+                    val actual = ScanProcessor.detectFile(file)
+                    val actualPage = page.copy(corners = (actual.quad ?: Quad.Full).encode())
+                    val automatic = BundledOcrEngine().layout(actualPage)
+                    row.put("ocr_auto", automatic.text)
+                        .put("layout_auto", JSONObject(automatic.encode()))
+                        .put("corners_auto", actualPage.corners)
+                }
             }
             if (stage == "all" && item.getString("scene") == "resolution-12mp") {
                 if (baseline) {

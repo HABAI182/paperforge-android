@@ -92,7 +92,7 @@ object ScanProcessor {
         }
     }
 
-    fun render(page: PageRow, maxEdge: Int = 2400): Bitmap {
+    fun render(page: PageRow, maxEdge: Int = 2400, ocrSampling: Boolean = false): Bitmap {
         val decoded = PageDecoder.crop(File(page.original), Quad.decode(page.corners), maxEdge)
         try {
             val result =
@@ -106,6 +106,8 @@ object ScanProcessor {
                     maxEdge,
                     page.enhanceStrength,
                     decoded.aspect,
+                    if (ocrSampling) Imgproc.INTER_CUBIC else Imgproc.INTER_LINEAR,
+                    if (ocrSampling) 1.5f else 1f,
                 )
             if (page.deskewDegrees == 0f) return result
             return try {
@@ -128,6 +130,8 @@ object ScanProcessor {
         targetEdge: Int = Int.MAX_VALUE,
         strength: Float? = null,
         aspectOverride: Float? = null,
+        interpolation: Int = Imgproc.INTER_LINEAR,
+        samplingScale: Float = 1f,
     ): Bitmap {
         require(quad.valid()) { "裁切四角不能交叉或重合" }
         val w = bitmap.width.toFloat()
@@ -139,7 +143,8 @@ object ScanProcessor {
         val aspect =
             aspectOverride
                 ?: cn.paperforge.app.model.ImageGeometry.aspect(quad, bitmap.width, bitmap.height)
-        val edge = min(max(sourceW, sourceH), min(targetEdge.toDouble() * 1.25, 4096.0))
+        val edge =
+            min(max(sourceW, sourceH) * samplingScale, min(targetEdge.toDouble() * 1.25, 4096.0))
         val outW = (if (aspect >= 1) edge else edge * aspect).roundToInt().coerceAtLeast(32)
         val outH = (if (aspect >= 1) edge / aspect else edge).roundToInt().coerceAtLeast(32)
         val source = Mat()
@@ -163,7 +168,7 @@ object ScanProcessor {
                 warped,
                 matrix,
                 Size(outW.toDouble(), outH.toDouble()),
-                Imgproc.INTER_LINEAR,
+                interpolation,
                 Core.BORDER_REPLICATE,
             )
             source.release()
