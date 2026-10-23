@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="cn.paperforge.app.quality.OcrGeometryTest" tests="5" failures="0" errors="0" skipped="0" time="16.43" timestamp="2026-10-23T09:45:00" hostname="localhost">
+  <properties>
+    <property name="device" value="paperforge_api35(AVD) - 15" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="cachedCorrectionTransformsPixelsAndTextTogetherAndUndoKeepsOriginal" classname="cn.paperforge.app.quality.OcrGeometryTest" time="0.322" />
+  <testcase name="pdfToolsSignatureRedactionAndEncryption" classname="cn.paperforge.app.UpgradeSmokeTest" time="4.585" />
+  <testcase name="historyAndBackupRestoreRetainOriginals" classname="cn.paperforge.app.UpgradeSmokeTest" time="0.297" />
+  <testcase name="lowContrastAutoCropOcrAndChineseSearchablePdf" classname="cn.paperforge.app.UpgradeSmokeTest" time="10.617" />
+  <testcase name="recordedSharpBlurSequenceAndFocusReadinessGateAutomaticCapture" classname="cn.paperforge.app.quality.CameraQualityTest" time="0.313" />
+</testsuite>

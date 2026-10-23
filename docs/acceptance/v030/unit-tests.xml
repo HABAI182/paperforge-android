@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites><testsuite name="cn.paperforge.app.GeometryTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-23T09:45:02.677Z" hostname="DESKTOP-DVV8TM5" time="0.057">
+  <properties />
+  <testcase name="corruptRecipeFallsBackToFullImage" classname="cn.paperforge.app.GeometryTest" time="0.037" />
+  <testcase name="invalidRangesDoNotProducePartialOutput" classname="cn.paperforge.app.GeometryTest" time="0.011" />
+  <testcase name="jitterAndSmallShapesCannotTrigger" classname="cn.paperforge.app.GeometryTest" time="0.001" />
+  <testcase name="fileNamesCannotEscapeDestination" classname="cn.paperforge.app.GeometryTest" time="0.005" />
+  <testcase name="crossedOrOutsideCornersRejected" classname="cn.paperforge.app.GeometryTest" time="0.0" />
+  <testcase name="rangesPreserveUserOrderAndRemoveDuplicates" classname="cn.paperforge.app.GeometryTest" time="0.0" />
+  <testcase name="unorderedCornersBecomeClockwise" classname="cn.paperforge.app.GeometryTest" time="0.003" />
+  <testcase name="stableDetectionCapturesOnceUntilPaperChanges" classname="cn.paperforge.app.GeometryTest" time="0.0" />
+  <system-out />
+  <system-err />
+</testsuite><testsuite name="cn.paperforge.app.ImageGeometryTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-23T09:45:02.736Z" hostname="DESKTOP-DVV8TM5" time="0.002">
+  <properties />
+  <testcase name="allExifOrientationsInvertInNormalizedSpace" classname="cn.paperforge.app.ImageGeometryTest" time="0.001" />
+  <testcase name="powerOfTwoSamplingKeepsRequestedCropPixels" classname="cn.paperforge.app.ImageGeometryTest" time="0.0" />
+  <testcase name="projectiveAspectRecoversKnownPaperWithoutForcingReceipts" classname="cn.paperforge.app.ImageGeometryTest" time="0.001" />
+  <system-out />
+  <system-err />
+</testsuite><testsuite name="cn.paperforge.app.OcrReadingOrderTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-23T09:45:02.740Z" hostname="DESKTOP-DVV8TM5" time="0.01">
+  <properties />
+  <testcase name="repeatedAgreementChoosesObservedTextAndKeepsHypotheses" classname="cn.paperforge.app.OcrReadingOrderTest" time="0.006" />
+  <testcase name="deskewAndInverseKeepCoordinates" classname="cn.paperforge.app.OcrReadingOrderTest" time="0.001" />
+  <testcase name="columnsStayTogetherBelowSpanningTitle" classname="cn.paperforge.app.OcrReadingOrderTest" time="0.003" />
+  <system-out />
+  <system-err />
+</testsuite></testsuites>

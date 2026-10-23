@@ -1,0 +1,21 @@
+{
+  "physical_device": false,
+  "dataset": "synthetic-v1",
+  "positives": 65,
+  "negatives": 8,
+  "mean_iou": 0.9970891086039394,
+  "corner_error_pct": 0.07930380696287521,
+  "detection_failures": 0,
+  "false_positives": 0,
+  "detect_p50_ms": 146.534,
+  "detect_p95_ms": 191.02736,
+  "ocr_pages": 9,
+  "ocr_mean_cer": 0.0392156862745098,
+  "chinese_mean_cer": 0.05867665418227216,
+  "latin_letters_mean_cer": 0.0,
+  "ocr_p50_ms": 4546.2393,
+  "ocr_p95_ms": 6130.48734,
+  "sampled_peak_pss_kib": 325883,
+  "bw_ten_page_bytes": 241115,
+  "regression_prefix_exact": 13
+}

@@ -1,5 +1,13 @@
 # 架构与文件生命周期
 
+## 0.3.0 管线增量
+
+PageDecoder负责预算内区域解码和EXIF；ImageGeometry在完整源画面估算物理比例。DocumentDetector返回评分/方法/诊断；EnhancePipeline处理颜色和缩放自适应二值化。ScanConfig从scan_params.json读参数。OcrEngine注入到应用/视图模型，OcrLayout记录候选/四角/引擎/方向；缓存写入核对revision，原图与派生历史保留。
+
+PdfImageEncoder处理不透明RGB/真灰度/1bit；PdfImageOptimizer在递归资源和实际CTM上下文中更换合适图片，其余对象与内容流保留，输出报告。flatten独立。Room6加入CJK FTS4及去阴影强度，迁移回填旧OCR；文档删除同步索引与历史。直接删除与回收站为两个明确入口。pdfEntry只在所选PDF成功打开时消费，用于直接到达工具参数；取消选择清空入口。
+
+以下为早期架构说明；若与本段冲突，以本段和当前代码为准。
+
 单 Gradle app 模块，按 model / data / imaging / pdf / ocr / ui 分包。选择一条可运行主链路，避免第一轮拆十多个尚无独立边界的模块。后续可以提取引擎为 library module。
 
 ```

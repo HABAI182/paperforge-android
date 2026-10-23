@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-23",
+  "timezone": "Asia/Shanghai",
+  "physicalDeviceTested": false,
+  "android": "API35 AOSP x86_64; no GMS; airplane mode",
+  "jvm": {
+    "tests": 14,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "finalOcrPdfHistoryCameraRegression": {
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "homePdfReaderDirectDeleteAndNinePageOcr": {
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "lint": {
+    "errors": 0,
+    "warnings": 29
+  },
+  "freshOfflineFirstRun": "Separate fresh applicationId, Chinese+Latin bundled models, no GMS, airplane mode; probe packages removed afterwards",
+  "performance": "100-page draft export and cancellation measured once; see quality/PERFORMANCE.md",
+  "screenshots": {
+    "home.png": "Compact native home",
+    "ocr-result.png": "Before source agreement: automatic crop gave 7/13 headings",
+    "ocr-result-final.png": "Actual homepage image-to-OCR import, automatic crop, 13/13 repeated headings"
+  },
+  "limitations": [
+    "Synthetic development data; no physical camera or real document benchmark",
+    "No ARM64 runtime / 50MP / battery or thermal measurement",
+    "See quality/OCR-BENCHMARK.md for slower low-confidence multi-pass tradeoff"
+  ]
+}
