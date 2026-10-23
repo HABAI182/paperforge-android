@@ -138,20 +138,31 @@ object PdfTools {
             check(temp.renameTo(output))
         } finally { temp.delete() }
     }
-    fun extractImages(input: File,output: File) {
-        var count=0
-        ZipOutputStream(output.outputStream()).use { zip -> PDDocument.load(input,MemoryUsageSetting.setupTempFileOnly()).use { doc ->
-            doc.pages.forEachIndexed { pageIndex,page ->
-                page.resources?.xObjectNames?.forEach { name ->
-                    val image=page.resources.getXObject(name)
-                    if(image is PDImageXObject) {
-                        val b=image.image
-                        try { zip.putNextEntry(ZipEntry("page-${pageIndex+1}-image-${++count}.png")); b.compress(Bitmap.CompressFormat.PNG,100,zip); zip.closeEntry() } finally { b.recycle() }
+    suspend fun extractImages(input: File,output: File) {
+        val temporary=File(output.path+".part");var count=0
+        val seen=java.util.Collections.newSetFromMap(java.util.IdentityHashMap<com.tom_roush.pdfbox.cos.COSStream,Boolean>())
+        val resourcesSeen=java.util.Collections.newSetFromMap(java.util.IdentityHashMap<com.tom_roush.pdfbox.cos.COSDictionary,Boolean>())
+        try {
+            ZipOutputStream(temporary.outputStream()).use { zip -> PDDocument.load(input,MemoryUsageSetting.setupTempFileOnly()).use { doc ->
+                suspend fun walk(resources: PDResources?,page: Int,depth: Int=0) {
+                    if(resources==null || depth>32 || !resourcesSeen.add(resources.cosObject)) return
+                    for(name in resources.xObjectNames) {
+                        coroutineContext.ensureActive()
+                        when(val value=resources.getXObject(name)) {
+                            is PDImageXObject -> if(seen.add(value.cosObject)) {
+                                require(value.width.toLong()*value.height<=18_000_000L) { "嵌入图片超过解码预算，请先压缩 PDF" }
+                                val bitmap=value.image
+                                try { zip.putNextEntry(ZipEntry("page-${page+1}-image-${++count}.png"));bitmap.compress(Bitmap.CompressFormat.PNG,100,zip);zip.closeEntry() } finally { bitmap.recycle() }
+                            }
+                            is com.tom_roush.pdfbox.pdmodel.graphics.form.PDFormXObject -> walk(value.resources,page,depth+1)
+                        }
                     }
                 }
-            }
-        } }
-        if(count==0) { output.delete(); error("此文档没有直接嵌入的页面图片") }
+                doc.pages.forEachIndexed { index,page -> walk(page.resources,index) }
+            } }
+            require(count>0) { "没有可提取的 XObject 图片；暂不提取内联图片" }
+            check(temporary.renameTo(output))
+        } finally { temporary.delete() }
     }
     fun forms(input: File): List<Pair<String,String>> = PDDocument.load(input).use { doc ->
         val form=doc.documentCatalog.acroForm ?: return@use emptyList()
@@ -170,17 +181,5 @@ object PdfTools {
         values.forEach { (key,value) -> (form.getField(key) ?: error("找不到表单字段 $key")).setValue(value) }
         form.refreshAppearances()
     }
-    fun exportText(input: File,output: File,kind: String) {
-        val text=PdfEngine.text(input)
-        require(text.isNotBlank()) { "文档没有文字层，请先生成可搜索 PDF" }
-        if(kind=="docx") {
-            fun escape(s: String)=s.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
-            ZipOutputStream(output.outputStream()).use { zip ->
-                fun entry(name: String,body: String) { zip.putNextEntry(ZipEntry(name)); zip.write(body.toByteArray(Charsets.UTF_8)); zip.closeEntry() }
-                entry("[Content_Types].xml","""<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>""")
-                entry("_rels/.rels","""<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>""")
-                entry("word/document.xml","""<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>"""+text.lines().joinToString("") { "<w:p><w:r><w:t xml:space=\"preserve\">${escape(it)}</w:t></w:r></w:p>" }+"</w:body></w:document>")
-            }
-        } else output.writeText(if(kind=="html") "<!doctype html><meta charset=\"utf-8\"><pre>"+text.replace("&","&amp;").replace("<","&lt;")+"</pre>" else text,Charsets.UTF_8)
-    }
+    suspend fun exportText(input: File,output: File,kind: String) { PdfTextExport.export(input,output,kind) }
 }

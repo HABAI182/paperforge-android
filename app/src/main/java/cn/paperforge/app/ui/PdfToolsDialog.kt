@@ -20,7 +20,7 @@ fun PdfToolsDialog(vm: MainViewModel,onDismiss: ()->Unit) {
     var number by remember { mutableStateOf("5") }
     var printAllowed by remember { mutableStateOf(true) }
     var copyAllowed by remember { mutableStateOf(true) }
-    val titles=linkedMapOf("searchable" to "扫描 PDF → 可搜索 PDF","images-jpg" to "PDF 转 JPG 图片包","images-png" to "PDF 转 PNG 图片包","split-each" to "每页拆成独立 PDF","extract-images" to "提取原始嵌入图片","watermark" to "添加中文水印","number" to "添加页码","crop" to "裁切页面边缘","blank" to "插入 A4 空白页","nup2" to "2 合 1 拼版","nup4" to "4 合 1 拼版","metadata" to "标题与作者","encrypt" to "密码加密 / 权限","forms" to "填写 AcroForm 表单","txt" to "导出纯文本 TXT","md" to "导出 Markdown 文本","html" to "导出 HTML 文本","docx" to "导出可编辑文字 DOCX","optimize" to "图片优化与资源去重","flatten" to "扁平化为图像 PDF（有损）")
+    val titles=linkedMapOf("searchable" to "扫描 PDF → 可搜索 PDF","images-jpg" to "PDF 转 JPG 图片包","images-png" to "PDF 转 PNG 图片包","split-each" to "每页拆成独立 PDF","extract-images" to "提取嵌入图片（PNG）","watermark" to "添加中文水印","number" to "添加页码","crop" to "裁切页面边缘","blank" to "插入 A4 空白页","nup2" to "2 合 1 拼版","nup4" to "4 合 1 拼版","metadata" to "标题与作者","encrypt" to "密码加密 / 权限","forms" to "填写 AcroForm 表单","txt" to "导出纯文本 TXT","md" to "导出 Markdown 文本","html" to "导出 HTML 文本","docx" to "导出可编辑段落 DOCX","docx-image" to "原页参考图 + 文字 DOCX","optimize" to "图片优化与资源去重","flatten" to "扁平化为图像 PDF（有损）")
     AlertDialog(onDismissRequest=onDismiss,title={ Text(if(mode.isEmpty()) "PDF 工具箱" else titles[mode] ?: "PDF 工具") },text={
         Column(Modifier.fillMaxWidth().heightIn(max=460.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)) {
             if(mode.isEmpty()) titles.forEach { (key,title) -> OutlinedButton(onClick={ mode=key; number=if(key=="blank") "1" else "5" },modifier=Modifier.fillMaxWidth()) { Text(title) } }
@@ -37,6 +37,7 @@ fun PdfToolsDialog(vm: MainViewModel,onDismiss: ()->Unit) {
                 }
                 if(mode=="searchable") Text("逐页离线 OCR，保留原 PDF 内容，添加嵌入字体与透明文字层；按已有文字覆盖范围跳过，避免重复添加页眉。")
                 if(mode=="flatten") Text("将页面重绘为图片。原有可选文字、链接、表单、批注对象和数字签名会丢失。生成新副本，源 PDF 保留。")
+                if(mode=="docx-image") Text("每页参考图加可编辑文字段落，便于对照。图片保留页面外观；不重建原排版或表格。")
                 if(mode=="docx") Text("导出可编辑的文字段落，保留文字阅读顺序；图片、表格与原排版不属于此模式。")
                 if(mode in listOf("optimize","nup2","nup4")) Text(if(mode=="optimize") "以较高画质压缩可安全处理的图片并去除重复图像资源，保留文字、矢量与链接。无法减小时保留原件副本。" else "生成拼版副本，保持页面矢量内容。")
                 if(mode=="forms") Text("读取 PDF 中实际存在的 AcroForm 字段。")

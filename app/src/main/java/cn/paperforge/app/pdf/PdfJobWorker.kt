@@ -17,7 +17,7 @@ class PdfJobWorker(context: Context,params: WorkerParameters): CoroutineWorker(c
             val doc=repo.dao.document(inputData.getString("document") ?: "")
             val source=doc?.pdfPath?.let { File(it) }
             val p=JSONObject(inputData.getString("options") ?: "{}")
-            val extension=when(mode) { "images-jpg","images-png","extract-images","split-each" -> "zip"; "txt","md","html","docx" -> mode; else -> "pdf" }
+            val extension=when(mode) { "images-jpg","images-png","extract-images","split-each" -> "zip"; "docx-image" -> "docx"; "txt","md","html","docx" -> mode; else -> "pdf" }
             val file=File(repo.exports,"${safeFileName(doc?.title ?: "合并文档")}-$mode-${id.toString().take(8)}.$extension"); output=file
             val input=source ?: file
             val range=p.optString("range")
@@ -35,7 +35,7 @@ class PdfJobWorker(context: Context,params: WorkerParameters): CoroutineWorker(c
                 "images-jpg","images-png" -> PdfTools.images(input,file,range,if(mode.endsWith("png")) "png" else "jpg",p.optInt("edge",2200)) { setProgress(workDataOf("progress" to it)) }
                 "extract-images" -> PdfTools.extractImages(input,file)
                 "searchable" -> PdfSearchable.convert(applicationContext,input,file) { setProgress(workDataOf("progress" to it)) }
-                "txt","md","html","docx" -> PdfTools.exportText(input,file,mode)
+                "txt","md","html","docx","docx-image" -> PdfTools.exportText(input,file,mode)
                 "compress" -> PdfEngine.compress(input,file,p.optInt("quality",75)) { setProgress(workDataOf("progress" to it)) }
                 "flatten" -> PdfEngine.flatten(input,file,p.optInt("quality",75)) { setProgress(workDataOf("progress" to it)) }
                 "split-each" -> PdfTools.splitEach(input,file)
