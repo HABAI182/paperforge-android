@@ -1,0 +1,70 @@
+{
+  "searchable_pdf": {
+    "pages": 1,
+    "chinese_text": "纸匠自动扫描与离线识别\n中文识别测试 2026\nPAPERFORGE OCR 123456\n漬晰讲义·第1行\n清晰讲义·第2行\n漬晰讲义·第3行\n漬晰讲义·第4行\n清晰讲义·第5行\n清晰讲义·第6行\n请晰讲义·第7行\n清晰讲义·第8行\n漬晰讲义·第9行\n清晰讲义·第10行\n清晰讲义·第11行\n请晰讲义·第12行\n清晰讲义·第13行",
+    "canonical_unicode": true
+  },
+  "chinese_annotation": true,
+  "redaction": {
+    "text_empty": true,
+    "author_absent": true,
+    "acroform_absent": true
+  },
+  "encryption": {
+    "wrong_password_rejected": true,
+    "correct_password_accepted": true
+  },
+  "chinese_form_value": true,
+  "files": [
+    {
+      "name": "acceptance-020-encrypted.pdf",
+      "bytes": 4643,
+      "sha256": "0e80b24df83ff8c4d08675664c686fd8ed09e68d681d236b6b7fe8acda00f14f"
+    },
+    {
+      "name": "acceptance-020-enhanced.png",
+      "bytes": 519656,
+      "sha256": "8fedcc53dc029e4690191bc8f3c218935a94b4feb28c458a34ff9375db5fe65e"
+    },
+    {
+      "name": "acceptance-020-low-contrast.jpg",
+      "bytes": 291728,
+      "sha256": "dcbcefc1ec999d8c2ca41f3c02fc487f23ac3abbe395fedf2181d0bf7518f2be"
+    },
+    {
+      "name": "acceptance-020-marked.pdf",
+      "bytes": 3749,
+      "sha256": "8d3bdfe045720903e01628b1dd1aef4f519286a0992866986747d595f6052356"
+    },
+    {
+      "name": "acceptance-020-native.pdf",
+      "bytes": 923,
+      "sha256": "ba6a7c971ece73e2391cf8abdb515e412d79485ea1ebf5b67de202553234b349"
+    },
+    {
+      "name": "acceptance-020-ocr.txt",
+      "bytes": 369,
+      "sha256": "2a49eee6c0cff2be30d18a6d1dc9f5f3387d6f47467f3332582fa1db1a9776e8"
+    },
+    {
+      "name": "acceptance-020-redacted.pdf",
+      "bytes": 30517,
+      "sha256": "1977b0962682b5a9f8f50a9dbbf5a2d795cd82a64eb1dc6c38bb9a0aa1855af6"
+    },
+    {
+      "name": "acceptance-020-searchable.pdf",
+      "bytes": 254859,
+      "sha256": "c4e4884b170bfcb755b8093b4ef66eda989d285c543b0f04740e416eb91dfe79"
+    },
+    {
+      "name": "filled.pdf",
+      "bytes": 6330514,
+      "sha256": "df10723de7a9bea5124caa3d5865e226ca71336b4f42b7e2382afbeb55f49c3d"
+    },
+    {
+      "name": "watermark.pdf",
+      "bytes": 4195,
+      "sha256": "add976204c408bea1f110c1dd629224d4335a6aaae9c0e7a9a919a6edbac4e17"
+    }
+  ]
+}

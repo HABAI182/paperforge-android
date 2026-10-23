@@ -13,6 +13,6 @@ class PaperForgeApp: Application() {
         super.onCreate()
         PDFBoxResourceLoader.init(this)
         OpenCVLoader.initLocal()
-        repository=Repository(this,Room.databaseBuilder(this,PaperDatabase::class.java,"paperforge.db").build())
+        repository=Repository(this,Room.databaseBuilder(this,PaperDatabase::class.java,"paperforge.db").addMigrations(PaperDatabase.Migration1To2).build())
     }
 }

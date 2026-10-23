@@ -9,7 +9,10 @@ import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -22,8 +25,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -34,6 +39,8 @@ import cn.paperforge.app.model.*
 import org.opencv.core.*
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.TimeUnit
+import kotlin.math.roundToInt
 
 @Composable
 fun CameraScreen(vm: MainViewModel,onImport: ()->Unit) {
@@ -43,7 +50,8 @@ fun CameraScreen(vm: MainViewModel,onImport: ()->Unit) {
     val request=rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { permitted=it }
     val pages by vm.pages.collectAsState()
     val busy by vm.busy.collectAsState()
-    var auto by remember { mutableStateOf(false) }
+    val prefs=remember { context.getSharedPreferences("camera",0) }
+    var auto by remember { mutableStateOf(prefs.getBoolean("auto",true)) }
     var torch by remember { mutableStateOf(false) }
     var quad by remember { mutableStateOf<Quad?>(null) }
     var frameRatio by remember { mutableFloatStateOf(.75f) }
@@ -51,6 +59,10 @@ fun CameraScreen(vm: MainViewModel,onImport: ()->Unit) {
     var camera by remember { mutableStateOf<Camera?>(null) }
     var capture by remember { mutableStateOf<ImageCapture?>(null) }
     var cameraError by remember { mutableStateOf<String?>(null) }
+    var controls by remember { mutableStateOf(false) }; var zoom by remember { mutableFloatStateOf(1f) }; var exposure by remember { mutableFloatStateOf(0f) }
+    var light by remember { mutableFloatStateOf(128f) }
+    val replacement by vm.replacement.collectAsState()
+    val preview=remember { PreviewView(context).apply { scaleType=PreviewView.ScaleType.FIT_CENTER; implementationMode=PreviewView.ImplementationMode.COMPATIBLE } }
     val snapping=remember { AtomicBoolean(false) }
     val gate=remember { AutoCaptureGate() }
     val main=remember { ContextCompat.getMainExecutor(context) }
@@ -61,8 +73,9 @@ fun CameraScreen(vm: MainViewModel,onImport: ()->Unit) {
         val doc=vm.selected.value
         if(imageCapture!=null && doc!=null && !busy && snapping.compareAndSet(false,true)) {
             val file=vm.repo.captureFile(doc.id)
+            val snapshot=quad
             imageCapture.takePicture(ImageCapture.OutputFileOptions.Builder(file).build(),main,object: ImageCapture.OnImageSavedCallback {
-                override fun onImageSaved(output: ImageCapture.OutputFileResults) { snapping.set(false); vm.captured(file) }
+                override fun onImageSaved(output: ImageCapture.OutputFileResults) { snapping.set(false); vm.captured(file,snapshot) }
                 override fun onError(exception: ImageCaptureException) { snapping.set(false); file.delete(); cameraError=exception.message }
             })
         }
@@ -71,14 +84,14 @@ fun CameraScreen(vm: MainViewModel,onImport: ()->Unit) {
     LaunchedEffect(Unit) { if(!permitted) request.launch(Manifest.permission.CAMERA) }
     Column(Modifier.fillMaxSize().background(Color(0xFF121B18)).systemBarsPadding()) {
         Row(Modifier.fillMaxWidth().padding(12.dp),verticalAlignment=Alignment.CenterVertically) {
-            IconButton(onClick={ vm.screen.value=if(pages.isEmpty()) "home" else "editor" }) { Icon(Icons.AutoMirrored.Filled.ArrowBack,"返回",tint=Color.White) }
-            Text("扫描文档",color=Color.White,modifier=Modifier.weight(1f),style=MaterialTheme.typography.titleLarge)
-            FilterChip(selected=auto,onClick={ auto=!auto; gate.reset() },label={ Text("自动",color=Color.White) })
+            IconButton(onClick={ vm.replacement.value=null; vm.screen.value=if(pages.isEmpty()) "home" else "editor" }) { Icon(Icons.AutoMirrored.Filled.ArrowBack,"返回",tint=Color.White) }
+            Text(if(replacement==null) "扫描文档" else "重拍本页",color=Color.White,modifier=Modifier.weight(1f),style=MaterialTheme.typography.titleLarge)
+            FilterChip(selected=auto,onClick={ auto=!auto; prefs.edit().putBoolean("auto",auto).apply(); gate.reset() },label={ Text(if(auto) "自动拍摄" else "手动拍摄",color=Color.White) })
+            IconButton(onClick={ controls=!controls }) { Icon(Icons.Default.Tune,"变焦与曝光",tint=Color.White) }
             IconButton(enabled=camera?.cameraInfo?.hasFlashUnit()==true,onClick={ torch=!torch; camera?.cameraControl?.enableTorch(torch) }) { Icon(if(torch) Icons.Default.FlashOn else Icons.Default.FlashOff,"闪光灯",tint=Color.White) }
         }
-        Box(Modifier.weight(1f).fillMaxWidth(),contentAlignment=Alignment.Center) {
+        Box(Modifier.weight(1f).fillMaxWidth().pointerInput(camera) { detectTapGestures { p -> camera?.cameraControl?.startFocusAndMetering(FocusMeteringAction.Builder(preview.meteringPointFactory.createPoint(p.x,p.y)).setAutoCancelDuration(3,TimeUnit.SECONDS).build()) } },contentAlignment=Alignment.Center) {
             if(permitted) {
-                val preview=remember { PreviewView(context).apply { scaleType=PreviewView.ScaleType.FIT_CENTER; implementationMode=PreviewView.ImplementationMode.COMPATIBLE } }
                 AndroidView(factory={ preview },modifier=Modifier.fillMaxSize())
                 DisposableEffect(preview,lifecycle) {
                     var disposed=false
@@ -89,7 +102,7 @@ fun CameraScreen(vm: MainViewModel,onImport: ()->Unit) {
                         if(!disposed) try {
                             provider=future.get()
                             val p=Preview.Builder().setTargetAspectRatio(AspectRatio.RATIO_4_3).build().also { it.surfaceProvider=preview.surfaceProvider }
-                            val c=ImageCapture.Builder().setTargetAspectRatio(AspectRatio.RATIO_4_3).setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY).build()
+                            val c=ImageCapture.Builder().setTargetAspectRatio(AspectRatio.RATIO_4_3).setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY).build()
                             val a=ImageAnalysis.Builder().setTargetAspectRatio(AspectRatio.RATIO_4_3).setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST).build()
                             var last=0L
                             a.setAnalyzer(executor) { image ->
@@ -111,9 +124,12 @@ fun CameraScreen(vm: MainViewModel,onImport: ()->Unit) {
                                             }
                                             val detected=ScanProcessor.detectMat(upright)
                                             val ratio=upright.cols().toFloat()/upright.rows()
+                                            val luminance=Core.mean(upright).`val`[0].toFloat()
                                             main.execute {
                                                 if(!disposed) {
-                                                    quad=detected; frameRatio=ratio
+                                                    val old=quad
+                                                    quad=if(old!=null && detected!=null && old.points.indices.all { i -> kotlin.math.hypot(old.points[i].x-detected.points[i].x,old.points[i].y-detected.points[i].y)<.05f }) Quad(old.points.zip(detected.points).map { (a,b) -> PointN(a.x*.35f+b.x*.65f,a.y*.35f+b.y*.65f) }) else detected
+                                                    frameRatio=ratio; light=luminance
                                                     val fire=if(latestAuto && !latestBusy && !snapping.get()) gate.update(detected,now) else false
                                                     stability=gate.progress
                                                     if(fire) latestTakePhoto()
@@ -145,12 +161,23 @@ fun CameraScreen(vm: MainViewModel,onImport: ()->Unit) {
             }
         }
         cameraError?.let { Text(it,color=Color(0xFFFFC4B7),modifier=Modifier.padding(16.dp)) }
+        if(controls) camera?.let { cam -> Column(Modifier.padding(horizontal=24.dp)) {
+            val zoomState=cam.cameraInfo.zoomState.value
+            if(zoomState!=null && zoomState.maxZoomRatio>zoomState.minZoomRatio) {
+                Text("变焦 %.1f×".format(zoom),color=Color.White); Slider(zoom,{ zoom=it; cam.cameraControl.setZoomRatio(it) },valueRange=zoomState.minZoomRatio..minOf(zoomState.maxZoomRatio,4f))
+            }
+            val e=cam.cameraInfo.exposureState
+            if(e.isExposureCompensationSupported) { Text("曝光 ${exposure.roundToInt()}",color=Color.White); Slider(exposure,{ exposure=it; cam.cameraControl.setExposureCompensationIndex(it.roundToInt()) },valueRange=e.exposureCompensationRange.lower.toFloat()..e.exposureCompensationRange.upper.toFloat()) }
+        } }
         if(auto) LinearProgressIndicator(progress={ stability },modifier=Modifier.fillMaxWidth())
-        Text(if(quad==null) "将纸张放入取景框，拍摄后仍可手动调角" else if(auto) "保持稳定，识别到纸张后自动拍摄" else "已找到纸张 · 点击快门拍摄",color=Color.White,modifier=Modifier.align(Alignment.CenterHorizontally).padding(12.dp))
+        Text(if(light<65) "光线偏暗，建议补光 · 点击画面对焦" else if(quad==null) "请让四周纸边完整入镜，背景与纸面尽量有色差" else if(auto) "已识别纸张 · 保持稳定自动裁切拍摄" else "已找到纸张 · 拍摄后自动裁边",color=Color.White,modifier=Modifier.align(Alignment.CenterHorizontally).padding(12.dp))
         Row(Modifier.fillMaxWidth().padding(20.dp),horizontalArrangement=Arrangement.SpaceAround,verticalAlignment=Alignment.CenterVertically) {
             TextButton(onClick=onImport,enabled=!busy) { Text("相册",color=Color.White) }
             FilledIconButton(onClick=takePhoto,enabled=capture!=null && !busy,modifier=Modifier.size(76.dp),shape=CircleShape,colors=IconButtonDefaults.filledIconButtonColors(containerColor=Color.White)) { Icon(Icons.Default.CameraAlt,"拍照",tint=Color(0xFF176B54),modifier=Modifier.size(32.dp)) }
-            TextButton(onClick={ vm.screen.value="editor" },enabled=pages.isNotEmpty() && !busy) { Text("完成 ${pages.size}",color=Color.White) }
+            Column(horizontalAlignment=Alignment.CenterHorizontally) {
+                pages.lastOrNull()?.let { page -> val thumb=pageBitmap(page,140); thumb?.let { Image(it.asImageBitmap(),"最近拍摄页面",Modifier.size(38.dp).clickable { vm.replacement.value=null; vm.screen.value="editor" }) } }
+                TextButton(onClick={ vm.replacement.value=null; vm.screen.value="editor" },enabled=pages.isNotEmpty() && !busy) { Text("完成 ${pages.size}",color=Color.White) }
+            }
         }
     }
 }

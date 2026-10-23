@@ -13,6 +13,7 @@ import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -22,6 +23,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
@@ -61,16 +65,33 @@ fun ReaderScreen(vm: MainViewModel,onShare: (File)->Unit) {
     var rotation by remember { mutableIntStateOf(0) }
     var jump by remember { mutableStateOf(false) }
     var jumpText by remember { mutableStateOf("1") }
+    var tools by remember { mutableStateOf(false) }
+    var thumbnails by remember { mutableStateOf(false) }
+    var search by remember { mutableStateOf(false) }
+    var query by remember { mutableStateOf("") }
+    var hitIndex by remember { mutableIntStateOf(0) }
+    val hits by vm.searchHits.collectAsState()
+    LaunchedEffect(hits) { hitIndex=0; hits.firstOrNull()?.let { list.scrollToItem(it.page) } }
+    LaunchedEffect(list.firstVisibleItemIndex) { vm.annotationPage.value=list.firstVisibleItemIndex }
     Scaffold(topBar={ TopAppBar(title={ Text(doc?.title ?: "PDF",maxLines=1) },navigationIcon={ IconButton(onClick={ vm.screen.value="home" }) { Icon(Icons.AutoMirrored.Filled.ArrowBack,"返回") } },actions={
         IconButton(onClick={ file?.let { onShare(it) } }) { Icon(Icons.Default.Share,"分享 PDF") }
-        IconButton(onClick={ file?.let { vm.output.value=it } }) { Icon(Icons.Default.SaveAlt,"另存为") }
+        IconButton(onClick={ search=!search }) { Icon(Icons.Default.Search,"搜索文字") }
+        IconButton(onClick={ tools=true }) { Icon(Icons.Default.MoreVert,"PDF 工具") }
     }) },bottomBar={ Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(6.dp),horizontalArrangement=Arrangement.SpaceEvenly) {
         ToolAction(Icons.Default.ContentCut,"抽页 / 旋转",!busy) { rangeDialog=true }
         ToolAction(Icons.Default.Compress,"图像压缩",!busy) { compressDialog=true }
-        ToolAction(Icons.Default.TextFields,"提取文字",!busy) { vm.extractText() }
+        ToolAction(Icons.Default.Draw,"批注签名",!busy) { vm.beginMarks() }
         ToolAction(Icons.Default.FindInPage,"跳页",session!=null) { jump=true }
     } }) { padding ->
-        Box(Modifier.padding(padding).fillMaxSize().background(MaterialTheme.colorScheme.surfaceContainerHighest)) {
+        Column(Modifier.padding(padding).fillMaxSize()) {
+            if(search) Column(Modifier.fillMaxWidth().padding(horizontal=12.dp)) {
+                OutlinedTextField(query,{ query=it },singleLine=true,label={ Text("搜索 PDF 文字层") },trailingIcon={ TextButton(enabled=!busy,onClick={ vm.searchPdf(query) }) { Text("查找") } },modifier=Modifier.fillMaxWidth())
+                Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
+                    Text(if(hits.isEmpty()) "${hits.size} 个结果；扫描件可先添加 OCR 文字层" else "${hitIndex+1} / ${hits.size}",style=MaterialTheme.typography.bodySmall)
+                    TextButton(enabled=hits.isNotEmpty(),onClick={ hitIndex=(hitIndex+1)%hits.size; scope.launch { list.scrollToItem(hits[hitIndex].page) } }) { Text("下一处") }
+                }
+            }
+        Box(Modifier.weight(1f).fillMaxWidth().background(MaterialTheme.colorScheme.surfaceContainerHighest)) {
             val s=session
             if(s==null) Text("无法读取 PDF 或仍在加载。加密文件暂不支持在此打开。",modifier=Modifier.align(Alignment.Center).padding(32.dp))
             else {
@@ -96,7 +117,10 @@ fun ReaderScreen(vm: MainViewModel,onShare: (File)->Unit) {
                                         }
                                     } while(event.changes.any { it.pressed })
                                 }
-                            }) { Image(b.asImageBitmap(),"第 ${index+1} 页",Modifier.fillMaxSize().graphicsLayer { scaleX=zoom; scaleY=zoom; translationX=panX; translationY=panY }) }
+                            }) { Box(Modifier.fillMaxSize().graphicsLayer { scaleX=zoom; scaleY=zoom; translationX=panX; translationY=panY }) {
+                                Image(b.asImageBitmap(),"第 ${index+1} 页",Modifier.fillMaxSize())
+                                Canvas(Modifier.fillMaxSize()) { hits.filter { it.page==index }.forEach { hit -> drawRect(Color(0x88FFD54F),Offset(hit.left*size.width,hit.top*size.height),Size((hit.right-hit.left)*size.width,(hit.bottom-hit.top)*size.height)) } }
+                            } }
                             else Box(Modifier.fillMaxWidth().height(360.dp),contentAlignment=Alignment.Center) { CircularProgressIndicator() }
                             Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
                                 Text("${index+1} / ${s.count}",modifier=Modifier.padding(8.dp),style=MaterialTheme.typography.labelMedium)
@@ -106,7 +130,7 @@ fun ReaderScreen(vm: MainViewModel,onShare: (File)->Unit) {
                     }
                 }
             }
-        }
+        } }
     }
     if(rangeDialog) AlertDialog(onDismissRequest={ rangeDialog=false },title={ Text("抽取页面与旋转") },text={ Column {
         OutlinedTextField(value=range,onValueChange={ range=it },label={ Text("页码，例如 1-3,5；留空为全部") })
@@ -117,5 +141,15 @@ fun ReaderScreen(vm: MainViewModel,onShare: (File)->Unit) {
     if(jump) AlertDialog(onDismissRequest={ jump=false },title={ Text("跳到页码") },text={ OutlinedTextField(value=jumpText,onValueChange={ jumpText=it },singleLine=true,label={ Text("1 – ${session?.count ?: 0}") }) },confirmButton={ TextButton(onClick={
         val n=jumpText.toIntOrNull(); val s=session
         if(n!=null && s!=null && n in 1..s.count) { scope.launch { list.scrollToItem(n-1) }; jump=false }
-    }) { Text("跳转") } },dismissButton={ TextButton(onClick={ jump=false }) { Text("取消") } })
+    }) { Text("跳转") } },dismissButton={ Row { TextButton(onClick={ jump=false; thumbnails=true }) { Text("缩略图") }; TextButton(onClick={ jump=false; vm.screen.value="pdf-pages" }) { Text("编排") }; TextButton(onClick={ jump=false }) { Text("取消") } } })
+    if(tools) PdfToolsDialog(vm) { tools=false }
+    if(thumbnails) AlertDialog(onDismissRequest={ thumbnails=false },title={ Text("页面缩略图") },text={
+        val s=session
+        if(s!=null) LazyVerticalGrid(GridCells.Fixed(3),modifier=Modifier.height(420.dp),horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+            items(s.count) { n ->
+                val thumb by produceState<Bitmap?>(null,s,n) { value=withContext(Dispatchers.IO) { runCatching { s.render(n) }.getOrNull() } }
+                Column(Modifier.clickable { scope.launch { list.scrollToItem(n) }; thumbnails=false },horizontalAlignment=Alignment.CenterHorizontally) { thumb?.let { Image(it.asImageBitmap(),"跳到第 ${n+1} 页",Modifier.fillMaxWidth().height(100.dp)) }; Text("${n+1}") }
+            }
+        }
+    },confirmButton={ TextButton(onClick={ thumbnails=false }) { Text("关闭") } })
 }

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="cn.paperforge.app.GeometryTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-23T00:26:50.590Z" hostname="DESKTOP-DVV8TM5" time="0.047">
+  <properties/>
+  <testcase name="corruptRecipeFallsBackToFullImage" classname="cn.paperforge.app.GeometryTest" time="0.028"/>
+  <testcase name="invalidRangesDoNotProducePartialOutput" classname="cn.paperforge.app.GeometryTest" time="0.009"/>
+  <testcase name="jitterAndSmallShapesCannotTrigger" classname="cn.paperforge.app.GeometryTest" time="0.002"/>
+  <testcase name="fileNamesCannotEscapeDestination" classname="cn.paperforge.app.GeometryTest" time="0.004"/>
+  <testcase name="crossedOrOutsideCornersRejected" classname="cn.paperforge.app.GeometryTest" time="0.0"/>
+  <testcase name="rangesPreserveUserOrderAndRemoveDuplicates" classname="cn.paperforge.app.GeometryTest" time="0.0"/>
+  <testcase name="unorderedCornersBecomeClockwise" classname="cn.paperforge.app.GeometryTest" time="0.002"/>
+  <testcase name="stableDetectionCapturesOnceUntilPaperChanges" classname="cn.paperforge.app.GeometryTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

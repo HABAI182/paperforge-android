@@ -22,16 +22,21 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-fun HomeScreen(vm: MainViewModel,onImages: ()->Unit,onPdf: ()->Unit,onMerge: ()->Unit,onAbout: ()->Unit) {
+fun HomeScreen(vm: MainViewModel,onImages: ()->Unit,onPdf: ()->Unit,onMerge: ()->Unit,onAbout: ()->Unit,onRestoreBackup: ()->Unit={}) {
     val docs by vm.documents.collectAsState()
     val busy by vm.busy.collectAsState()
     var tab by remember { mutableIntStateOf(0) }
-    var search by remember { mutableStateOf("") }
+    val search by vm.query.collectAsState()
+    val trash by vm.trash.collectAsState()
+    var showTrash by remember { mutableStateOf(false) }
+    var favoritesOnly by remember { mutableStateOf(false) }
+    var folder by remember { mutableStateOf("") }
+    var categorizing by remember { mutableStateOf<DocumentRow?>(null) }
     var deleting by remember { mutableStateOf<DocumentRow?>(null) }
     var renaming by remember { mutableStateOf<DocumentRow?>(null) }
-    Scaffold(bottomBar={ NavigationBar {
+    Scaffold(bottomBar={ NavigationBar(containerColor=MaterialTheme.colorScheme.surfaceContainerLow) {
         listOf("首页" to Icons.Default.Home,"文档" to Icons.AutoMirrored.Filled.Article,"工具" to Icons.Default.GridView).forEachIndexed { i,(label,icon) ->
-            NavigationBarItem(selected=tab==i,onClick={ tab=i },icon={ Icon(icon,label) },label={ Text(label) })
+            NavigationBarItem(selected=tab==i,onClick={ tab=i; if(i!=1) vm.query.value="" },icon={ Icon(icon,label) },label={ Text(label) },colors=NavigationBarItemDefaults.colors(indicatorColor=MaterialTheme.colorScheme.primaryContainer,selectedIconColor=MaterialTheme.colorScheme.primary))
         }
     } }) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxSize(),contentPadding=PaddingValues(22.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
@@ -67,29 +72,41 @@ fun HomeScreen(vm: MainViewModel,onImages: ()->Unit,onPdf: ()->Unit,onMerge: ()-
                 item { ToolCard("PDF 图像压缩","打开 PDF → 图像压缩 → 对比真实体积",Icons.Default.Compress,!busy,onPdf) }
                 item { ToolCard("提取 PDF 文字","保留可提取的原有文本；扫描图可单独 OCR",Icons.Default.TextSnippet,!busy,onPdf) }
                 item { ToolCard("中英文离线 OCR","导入图片 → 整理扫描 → 识文字",Icons.Default.Translate,!busy,onImages) }
+                item { ToolCard("可搜索 PDF / 水印 / 密码","打开 PDF → 工具箱，或扫描导出时开启 OCR",Icons.Default.ManageSearch,!busy,onPdf) }
+                item { ToolCard("PDF 批注与手写签名","打开 PDF → 批注，画笔、荧光笔、形状和文本",Icons.Default.Draw,!busy,onPdf) }
+                item { ToolCard("离线备份","包含原图、PDF、OCR、分类和编辑历史的 ZIP",Icons.Default.Backup,!busy,vm::backup) }
+                item { ToolCard("恢复备份","选择纸匠 ZIP，新建副本并保留现有文档",Icons.Default.Restore,!busy,onRestoreBackup) }
             } else {
                 item { Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
                     Text(if(tab==0) "最近文档" else "我的文档",style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.SemiBold,modifier=Modifier.weight(1f)); Text("${docs.size} 份",style=MaterialTheme.typography.labelMedium)
                 } }
-                if(tab==1) item { OutlinedTextField(value=search,onValueChange={ search=it },label={ Text("搜索文档名称") },leadingIcon={ Icon(Icons.Default.Search,null) },modifier=Modifier.fillMaxWidth(),singleLine=true) }
-                val filtered=docs.filter { it.title.contains(search,true) }.let { if(tab==0) it.take(6) else it }
+                if(tab==1) {
+                    item { OutlinedTextField(value=search,onValueChange={ vm.query.value=it },label={ Text("搜索名称、标签、文件夹与 OCR 全文") },leadingIcon={ Icon(Icons.Default.Search,null) },modifier=Modifier.fillMaxWidth(),singleLine=true) }
+                    item { Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) { FilterChip(favoritesOnly,{ favoritesOnly=!favoritesOnly },label={ Text("收藏") }); FilterChip(showTrash,{ showTrash=!showTrash },label={ Text("回收站 ${trash.size}") }) } }
+                    item { OutlinedTextField(value=folder,onValueChange={ folder=it },label={ Text("按文件夹筛选，留空显示全部") },singleLine=true,modifier=Modifier.fillMaxWidth()) }
+                }
+                val filtered=(if(showTrash && tab==1) trash else docs).filter { (!favoritesOnly || it.favorite) && (folder.isEmpty() || it.folder==folder) }.let { if(tab==0) it.take(6) else it }
                 if(filtered.isEmpty()) item { Column(Modifier.fillMaxWidth().padding(vertical=34.dp),horizontalAlignment=Alignment.CenterHorizontally) {
                     Icon(Icons.Default.Inbox,null,modifier=Modifier.size(44.dp),tint=MaterialTheme.colorScheme.outline)
                     Text(if(search.isEmpty()) "第一份文档，从这里开始" else "没有匹配的文档",modifier=Modifier.padding(10.dp),color=MaterialTheme.colorScheme.onSurfaceVariant)
                     if(search.isEmpty()) Text("扫描、导入，全程留在设备。",style=MaterialTheme.typography.bodySmall)
                 } }
                 items(filtered,key={ it.id }) { doc ->
-                    Card(onClick={ vm.open(doc) },enabled=!busy,colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surfaceContainerLow)) {
+                    Card(onClick={ if(showTrash) vm.restore(doc) else vm.open(doc) },enabled=!busy,colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surfaceContainerLow)) {
                         Row(Modifier.fillMaxWidth().padding(14.dp),verticalAlignment=Alignment.CenterVertically) {
                             Surface(shape=RoundedCornerShape(12.dp),color=MaterialTheme.colorScheme.primaryContainer) { Icon(if(doc.kind=="scan") Icons.Default.Description else Icons.Default.PictureAsPdf,null,modifier=Modifier.padding(14.dp),tint=MaterialTheme.colorScheme.primary) }
                             Column(Modifier.weight(1f).padding(horizontal=14.dp)) {
-                                Text(doc.title,maxLines=2,style=MaterialTheme.typography.titleMedium)
+                                Text((if(doc.favorite) "★ " else "")+doc.title,maxLines=2,style=MaterialTheme.typography.titleMedium)
                                 Text((if(doc.kind=="scan") "扫描草稿" else "PDF 私有副本")+" · "+SimpleDateFormat("MM/dd HH:mm",Locale.CHINA).format(Date(doc.modified)),style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                                if(doc.folder.isNotEmpty() || doc.tags.isNotEmpty()) Text(listOf(doc.folder,doc.tags).filter { it.isNotEmpty() }.joinToString(" · "),style=MaterialTheme.typography.labelSmall)
                             }
                             var menu by remember { mutableStateOf(false) }
                             Box { IconButton(onClick={ menu=true }) { Icon(Icons.Default.MoreVert,"文档操作") }; DropdownMenu(expanded=menu,onDismissRequest={ menu=false }) {
                                 DropdownMenuItem(text={ Text("重命名") },onClick={ menu=false; renaming=doc })
-                                DropdownMenuItem(text={ Text("删除本地文档") },onClick={ menu=false; deleting=doc })
+                                DropdownMenuItem(text={ Text(if(doc.favorite) "取消收藏" else "收藏") },onClick={ menu=false; vm.favorite(doc) })
+                                DropdownMenuItem(text={ Text("文件夹与标签") },onClick={ menu=false; categorizing=doc })
+                                if(showTrash) DropdownMenuItem(text={ Text("恢复") },onClick={ menu=false; vm.restore(doc) })
+                                DropdownMenuItem(text={ Text(if(showTrash) "永久删除" else "移入回收站") },onClick={ menu=false; deleting=doc })
                             } }
                         }
                     }
@@ -98,8 +115,9 @@ fun HomeScreen(vm: MainViewModel,onImages: ()->Unit,onPdf: ()->Unit,onMerge: ()-
             item { Spacer(Modifier.height(12.dp)) }
         }
     }
-    deleting?.let { d -> AlertDialog(onDismissRequest={ deleting=null },title={ Text("删除「${d.title}」？") },text={ Text("删除本应用中的副本及草稿原图。通过系统另存的文件需在文件管理器中删除。") },confirmButton={ TextButton(onClick={ vm.delete(d); deleting=null }) { Text("删除") } },dismissButton={ TextButton(onClick={ deleting=null }) { Text("取消") } }) }
+    deleting?.let { d -> AlertDialog(onDismissRequest={ deleting=null },title={ Text(if(showTrash) "永久删除「${d.title}」？" else "移入回收站？") },text={ Text(if(showTrash) "删除本地副本及原图。系统另存的文件保留。" else "文档与原图会保留，可从回收站恢复。") },confirmButton={ TextButton(onClick={ if(showTrash) vm.purge(d) else vm.delete(d); deleting=null }) { Text(if(showTrash) "永久删除" else "移入回收站") } },dismissButton={ TextButton(onClick={ deleting=null }) { Text("取消") } }) }
     renaming?.let { d -> var name by remember { mutableStateOf(d.title) }; AlertDialog(onDismissRequest={ renaming=null },title={ Text("重命名文档") },text={ OutlinedTextField(value=name,onValueChange={ name=it },singleLine=true) },confirmButton={ TextButton(onClick={ vm.rename(d,name); renaming=null }) { Text("保存") } },dismissButton={ TextButton(onClick={ renaming=null }) { Text("取消") } }) }
+    categorizing?.let { d -> var f by remember { mutableStateOf(d.folder) }; var tags by remember { mutableStateOf(d.tags) }; AlertDialog(onDismissRequest={ categorizing=null },title={ Text("文件夹与标签") },text={ Column { OutlinedTextField(f,{ f=it },label={ Text("文件夹") }); OutlinedTextField(tags,{ tags=it },label={ Text("标签，逗号分隔") }) } },confirmButton={ TextButton(onClick={ vm.categorize(d,f,tags); categorizing=null }) { Text("保存") } },dismissButton={ TextButton(onClick={ categorizing=null }) { Text("取消") } }) }
 }
 
 @Composable private fun QuickCard(label: String,icon: ImageVector,modifier: Modifier,enabled: Boolean,onClick: ()->Unit) {

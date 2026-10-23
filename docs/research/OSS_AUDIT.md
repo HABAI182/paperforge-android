@@ -16,6 +16,7 @@
 | OpenCV | 4.12.0 / Maven Central | Apache-2.0，另有第三方许可 | native 库随 APK | 官方预编译制品，arm64/x86_64，跟进漏洞/16KB 兼容 |
 | PdfBox-Android | 2.0.27.0 / Maven Central | Apache-2.0 + 上游字体/数据声明 | 无 | 旧 PDFBox 移植版本，复杂/恶意 PDF 兼容与资源压力持续评估；不开网络，不伪造全格式支持 |
 | ML Kit Chinese + Latin | 各 16.0.1 / Google Maven | ML Kit / Google API SDK 条款（非开源模型） | 模型已打包；SDK 可含指标代码，本应用移除网络权限 | 实际首次离线、无GMS测试通过后才标记可用 |
+| PaperForge CJK Regular | 由 google/fonts/ofl/notosanssc/NotoSansSC[wght].ttf 生成的重命名字体 | SIL OFL 1.1（Adobe Copyright，Reserved Font Name Source） | 静态字体随包 | 固定 wght400；移除与统一字共享 glyph 的兼容 cmap 别名，修复 PDFBox 中文 ToUnicode；完整许可随包 |
 | Coroutines / Play task adapter | 1.10.2 / Maven Central | Apache-2.0 | Task 适配层不等于依赖 Play services 安装 | suspend await，处理取消 |
 | AndroidX Test / JUnit | runner1.6.2、core1.6.1、ext1.2.1 / JUnit4.13.2 | Apache-2.0 / EPL-1.0 | 仅测试 | 不随主 APK 引入 JUnit |
 

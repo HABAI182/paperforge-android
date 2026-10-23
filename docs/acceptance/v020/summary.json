@@ -1,0 +1,33 @@
+{
+  "collected_at": "2026-10-23T08:33:56.183586+08:00",
+  "version": "0.2.0",
+  "application_id": "cn.paperforge.app",
+  "min_sdk": 26,
+  "target_sdk": 36,
+  "abis": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "signing": "Android debug signing key",
+  "apk_bytes": 151040636,
+  "apk_sha256": "0e3c7c518b16ff24193ae320d5537dd8fca8e4eb684b97baa628b3c7021431e7",
+  "unit_tests": {
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "device_tests": {
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "lint": {
+    "errors": 0,
+    "warnings": 19
+  },
+  "device": "paperforge_api35 / Android 15 API35 / AOSP x86_64 / no GMS / airplane mode",
+  "physical_device_tested": false,
+  "command": "gradlew.bat connectedDebugAndroidTest testDebugUnitTest lintDebug -Pandroid.testInstrumentationRunnerArguments.class=cn.paperforge.app.UpgradeSmokeTest --console=plain"
+}

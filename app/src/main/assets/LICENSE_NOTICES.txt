@@ -34,3 +34,9 @@ They are not represented as Apache-licensed open-source models.
 The application removes Android INTERNET permission.
 
 Full license copies are bundled in assets/licenses and the source package.
+
+PaperForge CJK Regular is a renamed derivative of Noto Sans SC, Copyright
+2014-2021 Adobe (http://www.adobe.com/), Reserved Font Name 'Source'.
+Licensed under the SIL Open Font License 1.1 (licenses/NotoSansSC-OFL.txt).
+The derivative fixes weight at 400 and canonicalizes duplicate Unicode cmap
+aliases for reliable PDF copy/search. Source: google/fonts/ofl/notosanssc.

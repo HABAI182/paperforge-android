@@ -1,0 +1,10 @@
+{
+  "before_schema": 1,
+  "after_schema": 2,
+  "original_documents": 10,
+  "original_pages": 31,
+  "all_original_document_ids_retained": true,
+  "all_original_page_ids_retained": true,
+  "current_documents": 14,
+  "current_pages": 33
+}

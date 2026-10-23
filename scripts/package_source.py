@@ -1,9 +1,17 @@
 """Create a clean source ZIP without SDKs, caches, private keys or build output."""
 from pathlib import Path
-import zipfile
+import zipfile, re, subprocess, shutil
 
 root=Path(__file__).resolve().parents[1]
-output=root.parent/'PaperForge-0.1.0-source.zip'
+version=re.search(r'versionName\s*=\s*"([^"]+)"',(root/'app/build.gradle.kts').read_text()).group(1)
+output=root.parent/f'PaperForge-{version}-source.zip'
+if (root/'.git').exists() and shutil.which('git'):
+    status=subprocess.run(['git','status','--porcelain'],cwd=root,capture_output=True,text=True,check=True).stdout
+    if status.strip():
+        raise SystemExit('Commit source and acceptance records before packaging the release.')
+    subprocess.run(['git','archive','--format=zip','--prefix=PaperForge/','--output='+str(output),'HEAD'],cwd=root,check=True)
+    print(output)
+    raise SystemExit(0)
 excluded={'.git','.gradle','.kotlin','.idea','build','captures','__pycache__'}
 with zipfile.ZipFile(output,'w',zipfile.ZIP_DEFLATED) as archive:
     for p in sorted(root.rglob('*')):

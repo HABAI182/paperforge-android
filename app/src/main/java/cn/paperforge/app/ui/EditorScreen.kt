@@ -3,6 +3,7 @@ package cn.paperforge.app.ui
 import android.graphics.Bitmap
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -56,9 +57,13 @@ fun EditorScreen(vm: MainViewModel,onImport: ()->Unit) {
     var paper by remember { mutableStateOf("A4") }
     var quality by remember { mutableIntStateOf(90) }
     var adjust by remember { mutableStateOf(false) }
+    var searchable by remember { mutableStateOf(true) }
+    var original by remember { mutableStateOf(false) }
+    var more by remember { mutableStateOf(false) }
     Scaffold(topBar={ TopAppBar(title={ Text("整理扫描") },navigationIcon={ IconButton(onClick={ vm.screen.value="home" }) { Icon(Icons.AutoMirrored.Filled.ArrowBack,"返回") } },actions={
         IconButton(onClick=vm::undo,enabled=!busy) { Icon(Icons.AutoMirrored.Filled.Undo,"撤销") }
         IconButton(onClick=vm::redo,enabled=!busy) { Icon(Icons.AutoMirrored.Filled.Redo,"重做") }
+        IconButton(onClick={ vm.screen.value="pages" },enabled=!busy) { Icon(Icons.Default.GridView,"页面管理") }
     }) },bottomBar={ Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(16.dp),horizontalArrangement=Arrangement.spacedBy(10.dp)) {
         OutlinedButton(onClick={ vm.screen.value="capture" },enabled=!busy) { Icon(Icons.Default.Add,"增页"); Text("继续拍") }
         OutlinedButton(onClick=onImport,enabled=!busy) { Text("导图") }
@@ -72,8 +77,8 @@ fun EditorScreen(vm: MainViewModel,onImport: ()->Unit) {
                     Text("草稿已保存，添加第一页吧",modifier=Modifier.padding(20.dp))
                 }
             } else {
-                val bitmap=pageBitmap(active)
-                Box(Modifier.fillMaxWidth().height(340.dp).background(MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(20.dp)),contentAlignment=Alignment.Center) {
+                val bitmap=pageBitmap(active,original=original)
+                Box(Modifier.fillMaxWidth().height(340.dp).background(MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(20.dp)).pointerInput(active.id) { detectTapGestures(onPress={ original=true; tryAwaitRelease(); original=false }) },contentAlignment=Alignment.Center) {
                     if(bitmap!=null) Image(bitmap.asImageBitmap(),"扫描预览",modifier=Modifier.fillMaxSize().padding(12.dp),contentScale=ContentScale.Fit)
                     else CircularProgressIndicator()
                     Surface(Modifier.align(Alignment.BottomEnd).padding(12.dp),shape=RoundedCornerShape(8.dp),color=MaterialTheme.colorScheme.surface) { Text("${pages.indexOf(active)+1} / ${pages.size}",modifier=Modifier.padding(horizontal=10.dp,vertical=5.dp)) }
@@ -93,15 +98,24 @@ fun EditorScreen(vm: MainViewModel,onImport: ()->Unit) {
                     ToolAction(Icons.Default.TextFields,"识文字",!busy) { vm.recognize(active,true) }
                     ToolAction(Icons.Default.DeleteOutline,"删除",!busy) { confirmDelete=true }
                 }
+                Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceEvenly) {
+                    TextButton(onClick={ vm.detectPage(active) },enabled=!busy) { Text("自动裁边") }
+                    TextButton(onClick={ vm.applyAll(active) },enabled=!busy) { Text("滤镜应用全部") }
+                    TextButton(onClick={ vm.replacement.value=active.id; vm.screen.value="capture" },enabled=!busy) { Text("重拍本页") }
+                    TextButton(onClick={ more=true },enabled=!busy) { Text("更多") }
+                }
                 LazyRow(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                    val names=listOf("原图","自动增强","灰度","黑白文档","彩色增强")
-                    itemsIndexed(ScanProcessor.filters) { i,filter -> FilterChip(selected=active.filter==filter,onClick={ if(!busy) vm.save(active.copy(filter=filter)) },label={ Text(names[i]) },enabled=!busy) }
+                    val names=listOf("原图","自动增强","去阴影","灰度","黑白文档","彩色增强","白板")
+                    itemsIndexed(ScanProcessor.filters) { i,filter ->
+                        val sample=pageBitmap(active.copy(filter=filter),160)
+                        FilterChip(selected=active.filter==filter,onClick={ if(!busy) vm.save(active.copy(filter=filter)) },label={ Text(names[i]) },leadingIcon={ sample?.let { Image(it.asImageBitmap(),null,Modifier.size(32.dp)) } },enabled=!busy)
+                    }
                 }
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
                     TextButton(onClick={ vm.move(active,-1) },enabled=pages.indexOf(active)>0 && !busy) { Text("← 前移一页") }
                     TextButton(onClick={ vm.move(active,1) },enabled=pages.indexOf(active)<pages.lastIndex && !busy) { Text("后移一页 →") }
                 }
-                Text("原图始终保留 · 调整会自动保存 · PDF 在导出时重建",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("按住预览对比原图 · 调整自动保存 · 撤销历史可跨进程恢复",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Spacer(Modifier.height(12.dp))
         }
@@ -117,11 +131,20 @@ fun EditorScreen(vm: MainViewModel,onImport: ()->Unit) {
         } },confirmButton={ TextButton(onClick={ vm.save(active.copy(brightness=brightness,contrast=contrast)); adjust=false }) { Text("应用") } },dismissButton={ TextButton(onClick={ adjust=false }) { Text("取消") } })
     }
     if(export) AlertDialog(onDismissRequest={ export=false },title={ Text("导出多页 PDF") },text={ Column {
-        Text("所有 ${pages.size} 页 · 图像 PDF（不含 OCR 文字层）")
+        Text("所有 ${pages.size} 页")
+        Row(verticalAlignment=Alignment.CenterVertically) { Checkbox(searchable,{ searchable=it }); Text("离线 OCR · 可搜索文字层") }
+        TextButton(onClick={ paper="ID" }) { Text(if(paper=="ID") "✓ 证件双面 A4 合版" else "证件双面 A4 合版") }
         Row { listOf("A4","A5","Letter","Original").forEach { p -> TextButton(onClick={ paper=p }) { Text(if(p=="Original") "原比例" else p,color=if(p==paper) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant) } } }
         Text("图像质量 $quality"); Slider(value=quality.toFloat(),onValueChange={ quality=it.toInt() },valueRange=50f..100f,steps=9)
         Text("后台生成后可预览、保存到任意文件夹或分享。",style=MaterialTheme.typography.bodySmall)
-    } },confirmButton={ TextButton(onClick={ export=false; vm.export(paper,quality,name) },enabled=!busy) { Text("生成 PDF") } },dismissButton={ TextButton(onClick={ export=false }) { Text("取消") } })
+    } },confirmButton={ TextButton(onClick={ export=false; vm.export(paper,quality,name,searchable) },enabled=!busy) { Text("生成 PDF") } },dismissButton={ TextButton(onClick={ export=false }) { Text("取消") } })
+    if(more && active!=null) AlertDialog(onDismissRequest={ more=false },title={ Text("扫描页面工具") },text={ Column {
+        TextButton(onClick={ more=false; vm.duplicate(active) }) { Text("复制当前页") }
+        TextButton(onClick={ more=false; vm.splitBook(active) }) { Text("书本双页从中缝分割") }
+        TextButton(onClick={ more=false; vm.recognizeAll() }) { Text("识别全部页面文字") }
+        TextButton(onClick={ more=false; vm.images("jpg") }) { Text("全部页面导出 JPG 图片包") }
+        TextButton(onClick={ more=false; vm.images("png") }) { Text("全部页面导出 PNG 图片包") }
+    } },confirmButton={ TextButton(onClick={ more=false }) { Text("关闭") } })
 }
 
 @Composable

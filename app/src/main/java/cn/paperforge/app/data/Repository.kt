@@ -11,6 +11,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.util.UUID
+import org.json.JSONObject
 
 class Repository(val context: Context,val database: PaperDatabase) {
     val dao=database.dao()
@@ -20,10 +21,10 @@ class Repository(val context: Context,val database: PaperDatabase) {
     suspend fun newScan(): DocumentRow = DocumentRow(UUID.randomUUID().toString(),"扫描 ${java.text.SimpleDateFormat("MM-dd HH.mm",java.util.Locale.CHINA).format(java.util.Date())}").also { dao.putDocument(it) }
     fun folder(id: String)=File(root,id).apply { mkdirs() }
     fun captureFile(id: String)=File(folder(id),"${UUID.randomUUID()}.jpg")
-    suspend fun addCapture(id: String,file: File): PageRow=withContext(Dispatchers.IO) {
-        val bitmap=ScanProcessor.decode(file,1000)
+    suspend fun addCapture(id: String,file: File,previewQuad: cn.paperforge.app.model.Quad?=null): PageRow=withContext(Dispatchers.IO) {
+        val bitmap=ScanProcessor.decode(file,1800)
         val quad=try { ScanProcessor.detect(bitmap) } finally { bitmap.recycle() }
-        val page=PageRow(UUID.randomUUID().toString(),id,dao.pages(id).size,file.absolutePath,corners=(quad?:cn.paperforge.app.model.Quad.Full).encode())
+        val page=PageRow(UUID.randomUUID().toString(),id,dao.pages(id).size,file.absolutePath,corners=(quad?:previewQuad?:cn.paperforge.app.model.Quad.Full).encode())
         database.withTransaction { dao.putPage(page); dao.touch(id,System.currentTimeMillis()) }; page
     }
     suspend fun importImages(id: String,uris: List<Uri>)=withContext(Dispatchers.IO) {
@@ -32,11 +33,14 @@ class Repository(val context: Context,val database: PaperDatabase) {
             try { copyUri(uri,file); addCapture(id,file) } catch(e: Exception) { file.delete(); throw e }
         }
     }
-    suspend fun importPdf(uri: Uri): DocumentRow=withContext(Dispatchers.IO) {
+    suspend fun importPdf(uri: Uri,password: String=""): DocumentRow=withContext(Dispatchers.IO) {
         val id=UUID.randomUUID().toString(); val file=File(folder(id),"source.pdf")
         try {
             copyUri(uri,file)
-            com.tom_roush.pdfbox.pdmodel.PDDocument.load(file).use { require(it.numberOfPages>0) { "PDF 没有页面" } }
+            com.tom_roush.pdfbox.pdmodel.PDDocument.load(file,password).use { pdf ->
+                require(pdf.numberOfPages>0) { "PDF 没有页面" }
+                if(pdf.isEncrypted) { val unlocked=File(folder(id),"unlocked.pdf"); pdf.isAllSecurityToBeRemoved=true; pdf.save(unlocked); file.renameTo(File(folder(id),"encrypted-original.pdf")); check(unlocked.renameTo(file)) }
+            }
             DocumentRow(id,displayName(uri).removeSuffix(".pdf"),kind="pdf",pdfPath=file.path).also { dao.putDocument(it) }
         } catch(e: Exception) { file.delete(); throw e }
     }
@@ -50,12 +54,34 @@ class Repository(val context: Context,val database: PaperDatabase) {
     fun displayName(uri: Uri): String=context.contentResolver.query(uri,arrayOf(OpenableColumns.DISPLAY_NAME),null,null,null)?.use { if(it.moveToFirst()) it.getString(0) else null } ?: "导入文档"
     suspend fun savePage(page: PageRow)=database.withTransaction {
         val current=dao.pages(page.documentId).firstOrNull { it.id==page.id } ?: error("页面不存在")
-        dao.updatePage(page.copy(revision=current.revision+1,ocrText=null)); dao.touch(page.documentId,System.currentTimeMillis())
+        val next=page.copy(revision=current.revision+1,ocrText=null,ocrLayout=null)
+        dao.clearRedo(page.documentId)
+        dao.addHistory(EditHistory(documentId=page.documentId,pageId=page.id,beforeJson=DocumentCodec.page(current).toString(),afterJson=DocumentCodec.page(next).toString()))
+        dao.updatePage(next); dao.touch(page.documentId,System.currentTimeMillis())
+    }
+    suspend fun undo(id: String,redo: Boolean=false)=database.withTransaction {
+        val history=(if(redo) dao.redoEntry(id) else dao.undoEntry(id)) ?: return@withTransaction
+        val p=DocumentCodec.page(JSONObject(if(redo) history.afterJson else history.beforeJson))
+        val current=dao.pages(id).find { it.id==p.id } ?: return@withTransaction
+        dao.updatePage(p.copy(revision=current.revision+1,ocrText=null,ocrLayout=null)); dao.updateHistory(history.copy(applied=redo)); dao.touch(id,System.currentTimeMillis())
     }
     suspend fun reorder(id: String,order: List<PageRow>)=database.withTransaction { order.forEachIndexed { index,p -> dao.updatePage(p.copy(position=index)) }; dao.touch(id,System.currentTimeMillis()) }
-    suspend fun deletePage(page: PageRow) { dao.deletePage(page.id); File(page.original).delete(); reorder(page.documentId,dao.pages(page.documentId)) }
+    suspend fun deletePage(page: PageRow) { dao.deletePage(page.id); if(dao.originalReferences(page.original)==0) File(page.original).delete(); dao.clearHistory(page.documentId); reorder(page.documentId,dao.pages(page.documentId)) }
+    suspend fun duplicate(page: PageRow) { val all=dao.pages(page.documentId).toMutableList(); val copy=page.copy(id=UUID.randomUUID().toString()); dao.putPage(copy); all.add(all.indexOfFirst { it.id==page.id }+1,copy); reorder(page.documentId,all) }
+    suspend fun splitBook(page: PageRow) {
+        val p=cn.paperforge.app.model.Quad.decode(page.corners).points
+        fun mid(a: cn.paperforge.app.model.PointN,b: cn.paperforge.app.model.PointN)=cn.paperforge.app.model.PointN((a.x+b.x)/2,(a.y+b.y)/2)
+        val top=mid(p[0],p[1]); val bottom=mid(p[3],p[2])
+        val left=page.copy(id=UUID.randomUUID().toString(),corners=cn.paperforge.app.model.Quad(listOf(p[0],top,bottom,p[3])).encode(),ocrText=null,ocrLayout=null)
+        val right=page.copy(id=UUID.randomUUID().toString(),corners=cn.paperforge.app.model.Quad(listOf(top,p[1],p[2],bottom)).encode(),ocrText=null,ocrLayout=null)
+        val all=dao.pages(page.documentId).toMutableList(); val index=all.indexOfFirst { it.id==page.id }
+        database.withTransaction { dao.deletePage(page.id); dao.putPage(left); dao.putPage(right); all.removeAt(index); all.addAll(index,listOf(left,right)); reorder(page.documentId,all); dao.clearHistory(page.documentId) }
+    }
+    suspend fun trash(doc: DocumentRow) { dao.updateDocument(doc.copy(trashedAt=System.currentTimeMillis())) }
+    suspend fun restore(doc: DocumentRow) { dao.updateDocument(doc.copy(trashedAt=null,modified=System.currentTimeMillis())) }
     suspend fun deleteDocument(doc: DocumentRow) {
         dao.deleteDocument(doc.id)
+        dao.clearHistory(doc.id)
         // Only our UUID-named private directory is removed; external documents are never deleted.
         val directory=File(root,doc.id)
         require(directory.canonicalFile.parentFile==root.canonicalFile)

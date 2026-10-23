@@ -14,7 +14,7 @@ import java.io.File
 import kotlin.math.*
 
 object ScanProcessor {
-    val filters=listOf("ORIGINAL","AUTO","GRAY","BW","COLOR")
+    val filters=listOf("ORIGINAL","AUTO","CLEAN","GRAY","BW","COLOR","WHITEBOARD")
     fun decode(file: File, maxEdge: Int=2400): Bitmap {
         val bounds=BitmapFactory.Options().apply { inJustDecodeBounds=true }
         BitmapFactory.decodeFile(file.path,bounds)
@@ -41,25 +41,45 @@ object ScanProcessor {
         try { Utils.bitmapToMat(bitmap,rgba); return detectMat(rgba) } finally { rgba.release() }
     }
     fun detectMat(source: Mat): Quad? {
-        val small=Mat(); val gray=Mat(); val blur=Mat(); val edges=Mat(); val hierarchy=Mat(); val contours=mutableListOf<MatOfPoint>()
+        val small=Mat(); val gray=Mat(); val blur=Mat(); val edges=Mat(); val binary=Mat(); val hierarchy=Mat()
         val kernel=Imgproc.getStructuringElement(Imgproc.MORPH_RECT,Size(5.0,5.0))
         try {
-            val scale=720.0/max(source.cols(),source.rows())
+            val scale=min(1.0,900.0/max(source.cols(),source.rows()))
             Imgproc.resize(source,small,Size(),scale,scale)
-            if(small.channels()==1) small.copyTo(gray) else Imgproc.cvtColor(small,gray,Imgproc.COLOR_RGBA2GRAY)
+            if(small.channels()==1) small.copyTo(gray) else Imgproc.cvtColor(small,gray,if(small.channels()==4) Imgproc.COLOR_RGBA2GRAY else Imgproc.COLOR_RGB2GRAY)
             Imgproc.GaussianBlur(gray,blur,Size(5.0,5.0),0.0)
-            Imgproc.Canny(blur,edges,45.0,135.0)
-            Imgproc.morphologyEx(edges,edges,Imgproc.MORPH_CLOSE,kernel)
-            Imgproc.findContours(edges,contours,hierarchy,Imgproc.RETR_LIST,Imgproc.CHAIN_APPROX_SIMPLE)
-            return contours.sortedByDescending { Imgproc.contourArea(it) }.take(12).mapNotNull { contour ->
-                val c=MatOfPoint2f(*contour.toArray()); val approx=MatOfPoint2f()
+            val candidates=mutableListOf<Pair<Quad,Float>>()
+            fun collect(mask: Mat) {
+                val contours=mutableListOf<MatOfPoint>()
                 try {
-                    Imgproc.approxPolyDP(c,approx,.025*Imgproc.arcLength(c,true),true)
-                    val p=approx.toArray()
-                    if(p.size!=4) null else Quad.ordered(p.map { PointN((it.x/small.cols()).toFloat().coerceIn(0f,1f),(it.y/small.rows()).toFloat().coerceIn(0f,1f)) }).takeIf { it.valid() && it.area in .12f.. .98f }
-                } finally { c.release(); approx.release() }
-            }.maxByOrNull { it.area }
-        } finally { listOf(small,gray,blur,edges,hierarchy,kernel).forEach { it.release() }; contours.forEach { it.release() } }
+                    Imgproc.findContours(mask,contours,hierarchy,Imgproc.RETR_LIST,Imgproc.CHAIN_APPROX_SIMPLE)
+                    contours.filter { Imgproc.contourArea(it)>small.total()*.07 }.sortedByDescending { Imgproc.contourArea(it) }.take(30).forEach { contour ->
+                        val c=MatOfPoint2f(*contour.toArray()); val approx=MatOfPoint2f()
+                        try {
+                            for(epsilon in listOf(.012,.022,.035,.05)) {
+                                Imgproc.approxPolyDP(c,approx,epsilon*Imgproc.arcLength(c,true),true)
+                                val p=approx.toArray(); if(p.size!=4) continue
+                                val q=Quad.ordered(p.map { PointN((it.x/(small.cols()-1)).toFloat().coerceIn(0f,1f),(it.y/(small.rows()-1)).toFloat().coerceIn(0f,1f)) })
+                                if(!q.valid() || q.area !in .08f.. .995f) continue
+                                // Reject a full image border introduced by thresholding and thin text boxes.
+                                val touches=q.points.count { it.x<.008f || it.x>.992f || it.y<.008f || it.y>.992f }
+                                if(touches>=3) continue
+                                val sides=q.points.indices.map { i -> val a=q.points[i]; val b=q.points[(i+1)%4]; hypot((a.x-b.x)*small.cols(),(a.y-b.y)*small.rows()) }
+                                if(sides.min()<min(small.cols(),small.rows())*.12) continue
+                                val rectangularity=(Imgproc.contourArea(contour)/(q.area*small.total())).toFloat().coerceIn(0f,1f)
+                                candidates.add(q to q.area*(.7f+.3f*rectangularity)); break
+                            }
+                        } finally { c.release(); approx.release() }
+                    }
+                } finally { contours.forEach { it.release() } }
+            }
+            // Edges find coloured paper; Otsu masks recover bright sheets with weak or broken edges.
+            Imgproc.Canny(blur,edges,28.0,92.0); Imgproc.morphologyEx(edges,edges,Imgproc.MORPH_CLOSE,kernel); collect(edges)
+            Imgproc.threshold(blur,binary,0.0,255.0,Imgproc.THRESH_BINARY+Imgproc.THRESH_OTSU)
+            Imgproc.morphologyEx(binary,binary,Imgproc.MORPH_CLOSE,kernel); collect(binary)
+            Core.bitwise_not(binary,binary); collect(binary)
+            return candidates.maxByOrNull { it.second }?.first
+        } finally { listOf(small,gray,blur,edges,binary,hierarchy,kernel).forEach { it.release() } }
     }
 
     fun render(page: PageRow,maxEdge: Int=2400): Bitmap {
@@ -84,14 +104,25 @@ object ScanProcessor {
             Imgproc.warpPerspective(source,warped,matrix,Size(outW.toDouble(),outH.toDouble()),Imgproc.INTER_CUBIC,Core.BORDER_REPLICATE)
             Imgproc.cvtColor(warped,rgb,Imgproc.COLOR_RGBA2RGB)
             when(filter) {
-                "GRAY","BW","AUTO" -> {
+                "GRAY","BW","AUTO","CLEAN","WHITEBOARD" -> {
                     Imgproc.cvtColor(rgb,gray,Imgproc.COLOR_RGB2GRAY)
                     when(filter) {
                         "BW" -> Imgproc.adaptiveThreshold(gray,dst,255.0,Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,Imgproc.THRESH_BINARY,41,13.0)
-                        "AUTO" -> {
-                            // Local contrast keeps faint pencil lines; unlike thresholding it preserves shades.
-                            val clahe=Imgproc.createCLAHE(2.0,Size(8.0,8.0))
-                            clahe.apply(gray,dst); clahe.collectGarbage()
+                        "AUTO","CLEAN","WHITEBOARD" -> {
+                            val background=Mat(); val smooth=Mat(); val norm=Mat(); val sharp=Mat()
+                            val backgroundSize=(min(gray.cols(),gray.rows())/25).coerceIn(21,81).let { if(it%2==0) it+1 else it }
+                            val k=Imgproc.getStructuringElement(Imgproc.MORPH_RECT,Size(backgroundSize.toDouble(),backgroundSize.toDouble()))
+                            try {
+                                // Suppress JPEG/bicubic bright ringing before the max filter; otherwise
+                                // that overshoot becomes a false light source and creates dark halos.
+                                Imgproc.medianBlur(gray,smooth,5)
+                                Imgproc.dilate(smooth,background,k); Imgproc.GaussianBlur(background,background,Size(51.0,51.0),0.0)
+                                Core.divide(gray,background,norm,255.0)
+                                Imgproc.GaussianBlur(norm,smooth,Size(3.0,3.0),0.0); Core.addWeighted(norm,1.2,smooth,-.2,0.0,sharp)
+                                if(filter=="WHITEBOARD") Imgproc.adaptiveThreshold(sharp,dst,255.0,Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,Imgproc.THRESH_BINARY,51,10.0)
+                                else if(filter=="CLEAN") sharp.convertTo(dst,-1,1.08,-8.0)
+                                else sharp.copyTo(dst)
+                            } finally { listOf(background,smooth,norm,sharp,k).forEach { it.release() } }
                         }
                         else -> gray.copyTo(dst)
                     }

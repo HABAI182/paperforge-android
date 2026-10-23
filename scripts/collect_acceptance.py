@@ -1,9 +1,10 @@
 from pathlib import Path
-import hashlib, json, shutil, xml.etree.ElementTree as ET
+import hashlib, json, shutil, re, xml.etree.ElementTree as ET
 from datetime import datetime, timezone, timedelta
 
 root=Path(__file__).resolve().parents[1]
-out=root/'docs/acceptance'; out.mkdir(parents=True,exist_ok=True)
+version=re.search(r'versionName\s*=\s*"([^"]+)"',(root/'app/build.gradle.kts').read_text()).group(1)
+out=root/'docs/acceptance'/('v'+version.replace('.','')); out.mkdir(parents=True,exist_ok=True)
 sources={
     'unit-tests.xml':root/'app/build/test-results/testDebugUnitTest/TEST-cn.paperforge.app.GeometryTest.xml',
     'device-tests.xml':next((root/'app/build/outputs/androidTest-results/connected/debug').glob('TEST-*.xml')),
@@ -18,14 +19,14 @@ issues=ET.parse(out/'lint-results-debug.xml').getroot().findall('issue')
 apk=root/'app/build/outputs/apk/debug/app-debug.apk'
 summary={
     'collected_at':datetime.now(timezone(timedelta(hours=8))).isoformat(),
-    'version':'0.1.0','application_id':'cn.paperforge.app','min_sdk':26,'target_sdk':36,
+    'version':version,'application_id':'cn.paperforge.app','min_sdk':26,'target_sdk':36,
     'abis':['arm64-v8a','x86_64'],'signing':'Android debug signing key',
     'apk_bytes':apk.stat().st_size,'apk_sha256':hashlib.sha256(apk.read_bytes()).hexdigest(),
     'unit_tests':counts('unit-tests.xml'),'device_tests':counts('device-tests.xml'),
     'lint':{'errors':sum(i.get('severity') in ['Error','Fatal'] for i in issues),'warnings':sum(i.get('severity')=='Warning' for i in issues)},
     'device':'paperforge_api35 / Android 15 API35 / AOSP x86_64 / no GMS / airplane mode',
     'physical_device_tested':False,
-    'command':'gradlew.bat assembleDebug testDebugUnitTest lintDebug connectedDebugAndroidTest --continue --console=plain',
+    'command':'gradlew.bat connectedDebugAndroidTest testDebugUnitTest lintDebug -Pandroid.testInstrumentationRunnerArguments.class=cn.paperforge.app.UpgradeSmokeTest --console=plain',
 }
 assert summary['unit_tests']['failures']==0 and summary['device_tests']['failures']==0
 assert summary['lint']['errors']==0

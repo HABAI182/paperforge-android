@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="cn.paperforge.app.UpgradeSmokeTest" tests="3" failures="0" errors="0" skipped="0" time="7.171" timestamp="2026-10-23T00:33:12" hostname="localhost">
+  <properties>
+    <property name="device" value="paperforge_api35(AVD) - 15" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="pdfToolsSignatureRedactionAndEncryption" classname="cn.paperforge.app.UpgradeSmokeTest" time="4.463" />
+  <testcase name="historyAndBackupRestoreRetainOriginals" classname="cn.paperforge.app.UpgradeSmokeTest" time="0.159" />
+  <testcase name="lowContrastAutoCropOcrAndChineseSearchablePdf" classname="cn.paperforge.app.UpgradeSmokeTest" time="2.306" />
+</testsuite>
