@@ -27,31 +27,39 @@ object PdfEngine {
         atomic(output) { temp ->
             PDDocument(MemoryUsageSetting.setupTempFileOnly()).use { doc ->
                 val font=if(searchable) PdfTextLayer.font(requireNotNull(context),doc) else null
+                val engine=if(searchable) (requireNotNull(context).applicationContext as cn.paperforge.app.PaperForgeApp).ocrEngine else null
                 pages.forEachIndexed { index,page ->
                     coroutineContext.ensureActive()
+                    var layout=if(engine==null) null else page.ocrLayout?.let { runCatching { OcrLayout.decode(it) }.getOrNull() }?.takeIf {
+                        it.sourceRevision==page.revision && (it.engineId==engine.id || it.lines.any { line -> line.corrected })
+                    } ?: engine.layout(page)
                     val dpi=cn.paperforge.app.imaging.ScanConfig.dpi(resolution)
-                    val bitmap=ScanProcessor.render(page,cn.paperforge.app.imaging.ScanConfig.edge(resolution))
+                    var bitmap=ScanProcessor.render(page,cn.paperforge.app.imaging.ScanConfig.edge(resolution))
                     try {
+                        layout?.takeIf { it.orientationCorrection!=0 }?.let { l ->
+                            val old=bitmap;bitmap=cn.paperforge.app.imaging.PageOrientation.rotate(old,l.orientationCorrection.toFloat());old.recycle()
+                            layout=l.rotated(l.orientationCorrection)
+                        }
+                        layout?.takeIf { it.deskewDegrees!=0f }?.let { l ->
+                            val geometry=cn.paperforge.app.model.DeskewGeometry(bitmap.width,bitmap.height,l.deskewDegrees)
+                            val old=bitmap;bitmap=cn.paperforge.app.imaging.PageOrientation.rotate(old,l.deskewDegrees);old.recycle()
+                            layout=geometry.map(l,true).copy(deskewDegrees=0f)
+                        }
                         val matched=paper in listOf("Auto","Original")
-                        val size=when(paper) { "A5" -> PDRectangle.A5; "Letter" -> PDRectangle.LETTER; "Auto","Original" -> PDRectangle(bitmap.width*72f/dpi,bitmap.height*72f/dpi); else -> PDRectangle.A4 }
+                        val size=when(paper) { "A5" -> PDRectangle.A5;"Letter" -> PDRectangle.LETTER;"Auto","Original" -> PDRectangle(bitmap.width*72f/dpi,bitmap.height*72f/dpi);else -> PDRectangle.A4 }
                         val card=paper=="ID"
                         val pdfPage=if(card && index%2==1) doc.getPage(doc.numberOfPages-1) else PDPage(size).also { doc.addPage(it) }
-                        val image=JPEGFactory.createFromImage(doc,bitmap,quality/100f)
+                        val image=PdfImageEncoder.scan(doc,bitmap,page.filter,quality,dpi)
                         val margin=if(matched) 0f else 12f
                         val scale=if(card) minOf(242.65f/bitmap.width,153.07f/bitmap.height) else minOf((size.width-2*margin)/bitmap.width,(size.height-2*margin)/bitmap.height)
-                        val w=bitmap.width*scale; val h=bitmap.height*scale
-                        val x=(size.width-w)/2; val y=if(card) (if(index%2==0) size.height*.66f else size.height*.33f)-h/2 else (size.height-h)/2
+                        val w=bitmap.width*scale;val h=bitmap.height*scale
+                        val x=(size.width-w)/2;val y=if(card) (if(index%2==0) size.height*.66f else size.height*.33f)-h/2 else (size.height-h)/2
                         PDPageContentStream(doc,pdfPage,PDPageContentStream.AppendMode.APPEND,true,true).use { it.drawImage(image,x,y,w,h) }
-                        if(font!=null) {
-                            val layout=page.ocrLayout?.let { runCatching { OcrLayout.decode(it) }.getOrNull() } ?: BundledOcrEngine().layout(page)
-                            PdfTextLayer.append(doc,pdfPage,font,layout,x,y,w,h)
-                        }
+                        if(font!=null && layout!=null) PdfTextLayer.append(doc,pdfPage,font,layout!!,x,y,w,h)
                     } finally { bitmap.recycle() }
                     progress((index+1)*100/pages.size)
                 }
-                doc.documentInformation.title=output.nameWithoutExtension
-                doc.documentInformation.creator="PaperForge 纸匠"
-                doc.save(temp)
+                doc.documentInformation.title=output.nameWithoutExtension;doc.documentInformation.creator="PaperForge 纸匠";doc.save(temp)
             }
         }
     }
