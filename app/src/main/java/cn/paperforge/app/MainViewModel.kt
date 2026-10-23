@@ -246,6 +246,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         perform("打包所选文档") {
             val docs = ids.mapNotNull { repo.dao.document(it) }.filter { it.trashedAt == null }
             require(docs.isNotEmpty()) { "请选择文档" }
+            val sharePaper = UserSettings.string("paper", "Auto")
+            val shareQuality = UserSettings.number("quality", 90f).toInt()
+            val shareSearchable = UserSettings.bool("searchable", true)
+            val requestedResolution = UserSettings.string("resolution", "STANDARD")
+            val shareResolution =
+                if (requestedResolution == "CUSTOM")
+                    "DPI:${cn.paperforge.app.imaging.ScanConfig.dpi(requestedResolution)}"
+                else requestedResolution
             val file = File(repo.exports, "PaperForge-documents-${System.currentTimeMillis()}.zip")
             val partial = File(file.path + ".part")
             val temporary =
@@ -264,7 +272,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                                         repo.dao.pages(doc.id),
                                         it,
                                         context = getApplication(),
-                                        searchable = false,
+                                        searchable = shareSearchable,
+                                        paper = sharePaper,
+                                        quality = shareQuality,
+                                        resolution = shareResolution,
                                     )
                                 }
                         zip.putNextEntry(
