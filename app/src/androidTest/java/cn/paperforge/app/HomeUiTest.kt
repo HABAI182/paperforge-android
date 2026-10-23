@@ -20,7 +20,7 @@ class HomeUiTest {
         compose.onNodeWithText("工具", useUnmergedTree = true).performClick()
         compose.onNodeWithText("小工具，大用处").assertIsDisplayed()
         compose.onNodeWithContentDescription("关于与隐私").performClick()
-        compose.onNodeWithText("纸匠 PaperForge · 0.2.0").assertIsDisplayed()
+        compose.onNodeWithText("纸匠 PaperForge", substring = true).assertIsDisplayed()
         compose.onNodeWithText("知道了").performClick()
     }
 

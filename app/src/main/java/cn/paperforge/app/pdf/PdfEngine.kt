@@ -103,7 +103,6 @@ object PdfEngine {
                         val pdfPage =
                             if (card && index % 2 == 1) doc.getPage(doc.numberOfPages - 1)
                             else PDPage(size).also { doc.addPage(it) }
-                        val image = PdfImageEncoder.scan(doc, bitmap, page.filter, quality, dpi)
                         val margin = if (matched) 0f else 12f
                         val scale =
                             if (card) minOf(242.65f / bitmap.width, 153.07f / bitmap.height)
@@ -114,6 +113,10 @@ object PdfEngine {
                                 )
                         val w = bitmap.width * scale
                         val h = bitmap.height * scale
+                        val effectiveDpi =
+                            kotlin.math.round(bitmap.width * 72f / w).toInt().coerceAtLeast(1)
+                        val image =
+                            PdfImageEncoder.scan(doc, bitmap, page.filter, quality, effectiveDpi)
                         val x = (size.width - w) / 2
                         val y =
                             if (card)

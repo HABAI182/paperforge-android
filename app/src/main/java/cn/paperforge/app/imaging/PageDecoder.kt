@@ -7,7 +7,12 @@ import java.io.File
 import kotlin.math.*
 
 object PageDecoder {
-    data class Decoded(val bitmap: Bitmap, val quad: Quad, val plan: ImageGeometry.DecodePlan)
+    data class Decoded(
+        val bitmap: Bitmap,
+        val quad: Quad,
+        val plan: ImageGeometry.DecodePlan,
+        val aspect: Float,
+    )
 
     @Suppress("DEPRECATION")
     fun crop(file: File, quad: Quad, target: Int): Decoded {
@@ -73,7 +78,14 @@ object PageDecoder {
                     orientation,
                 )
             }
-        return Decoded(image, Quad(mapped), plan)
+        // The crop ROI shifts the principal point. Estimate physical aspect in the full image
+        // frame.
+        return Decoded(
+            image,
+            Quad(mapped),
+            plan,
+            ImageGeometry.aspect(quad, uprightWidth, uprightHeight),
+        )
     }
 
     fun orient(bitmap: Bitmap, orientation: Int): Bitmap {

@@ -39,6 +39,7 @@ class MainActivity : ComponentActivity() {
             authenticating = false
             if (result.resultCode == RESULT_OK) {
                 LocalAppLock.authorized = true
+                LocalAppLock.backgroundAt = 0L
                 appLocked = false
             }
         }
@@ -436,7 +437,7 @@ class MainActivity : ComponentActivity() {
                 if (about)
                     AlertDialog(
                         onDismissRequest = { about = false },
-                        title = { Text("纸匠 PaperForge · 0.2.0") },
+                        title = { Text("纸匠 PaperForge · 0.3.0") },
                         text = {
                             Column(Modifier.verticalScroll(rememberScrollState())) {
                                 Text(

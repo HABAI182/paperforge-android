@@ -105,6 +105,7 @@ object ScanProcessor {
                     page.contrast,
                     maxEdge,
                     page.enhanceStrength,
+                    decoded.aspect,
                 )
             if (page.deskewDegrees == 0f) return result
             return try {
@@ -126,6 +127,7 @@ object ScanProcessor {
         contrast: Float = 1f,
         targetEdge: Int = Int.MAX_VALUE,
         strength: Float? = null,
+        aspectOverride: Float? = null,
     ): Bitmap {
         require(quad.valid()) { "裁切四角不能交叉或重合" }
         val w = bitmap.width.toFloat()
@@ -134,7 +136,9 @@ object ScanProcessor {
         fun dist(a: Point, b: Point) = hypot(a.x - b.x, a.y - b.y)
         val sourceW = max(dist(p[0], p[1]), dist(p[3], p[2]))
         val sourceH = max(dist(p[0], p[3]), dist(p[1], p[2]))
-        val aspect = cn.paperforge.app.model.ImageGeometry.aspect(quad, bitmap.width, bitmap.height)
+        val aspect =
+            aspectOverride
+                ?: cn.paperforge.app.model.ImageGeometry.aspect(quad, bitmap.width, bitmap.height)
         val edge = min(max(sourceW, sourceH), min(targetEdge.toDouble() * 1.25, 4096.0))
         val outW = (if (aspect >= 1) edge else edge * aspect).roundToInt().coerceAtLeast(32)
         val outH = (if (aspect >= 1) edge / aspect else edge).roundToInt().coerceAtLeast(32)
