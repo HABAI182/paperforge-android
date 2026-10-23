@@ -11,6 +11,8 @@ import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.camera.view.transform.CoordinateTransform
+import androidx.camera.view.transform.ImageProxyTransformFactory
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -31,14 +33,17 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import cn.paperforge.app.MainViewModel
+import cn.paperforge.app.UserSettings
 import cn.paperforge.app.imaging.CameraQualityAnalyzer
-import cn.paperforge.app.imaging.DocumentDetector
+import cn.paperforge.app.imaging.LearnedDocumentDetector
 import cn.paperforge.app.imaging.ScanConfig
 import cn.paperforge.app.model.*
 import java.util.concurrent.Executors
@@ -47,6 +52,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.roundToInt
 import org.opencv.core.*
 
+@androidx.annotation.OptIn(androidx.camera.view.TransformExperimental::class)
 @Composable
 fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
     val context = LocalContext.current
@@ -64,10 +70,13 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
     val pages by vm.pages.collectAsState()
     val busy by vm.busy.collectAsState()
     val prefs = remember { context.getSharedPreferences("camera", 0) }
-    var auto by remember { mutableStateOf(prefs.getBoolean("auto", true)) }
+    var auto by remember { mutableStateOf(UserSettings.bool("autoShutter", true)) }
     var torch by remember { mutableStateOf(false) }
     var quad by remember { mutableStateOf<Quad?>(null) }
-    var frameRatio by remember { mutableFloatStateOf(.75f) }
+    var rawQuad by remember { mutableStateOf<Quad?>(null) }
+    var rawAt by remember { mutableLongStateOf(0L) }
+    var overlay by remember { mutableStateOf<List<PointN>?>(null) }
+    var previewSize by remember { mutableStateOf(IntSize.Zero) }
     var stability by remember { mutableFloatStateOf(0f) }
     var camera by remember { mutableStateOf<Camera?>(null) }
     var capture by remember { mutableStateOf<ImageCapture?>(null) }
@@ -84,7 +93,13 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
         }
     }
     val snapping = remember { AtomicBoolean(false) }
-    val gate = remember { AutoCaptureGate(ScanConfig.int("captureStableMs", 1200).toLong()) }
+    val gate = remember {
+        AutoCaptureGate(
+            UserSettings.number("stableMs", 600f).toLong(),
+            UserSettings.number("cooldownMs", 1500f).toLong(),
+            UserSettings.number("captureArea", 0.08f),
+        )
+    }
     val outline = remember { OutlineTracker() }
     val qualityTracker = remember { CaptureQualityTracker() }
     var qualityHint by remember { mutableStateOf("") }
@@ -123,7 +138,7 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
         val doc = vm.selected.value
         if (imageCapture != null && doc != null && !busy && snapping.compareAndSet(false, true)) {
             val file = vm.repo.captureFile(doc.id)
-            val snapshot = quad
+            val snapshot = rawQuad.takeIf { SystemClock.elapsedRealtime() - rawAt < 700 }
             imageCapture.takePicture(
                 ImageCapture.OutputFileOptions.Builder(file).build(),
                 main,
@@ -168,7 +183,8 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                 onClick = {
                     auto = !auto
                     prefs.edit().putBoolean("auto", auto).apply()
-                    gate.reset()
+                    UserSettings.set("autoShutter", auto)
+                    gate.reset(clearCaptured = true)
                 },
                 label = { Text(if (auto) "自动拍摄" else "手动拍摄", color = Color.White) },
             )
@@ -190,282 +206,372 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
             }
         }
         Box(
-            Modifier.weight(1f).fillMaxWidth().pointerInput(camera) {
-                detectTapGestures { p -> requestFocus(p.x, p.y) }
-            },
+            Modifier.weight(1f)
+                .fillMaxWidth()
+                .onSizeChanged { previewSize = it }
+                .pointerInput(camera) { detectTapGestures { p -> requestFocus(p.x, p.y) } },
             contentAlignment = Alignment.Center,
         ) {
             if (permitted) {
                 AndroidView(factory = { preview }, modifier = Modifier.fillMaxSize())
-                DisposableEffect(preview, lifecycle) {
-                    var disposed = false
-                    var provider: ProcessCameraProvider? = null
-                    val executor = Executors.newSingleThreadExecutor()
-                    val future = ProcessCameraProvider.getInstance(context)
-                    future.addListener(
-                        {
-                            if (!disposed)
-                                try {
-                                    provider = future.get()
-                                    val p =
-                                        Preview.Builder()
-                                            .setTargetAspectRatio(AspectRatio.RATIO_4_3)
-                                            .build()
-                                            .also { it.surfaceProvider = preview.surfaceProvider }
-                                    val c =
-                                        ImageCapture.Builder()
-                                            .setTargetAspectRatio(AspectRatio.RATIO_4_3)
-                                            .setCaptureMode(
-                                                ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY
-                                            )
-                                            .build()
-                                    val selector =
-                                        ResolutionSelector.Builder()
-                                            .setAspectRatioStrategy(
-                                                AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY
-                                            )
-                                            .setResolutionStrategy(
-                                                ResolutionStrategy(
-                                                    android.util.Size(1280, 960),
-                                                    ResolutionStrategy
-                                                        .FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER,
-                                                )
-                                            )
-                                            .build()
-                                    val a =
-                                        ImageAnalysis.Builder()
-                                            .setResolutionSelector(selector)
-                                            .setOutputImageFormat(
-                                                ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888
-                                            )
-                                            .setBackpressureStrategy(
-                                                ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
-                                            )
-                                            .build()
-                                    var last = 0L
-                                    a.setAnalyzer(executor) { image ->
-                                        try {
-                                            val now = SystemClock.elapsedRealtime()
-                                            if (now - last > 180) {
-                                                last = now
-                                                val plane = image.planes[0]
-                                                val buffer = plane.buffer.duplicate()
-                                                val base = buffer.position()
-                                                val bytes =
-                                                    ByteArray(image.width * image.height * 4)
-                                                require(plane.pixelStride == 4) {
-                                                    "Unexpected RGBA stride"
-                                                }
-                                                for (y in 0 until image.height) {
-                                                    buffer.position(base + y * plane.rowStride)
-                                                    buffer.get(
-                                                        bytes,
-                                                        y * image.width * 4,
-                                                        image.width * 4,
-                                                    )
-                                                }
-                                                val mat =
-                                                    Mat(image.height, image.width, CvType.CV_8UC4)
-                                                val upright = Mat()
-                                                try {
-                                                    mat.put(0, 0, bytes)
-                                                    when (image.imageInfo.rotationDegrees) {
-                                                        90 ->
-                                                            Core.rotate(
-                                                                mat,
-                                                                upright,
-                                                                Core.ROTATE_90_CLOCKWISE,
-                                                            )
-                                                        180 ->
-                                                            Core.rotate(
-                                                                mat,
-                                                                upright,
-                                                                Core.ROTATE_180,
-                                                            )
-                                                        270 ->
-                                                            Core.rotate(
-                                                                mat,
-                                                                upright,
-                                                                Core.ROTATE_90_COUNTERCLOCKWISE,
-                                                            )
-                                                        else -> mat.copyTo(upright)
-                                                    }
-                                                    val detection =
-                                                        DocumentDetector.detect(
-                                                            upright,
-                                                            preview = true,
-                                                        )
-                                                    val detected = detection.quad
-                                                    val quality =
-                                                        CameraQualityAnalyzer.analyze(
-                                                            upright,
-                                                            detected,
-                                                        )
-                                                    val ratio =
-                                                        upright.cols().toFloat() / upright.rows()
-                                                    val viewportEpoch =
-                                                        image.width.toLong() * 10000 +
-                                                            image.height * 10 +
-                                                            image.imageInfo.rotationDegrees
-                                                    val luminance =
-                                                        (quality.sample?.brightness?.times(255)
-                                                                ?: (quality.signature.average() *
-                                                                    255))
-                                                            .toFloat()
-                                                    main.execute {
-                                                        if (!disposed) {
-                                                            quad =
-                                                                outline.update(
-                                                                    detected,
-                                                                    detection.confidence,
-                                                                    quality.signature,
-                                                                    now,
-                                                                    viewportEpoch,
-                                                                )
-                                                            frameRatio = ratio
-                                                            light = luminance
-                                                            if (detected != null) {
-                                                                val anchor = focusAnchor
-                                                                if (
-                                                                    anchor == null ||
-                                                                        anchor.points
-                                                                            .zip(detected.points)
-                                                                            .any { (a, b) ->
-                                                                                kotlin.math.hypot(
-                                                                                    a.x - b.x,
-                                                                                    a.y - b.y,
-                                                                                ) > .1f
-                                                                            }
-                                                                ) {
-                                                                    focusReady = false
-                                                                    focusAnchor = detected
-                                                                }
-                                                                if (
-                                                                    !focusReady &&
-                                                                        now - lastFocusAttempt >
-                                                                            2500
-                                                                )
-                                                                    requestFocus(
-                                                                        preview.width / 2f,
-                                                                        preview.height / 2f,
-                                                                    )
-                                                            }
-                                                            val acceptable =
-                                                                qualityTracker.update(
-                                                                    detected,
-                                                                    quality.sample,
-                                                                    quality.signature,
-                                                                    now,
-                                                                    focusReady ||
-                                                                        (lastFocusAttempt > 0 &&
-                                                                            now -
-                                                                                lastFocusAttempt >=
-                                                                                1200),
-                                                                    ScanConfig.float(
-                                                                            "captureSharpnessFloor",
-                                                                            60f,
-                                                                        )
-                                                                        .toDouble(),
-                                                                ) &&
-                                                                    detection.confidence >=
-                                                                        ScanConfig.float(
-                                                                            "confidenceCapture",
-                                                                            .72f,
-                                                                        )
-                                                            qualityHint =
-                                                                when {
-                                                                    detected == null -> ""
-                                                                    quality.sample != null &&
-                                                                        quality.sample.sharpness <
-                                                                            ScanConfig.float(
-                                                                                "captureSharpnessFloor",
-                                                                                60f,
-                                                                            ) -> "点击文字对焦"
-                                                                    quality.sample != null &&
-                                                                        quality.sample
-                                                                            .glareFraction in
-                                                                            0.03..0.45 ->
-                                                                        "调整角度可减少反光"
-                                                                    else -> ""
-                                                                }
-                                                            val fire =
-                                                                if (
-                                                                    latestAuto &&
-                                                                        !latestBusy &&
-                                                                        !snapping.get()
-                                                                )
-                                                                    gate.update(
-                                                                        detected,
-                                                                        now,
-                                                                        acceptable,
-                                                                    )
-                                                                else false
-                                                            stability = gate.progress
-                                                            if (fire) latestTakePhoto()
-                                                        }
-                                                    }
-                                                } finally {
-                                                    mat.release()
-                                                    upright.release()
-                                                }
-                                            }
-                                        } catch (_: Exception) {
-                                            main.execute { quad = null }
-                                        } finally {
-                                            image.close()
-                                        }
-                                    }
-                                    provider?.unbindAll()
-                                    camera =
-                                        provider?.bindToLifecycle(
-                                            lifecycle,
-                                            CameraSelector.DEFAULT_BACK_CAMERA,
-                                            p,
-                                            c,
-                                            a,
-                                        )
-                                    capture = c
-                                } catch (e: Exception) {
-                                    cameraError = "相机不可用：${e.message}，可使用相册导入"
-                                }
-                        },
-                        main,
-                    )
-                    onDispose {
-                        disposed = true
-                        focusGeneration++
-                        focusReady = false
-                        outline.reset()
-                        qualityTracker.reset()
-                        provider?.unbindAll()
-                        executor.shutdown()
-                        camera?.cameraControl?.enableTorch(false)
-                    }
-                }
-                Canvas(Modifier.fillMaxSize()) {
-                    quad?.let { q ->
-                        val width = minOf(size.width, size.height * frameRatio)
-                        val height = width / frameRatio
-                        val ox = (size.width - width) / 2
-                        val oy = (size.height - height) / 2
-                        val path =
-                            Path().apply {
-                                q.points.forEachIndexed { i, p ->
-                                    if (i == 0) moveTo(ox + p.x * width, oy + p.y * height)
-                                    else lineTo(ox + p.x * width, oy + p.y * height)
-                                }
-                                close()
+                if (previewSize.width > 0 && previewSize.height > 0)
+                    DisposableEffect(preview, lifecycle) {
+                        var disposed = false
+                        var provider: ProcessCameraProvider? = null
+                        val executor = Executors.newSingleThreadExecutor()
+                        val future = ProcessCameraProvider.getInstance(context)
+                        val mappingFactory =
+                            ImageProxyTransformFactory().apply {
+                                isUsingCropRect = true
+                                isUsingRotationDegrees = true
                             }
-                        drawPath(path, Color(0xFF86E5B8), style = Stroke(3.dp.toPx()))
-                        q.points.forEach {
-                            drawCircle(
-                                Color.White,
-                                4.dp.toPx(),
-                                Offset(ox + it.x * width, oy + it.y * height),
-                            )
+                        future.addListener(
+                            {
+                                if (!disposed)
+                                    try {
+                                        provider = future.get()
+                                        val p =
+                                            Preview.Builder()
+                                                .setTargetAspectRatio(AspectRatio.RATIO_4_3)
+                                                .build()
+                                                .also {
+                                                    it.surfaceProvider = preview.surfaceProvider
+                                                }
+                                        val c =
+                                            ImageCapture.Builder()
+                                                .setJpegQuality(
+                                                    UserSettings.number("cameraJpeg", 97f).toInt()
+                                                )
+                                                .setTargetAspectRatio(AspectRatio.RATIO_4_3)
+                                                .setCaptureMode(
+                                                    ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY
+                                                )
+                                                .build()
+                                        val selector =
+                                            ResolutionSelector.Builder()
+                                                .setAspectRatioStrategy(
+                                                    AspectRatioStrategy
+                                                        .RATIO_4_3_FALLBACK_AUTO_STRATEGY
+                                                )
+                                                .setResolutionStrategy(
+                                                    ResolutionStrategy(
+                                                        android.util.Size(1280, 960),
+                                                        ResolutionStrategy
+                                                            .FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER,
+                                                    )
+                                                )
+                                                .build()
+                                        val a =
+                                            ImageAnalysis.Builder()
+                                                .setResolutionSelector(selector)
+                                                .setOutputImageFormat(
+                                                    ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888
+                                                )
+                                                .setBackpressureStrategy(
+                                                    ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
+                                                )
+                                                .build()
+                                        var last = 0L
+                                        a.setAnalyzer(executor) { image ->
+                                            try {
+                                                val now = SystemClock.elapsedRealtime()
+                                                if (
+                                                    now - last >
+                                                        UserSettings.number("analysisMs", 160f)
+                                                            .toLong()
+                                                ) {
+                                                    last = now
+                                                    val plane = image.planes[0]
+                                                    val buffer = plane.buffer.duplicate()
+                                                    val base = buffer.position()
+                                                    val crop = image.cropRect
+                                                    val transform =
+                                                        mappingFactory.getOutputTransform(image)
+                                                    val bytes =
+                                                        ByteArray(crop.width() * crop.height() * 4)
+                                                    require(plane.pixelStride == 4) {
+                                                        "Unexpected RGBA stride"
+                                                    }
+                                                    for (y in 0 until crop.height()) {
+                                                        buffer.position(
+                                                            base +
+                                                                (crop.top + y) * plane.rowStride +
+                                                                crop.left * 4
+                                                        )
+                                                        buffer.get(
+                                                            bytes,
+                                                            y * crop.width() * 4,
+                                                            crop.width() * 4,
+                                                        )
+                                                    }
+                                                    val mat =
+                                                        Mat(
+                                                            crop.height(),
+                                                            crop.width(),
+                                                            CvType.CV_8UC4,
+                                                        )
+                                                    val upright = Mat()
+                                                    try {
+                                                        mat.put(0, 0, bytes)
+                                                        when (image.imageInfo.rotationDegrees) {
+                                                            90 ->
+                                                                Core.rotate(
+                                                                    mat,
+                                                                    upright,
+                                                                    Core.ROTATE_90_CLOCKWISE,
+                                                                )
+                                                            180 ->
+                                                                Core.rotate(
+                                                                    mat,
+                                                                    upright,
+                                                                    Core.ROTATE_180,
+                                                                )
+                                                            270 ->
+                                                                Core.rotate(
+                                                                    mat,
+                                                                    upright,
+                                                                    Core.ROTATE_90_COUNTERCLOCKWISE,
+                                                                )
+                                                            else -> mat.copyTo(upright)
+                                                        }
+                                                        val detection =
+                                                            LearnedDocumentDetector.detect(
+                                                                upright,
+                                                                preview = true,
+                                                            )
+                                                        val detected = detection.quad
+                                                        val quality =
+                                                            CameraQualityAnalyzer.analyze(
+                                                                upright,
+                                                                detected,
+                                                            )
+                                                        val frameWidth = upright.cols()
+                                                        val frameHeight = upright.rows()
+                                                        val viewportEpoch =
+                                                            image.width.toLong() * 10000 +
+                                                                image.height * 10 +
+                                                                image.imageInfo.rotationDegrees
+                                                        val luminance =
+                                                            (quality.sample?.brightness?.times(255)
+                                                                    ?: (quality.signature
+                                                                        .average() * 255))
+                                                                .toFloat()
+                                                        main.execute {
+                                                            if (
+                                                                !disposed &&
+                                                                    SystemClock.elapsedRealtime() -
+                                                                        now < 1000
+                                                            ) {
+                                                                rawQuad = detected
+                                                                rawAt = now
+                                                                quad =
+                                                                    outline.update(
+                                                                        detected,
+                                                                        detection.confidence,
+                                                                        quality.signature,
+                                                                        now,
+                                                                        viewportEpoch,
+                                                                    )
+                                                                overlay =
+                                                                    preview.outputTransform?.let {
+                                                                        target ->
+                                                                        quad?.let { q ->
+                                                                            val points =
+                                                                                q.points
+                                                                                    .flatMap {
+                                                                                        listOf(
+                                                                                            it.x *
+                                                                                                (frameWidth -
+                                                                                                    1),
+                                                                                            it.y *
+                                                                                                (frameHeight -
+                                                                                                    1),
+                                                                                        )
+                                                                                    }
+                                                                                    .toFloatArray()
+                                                                            CoordinateTransform(
+                                                                                    transform,
+                                                                                    target,
+                                                                                )
+                                                                                .mapPoints(points)
+                                                                            points
+                                                                                .toList()
+                                                                                .chunked(2)
+                                                                                .map {
+                                                                                    PointN(
+                                                                                        it[0],
+                                                                                        it[1],
+                                                                                    )
+                                                                                }
+                                                                        }
+                                                                    }
+                                                                light = luminance
+                                                                if (detected != null) {
+                                                                    val anchor = focusAnchor
+                                                                    if (
+                                                                        anchor == null ||
+                                                                            anchor.points
+                                                                                .zip(
+                                                                                    detected.points
+                                                                                )
+                                                                                .any { (a, b) ->
+                                                                                    kotlin.math
+                                                                                        .hypot(
+                                                                                            a.x -
+                                                                                                b.x,
+                                                                                            a.y -
+                                                                                                b.y,
+                                                                                        ) > .1f
+                                                                                }
+                                                                    ) {
+                                                                        focusAnchor = detected
+                                                                        val center =
+                                                                            overlay?.let { p ->
+                                                                                Pair(
+                                                                                    p.map { it.x }
+                                                                                        .average()
+                                                                                        .toFloat(),
+                                                                                    p.map { it.y }
+                                                                                        .average()
+                                                                                        .toFloat(),
+                                                                                )
+                                                                            }
+                                                                        requestFocus(
+                                                                            center?.first
+                                                                                ?: preview.width /
+                                                                                    2f,
+                                                                            center?.second
+                                                                                ?: preview.height /
+                                                                                    2f,
+                                                                        )
+                                                                    }
+                                                                }
+                                                                val acceptable =
+                                                                    (!UserSettings.bool(
+                                                                        "strictQuality",
+                                                                        false,
+                                                                    ) ||
+                                                                        qualityTracker.update(
+                                                                            detected,
+                                                                            quality.sample,
+                                                                            quality.signature,
+                                                                            now,
+                                                                            focusReady ||
+                                                                                (lastFocusAttempt >
+                                                                                    0 &&
+                                                                                    now -
+                                                                                        lastFocusAttempt >=
+                                                                                        1200),
+                                                                            ScanConfig.float(
+                                                                                    "captureSharpnessFloor",
+                                                                                    60f,
+                                                                                )
+                                                                                .toDouble(),
+                                                                        )) &&
+                                                                        detection.confidence >=
+                                                                            ScanConfig.float(
+                                                                                "confidenceCapture",
+                                                                                .72f,
+                                                                            )
+                                                                qualityHint =
+                                                                    when {
+                                                                        detected == null -> ""
+                                                                        quality.sample != null &&
+                                                                            quality.sample
+                                                                                .sharpness <
+                                                                                ScanConfig.float(
+                                                                                    "captureSharpnessFloor",
+                                                                                    60f,
+                                                                                ) -> "点击文字对焦"
+                                                                        quality.sample != null &&
+                                                                            quality.sample
+                                                                                .glareFraction in
+                                                                                0.03..0.45 ->
+                                                                            "调整角度可减少反光"
+                                                                        else -> ""
+                                                                    }
+                                                                val fire =
+                                                                    if (
+                                                                        latestAuto &&
+                                                                            !latestBusy &&
+                                                                            !snapping.get()
+                                                                    )
+                                                                        gate.update(
+                                                                            detected,
+                                                                            now,
+                                                                            acceptable,
+                                                                            quality.signature,
+                                                                        )
+                                                                    else false
+                                                                stability = gate.progress
+                                                                if (fire) latestTakePhoto()
+                                                            }
+                                                        }
+                                                    } finally {
+                                                        mat.release()
+                                                        upright.release()
+                                                    }
+                                                }
+                                            } catch (_: Exception) {
+                                                main.execute {
+                                                    quad = null
+                                                    overlay = null
+                                                    rawQuad = null
+                                                }
+                                            } finally {
+                                                image.close()
+                                            }
+                                        }
+                                        provider?.unbindAll()
+                                        val group =
+                                            UseCaseGroup.Builder()
+                                                .addUseCase(p)
+                                                .addUseCase(c)
+                                                .addUseCase(a)
+                                                .setViewPort(requireNotNull(preview.viewPort))
+                                                .build()
+                                        camera =
+                                            provider?.bindToLifecycle(
+                                                lifecycle,
+                                                CameraSelector.DEFAULT_BACK_CAMERA,
+                                                group,
+                                            )
+                                        capture = c
+                                    } catch (e: Exception) {
+                                        cameraError = "相机不可用：${e.message}，可使用相册导入"
+                                    }
+                            },
+                            main,
+                        )
+                        onDispose {
+                            disposed = true
+                            focusGeneration++
+                            focusReady = false
+                            outline.reset()
+                            overlay = null
+                            rawQuad = null
+                            qualityTracker.reset()
+                            provider?.unbindAll()
+                            executor.shutdown()
+                            camera?.cameraControl?.enableTorch(false)
                         }
                     }
-                }
+                if (UserSettings.bool("showOutline", true))
+                    Canvas(Modifier.fillMaxSize()) {
+                        overlay?.let { points ->
+                            val path =
+                                Path().apply {
+                                    points.forEachIndexed { i, p ->
+                                        if (i == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y)
+                                    }
+                                    close()
+                                }
+                            drawPath(path, Color(0xFF86E5B8), style = Stroke(3.dp.toPx()))
+                            points.forEach {
+                                drawCircle(Color.White, 4.dp.toPx(), Offset(it.x, it.y))
+                            }
+                        }
+                    }
             } else
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -519,7 +625,8 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
             else if (light < 65) "光线偏暗，建议补光 · 点击画面对焦"
             else if (quad == null) "对准纸张 · 随时可拍" else if (auto) "保持稳定，自动拍摄" else "拍摄后自动裁边",
             color = Color.White,
-            modifier = Modifier.align(Alignment.CenterHorizontally).padding(12.dp),
+            maxLines = 1,
+            modifier = Modifier.fillMaxWidth().height(48.dp).padding(12.dp),
         )
         Row(
             Modifier.fillMaxWidth().padding(20.dp),
@@ -541,18 +648,20 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                     modifier = Modifier.size(32.dp),
                 )
             }
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                pages.lastOrNull()?.let { page ->
-                    val thumb = pageBitmap(page, 140)
-                    thumb?.let {
-                        Image(
-                            it.asImageBitmap(),
-                            "最近拍摄页面",
-                            Modifier.size(38.dp).clickable {
-                                vm.replacement.value = null
-                                vm.screen.value = "editor"
-                            },
-                        )
+            Column(Modifier.width(88.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(Modifier.size(38.dp), contentAlignment = Alignment.Center) {
+                    pages.lastOrNull()?.let { page ->
+                        val thumb = pageBitmap(page, 140)
+                        thumb?.let {
+                            Image(
+                                it.asImageBitmap(),
+                                "最近拍摄页面",
+                                Modifier.size(38.dp).clickable {
+                                    vm.replacement.value = null
+                                    vm.screen.value = "editor"
+                                },
+                            )
+                        }
                     }
                 }
                 TextButton(

@@ -23,3 +23,10 @@ Inspected 2026-10-23. Project HEAD/base: `4d56d556aab3241c96f1584b869e947b1f330b
 
 Measured adoption decisions and before/after data are linked from `docs/quality/QUALITY-REPORT.md` as experiments finish.
 
+
+
+## 0.4 direct adoption
+
+- MakeACopy: https://github.com/egdels/makeacopy/tree/01bebd394b9dd6f3a692f28aea7c0638085eb4da . Inspected Java corner adapter, ORT runner, letterbox/score/postprocessor, training guide, LICENSE/NOTICE. Directly adapted three postprocessor Java classes and bundled the unmodified 13,404,960-byte DocQuadNet model, with complete source headers, changed-package notice, licence, model provenance and hashes. No app UI, OpenCV binary or Paddle assets copied. Acceptance: offline model executed, fixed geometry did not regress; no overall superiority claim.
+- ONNX Runtime Android1.24.1, official Maven CPU runtime. MIT and third-party texts; pinned source revision470ae16099a74fe05e31f2530489332c0525edb5, artifact hashes in assets/licenses/ONNXRuntime-provenance.json.
+- User-provided CamScanner7.27.5 APK: static study only; exact hash and findings in CAMSCANNER-APK-ANALYSIS.md. Protected DEX/native code was not represented as recovered full source. No competitor binary/asset/runtime is shipped.

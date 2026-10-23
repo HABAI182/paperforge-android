@@ -28,3 +28,8 @@ Copyright (c) 2010 Atos Worldline SAS
 Includes the Adobe Glyph List. Copyright 1997, 1998, 2002, 2007, 2010 Adobe Systems Incorporated.
 Includes the Zapf Dingbats Glyph List. Copyright 2002, 2010 Adobe Systems Incorporated.
 Includes the Script Property (Scripts-10.0.0.txt). Copyright 2017 Unicode, Inc.
+
+
+v0.4 directly adapts DocQuadLetterbox.java, DocQuadScore.java and DocQuadPostprocessor.java from MakeACopy (Christian Kierdorf), fixed revision 01bebd394b9dd6f3a692f28aea7c0638085eb4da, Apache-2.0. Package names changed, Lombok and runner-specific overloads removed; original copyright headers retained. The unmodified DocQuadNet-256 ORT inference artifact is bundled under the upstream NOTICE's explicit Apache-2.0 model grant. Full LICENSE/NOTICE, training-provenance caveats and hashes travel in assets/licenses/MakeACopy-* and assets/docquad/provenance.json. Model training overlap and inherited dataset terms are not independently certified.
+
+ONNX Runtime Android 1.24.1 is the official Microsoft Maven artifact, CPU only, MIT plus third-party notices. Exact upstream revision 470ae16099a74fe05e31f2530489332c0525edb5 and AAR/notice hashes are recorded in assets/licenses/ONNXRuntime-provenance.json. Full texts are bundled. CamScanner's provided APK and extracted binaries/source/assets are local research inputs, not shipped dependencies.

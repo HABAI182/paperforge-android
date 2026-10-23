@@ -50,7 +50,13 @@ object PdfSearchable {
                                                 .ocrEngine
                                         val layout =
                                             NativeTextCoverage.removeCovered(
-                                                engine.recognizeBitmap(bitmap),
+                                                engine.recognizeBitmap(
+                                                    bitmap,
+                                                    cn.paperforge.app.UserSettings.string(
+                                                        "ocrLanguage",
+                                                        "CHINESE",
+                                                    ) != "LATIN",
+                                                ),
                                                 native,
                                             )
                                         val page = doc.getPage(i)

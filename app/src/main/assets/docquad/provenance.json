@@ -1,0 +1,66 @@
+{
+  "repository": "egdels/makeacopy",
+  "revision": "01bebd394b9dd6f3a692f28aea7c0638085eb4da",
+  "files": [
+    {
+      "path": "LICENSE",
+      "bytes": 11679,
+      "sha256": "e1ee574b63dcde94cbee75a53aefed0a3f3bcf0966464cad85a8968b052ce13a"
+    },
+    {
+      "path": "NOTICE",
+      "bytes": 12261,
+      "sha256": "4a2935e00dfcb9aaa612706153108ce2f2ee3c6e39b05b67c956660c2a492fe9"
+    },
+    {
+      "path": "app/src/main/assets/docquad/docquadnet256_trained_opset17.ort",
+      "bytes": 13404960,
+      "sha256": "f0f2f52d7d79ff02d346c8f9d0c9e903407366aeea1747cdcff160c401e3e72a"
+    },
+    {
+      "path": "app/src/main/java/de/schliweb/makeacopy/ml/corners/DocQuadDetector.java",
+      "bytes": 9413,
+      "sha256": "09fa2227edaf20b28d2de35649b5312960f3e6f6023a60558369956654f1df9c"
+    },
+    {
+      "path": "app/src/main/java/de/schliweb/makeacopy/ml/corners/RotatingDocQuadDetector.java",
+      "bytes": 9332,
+      "sha256": "0e6d13be52abcdfe3f816007ba38da438157666f05bb18b2459a925325cf2386"
+    },
+    {
+      "path": "app/src/main/java/de/schliweb/makeacopy/ml/corners/ThrottledDocQuadLiveDetector.java",
+      "bytes": 5985,
+      "sha256": "e3c5506630c9e885c25311043c3227f637a46bb68a30f319d2aec2f7ca6c0461"
+    },
+    {
+      "path": "app/src/main/java/de/schliweb/makeacopy/ml/docquad/DocQuadLetterbox.java",
+      "bytes": 5275,
+      "sha256": "11666d63b0943a566ed5b912ffdbe70256d784f110f8739e0780dde7684c55f4"
+    },
+    {
+      "path": "app/src/main/java/de/schliweb/makeacopy/ml/docquad/DocQuadOrtRunner.java",
+      "bytes": 14525,
+      "sha256": "1c08752faa449f292c9a8b4a58d831affd12ef250506af72c7965920886ae5e0"
+    },
+    {
+      "path": "app/src/main/java/de/schliweb/makeacopy/ml/docquad/DocQuadPostprocessor.java",
+      "bytes": 36972,
+      "sha256": "206ae6595213bffc75b8904ce3d1f4036156d4bfb72ab2382509cf2fb3745f1f"
+    },
+    {
+      "path": "app/src/main/java/de/schliweb/makeacopy/ml/docquad/DocQuadScore.java",
+      "bytes": 6871,
+      "sha256": "34686eec36fa844a5754ec421421405b834cb174a93dfc5fd3fd6a56531a88bf"
+    },
+    {
+      "path": "training/README.md",
+      "bytes": 31326,
+      "sha256": "2c8ddbbf95593d5425b6055235f897c32b6487159378a32bc4d7d4e8b657cffd"
+    },
+    {
+      "path": "training/docquad_m3/golden/expected_stats_v1.md",
+      "bytes": 662,
+      "sha256": "9c4ee486c234b0012a91309912623b06a819ea2976e141162877c2fddd50f268"
+    }
+  ]
+}

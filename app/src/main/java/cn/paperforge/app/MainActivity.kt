@@ -9,7 +9,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -17,7 +16,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -86,20 +84,7 @@ class MainActivity : ComponentActivity() {
         incoming = if (savedInstanceState == null) intent else null
         securitySettingsChanged()
         setContent {
-            val dark = isSystemInDarkTheme()
-            val scheme =
-                if (dark)
-                    darkColorScheme(primary = Color(0xFF88D6B7), secondary = Color(0xFFB5CDBE))
-                else
-                    lightColorScheme(
-                        primary = Color(0xFF176B54),
-                        primaryContainer = Color(0xFFD5EEE1),
-                        secondary = Color(0xFF5E7569),
-                        background = Color(0xFFFAF9F5),
-                        surface = Color(0xFFFAF9F5),
-                        surfaceContainerLow = Color(0xFFF0F1EA),
-                    )
-            MaterialTheme(colorScheme = scheme) {
+            PaperForgeTheme {
                 if (appLocked) {
                     Surface(Modifier.fillMaxSize()) {
                         Column(
@@ -127,7 +112,7 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
-                    return@MaterialTheme
+                    return@PaperForgeTheme
                 }
                 val vm: MainViewModel = viewModel()
                 val screen by vm.screen.collectAsState()
@@ -258,6 +243,7 @@ class MainActivity : ComponentActivity() {
                         "capture" -> CameraScreen(vm) { images.launch(arrayOf("image/*")) }
                         "editor" -> EditorScreen(vm) { images.launch(arrayOf("image/*")) }
                         "reader" -> ReaderScreen(vm, share)
+                        "settings" -> SettingsScreen(vm)
                         "pages" -> PageGridScreen(vm)
                         "pdf-pages" -> PdfPageGridScreen(vm)
                         "merge" -> MergeScreen(vm)
@@ -447,7 +433,7 @@ class MainActivity : ComponentActivity() {
                 if (about)
                     AlertDialog(
                         onDismissRequest = { about = false },
-                        title = { Text("纸匠 PaperForge · 0.3.0") },
+                        title = { Text("纸匠 PaperForge · 0.4.0") },
                         text = {
                             Column(Modifier.verticalScroll(rememberScrollState())) {
                                 Text(

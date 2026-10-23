@@ -1,0 +1,74 @@
+{
+  "mode": "current",
+  "dataset": "upstream-exploratory-one-photo",
+  "sampled_peak_pss_kb": 285425,
+  "physical_device": false,
+  "rows": [
+    {
+      "file": "makeacopy-phone-document.jpg",
+      "scene": "upstream-phone-photo",
+      "synthetic": false,
+      "decode_ms": 82.6097,
+      "detect_ms": 461.5527,
+      "decoded_width": 1013,
+      "decoded_height": 1800,
+      "confidence": 1,
+      "method": "ai+channel-1+refined",
+      "predicted": [
+        [
+          0.049885556,
+          0.034065545
+        ],
+        [
+          0.92396235,
+          0.02893364
+        ],
+        [
+          0.9187956,
+          0.7307807
+        ],
+        [
+          0.033751436,
+          0.72370076
+        ]
+      ],
+      "sampled_pss_kb": 285425
+    }
+  ],
+  "provenance": {
+    "file": "20251007_183138.jpg",
+    "source": "https://raw.githubusercontent.com/egdels/makeacopy/01bebd394b9dd6f3a692f28aea7c0638085eb4da/app/src/androidTest/assets/instrumented_test_data/20251007_183138.jpg",
+    "sha256": "877ed46814fab0b4208e333c3c5c6b1d1c5041f2ce368030865469fcacf03a1b"
+  },
+  "annotation": [
+    [
+      0.0512,
+      0.0332
+    ],
+    [
+      0.9254,
+      0.0298
+    ],
+    [
+      0.9176,
+      0.7305
+    ],
+    [
+      0.033,
+      0.7241
+    ]
+  ],
+  "annotation_note": "Approximate manual corners on the displayed upright photograph; exploratory single upstream photo; model training overlap unknown; source image not redistributed.",
+  "metrics": {
+    "file": "makeacopy-phone-document.jpg",
+    "scene": "upstream-phone-photo",
+    "iou": "0.9977536134152863",
+    "corner_error_pct": "0.09088548272848129",
+    "failed": "False",
+    "detect_ms": "461.5527",
+    "ocr_cer": "",
+    "ocr_ms": "",
+    "high_render_width": "",
+    "high_render_height": ""
+  }
+}

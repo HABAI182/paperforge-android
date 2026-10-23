@@ -79,14 +79,34 @@ object ScanProcessor {
     fun detect(bitmap: Bitmap): Quad? = detectResult(bitmap).quad
 
     fun detectResult(bitmap: Bitmap, preview: Boolean = false): DetectionResult =
-        DocumentDetector.detect(bitmap, preview)
+        Mat().let { mat ->
+            try {
+                Utils.bitmapToMat(bitmap, mat)
+                LearnedDocumentDetector.detect(mat, preview)
+            } finally {
+                mat.release()
+            }
+        }
 
     fun detectMat(source: Mat): Quad? = DocumentDetector.detect(source, preview = true).quad
 
-    fun detectFile(file: File): DetectionResult {
+    fun detectFile(file: File, previewQuad: Quad? = null): DetectionResult {
         val image = decode(file, 4000)
         return try {
-            DocumentDetector.detect(image)
+            if (
+                previewQuad != null &&
+                    previewQuad.valid() &&
+                    cn.paperforge.app.UserSettings.bool("lockCrop", true)
+            ) {
+                val mat = Mat()
+                try {
+                    Utils.bitmapToMat(image, mat)
+                    val refined = DocumentDetector.refine(mat, previewQuad)
+                    DetectionResult(refined, .85f, "viewfinder+refined")
+                } finally {
+                    mat.release()
+                }
+            } else detectResult(image)
         } finally {
             image.recycle()
         }

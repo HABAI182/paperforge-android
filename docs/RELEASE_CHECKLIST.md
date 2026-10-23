@@ -1,5 +1,7 @@
 # 发布检查
 
+0.4.0新增定位模型与ONNX Runtime：完整许可/固定来源/模型及AAR哈希保存在assets。通用、ARM64、x86_64分别检查签名、权限和16KB结构对齐，source.zip按原始Git blob验证；新tag和预发布不覆盖历史。最终Release上传结果以交付目录release-0.4.0-verification.json为准。
+
 ## 0.3.0 当前发布
 
 使用公开仓库，保留v0.1.0/v0.2.0；新增v0.3.0预发布。用户已授权GitHub推送、tag和release。通用/ARM64/x86_64开发签名APK、原始Git blob源码ZIP、质量报告和SHA256作为独立附件；发布脚本先创建草稿、逐附件回读哈希，再公开预发布。最终上传结果以交付目录release-0.3.0-verification.json为准。

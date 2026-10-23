@@ -25,6 +25,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import cn.paperforge.app.MainViewModel
+import cn.paperforge.app.UserSettings
 import cn.paperforge.app.data.PageRow
 import cn.paperforge.app.imaging.ScanProcessor
 import cn.paperforge.app.model.*
@@ -62,11 +63,11 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
     var name by remember(doc?.id) { mutableStateOf(doc?.title ?: "") }
     var export by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
-    var paper by remember { mutableStateOf("Auto") }
-    var resolution by remember { mutableStateOf("STANDARD") }
-    var quality by remember { mutableIntStateOf(90) }
+    var paper by remember { mutableStateOf(UserSettings.string("paper", "Auto")) }
+    var resolution by remember { mutableStateOf(UserSettings.string("resolution", "STANDARD")) }
+    var quality by remember { mutableIntStateOf(UserSettings.number("quality", 90f).toInt()) }
     var adjust by remember { mutableStateOf(false) }
-    var searchable by remember { mutableStateOf(true) }
+    var searchable by remember { mutableStateOf(UserSettings.bool("searchable", true)) }
     var original by remember { mutableStateOf(false) }
     var more by remember { mutableStateOf(false) }
     Scaffold(
@@ -393,6 +394,8 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                                 "DRAFT" to "草稿 150 dpi",
                                 "STANDARD" to "标准 220 dpi",
                                 "HIGH" to "高清 300 dpi",
+                                "CUSTOM" to
+                                    "自定义 ${UserSettings.number("customDpi",300f).toInt()} dpi",
                             )
                             .forEach { (value, label) ->
                                 FilterChip(

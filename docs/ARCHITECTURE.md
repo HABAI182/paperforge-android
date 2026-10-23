@@ -1,5 +1,7 @@
 # 架构与文件生命周期
 
+0.4.0：CameraX共享UseCaseGroup/ViewPort，遵循cropRect与OutputTransform。LearnedDocumentDetector用单例串行CPU ORT会话和带来源的MakeACopy后处理，与DocumentDetector混合/回退。UserSettings独立保存本地偏好、StateFlow驱动UI，DPI排队时冻结；不改变Room6。文档多选按明确ID批量操作，照片原始文件不变。
+
 ## 0.3.0 管线增量
 
 PageDecoder负责预算内区域解码和EXIF；ImageGeometry在完整源画面估算物理比例。DocumentDetector返回评分/方法/诊断；EnhancePipeline处理颜色和缩放自适应二值化。ScanConfig从scan_params.json读参数。OcrEngine注入到应用/视图模型，OcrLayout记录候选/四角/引擎/方向；缓存写入核对revision，原图与派生历史保留。

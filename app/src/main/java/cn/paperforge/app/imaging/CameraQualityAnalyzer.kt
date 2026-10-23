@@ -79,6 +79,9 @@ object CameraQualityAnalyzer {
             val bytes = ByteArray(paper.rows() * paper.cols())
             paper.get(0, 0, bytes)
             val glare = bytes.count { (it.toInt() and 255) >= 253 }.toDouble() / bytes.size
+            Imgproc.resize(paper, signature, Size(8.0, 8.0), 0.0, 0.0, Imgproc.INTER_AREA)
+            val paperSignature = ByteArray(64)
+            signature.get(0, 0, paperSignature)
             return Result(
                 CaptureQualityPolicy.Sample(
                     sharpness,
@@ -86,7 +89,7 @@ object CameraQualityAnalyzer {
                     detailed,
                     glare,
                 ),
-                values,
+                paperSignature.map { (it.toInt() and 255) / 255f },
             )
         } finally {
             gray.release()

@@ -522,7 +522,7 @@ object DocumentDetector {
     }
 
     /** Four narrow bands at decoded still resolution; no full-size gradient matrices. */
-    private fun refine(source: Mat, quad: Quad): Quad {
+    fun refine(source: Mat, quad: Quad): Quad {
         val w = source.cols()
         val h = source.rows()
         val channels = source.channels()

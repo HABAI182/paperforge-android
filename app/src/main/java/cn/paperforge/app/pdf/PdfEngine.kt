@@ -51,7 +51,14 @@ object PdfEngine {
                                     it.sourceRevision == page.revision &&
                                         (it.engineId == engine.id ||
                                             it.lines.any { line -> line.corrected })
-                                } ?: engine.layout(page)
+                                }
+                                ?: engine.layout(
+                                    page,
+                                    cn.paperforge.app.UserSettings.string(
+                                        "ocrLanguage",
+                                        "CHINESE",
+                                    ) != "LATIN",
+                                )
                     val dpi = cn.paperforge.app.imaging.ScanConfig.dpi(resolution)
                     var bitmap =
                         ScanProcessor.render(

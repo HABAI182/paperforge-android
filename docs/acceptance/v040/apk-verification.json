@@ -1,0 +1,354 @@
+[
+  {
+    "file": "PaperForge-0.4.0-debug.apk",
+    "bytes": 215267018,
+    "sha256": "31939c066d26c180d9d85372414b6e9b5a6f8836a5ff401fb82c00b8d2fd6f7a",
+    "certificateSha256": "d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e",
+    "sameCertificateAsV020": true,
+    "zeroInternetPermission": true,
+    "zipalign16KiB": true,
+    "nativeLibraries": [
+      {
+        "name": "lib/arm64-v8a/libandroidx.graphics.path.so",
+        "bytes": 10096,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libc++_shared.so",
+        "bytes": 1292904,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libimage_processing_util_jni.so",
+        "bytes": 29008,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libmlkit_google_ocr_pipeline.so",
+        "bytes": 11064544,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libonnxruntime.so",
+        "bytes": 25763824,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libonnxruntime4j_jni.so",
+        "bytes": 111976,
+        "loadAlignments": [
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libopencv_java4.so",
+        "bytes": 23465088,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libsurface_util_jni.so",
+        "bytes": 4832,
+        "loadAlignments": [
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libandroidx.graphics.path.so",
+        "bytes": 10760,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libc++_shared.so",
+        "bytes": 1252080,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libimage_processing_util_jni.so",
+        "bytes": 48104,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libmlkit_google_ocr_pipeline.so",
+        "bytes": 11626128,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libonnxruntime.so",
+        "bytes": 31239096,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libonnxruntime4j_jni.so",
+        "bytes": 100424,
+        "loadAlignments": [
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libopencv_java4.so",
+        "bytes": 55830920,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libsurface_util_jni.so",
+        "bytes": 4928,
+        "loadAlignments": [
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      }
+    ],
+    "allElfLoadSegments16KiB": true
+  },
+  {
+    "file": "PaperForge-0.4.0-arm64-debug.apk",
+    "bytes": 115094504,
+    "sha256": "9a9bbd960f0ca3c7c44a735f07dba6d7a9490b1068af639b684f992ce5d5f44a",
+    "certificateSha256": "d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e",
+    "sameCertificateAsV020": true,
+    "zeroInternetPermission": true,
+    "zipalign16KiB": true,
+    "nativeLibraries": [
+      {
+        "name": "lib/arm64-v8a/libandroidx.graphics.path.so",
+        "bytes": 10096,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libc++_shared.so",
+        "bytes": 1292904,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libimage_processing_util_jni.so",
+        "bytes": 29008,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libmlkit_google_ocr_pipeline.so",
+        "bytes": 11064544,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libonnxruntime.so",
+        "bytes": 25763824,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libonnxruntime4j_jni.so",
+        "bytes": 111976,
+        "loadAlignments": [
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libopencv_java4.so",
+        "bytes": 23465088,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libsurface_util_jni.so",
+        "bytes": 4832,
+        "loadAlignments": [
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      }
+    ],
+    "allElfLoadSegments16KiB": true
+  },
+  {
+    "file": "PaperForge-0.4.0-x86_64-debug.apk",
+    "bytes": 153465904,
+    "sha256": "3fd261cc8ed611bf9817b6f536c7a5344011f7c704c65eab0ed10cca65714a45",
+    "certificateSha256": "d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e",
+    "sameCertificateAsV020": true,
+    "zeroInternetPermission": true,
+    "zipalign16KiB": true,
+    "nativeLibraries": [
+      {
+        "name": "lib/x86_64/libandroidx.graphics.path.so",
+        "bytes": 10760,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libc++_shared.so",
+        "bytes": 1252080,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libimage_processing_util_jni.so",
+        "bytes": 48104,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libmlkit_google_ocr_pipeline.so",
+        "bytes": 11626128,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libonnxruntime.so",
+        "bytes": 31239096,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libonnxruntime4j_jni.so",
+        "bytes": 100424,
+        "loadAlignments": [
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libopencv_java4.so",
+        "bytes": 55830920,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libsurface_util_jni.so",
+        "bytes": 4928,
+        "loadAlignments": [
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      }
+    ],
+    "allElfLoadSegments16KiB": true
+  }
+]

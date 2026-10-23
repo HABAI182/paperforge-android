@@ -2,7 +2,13 @@
 
 原生 Android 离线扫描与 PDF 工作台，供个人非商业使用。无登录、广告或水印，应用不声明 INTERNET 权限。
 
-当前版本 **0.3.0**，公开源码：[HABAI182/paperforge-android](https://github.com/HABAI182/paperforge-android)。安装包与源码见 [Releases](https://github.com/HABAI182/paperforge-android/releases)。旧 tag 和发布附件保留。
+当前版本 **0.4.0**，公开源码：[HABAI182/paperforge-android](https://github.com/HABAI182/paperforge-android)。安装包与源码见 [Releases](https://github.com/HABAI182/paperforge-android/releases)。旧 tag 和发布附件保留。
+
+## 0.4.0 新增
+
+首页右上角齿轮进入个性化设置，可调扫描/拍摄/增强/OCR/导出/主题字体及首页快捷入口，支持设置JSON导入导出。最近文档和文档库点“多选”或长按，批量分享、收藏、分类、回收和直接删除；回收站可批量恢复。已有PDF可直接进入合并排序。
+
+相机统一取景/分析/照片坐标，修复反复重绑和拍摄中断，沿用纸框后原图精修；加入MakeACopy离线定位模型与传统识边回退。质量与边界见[本轮扫描记录](docs/quality/SCAN-0.4.0.md)，APK研究见[静态分析](docs/research/CAMSCANNER-APK-ANALYSIS.md)。
 
 ## 从这里开始
 
@@ -53,4 +59,4 @@ macOS/Linux 使用 `./gradlew`。首次构建需下载依赖，已安装应用�
 - [架构](docs/ARCHITECTURE.md)、[技术选型](docs/architecture/0001-architecture.md)
 - [上游研究矩阵](docs/research/UPSTREAM_REFERENCE_MATRIX.md)、[审计](docs/research/OSS_AUDIT.md)、[许可](LICENSE_NOTICES.md)
 - [测试矩阵](docs/TEST_MATRIX.md)、[隐私](docs/PRIVACY.md)、[发布检查](docs/RELEASE_CHECKLIST.md)
-- [0.3.0 改动](docs/CHANGELOG-0.3.0.md)、[接续记录](docs/DEVELOPMENT_LOG.md)
+- [0.4.0 改动](docs/CHANGELOG-0.4.0.md)、[接续记录](docs/DEVELOPMENT_LOG.md)
