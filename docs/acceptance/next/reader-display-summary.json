@@ -1,0 +1,27 @@
+{
+  "scope": [
+    "R10",
+    "R11",
+    "R12",
+    "R05/R06 geometry regression"
+  ],
+  "environment": "AOSP API35 x86_64 emulator-5554; no physical device claim",
+  "build": "work/next-facing-build.log: assemble/unit/lint/androidTest SUCCESS",
+  "tests": [
+    {
+      "log": "work/next-display-android.log",
+      "passed": 1,
+      "covers": "Night-mode photograph colors, UI trim/fit, per-document persistence, ID-remapped reader preferences, unchanged PDF SHA256"
+    },
+    {
+      "log": "work/next-facing-android.log",
+      "passed": 2,
+      "covers": "Landscape RTL cover/pairs to portrait preserves selected physical page; native links/outline/text/notes with zoom tiles and edge turns"
+    }
+  ],
+  "notes": [
+    "Color preservation uses composited native rendering clipped to placed-image polygons. Objects composited within these polygons keep the same original colors.",
+    "Native glyph handle selection, richer reflow, speech audio and real ARM64 acceptance remain separate unfinished work."
+  ],
+  "releaseHold": true
+}

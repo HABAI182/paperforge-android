@@ -221,4 +221,71 @@ class ReaderFeaturesTest {
             file.delete()
         }
     }
+
+    @Test
+    fun facingCoverAndRtlKeepTheSelectedPhysicalPageAcrossRotation() {
+        val repo = app.repository
+        val file = fixture()
+        val doc = runBlocking { repo.registerPdf(file, "Facing ${System.nanoTime()}") }
+        val model = ViewModelProvider(compose.activity)[MainViewModel::class.java]
+        val previous = compose.activity.requestedOrientation
+        ReaderPreferences(app)
+            .view(
+                doc.id,
+                cn.paperforge.app.reader.ReaderViewOptions(
+                    facingPages = true,
+                    coverAlone = true,
+                    rightToLeft = true,
+                ),
+            )
+        try {
+            compose.runOnIdle {
+                compose.activity.requestedOrientation =
+                    android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                model.open(doc)
+            }
+            compose.waitUntil(15000) {
+                compose.onAllNodesWithContentDescription("第 1 页").fetchSemanticsNodes().isNotEmpty()
+            }
+            compose.onNodeWithContentDescription("第 2 页").assertDoesNotExist()
+            compose.onNodeWithTag("reader-viewport-0").performTouchInput { swipeRight() }
+            compose.waitUntil(10000) {
+                compose
+                    .onAllNodesWithContentDescription("第 2 页")
+                    .fetchSemanticsNodes()
+                    .isNotEmpty() &&
+                    compose
+                        .onAllNodesWithContentDescription("第 3 页")
+                        .fetchSemanticsNodes()
+                        .isNotEmpty()
+            }
+            assertTrue(
+                compose.onNodeWithTag("reader-viewport-2").fetchSemanticsNode().boundsInRoot.left <
+                    compose
+                        .onNodeWithTag("reader-viewport-1")
+                        .fetchSemanticsNode()
+                        .boundsInRoot
+                        .left
+            )
+            compose.runOnIdle { model.readerTarget.value = doc.id to 2 }
+            compose.waitUntil(10000) {
+                compose.onAllNodesWithText("3 / 3").fetchSemanticsNodes().isNotEmpty()
+            }
+            compose.runOnIdle {
+                compose.activity.requestedOrientation =
+                    android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            }
+            compose.waitUntil(15000) {
+                compose.onAllNodesWithTag("reader-viewport-2").fetchSemanticsNodes().isNotEmpty() &&
+                    compose.onAllNodesWithTag("reader-viewport-1").fetchSemanticsNodes().isEmpty()
+            }
+            compose.onNodeWithText("3 / 3").assertIsDisplayed()
+        } finally {
+            compose.runOnIdle {
+                model.screen.value = "home"
+                compose.activity.requestedOrientation = previous
+            }
+            runBlocking { repo.deleteDocument(doc) }
+        }
+    }
 }

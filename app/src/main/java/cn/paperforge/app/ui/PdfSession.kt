@@ -9,7 +9,7 @@ import android.util.LruCache
 import java.io.File
 import kotlin.math.ceil
 
-class PdfSession(file: File) : AutoCloseable {
+class PdfSession(val file: File) : AutoCloseable {
     private val sizes = mutableMapOf<Int, Pair<Int, Int>>()
     private val fd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
     private val renderer =

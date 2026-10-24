@@ -293,7 +293,7 @@
       ],
       "scope": "应用深色与PDF着色分开，暖纸/反色可选",
       "acceptance": "照片不被强制反色，原文件不变",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "R11",
@@ -306,7 +306,7 @@
       ],
       "scope": "当前/全篇/奇偶边距、适宽适页",
       "acceptance": "隐藏边距不改源PDF内容",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "R12",
@@ -319,7 +319,7 @@
       ],
       "scope": "宽屏面对页、封面单页、阅读方向",
       "acceptance": "横竖切换页序稳定，封面不乱配对",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "R13",

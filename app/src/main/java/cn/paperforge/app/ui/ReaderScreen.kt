@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -30,6 +31,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import cn.paperforge.app.MainViewModel
 import cn.paperforge.app.ReaderPosition
 import cn.paperforge.app.ReaderPreferences
+import cn.paperforge.app.model.PageSpreads
 import cn.paperforge.app.model.PointN
 import cn.paperforge.app.pdf.PdfSearch
 import cn.paperforge.app.pdf.ReaderDocument
@@ -58,6 +60,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
     val context = LocalContext.current
     val preferences = remember { ReaderPreferences(context) }
     val saved = remember(doc?.id) { preferences.load(doc?.id ?: "") }
+    var viewOptions by remember(doc?.id) { mutableStateOf(preferences.view(doc?.id ?: "")) }
     val file = doc?.pdfPath?.let { File(it) }
     var session by remember(file) { mutableStateOf<PdfSession?>(null) }
     var loadError by remember(file) { mutableStateOf<String?>(null) }
@@ -77,9 +80,25 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
         }
     }
     val list = rememberLazyListState(saved.page, saved.offset)
-    val pager = rememberPagerState(initialPage = saved.page) { session?.count ?: saved.page + 1 }
-    val scope = rememberCoroutineScope()
+    var activePage by rememberSaveable(doc?.id) { mutableIntStateOf(saved.page) }
     var horizontal by rememberSaveable(doc?.id) { mutableStateOf(saved.horizontal) }
+    val facing =
+        horizontal && viewOptions.facingPages && LocalConfiguration.current.screenWidthDp >= 600
+    val spreads =
+        PageSpreads.groups(session?.count ?: saved.page + 1, facing, viewOptions.coverAlone)
+    val pager =
+        key(facing, viewOptions.coverAlone) {
+            rememberPagerState(initialPage = PageSpreads.groupOf(spreads, activePage)) {
+                spreads.size
+            }
+        }
+    LaunchedEffect(pager.currentPage, spreads, horizontal) {
+        if (horizontal)
+            spreads.getOrNull(pager.currentPage)?.let {
+                if (activePage !in it) activePage = it.first()
+            }
+    }
+    val scope = rememberCoroutineScope()
     var fullscreen by rememberSaveable { mutableStateOf(false) }
     var controls by remember { mutableStateOf(true) }
     var interaction by remember { mutableIntStateOf(0) }
@@ -113,12 +132,31 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
         }
     val transforms =
         remember(doc?.id) {
-            mutableStateMapOf(saved.page to PageTransform(saved.zoom, saved.panX, saved.panY))
+            mutableStateMapOf<Int, PageTransform>().apply {
+                if (preferences.hasPosition(doc?.id ?: ""))
+                    put(saved.page, PageTransform(saved.zoom, saved.panX, saved.panY))
+            }
         }
     val visiblePage by remember { derivedStateOf { list.firstVisibleItemIndex } }
-    val page = if (horizontal) pager.currentPage else visiblePage
+    val page = if (horizontal) activePage else visiblePage
     val livePage by rememberUpdatedState(page)
     val transform = transforms[page] ?: PageTransform()
+    fun changeView(next: cn.paperforge.app.reader.ReaderViewOptions) {
+        val source =
+            viewOptions
+                .viewport(page)
+                .source(
+                    PointN(.5f - transform.x / transform.zoom, .5f - transform.y / transform.zoom)
+                )
+        val center = next.viewport(page).view(source)
+        transforms[page] =
+            transform.copy(
+                x = (.5f - center.x) * transform.zoom,
+                y = (.5f - center.y) * transform.zoom,
+            )
+        viewOptions = next
+        doc?.id?.let { preferences.view(it, next) }
+    }
     val latestPosition by
         rememberUpdatedState(
             ReaderPosition(page, horizontal, transform.zoom, transform.x, transform.y, 0, paperTone)
@@ -187,7 +225,11 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
     val readerTarget by vm.readerTarget.collectAsState()
     fun goTo(index: Int) {
         val n = index.coerceIn(0, ((session?.count ?: 1) - 1).coerceAtLeast(0))
-        scope.launch { if (horizontal) pager.scrollToPage(n) else list.scrollToItem(n) }
+        activePage = n
+        scope.launch {
+            if (horizontal) pager.scrollToPage(PageSpreads.groupOf(spreads, n))
+            else list.scrollToItem(n)
+        }
         interaction++
     }
     val linkCache = remember(file) { mutableMapOf<Int, List<ReaderLink>>() }
@@ -209,14 +251,17 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
         val previous = navigationBack.removeLastOrNull() ?: return
         transforms[previous.page] = PageTransform(previous.zoom, previous.panX, previous.panY)
         horizontal = previous.horizontal
+        activePage = previous.page
         scope.launch {
             withFrameNanos {}
-            if (previous.horizontal) pager.scrollToPage(previous.page)
+            if (previous.horizontal) pager.scrollToPage(PageSpreads.groupOf(spreads, previous.page))
             else list.scrollToItem(previous.page, previous.offset)
         }
     }
     fun activateLink(index: Int, point: PointN): Boolean {
-        if (index != livePage) return false
+        if (horizontal && index !in spreads.getOrNull(pager.currentPage).orEmpty()) return false
+        if (!horizontal && index != livePage) return false
+        activePage = index
         fun activate(links: List<ReaderLink>): Boolean {
             val link =
                 links.firstOrNull { point.x in it.left..it.right && point.y in it.top..it.bottom }
@@ -245,9 +290,14 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
         }
         return true
     }
+    fun nextAtEdge(direction: Int): Int {
+        val step = if (horizontal && viewOptions.rightToLeft) -direction else direction
+        return if (horizontal) spreads.getOrNull(pager.currentPage + step)?.first() ?: -1
+        else page + step
+    }
     fun flipAtEdge(direction: Int) {
         edgeNotice = ""
-        val next = page + direction
+        val next = nextAtEdge(direction)
         if (next in 0 until (session?.count ?: 0)) {
             transforms[next] = PageTransform()
             goTo(next)
@@ -256,8 +306,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
     fun edgeHint(direction: Int) {
         edgeNotice =
             when {
-                page + direction < 0 -> "已经是第一页"
-                page + direction >= (session?.count ?: 0) -> "已经是最后一页"
+                nextAtEdge(direction) !in 0 until (session?.count ?: 0) -> "已经到达文档边界"
                 direction > 0 -> "已到页边，再次向左滑动翻页"
                 else -> "已到页边，再次向右滑动翻页"
             }
@@ -265,7 +314,11 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
     fun changeMode(value: Boolean) {
         val current = page
         horizontal = value
-        scope.launch { if (value) pager.scrollToPage(current) else list.scrollToItem(current) }
+        activePage = current
+        scope.launch {
+            if (value) pager.scrollToPage(PageSpreads.groupOf(spreads, current))
+            else list.scrollToItem(current)
+        }
     }
     LaunchedEffect(readerTarget, session) {
         val target = readerTarget
@@ -441,50 +494,71 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                 else if (horizontal)
                     HorizontalPager(
                         pager,
-                        userScrollEnabled = transform.zoom <= 1.01f,
+                        userScrollEnabled =
+                            spreads.getOrNull(pager.currentPage).orEmpty().all {
+                                (transforms[it]?.zoom ?: 1f) <= 1.01f
+                            },
+                        reverseLayout = viewOptions.rightToLeft,
                         modifier = Modifier.fillMaxSize(),
                         beyondViewportPageCount = 0,
-                    ) { index ->
-                        ReaderPage(
-                            s,
-                            index,
-                            transforms[index] ?: PageTransform(),
-                            paperTone,
-                            true,
-                            hits.filter { it.page == index } +
-                                listOfNotNull(
-                                    focusedText
-                                        ?.takeIf { it.first == index }
-                                        ?.second
-                                        ?.let {
-                                            PdfSearch.Hit(
-                                                index,
-                                                it.text,
-                                                it.left,
-                                                it.top,
-                                                it.right,
-                                                it.bottom,
-                                            )
-                                        }
-                                ),
-                            {
-                                transforms[index] = it
-                                interaction++
-                            },
-                            {
-                                controls = !controls
-                                interaction++
-                            },
-                            onLongPress = { p ->
-                                textPage = index
-                                textPoint = p
-                                interaction++
-                            },
-                            onLinkTap = { p -> activateLink(index, p) },
-                            edgeTurning = edgeTurning,
-                            onEdgeTurn = ::flipAtEdge,
-                            onEdgeArm = ::edgeHint,
-                        )
+                    ) { group ->
+                        val pages = spreads[group]
+                        Row(
+                            Modifier.fillMaxSize(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            (if (viewOptions.rightToLeft) pages.reversed() else pages).forEach {
+                                index ->
+                                Box(Modifier.weight(1f).fillMaxHeight()) {
+                                    ReaderPage(
+                                        s,
+                                        index,
+                                        transforms[index] ?: PageTransform(),
+                                        paperTone,
+                                        true,
+                                        hits.filter { it.page == index } +
+                                            listOfNotNull(
+                                                focusedText
+                                                    ?.takeIf { it.first == index }
+                                                    ?.second
+                                                    ?.let {
+                                                        PdfSearch.Hit(
+                                                            index,
+                                                            it.text,
+                                                            it.left,
+                                                            it.top,
+                                                            it.right,
+                                                            it.bottom,
+                                                        )
+                                                    }
+                                            ),
+                                        {
+                                            transforms[index] = it
+                                            interaction++
+                                        },
+                                        {
+                                            activePage = index
+                                            controls = !controls
+                                            interaction++
+                                        },
+                                        onLongPress = { p ->
+                                            activePage = index
+                                            textPage = index
+                                            textPoint = p
+                                            interaction++
+                                        },
+                                        onLinkTap = { p -> activateLink(index, p) },
+                                        edgeTurning = edgeTurning,
+                                        onEdgeTurn = ::flipAtEdge,
+                                        onEdgeArm = ::edgeHint,
+                                        viewport = viewOptions.viewport(index),
+                                        fitWidth = viewOptions.fitWidth,
+                                        initializeAtTop = !transforms.containsKey(index),
+                                        preserveImageColor = viewOptions.preserveImageColor,
+                                    )
+                                }
+                            }
+                        }
                     }
                 else
                     LazyColumn(
@@ -522,10 +596,12 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                                     interaction++
                                 },
                                 {
+                                    activePage = index
                                     controls = !controls
                                     interaction++
                                 },
                                 onLongPress = { p ->
+                                    activePage = index
                                     textPage = index
                                     textPoint = p
                                     interaction++
@@ -534,6 +610,10 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                                 edgeTurning = edgeTurning,
                                 onEdgeTurn = ::flipAtEdge,
                                 onEdgeArm = ::edgeHint,
+                                viewport = viewOptions.viewport(index),
+                                fitWidth = viewOptions.fitWidth,
+                                initializeAtTop = !transforms.containsKey(index),
+                                preserveImageColor = viewOptions.preserveImageColor,
                             )
                         }
                     }
@@ -687,6 +767,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                             ?: "物理页 ${page + 1}",
                         style = MaterialTheme.typography.labelMedium,
                     )
+                    ReaderDisplaySettings(viewOptions, page, ::changeView)
                     Text("纸张显示", style = MaterialTheme.typography.labelLarge)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         listOf("原色", "暖纸", "夜读").forEachIndexed { index, title ->

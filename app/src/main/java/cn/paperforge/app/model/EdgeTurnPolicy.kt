@@ -16,6 +16,7 @@ object EdgeTurnPolicy {
         repeated: Boolean,
         minimumDrag: Float,
         multiplePointers: Boolean,
+        limitOverride: Float? = null,
     ): EdgeTurnResult {
         if (
             zoom <= 1.01f ||
@@ -24,7 +25,7 @@ object EdgeTurnPolicy {
                 abs(dragX) < abs(dragY) * 1.4f
         )
             return EdgeTurnResult(0, 0)
-        val bound = (zoom - 1f) / 2f
+        val bound = limitOverride ?: ((zoom - 1f) / 2f)
         val direction =
             when {
                 dragX < 0 && abs(endX + bound) < .01f -> 1

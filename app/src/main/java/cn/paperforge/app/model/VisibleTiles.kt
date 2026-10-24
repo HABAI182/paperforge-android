@@ -6,21 +6,40 @@ import kotlin.math.floor
 data class TileKey(val edge: Int, val column: Int, val row: Int)
 
 object VisibleTiles {
-    fun plan(width: Int, height: Int, zoom: Float, panX: Float, panY: Float): List<TileKey> {
-        if (zoom <= 1.5f) return emptyList()
+    fun plan(
+        width: Int,
+        height: Int,
+        zoom: Float,
+        panX: Float,
+        panY: Float,
+        viewport: PageViewport = PageViewport.Full,
+        viewportRatioX: Float = 1f,
+        viewportRatioY: Float = 1f,
+    ): List<TileKey> {
+        val detail = zoom / minOf(viewport.width, viewport.height)
+        if (detail <= 1.5f) return emptyList()
         val edge =
             when {
-                zoom <= 2.5f -> 3200
-                zoom <= 4.5f -> 6400
-                else -> 9600
+                detail <= 2.5f -> 3200
+                detail <= 4.5f -> 6400
+                detail <= 6f -> 9600
+                else -> 12800
             }
         val scale = edge.toFloat() / maxOf(width, height)
         val w = ceil(width * scale).toInt()
         val h = ceil(height * scale).toInt()
-        val left = (.5f + (-.5f - panX) / zoom).coerceIn(0f, 1f)
-        val right = (.5f + (.5f - panX) / zoom).coerceIn(0f, 1f)
-        val top = (.5f + (-.5f - panY) / zoom).coerceIn(0f, 1f)
-        val bottom = (.5f + (.5f - panY) / zoom).coerceIn(0f, 1f)
+        val left =
+            viewport.left +
+                (.5f + (-.5f * viewportRatioX - panX) / zoom).coerceIn(0f, 1f) * viewport.width
+        val right =
+            viewport.left +
+                (.5f + (.5f * viewportRatioX - panX) / zoom).coerceIn(0f, 1f) * viewport.width
+        val top =
+            viewport.top +
+                (.5f + (-.5f * viewportRatioY - panY) / zoom).coerceIn(0f, 1f) * viewport.height
+        val bottom =
+            viewport.top +
+                (.5f + (.5f * viewportRatioY - panY) / zoom).coerceIn(0f, 1f) * viewport.height
         if (right <= left || bottom <= top) return emptyList()
         val columns = ceil(w / 512f).toInt()
         val rows = ceil(h / 512f).toInt()

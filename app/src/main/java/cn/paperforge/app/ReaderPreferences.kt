@@ -16,6 +16,21 @@ data class ReaderPosition(
 
 class ReaderPreferences(context: Context) {
     private val prefs = context.getSharedPreferences("reader", Context.MODE_PRIVATE)
+    private val viewPrefs = context.getSharedPreferences("reader-view", Context.MODE_PRIVATE)
+
+    fun hasPosition(id: String) = prefs.contains(id)
+
+    fun view(id: String) =
+        runCatching {
+                cn.paperforge.app.reader.ReaderViewOptions.decode(
+                    JSONObject(viewPrefs.getString(id, "{}") ?: "{}")
+                )
+            }
+            .getOrDefault(cn.paperforge.app.reader.ReaderViewOptions())
+
+    fun view(id: String, value: cn.paperforge.app.reader.ReaderViewOptions) {
+        viewPrefs.edit().putString(id, value.encode().toString()).apply()
+    }
 
     fun load(id: String): ReaderPosition =
         runCatching {
@@ -51,7 +66,8 @@ class ReaderPreferences(context: Context) {
                     id,
                     JSONObject()
                         .put("position", JSONObject(prefs.getString(id, "{}") ?: "{}"))
-                        .put("bookmarks", org.json.JSONArray(bookmarks(id).sorted())),
+                        .put("bookmarks", org.json.JSONArray(bookmarks(id).sorted()))
+                        .put("view", view(id).encode()),
                 )
             }
         }
@@ -61,6 +77,9 @@ class ReaderPreferences(context: Context) {
         ids.forEach { (old, new) ->
             data.optJSONObject(old)?.let { state ->
                 state.optJSONObject("position")?.let { edit.putString(new, it.toString()) }
+                state.optJSONObject("view")?.let {
+                    view(new, cn.paperforge.app.reader.ReaderViewOptions.decode(it))
+                }
                 state.optJSONArray("bookmarks")?.let { marks ->
                     edit.putStringSet(
                         "marks:$new",
