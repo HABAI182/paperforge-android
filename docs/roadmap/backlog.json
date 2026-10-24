@@ -39,7 +39,7 @@
       ],
       "scope": "沿用新鲜候选，画面变化/过期候选重新定位，显示平滑不影响原始角点",
       "acceptance": "移动纸张后不沿用旧框；手动快门始终可拍",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "CORE04",
@@ -52,7 +52,7 @@
       ],
       "scope": "运动、内容变化和稳定状态共同布防；相似表格允许继续拍",
       "acceptance": "同页不持续连拍，换相似新页可拍",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "CORE05",

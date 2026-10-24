@@ -66,6 +66,7 @@ class AutoCaptureGate(
     private var lastCapture = -cooldownMs
     private var captured: Quad? = null
     private var capturedScene: List<Float>? = null
+    private var manualUnknown = false
     private var changedFrames = 0
     private var absentSince: Long? = null
     var progress = 0f
@@ -79,11 +80,21 @@ class AutoCaptureGate(
     ): Boolean {
         if (quad == null || !quad.valid() || quad.area < minimumArea) {
             if (absentSince == null) absentSince = now
-            if (now - (absentSince ?: now) > 600) captured = null
+            if (now - (absentSince ?: now) > 600) {
+                captured = null
+                manualUnknown = false
+            }
             reset()
             return false
         }
         absentSince = null
+        if (manualUnknown) {
+            captured = quad
+            capturedScene = scene?.toList()
+            manualUnknown = false
+            reset()
+            return false
+        }
         if (!qualityReady) {
             reset()
             return false
@@ -146,10 +157,20 @@ class AutoCaptureGate(
         if (clearCaptured) {
             captured = null
             capturedScene = null
+            manualUnknown = false
             changedFrames = 0
         }
         anchor = null
         progress = 0f
+    }
+
+    fun markCaptured(quad: Quad?, now: Long, scene: List<Float>?) {
+        lastCapture = now
+        captured = quad
+        capturedScene = scene?.toList()
+        manualUnknown = quad == null
+        changedFrames = 0
+        reset()
     }
 }
 

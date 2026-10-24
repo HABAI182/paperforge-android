@@ -100,12 +100,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         } else editorTarget.value = doc.id to hit.page
     }
 
-    private fun perform(label: String, action: suspend () -> Unit) {
-        if (busy.value) return
-        task =
+    private fun perform(label: String, queue: Boolean = false, action: suspend () -> Unit) {
+        if (!queue && !busy.compareAndSet(false, true)) return
+        if (!queue) progress.value = label
+        val launched =
             viewModelScope.launch {
-                busy.value = true
-                progress.value = label
+                if (queue) {
+                    while (!busy.compareAndSet(false, true)) busy.first { !it }
+                    task = currentCoroutineContext()[Job]
+                    progress.value = label
+                }
                 try {
                     withContext(Dispatchers.IO) { action() }
                 } catch (e: CancellationException) {
@@ -113,10 +117,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 } catch (e: Exception) {
                     messages.send(e.message ?: "操作未完成")
                 } finally {
-                    busy.value = false
                     progress.value = ""
+                    busy.value = false
                 }
             }
+        if (!queue) task = launched
     }
 
     fun newScan(camera: Boolean = true) =
@@ -166,21 +171,29 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
 
-    fun captured(file: File, previewQuad: cn.paperforge.app.model.Quad? = null) =
-        perform("正在检测纸张") {
-            val target = replacement.value
+    fun captured(
+        file: File,
+        previewQuad: cn.paperforge.app.model.Quad? = null,
+        reference: cn.paperforge.app.model.CaptureReference? = null,
+        documentId: String? = null,
+        replacementId: String? = replacement.value,
+    ) =
+        perform("正在检测纸张", queue = true) {
+            val id = documentId ?: selected.value!!.id
+            val target = replacementId
             if (target == null) {
-                val page = repo.addCapture(selected.value!!.id, file, previewQuad)
+                val page = repo.addCapture(id, file, previewQuad, reference)
                 if (page.corners == cn.paperforge.app.model.Quad.Full.encode())
                     messages.send("本页未找到完整纸边，已保留全图；可点击自动裁边重试")
             } else {
-                val page = repo.dao.pages(selected.value!!.id).first { it.id == target }
+                val page = repo.dao.pages(id).first { it.id == target }
                 val detection =
-                    cn.paperforge.app.imaging.ScanProcessor.detectFile(file, previewQuad)
+                    cn.paperforge.app.imaging.ScanProcessor.detectFile(file, previewQuad, reference)
                 repo.savePage(
                     page.copy(
                         original = file.path,
-                        processingMetadata = "{}",
+                        processingMetadata =
+                            cn.paperforge.app.imaging.CaptureMetadata.encode(reference, detection),
                         corners = (detection.quad ?: cn.paperforge.app.model.Quad.Full).encode(),
                         rotation = 0,
                         deskewDegrees = 0f,
@@ -188,10 +201,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                         detectionMethod = detection.method,
                     )
                 )
-                replacement.value = null
-                screen.value = "editor"
+                if (replacement.value == target) replacement.value = null
+                if (selected.value?.id == id) screen.value = "editor"
             }
-            if (UserSettings.bool("reviewAfterCapture", false)) screen.value = "editor"
+            if (selected.value?.id == id && UserSettings.bool("reviewAfterCapture", false))
+                screen.value = "editor"
         }
 
     fun save(page: PageRow) = perform("正在更新页面") { repo.savePage(page) }

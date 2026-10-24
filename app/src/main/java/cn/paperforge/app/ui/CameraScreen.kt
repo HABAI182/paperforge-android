@@ -49,6 +49,7 @@ import cn.paperforge.app.model.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.hypot
 import kotlin.math.roundToInt
 import org.opencv.core.*
 
@@ -75,6 +76,7 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
     var quad by remember { mutableStateOf<Quad?>(null) }
     var rawQuad by remember { mutableStateOf<Quad?>(null) }
     var rawAt by remember { mutableLongStateOf(0L) }
+    var reference by remember { mutableStateOf<CaptureReference?>(null) }
     var overlay by remember { mutableStateOf<List<PointN>?>(null) }
     var previewSize by remember { mutableStateOf(IntSize.Zero) }
     var stability by remember { mutableFloatStateOf(0f) }
@@ -144,18 +146,28 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
         if (imageCapture != null && doc != null && !busy && snapping.compareAndSet(false, true)) {
             val file = vm.repo.captureFile(doc.id)
             val snapshot = rawQuad.takeIf { SystemClock.elapsedRealtime() - rawAt < 700 }
+            val atShutter = reference?.copy(requestedAt = SystemClock.elapsedRealtime())
+            val targetAtShutter = vm.replacement.value
+            gate.markCaptured(snapshot, SystemClock.elapsedRealtime(), atShutter?.paper)
             imageCapture.takePicture(
                 ImageCapture.OutputFileOptions.Builder(file).build(),
                 main,
                 object : ImageCapture.OnImageSavedCallback {
                     override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                         snapping.set(false)
-                        vm.captured(file, snapshot)
+                        vm.captured(
+                            file,
+                            snapshot,
+                            atShutter,
+                            documentId = doc.id,
+                            replacementId = targetAtShutter,
+                        )
                     }
 
                     override fun onError(exception: ImageCaptureException) {
                         snapping.set(false)
                         file.delete()
+                        gate.reset(clearCaptured = true)
                         cameraError = exception.message
                     }
                 },
@@ -352,6 +364,9 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                                             )
                                                         val frameWidth = upright.cols()
                                                         val frameHeight = upright.rows()
+                                                        val sensorNs = image.imageInfo.timestamp
+                                                        val viewportKey =
+                                                            "${image.width}x${image.height}:${crop.left},${crop.top},${crop.right},${crop.bottom}:${image.imageInfo.rotationDegrees}"
                                                         val viewportEpoch =
                                                             image.width.toLong() * 10000 +
                                                                 image.height * 10 +
@@ -365,8 +380,55 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                                             if (
                                                                 !disposed &&
                                                                     SystemClock.elapsedRealtime() -
-                                                                        now < 1000
+                                                                        now < 500
                                                             ) {
+                                                                val previous =
+                                                                    reference?.takeIf {
+                                                                        it.viewport ==
+                                                                            viewportKey &&
+                                                                            now - it.analyzedAt <
+                                                                                800
+                                                                    }
+                                                                val motion =
+                                                                    if (
+                                                                        previous != null &&
+                                                                            detected != null
+                                                                    )
+                                                                        maxOf(
+                                                                            CaptureReference
+                                                                                .signatureDistance(
+                                                                                    previous.scene,
+                                                                                    quality
+                                                                                        .sceneSignature,
+                                                                                ),
+                                                                            previous.quad.points
+                                                                                .zip(
+                                                                                    detected.points
+                                                                                )
+                                                                                .maxOf { (a, b) ->
+                                                                                    hypot(
+                                                                                        a.x - b.x,
+                                                                                        a.y - b.y,
+                                                                                    )
+                                                                                },
+                                                                        )
+                                                                    else 0f
+                                                                reference =
+                                                                    detected?.let {
+                                                                        CaptureReference(
+                                                                            it,
+                                                                            now,
+                                                                            now,
+                                                                            frameWidth,
+                                                                            frameHeight,
+                                                                            viewportKey,
+                                                                            sensorNs,
+                                                                            detection.confidence,
+                                                                            quality.sceneSignature,
+                                                                            quality.signature,
+                                                                            motion,
+                                                                        )
+                                                                    }
                                                                 rawQuad = detected
                                                                 rawAt = now
                                                                 quad =
@@ -519,6 +581,7 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                                     quad = null
                                                     overlay = null
                                                     rawQuad = null
+                                                    reference = null
                                                 }
                                             } finally {
                                                 image.close()
@@ -552,6 +615,7 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                             outline.reset()
                             overlay = null
                             rawQuad = null
+                            reference = null
                             qualityTracker.reset()
                             provider?.unbindAll()
                             executor.shutdown()

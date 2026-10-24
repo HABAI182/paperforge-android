@@ -34,9 +34,10 @@ class Repository(val context: Context, val database: PaperDatabase) {
         id: String,
         file: File,
         previewQuad: cn.paperforge.app.model.Quad? = null,
+        reference: cn.paperforge.app.model.CaptureReference? = null,
     ): PageRow =
         withContext(Dispatchers.IO) {
-            val detection = ScanProcessor.detectFile(file, previewQuad)
+            val detection = ScanProcessor.detectFile(file, previewQuad, reference)
             val page =
                 PageRow(
                     UUID.randomUUID().toString(),
@@ -50,6 +51,8 @@ class Repository(val context: Context, val database: PaperDatabase) {
                     corners = (detection.quad ?: cn.paperforge.app.model.Quad.Full).encode(),
                     detectionConfidence = detection.confidence,
                     detectionMethod = detection.method,
+                    processingMetadata =
+                        cn.paperforge.app.imaging.CaptureMetadata.encode(reference, detection),
                 )
             database.withTransaction {
                 dao.putPage(page)

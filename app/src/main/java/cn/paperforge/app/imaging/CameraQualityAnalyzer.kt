@@ -6,7 +6,11 @@ import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
 
 object CameraQualityAnalyzer {
-    data class Result(val sample: CaptureQualityPolicy.Sample?, val signature: List<Float>)
+    data class Result(
+        val sample: CaptureQualityPolicy.Sample?,
+        val signature: List<Float>,
+        val sceneSignature: List<Float>,
+    )
 
     fun analyze(source: Mat, quad: Quad?): Result {
         val gray = Mat()
@@ -25,7 +29,7 @@ object CameraQualityAnalyzer {
             val scene = ByteArray(16)
             signature.get(0, 0, scene)
             val values = scene.map { (it.toInt() and 255) / 255f }
-            if (quad == null) return Result(null, values)
+            if (quad == null) return Result(null, values, values)
             val points =
                 MatOfPoint2f(
                     *quad.points
@@ -90,6 +94,7 @@ object CameraQualityAnalyzer {
                     glare,
                 ),
                 paperSignature.map { (it.toInt() and 255) / 255f },
+                values,
             )
         } finally {
             gray.release()

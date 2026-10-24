@@ -1,0 +1,27 @@
+{
+  "state": "development-only",
+  "releaseCreated": false,
+  "build": "work/next-capture-final-build.log: assemble and focused CaptureReferenceTest SUCCESS",
+  "covers": [
+    "exposure-shift tolerant signatures",
+    "stale/motion/aspect/content reference fallback decisions",
+    "manual capture known/unknown duplicate suppression and failure reset"
+  ],
+  "implementation": [
+    "snapshot document and replacement target at shutter",
+    "raw candidate separate from smoothed overlay",
+    "final photo scene/paper verification before reference refinement",
+    "manual shutter is never blocked by the reference policy",
+    "in-memory capture callback queue waits for ongoing operation"
+  ],
+  "limits": [
+    "No physical CameraX proof",
+    "Final-photo verifier not yet exercised against independently labeled real capture pairs",
+    "Capture queue is not durable across process death; CORE05/JOB01 still pending",
+    "Similar-form page-turn motion policy still pending"
+  ],
+  "references": {
+    "ImageInfo": "https://developer.android.com/reference/androidx/camera/core/ImageInfo"
+  },
+  "clock": "Use analyzer arrival elapsedRealtime for age; sensor timestamp recorded for diagnostics only because its source clock is not assumed"
+}

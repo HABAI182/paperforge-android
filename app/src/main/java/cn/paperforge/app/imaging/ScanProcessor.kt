@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import androidx.exifinterface.media.ExifInterface
 import cn.paperforge.app.data.PageRow
+import cn.paperforge.app.model.CaptureReference
 import cn.paperforge.app.model.Quad
 import java.io.File
 import kotlin.math.*
@@ -90,7 +91,11 @@ object ScanProcessor {
 
     fun detectMat(source: Mat): Quad? = DocumentDetector.detect(source, preview = true).quad
 
-    fun detectFile(file: File, previewQuad: Quad? = null): DetectionResult {
+    fun detectFile(
+        file: File,
+        previewQuad: Quad? = null,
+        reference: CaptureReference? = null,
+    ): DetectionResult {
         val image = decode(file, 4000)
         return try {
             if (
@@ -101,8 +106,40 @@ object ScanProcessor {
                 val mat = Mat()
                 try {
                     Utils.bitmapToMat(image, mat)
+                    if (reference != null) {
+                        val signature = CameraQualityAnalyzer.analyze(mat, previewQuad)
+                        val reason =
+                            reference.reason(
+                                image.width,
+                                image.height,
+                                signature.sceneSignature,
+                                signature.signature,
+                            )
+                        if (reason != "matched") {
+                            mat.release()
+                            return detectResult(image).let {
+                                it.copy(
+                                    method = it.method + ";fresh-after-$reason",
+                                    diagnostics =
+                                        it.diagnostics +
+                                            mapOf(
+                                                "referenceAgeMs" to reference.age.toFloat(),
+                                                "referenceReused" to 0f,
+                                            ),
+                                )
+                            }
+                        }
+                    }
                     val refined = DocumentDetector.refine(mat, previewQuad)
-                    DetectionResult(refined, .85f, "viewfinder+refined")
+                    DetectionResult(
+                        refined,
+                        reference?.confidence ?: .85f,
+                        if (reference == null) "viewfinder+refined" else "preview-verified+refined",
+                        mapOf(
+                            "referenceAgeMs" to (reference?.age?.toFloat() ?: -1f),
+                            "referenceReused" to 1f,
+                        ),
+                    )
                 } finally {
                     mat.release()
                 }
