@@ -323,6 +323,7 @@ class MainActivity : ComponentActivity() {
                     vm.screen.value =
                         when {
                             screen in listOf("annotations", "pdf-pages") -> "reader"
+                            screen == "storage" -> "settings"
                             screen == "pages" ||
                                 screen == "capture" && vm.pages.value.isNotEmpty() -> "editor"
                             else -> "home"
@@ -385,6 +386,7 @@ class MainActivity : ComponentActivity() {
                                 },
                             )
                         "settings" -> SettingsScreen(vm)
+                        "storage" -> StorageScreen(vm)
                         "pages" -> PageGridScreen(vm)
                         "pdf-pages" -> PdfPageGridScreen(vm)
                         "merge" -> MergeScreen(vm)

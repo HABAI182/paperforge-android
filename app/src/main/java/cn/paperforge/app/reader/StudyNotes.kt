@@ -91,6 +91,9 @@ object StudyNotes {
         }
     }
 
+    @Synchronized
+    internal fun replace(context: Context, notes: List<StudyNote>) = write(context, notes)
+
     fun encode(notes: List<StudyNote>) =
         JSONArray().apply {
             notes.forEach {

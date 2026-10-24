@@ -365,7 +365,15 @@ fun HomeScreen(
                             onPdfTool("annotate")
                         },
                         HomeTool("离线备份", "原图、PDF、OCR、分类与编辑历史", Icons.Default.Backup, vm::backup),
-                        HomeTool("恢复备份", "选择纸匠 ZIP 并保留现有文档", Icons.Default.Restore, onRestoreBackup),
+                        HomeTool(
+                            "恢复备份",
+                            "选择纸匠 ZIP 并保留现有文档",
+                            Icons.Default.Restore,
+                            onRestoreBackup,
+                        ),
+                        HomeTool("存储空间与缓存", "查看原件、历史、导出与可清理容量", Icons.Default.Storage) {
+                            vm.screen.value = "storage"
+                        },
                     ) +
                         listOf(
                                 "searchable" to "扫描 PDF 转可搜索 PDF",

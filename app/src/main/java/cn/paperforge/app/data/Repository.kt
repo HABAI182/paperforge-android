@@ -298,12 +298,12 @@ class Repository(val context: Context, val database: PaperDatabase) {
         }
 
     suspend fun originalResources(id: String): Set<String> =
-        (dao.pages(id).map { it.original } +
+        (dao.pages(id).flatMap { PageResources.paths(it) } +
                 dao.allHistory()
                     .filter { it.documentId == id }
                     .flatMap {
-                        HistoryState.pages(it.beforeJson).map { p -> p.original } +
-                            HistoryState.pages(it.afterJson).map { p -> p.original }
+                        HistoryState.pages(it.beforeJson).flatMap { p -> PageResources.paths(p) } +
+                            HistoryState.pages(it.afterJson).flatMap { p -> PageResources.paths(p) }
                     })
             .toSet()
 

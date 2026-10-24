@@ -17,13 +17,15 @@ object BackupStore {
         val history = repo.dao.allHistory()
         val paths =
             (documents.mapNotNull { it.pdfPath } +
-                    pages.map { it.original } +
+                    pages.flatMap { PageResources.paths(it) } +
                     history.flatMap {
                         listOf(
                             *HistoryState.pages(it.beforeJson)
-                                .map { p -> p.original }
+                                .flatMap { p -> PageResources.paths(p) }
                                 .toTypedArray(),
-                            *HistoryState.pages(it.afterJson).map { p -> p.original }.toTypedArray(),
+                            *HistoryState.pages(it.afterJson)
+                                .flatMap { p -> PageResources.paths(p) }
+                                .toTypedArray(),
                         )
                     })
                 .distinct()
@@ -31,10 +33,10 @@ object BackupStore {
             paths.associateWith {
                 "files/${UUID.randomUUID()}.${File(it).extension.ifBlank { "bin" }}"
             }
-        fun page(p: PageRow) = DocumentCodec.page(p.copy(original = mapping.getValue(p.original)))
+        fun page(p: PageRow) = DocumentCodec.page(PageResources.remap(p, mapping::getValue))
         val metadata =
             JSONObject()
-                .put("format", 2)
+                .put("format", 3)
                 .put(
                     "studyNotes",
                     cn.paperforge.app.reader.StudyNotes.encode(
@@ -85,13 +87,13 @@ object BackupStore {
                                     .put(
                                         "before",
                                         HistoryState.map(it.beforeJson) { p ->
-                                            p.copy(original = mapping.getValue(p.original))
+                                            PageResources.remap(p, mapping::getValue)
                                         },
                                     )
                                     .put(
                                         "after",
                                         HistoryState.map(it.afterJson) { p ->
-                                            p.copy(original = mapping.getValue(p.original))
+                                            PageResources.remap(p, mapping::getValue)
                                         },
                                     )
                                     .put("applied", it.applied)
@@ -141,6 +143,8 @@ object BackupStore {
             archive.outputStream().use { input.copyTo(it) }
         } ?: error("无法读取备份")
         val created = mutableListOf<File>()
+        val sideState = RestoreSideState(repo.context)
+        var sideChanged = false
         try {
             ZipFile(archive).use { zip ->
                 val metadata =
@@ -149,7 +153,7 @@ object BackupStore {
                             .bufferedReader()
                             .use { it.readText() }
                     )
-                require(metadata.getInt("format") in 1..2) { "不支持的备份版本" }
+                require(metadata.getInt("format") in 1..3) { "不支持的备份版本" }
                 val integrity =
                     zip.getEntry("integrity.json")?.let { entry ->
                         JSONObject(zip.getInputStream(entry).bufferedReader().use { it.readText() })
@@ -193,23 +197,26 @@ object BackupStore {
                             java.security
                                 .DigestInputStream(zip.getInputStream(source), digest)
                                 .use { input -> target.outputStream().use { input.copyTo(it) } }
-                        integrity?.optJSONObject(entry)?.let { expected ->
-                            require(
-                                copied == expected.getLong("bytes") &&
-                                    hex(digest.digest()) == expected.getString("sha256")
-                            ) {
-                                "备份资源校验失败：$entry"
+                        (if (metadata.getInt("format") >= 2)
+                                checkNotNull(integrity).getJSONObject(entry)
+                            else integrity?.optJSONObject(entry))
+                            ?.let { expected ->
+                                require(
+                                    copied == expected.getLong("bytes") &&
+                                        hex(digest.digest()) == expected.getString("sha256")
+                                ) {
+                                    "备份资源校验失败：$entry"
+                                }
                             }
-                        }
                         target.path
                     }
                 fun page(old: PageRow): PageRow {
                     val docId = ids[old.documentId] ?: error("备份页面缺少所属文档")
-                    return old.copy(
-                        id = pageIds.getOrPut(old.id) { UUID.randomUUID().toString() },
-                        documentId = docId,
-                        original = copy(old.original, docId),
-                    )
+                    return PageResources.remap(old) { path -> copy(path, docId) }
+                        .copy(
+                            id = pageIds.getOrPut(old.id) { UUID.randomUUID().toString() },
+                            documentId = docId,
+                        )
                 }
                 val restored =
                     documents.map { old ->
@@ -248,23 +255,34 @@ object BackupStore {
                     restored.forEach { repo.dao.putDocument(it) }
                     pages.forEach { repo.dao.putPage(it) }
                     histories.forEach { repo.dao.addHistory(it) }
-                }
-                val signatures = repo.context.getSharedPreferences("signature", 0)
-                if (!signatures.contains("strokes") && metadata.has("signature"))
-                    signatures.edit().putString("strokes", metadata.getString("signature")).apply()
-                metadata.optJSONObject("reader")?.let {
-                    cn.paperforge.app.ReaderPreferences(repo.context).restore(it, ids)
-                }
-                metadata.optJSONArray("studyNotes")?.let {
-                    cn.paperforge.app.reader.StudyNotes.restore(repo.context, it, ids)
-                }
-                metadata.optJSONObject("preferences")?.let {
-                    cn.paperforge.app.UserSettings.importJson(it.toString())
+                    sideChanged = true
+                    val signatures = repo.context.getSharedPreferences("signature", 0)
+                    if (!signatures.contains("strokes") && metadata.has("signature"))
+                        signatures
+                            .edit()
+                            .putString("strokes", metadata.getString("signature"))
+                            .apply()
+                    metadata.optJSONObject("reader")?.let {
+                        cn.paperforge.app.ReaderPreferences(repo.context).restore(it, ids)
+                    }
+                    metadata.optJSONArray("studyNotes")?.let {
+                        cn.paperforge.app.reader.StudyNotes.restore(repo.context, it, ids)
+                    }
+                    metadata.optJSONObject("preferences")?.let {
+                        cn.paperforge.app.UserSettings.importJson(it.toString())
+                    }
                 }
                 return restored.size
             }
         } catch (e: Exception) {
-            created.forEach { it.delete() }
+            kotlinx.coroutines.withContext(
+                kotlinx.coroutines.NonCancellable + kotlinx.coroutines.Dispatchers.IO
+            ) {
+                if (sideChanged)
+                    runCatching { sideState.restore() }.onFailure { e.addSuppressed(it) }
+                created.forEach { it.delete() }
+                created.mapNotNull { it.parentFile }.distinct().forEach { it.delete() }
+            }
             throw e
         } finally {
             archive.delete()

@@ -102,7 +102,7 @@
       ],
       "scope": "保存非线性映射和来源版本，原图/结果联动",
       "acceptance": "曲面后OCR框可映射回页面，撤销恢复原件",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "SCN04",
@@ -867,7 +867,7 @@
       "dependencies": [],
       "scope": "原件历史缩略图OCR导出容量，清理范围预览",
       "acceptance": "清缓存不删除唯一原件或可恢复历史",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "LIB06",

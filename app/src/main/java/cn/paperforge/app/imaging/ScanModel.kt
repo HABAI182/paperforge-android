@@ -8,6 +8,26 @@ import org.opencv.imgproc.Imgproc
 object ScanModel {
     private var context: Context? = null
     private val sessions = mutableMapOf<String, Long>()
+    private val fingerprints = mutableMapOf<Boolean, String>()
+
+    @Synchronized
+    fun fingerprint(dewarp: Boolean): String =
+        fingerprints.getOrPut(dewarp) {
+            val digest = java.security.MessageDigest.getInstance("SHA-256")
+            checkNotNull(context)
+                .assets
+                .open(if (dewarp) "scan/dewarp.mnn" else "scan/border.mnn")
+                .use { input ->
+                    val buffer = ByteArray(65536)
+                    while (true) {
+                        val n = input.read(buffer)
+                        if (n < 0) break
+                        digest.update(buffer, 0, n)
+                    }
+                }
+            digest.digest().joinToString("") { "%02x".format(it.toInt() and 255) }
+        }
+
     private val loaded by lazy {
         System.loadLibrary("paperforge_scan")
         true

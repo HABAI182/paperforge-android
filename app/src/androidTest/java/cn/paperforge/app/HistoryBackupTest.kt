@@ -79,7 +79,7 @@ class HistoryBackupTest {
                             .bufferedReader()
                             .readText()
                     )
-                assertEquals(2, meta.getInt("format"))
+                assertEquals(3, meta.getInt("format"))
                 assertTrue(meta.has("reader") && meta.has("preferences"))
             }
             UserSettings.set("fontScale", 1.25f)

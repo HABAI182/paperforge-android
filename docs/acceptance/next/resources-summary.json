@@ -1,0 +1,26 @@
+{
+  "state": "development-only",
+  "releaseCreated": false,
+  "build": "work/next-storage-build.log: assembleDebug + assembleDebugAndroidTest succeeded; focused DewarpGrid JVM test passed",
+  "android": "work/next-resources-android.log: 2 passed, 5.571s, API35 AOSP x86_64",
+  "covers": [
+    "saved nonlinear mapping vs actual gradient-image pixels",
+    "current rotation mapping",
+    "undo/redo and resource references",
+    "format3 backup ID/path remapping",
+    "cache cleaning protects referenced resources even inside cache folder",
+    "failure after DB writes rolls back rows, reader/settings and files"
+  ],
+  "limitations": [
+    "No physical ARM64 or owner-phone camera result",
+    "Deskew mapping uses rendered dimensions with integer rounding; larger real-photo quality comparison is separate",
+    "Imported PDF attachments and recipe/duplicate strategies remain unfinished"
+  ],
+  "realPhotoCorpus": {
+    "dataset": "DocUNet public author benchmark",
+    "downloadedPhotos": 50,
+    "flatbedReferences": 25,
+    "ownerPhonePhotos": false,
+    "benchmarked": false
+  }
+}

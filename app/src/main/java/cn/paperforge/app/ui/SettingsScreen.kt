@@ -57,6 +57,13 @@ fun SettingsScreen(vm: MainViewModel) {
                 modifier = Modifier.fillMaxWidth(),
             )
             Text("修改自动保存，拍摄参数在下一次进入相机时生效。", style = MaterialTheme.typography.bodySmall)
+            if (visible("存储 空间 缓存 原件 历史 清理"))
+                OutlinedButton(
+                    onClick = { vm.screen.value = "storage" },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("存储空间与缓存")
+                }
             if (visible("扫描 取景 相机 自动 裁边 纸张 定位 AI 照片 纸框 显示 模糊 亮度 稳定 等待 分析 间隔 JPEG 画质")) {
                 Text("扫描与取景", style = MaterialTheme.typography.titleLarge)
                 SettingChoices(

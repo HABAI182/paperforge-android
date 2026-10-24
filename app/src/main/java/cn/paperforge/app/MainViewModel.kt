@@ -143,6 +143,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 repo.savePage(
                     page.copy(
                         original = file.path,
+                        processingMetadata = "{}",
                         corners = (detection.quad ?: cn.paperforge.app.model.Quad.Full).encode(),
                         rotation = 0,
                         deskewDegrees = 0f,
@@ -166,9 +167,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     2400,
                 )
             val file = File(repo.folder(page.documentId), "${UUID.randomUUID()}-dewarp.png")
+            val inputFile =
+                File(repo.folder(page.documentId), "${UUID.randomUUID()}-dewarp-input.png")
+            val gridFile = File(repo.folder(page.documentId), "${UUID.randomUUID()}.pfgrid.gz")
             var saved = false
             try {
-                val corrected = cn.paperforge.app.imaging.PageDewarp.apply(source, strength)
+                val result = cn.paperforge.app.imaging.PageDewarp.process(source, strength)
+                val corrected = result.bitmap
                 try {
                     file.outputStream().use {
                         check(
@@ -178,6 +183,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 } finally {
                     corrected.recycle()
                 }
+                inputFile.outputStream().use {
+                    check(source.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it))
+                }
+                result.grid.write(gridFile)
                 repo.savePage(
                     page.copy(
                         original = file.path,
@@ -186,6 +195,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                         deskewDegrees = 0f,
                         detectionConfidence = null,
                         detectionMethod = "dewarp",
+                        processingMetadata =
+                            cn.paperforge.app.data.PageResources.withDewarp(
+                                page,
+                                inputFile,
+                                gridFile,
+                                file,
+                                result.grid.strength,
+                                cn.paperforge.app.imaging.ScanModel.fingerprint(true),
+                            ),
                     )
                 )
                 saved = true
@@ -193,7 +211,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 messages.send("已应用曲面校正，可撤销")
             } finally {
                 source.recycle()
-                if (!saved) file.delete()
+                if (!saved) listOf(file, inputFile, gridFile).forEach { it.delete() }
             }
         }
 

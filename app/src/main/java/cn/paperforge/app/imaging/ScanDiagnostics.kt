@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Debug
 import android.os.PowerManager
 import android.os.SystemClock
+import cn.paperforge.app.data.PageResources
 import cn.paperforge.app.data.PageRow
 import cn.paperforge.app.model.Quad
 import java.io.File
@@ -84,7 +85,9 @@ object ScanDiagnostics {
                 val temp = File(target.path + ".part")
                 try {
                     ZipOutputStream(temp.outputStream().buffered()).use { zip ->
-                        zip.putNextEntry(ZipEntry("original.jpg"))
+                        zip.putNextEntry(
+                            ZipEntry("original.${File(page.original).extension.ifBlank { "bin" }}")
+                        )
                         val digest = MessageDigest.getInstance("SHA-256")
                         File(page.original).inputStream().use { input ->
                             val buffer = ByteArray(64 * 1024)
@@ -96,6 +99,26 @@ object ScanDiagnostics {
                             }
                         }
                         zip.closeEntry()
+                        val mapped =
+                            PageResources.remap(page) { path ->
+                                if (path == page.original)
+                                    "original.${File(path).extension.ifBlank { "bin" }}"
+                                else
+                                    "resources/${PageResources.entries(page).first { it.path==path }.id}.${File(path).extension.ifBlank { "bin" }}"
+                            }
+                        PageResources.entries(page)
+                            .distinctBy { it.path }
+                            .filter { it.path != page.original }
+                            .forEach { resource ->
+                                val name =
+                                    PageResources.entries(mapped)
+                                        .first { it.id == resource.id }
+                                        .path
+                                zip.putNextEntry(ZipEntry(name))
+                                File(resource.path).inputStream().use { it.copyTo(zip) }
+                                zip.closeEntry()
+                            }
+                        report.put("processing", PageResources.metadata(mapped))
                         report.put(
                             "originalSha256",
                             digest.digest().joinToString("") { "%02x".format(it.toInt() and 255) },

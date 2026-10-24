@@ -58,6 +58,7 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
     var more by remember { mutableStateOf(false) }
     var bookSplit by remember { mutableStateOf(false) }
     var dewarp by remember { mutableStateOf(false) }
+    var trace by remember { mutableStateOf(false) }
     ScanEditorLayout(
         pages,
         pager,
@@ -110,6 +111,7 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                 bookSplit = false
             },
         )
+    if (trace && active != null) DewarpTraceDialog(active) { trace = false }
     if (dewarp && active != null) {
         val page = active
         var strength by remember { mutableFloatStateOf(UserSettings.number("dewarpStrength", 1f)) }
@@ -349,6 +351,15 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                     ) {
                         Text("曲面校正")
                     }
+                    if (active.processingMetadata != "{}")
+                        TextButton(
+                            onClick = {
+                                more = false
+                                trace = true
+                            }
+                        ) {
+                            Text("曲面来源与网格")
+                        }
                     TextButton(
                         onClick = {
                             more = false

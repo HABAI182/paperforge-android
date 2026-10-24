@@ -1,15 +1,29 @@
 package cn.paperforge.app.imaging
 
 import android.graphics.Bitmap
+import cn.paperforge.app.model.DewarpGrid
 import org.opencv.android.Utils
 import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
 
 /** Recovered displacement model and dense-grid core. Applied explicitly, with undo support. */
 object PageDewarp {
-    fun apply(bitmap: Bitmap, strength: Float): Bitmap {
+    data class Result(val bitmap: Bitmap, val grid: DewarpGrid)
+
+    fun apply(bitmap: Bitmap, strength: Float): Bitmap = process(bitmap, strength).bitmap
+
+    fun process(bitmap: Bitmap, strength: Float): Result {
         if (strength <= 0f)
-            return checkNotNull(bitmap.copy(bitmap.config ?: Bitmap.Config.ARGB_8888, false))
+            return Result(
+                checkNotNull(bitmap.copy(bitmap.config ?: Bitmap.Config.ARGB_8888, false)),
+                DewarpGrid(
+                    bitmap.width,
+                    bitmap.height,
+                    0f,
+                    2,
+                    floatArrayOf(0f, 0f, 1f, 0f, 0f, 1f, 1f, 1f),
+                ),
+            )
         val source = Mat()
         val field = Mat(240, 240, CvType.CV_32FC2)
         val smooth = Mat()
@@ -43,11 +57,18 @@ object PageDewarp {
                     high = maxOf(high, values[2 * i + axis])
                 }
                 check(high - low > .001f) { "曲面校正未得到有效网格" }
-                val dimension = if (axis == 0) source.cols() else source.rows()
                 for (i in 0 until 240 * 240) values[2 * i + axis] =
-                    (values[2 * i + axis] - low) / (high - low) * dimension
+                    (values[2 * i + axis] - low) / (high - low)
             }
-            grid.put(0, 0, values)
+            val mapping =
+                DewarpGrid(source.cols(), source.rows(), strength.coerceIn(0f, 1f), 240, values)
+            grid.put(
+                0,
+                0,
+                FloatArray(values.size) { i ->
+                    values[i] * (if (i % 2 == 0) source.cols() - 1 else source.rows() - 1)
+                },
+            )
             Imgproc.resize(grid, dense, source.size(), 0.0, 0.0, Imgproc.INTER_LINEAR)
             val row = FloatArray(source.cols() * 2)
             val amount = strength.coerceIn(0f, 1f)
@@ -67,9 +88,11 @@ object PageDewarp {
                 Imgproc.INTER_LINEAR,
                 Core.BORDER_REPLICATE,
             )
-            return Bitmap.createBitmap(result.cols(), result.rows(), Bitmap.Config.ARGB_8888).also {
-                Utils.matToBitmap(result, it)
-            }
+            val corrected =
+                Bitmap.createBitmap(result.cols(), result.rows(), Bitmap.Config.ARGB_8888).also {
+                    Utils.matToBitmap(result, it)
+                }
+            return Result(corrected, mapping)
         } finally {
             listOf(source, field, smooth, grid, dense, unusedMap, result).forEach { it.release() }
         }
