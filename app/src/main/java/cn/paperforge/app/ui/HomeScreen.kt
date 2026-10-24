@@ -342,6 +342,13 @@ fun HomeScreen(
                 }
                 val toolEntries =
                     listOf(
+                        HomeTool(
+                            "学习摘录与笔记",
+                            "来源页定位、Markdown、Word、Anki TSV",
+                            Icons.Default.AutoStories,
+                        ) {
+                            vm.screen.value = "notes"
+                        },
                         HomeTool("转换中心", "PDF、图片、文字、Office 与表格", Icons.Default.SwapHoriz) {
                             vm.screen.value = "convert"
                         },

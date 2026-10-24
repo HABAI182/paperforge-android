@@ -1,0 +1,19 @@
+{
+  "state": "development-only",
+  "releaseCreated": false,
+  "originalPlanCounts": {
+    "partial": 26,
+    "planned": 56,
+    "done": 16
+  },
+  "unitTests": 18,
+  "unitFailures": 0,
+  "lintErrors": 0,
+  "lintWarnings": 53,
+  "latestRelevantAndroidChecks": "next-gestures-android.log: 2 passed",
+  "otherCurrentFeatureChecks": "Reader mixed native/OCR and history backup with notes passed",
+  "independentNotesDocx": "python-docx parsed 5 paragraphs and source URI",
+  "ttsServicesInstalled": false,
+  "physicalDeviceTested": false,
+  "environment": "API35 AOSP x86_64 emulator"
+}

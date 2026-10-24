@@ -48,11 +48,13 @@ fun ScanPageCanvas(page: PageRow, compare: Boolean, onTap: () -> Unit, onZoom: (
             .pointerInput(page.id) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
+                    var eventTime = down.uptimeMillis
                     var multiple = false
                     var travel = Offset.Zero
                     var moved = false
                     do {
                         val event = awaitPointerEvent()
+                        eventTime = event.changes.maxOf { it.uptimeMillis }
                         val fingers = event.changes.count { it.pressed }
                         multiple = multiple || fingers > 1
                         val delta = event.calculatePan()
@@ -71,7 +73,7 @@ fun ScanPageCanvas(page: PageRow, compare: Boolean, onTap: () -> Unit, onZoom: (
                         }
                     } while (event.changes.any { it.pressed })
                     if (!moved && !multiple) {
-                        val now = android.os.SystemClock.uptimeMillis()
+                        val now = eventTime
                         if (now - lastTap < 280) {
                             tapJob?.cancel()
                             zoom = if (zoom > 1.01f) 1f else 2f

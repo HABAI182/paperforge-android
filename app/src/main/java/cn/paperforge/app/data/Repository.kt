@@ -11,7 +11,6 @@ import java.io.FileOutputStream
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.json.JSONObject
 
 class Repository(val context: Context, val database: PaperDatabase) {
     val dao = database.dao()
@@ -174,69 +173,139 @@ class Repository(val context: Context, val database: PaperDatabase) {
         database.withTransaction {
             val history =
                 (if (redo) dao.redoEntry(id) else dao.undoEntry(id)) ?: return@withTransaction
-            val p =
-                DocumentCodec.page(JSONObject(if (redo) history.afterJson else history.beforeJson))
-            val current = dao.pages(id).find { it.id == p.id } ?: return@withTransaction
-            dao.updatePage(
-                p.copy(revision = current.revision + 1, ocrText = null, ocrLayout = null)
-            )
+            val encoded = if (redo) history.afterJson else history.beforeJson
+            val restored = HistoryState.pages(encoded)
+            val current = dao.pages(id).associateBy { it.id }
+            if (HistoryState.isSnapshot(encoded)) {
+                current.keys.forEach { dao.deletePage(it) }
+                restored.forEach { p ->
+                    dao.putPage(
+                        p.copy(
+                            revision = (current[p.id]?.revision ?: p.revision) + 1,
+                            ocrText = null,
+                            ocrLayout = null,
+                        )
+                    )
+                }
+            } else {
+                val p = restored.single()
+                dao.putPage(
+                    p.copy(
+                        revision = (current[p.id]?.revision ?: p.revision) + 1,
+                        ocrText = null,
+                        ocrLayout = null,
+                    )
+                )
+            }
             dao.updateHistory(history.copy(applied = redo))
             dao.touch(id, System.currentTimeMillis())
         }
 
+    private suspend fun replacePages(
+        id: String,
+        before: List<PageRow>,
+        after: List<PageRow>,
+        pageId: String,
+    ) {
+        dao.clearRedo(id)
+        val ordered = after.mapIndexed { index, p -> p.copy(position = index) }
+        dao.addHistory(
+            EditHistory(
+                documentId = id,
+                pageId = pageId,
+                beforeJson = HistoryState.snapshot(before),
+                afterJson = HistoryState.snapshot(ordered),
+            )
+        )
+        val retained = ordered.map { it.id }.toSet()
+        before.filter { it.id !in retained }.forEach { dao.deletePage(it.id) }
+        ordered.forEach { dao.putPage(it) }
+        dao.touch(id, System.currentTimeMillis())
+    }
+
     suspend fun reorder(id: String, order: List<PageRow>) =
         database.withTransaction {
-            order.forEachIndexed { index, p -> dao.updatePage(p.copy(position = index)) }
-            dao.touch(id, System.currentTimeMillis())
+            val before = dao.pages(id)
+            require(before.map { it.id }.toSet() == order.map { it.id }.toSet()) { "页面列表已变化，请重新排序" }
+            if (before.map { it.id } != order.map { it.id })
+                replacePages(id, before, order, order.firstOrNull()?.id ?: "order")
         }
 
-    suspend fun deletePage(page: PageRow) {
-        dao.deletePage(page.id)
-        if (dao.originalReferences(page.original) == 0) File(page.original).delete()
-        dao.clearHistory(page.documentId)
-        reorder(page.documentId, dao.pages(page.documentId))
-    }
-
-    suspend fun duplicate(page: PageRow) {
-        val all = dao.pages(page.documentId).toMutableList()
-        val copy = page.copy(id = UUID.randomUUID().toString())
-        dao.putPage(copy)
-        all.add(all.indexOfFirst { it.id == page.id } + 1, copy)
-        reorder(page.documentId, all)
-    }
-
-    suspend fun splitBook(page: PageRow) {
-        val p = cn.paperforge.app.model.Quad.decode(page.corners).points
-        fun mid(a: cn.paperforge.app.model.PointN, b: cn.paperforge.app.model.PointN) =
-            cn.paperforge.app.model.PointN((a.x + b.x) / 2, (a.y + b.y) / 2)
-        val top = mid(p[0], p[1])
-        val bottom = mid(p[3], p[2])
-        val left =
-            page.copy(
-                id = UUID.randomUUID().toString(),
-                corners = cn.paperforge.app.model.Quad(listOf(p[0], top, bottom, p[3])).encode(),
-                ocrText = null,
-                ocrLayout = null,
-            )
-        val right =
-            page.copy(
-                id = UUID.randomUUID().toString(),
-                corners = cn.paperforge.app.model.Quad(listOf(top, p[1], p[2], bottom)).encode(),
-                ocrText = null,
-                ocrLayout = null,
-            )
-        val all = dao.pages(page.documentId).toMutableList()
-        val index = all.indexOfFirst { it.id == page.id }
+    suspend fun deletePage(page: PageRow) =
         database.withTransaction {
-            dao.deletePage(page.id)
-            dao.putPage(left)
-            dao.putPage(right)
-            all.removeAt(index)
-            all.addAll(index, listOf(left, right))
-            reorder(page.documentId, all)
-            dao.clearHistory(page.documentId)
+            val before = dao.pages(page.documentId)
+            require(before.any { it.id == page.id }) { "页面不存在" }
+            // Keep original files while any undo/redo state references them.
+            replacePages(page.documentId, before, before.filter { it.id != page.id }, page.id)
         }
-    }
+
+    suspend fun duplicate(page: PageRow) =
+        database.withTransaction {
+            val all = dao.pages(page.documentId)
+            val index = all.indexOfFirst { it.id == page.id }
+            require(index >= 0)
+            val next = all.toMutableList()
+            next.add(index + 1, page.copy(id = UUID.randomUUID().toString()))
+            replacePages(page.documentId, all, next, page.id)
+        }
+
+    suspend fun splitBook(
+        page: PageRow,
+        topFraction: Float = .5f,
+        bottomFraction: Float = .5f,
+        keep: String = "both",
+    ) =
+        database.withTransaction {
+            val (leftQuad, rightQuad) =
+                cn.paperforge.app.model.CropGeometry.split(
+                    cn.paperforge.app.model.Quad.decode(page.corners),
+                    topFraction,
+                    bottomFraction,
+                )
+            require(leftQuad.valid() && rightQuad.valid()) { "书脊位置不合法" }
+            require(keep in setOf("both", "left", "right"))
+            val halves =
+                listOf(
+                        page.copy(
+                            id = UUID.randomUUID().toString(),
+                            corners = leftQuad.encode(),
+                            outputAspect = 0f,
+                            ocrText = null,
+                            ocrLayout = null,
+                        ),
+                        page.copy(
+                            id = UUID.randomUUID().toString(),
+                            corners = rightQuad.encode(),
+                            outputAspect = 0f,
+                            ocrText = null,
+                            ocrLayout = null,
+                        ),
+                    )
+                    .filterIndexed { index, _ ->
+                        keep == "both" ||
+                            (keep == "left" && index == 0) ||
+                            (keep == "right" && index == 1)
+                    }
+            val all = dao.pages(page.documentId)
+            val index = all.indexOfFirst { it.id == page.id }
+            require(index >= 0)
+            val next =
+                all.toMutableList().apply {
+                    removeAt(index)
+                    addAll(index, halves)
+                }
+            replacePages(page.documentId, all, next, page.id)
+        }
+
+    suspend fun originalResources(id: String): Set<String> =
+        (dao.pages(id).map { it.original } +
+                dao.allHistory()
+                    .filter { it.documentId == id }
+                    .flatMap {
+                        HistoryState.pages(it.beforeJson).map { p -> p.original } +
+                            HistoryState.pages(it.afterJson).map { p -> p.original }
+                    })
+            .toSet()
 
     suspend fun trash(doc: DocumentRow) {
         dao.updateDocument(doc.copy(trashedAt = System.currentTimeMillis()))

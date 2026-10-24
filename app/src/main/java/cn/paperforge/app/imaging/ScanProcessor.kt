@@ -125,7 +125,7 @@ object ScanProcessor {
                     page.contrast,
                     maxEdge,
                     page.enhanceStrength,
-                    decoded.aspect,
+                    page.outputAspect.takeIf { it > 0f } ?: decoded.aspect,
                     if (ocrSampling) Imgproc.INTER_CUBIC else Imgproc.INTER_LINEAR,
                     if (ocrSampling) 1.5f else 1f,
                 )

@@ -50,6 +50,8 @@ data class PageRow(
     val detectionMethod: String? = null,
     @ColumnInfo(defaultValue = "0") val deskewDegrees: Float = 0f,
     @ColumnInfo(defaultValue = "1") val enhanceStrength: Float = 1f,
+    @ColumnInfo(defaultValue = "0") val outputAspect: Float = 0f,
+    @ColumnInfo(defaultValue = "'{}'") val processingMetadata: String = "{}",
 )
 
 @Entity(tableName = "edit_history", indices = [Index("documentId")])
@@ -181,13 +183,22 @@ interface DocumentDao {
 
 @Database(
     entities = [DocumentRow::class, PageRow::class, EditHistory::class, PageSearch::class],
-    version = 7,
+    version = 8,
     exportSchema = true,
 )
 abstract class PaperDatabase : RoomDatabase() {
     abstract fun dao(): DocumentDao
 
     companion object {
+        val Migration7To8 =
+            object : Migration(7, 8) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL("ALTER TABLE pages ADD COLUMN outputAspect REAL NOT NULL DEFAULT 0")
+                    db.execSQL(
+                        "ALTER TABLE pages ADD COLUMN processingMetadata TEXT NOT NULL DEFAULT '{}'"
+                    )
+                }
+            }
         val Migration6To7 =
             object : Migration(6, 7) {
                 override fun migrate(db: SupportSQLiteDatabase) {

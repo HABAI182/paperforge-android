@@ -52,6 +52,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val formFields = MutableStateFlow<List<Pair<String, String>>?>(null)
     val searchHits = MutableStateFlow<List<cn.paperforge.app.pdf.PdfSearch.Hit>>(emptyList())
     val annotationPage = MutableStateFlow(0)
+    val readerTarget = MutableStateFlow<Pair<String, Int>?>(null)
     val marks = MutableStateFlow<List<PdfMark>>(emptyList())
     private var marksSave: Job? = null
     private var task: Job? = null
@@ -778,7 +779,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun duplicate(page: PageRow) = perform("复制页面") { repo.duplicate(page) }
 
-    fun splitBook(page: PageRow) = perform("分割双页") { repo.splitBook(page) }
+    fun splitBook(page: PageRow, top: Float = .5f, bottom: Float = .5f, keep: String = "both") =
+        perform("分割双页") { repo.splitBook(page, top, bottom, keep) }
 
     fun applyAll(page: PageRow) =
         perform("应用到所有页") {
@@ -844,6 +846,29 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 )
             outputLocked.value = false
         }
+
+    fun exportStudyNotes(format: String) =
+        perform("正在导出摘录") {
+            output.value =
+                cn.paperforge.app.reader.StudyNotes.export(getApplication(), repo.exports, format)
+            outputLocked.value = false
+        }
+
+    fun openDocumentLink(uri: Uri) {
+        viewModelScope.launch {
+            val doc =
+                withContext(Dispatchers.IO) { uri.lastPathSegment?.let { repo.dao.document(it) } }
+            if (doc == null) messages.send("来源文档已移除，摘录文字仍然保留")
+            else {
+                val reader = ReaderPreferences(getApplication())
+                val page =
+                    ((uri.getQueryParameter("page")?.toIntOrNull() ?: 1) - 1).coerceAtLeast(0)
+                reader.save(doc.id, reader.load(doc.id).copy(page = page))
+                open(doc)
+                readerTarget.value = doc.id to page
+            }
+        }
+    }
 
     fun backup() =
         perform("正在离线备份") {

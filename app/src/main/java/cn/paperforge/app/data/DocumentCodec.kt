@@ -21,6 +21,8 @@ object DocumentCodec {
             put("detectionMethod", p.detectionMethod ?: JSONObject.NULL)
             put("deskewDegrees", p.deskewDegrees)
             put("enhanceStrength", p.enhanceStrength)
+            put("outputAspect", p.outputAspect)
+            put("processingMetadata", p.processingMetadata)
         }
 
     fun page(o: JSONObject) =
@@ -42,6 +44,8 @@ object DocumentCodec {
             nullable(o, "detectionMethod"),
             o.optDouble("deskewDegrees", 0.0).toFloat(),
             o.optDouble("enhanceStrength", 1.0).toFloat(),
+            o.optDouble("outputAspect", 0.0).toFloat(),
+            o.optString("processingMetadata", "{}"),
         )
 
     fun document(d: DocumentRow) =

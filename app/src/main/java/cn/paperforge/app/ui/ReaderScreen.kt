@@ -41,7 +41,12 @@ import androidx.core.view.WindowInsetsControllerCompat
 import cn.paperforge.app.MainViewModel
 import cn.paperforge.app.ReaderPosition
 import cn.paperforge.app.ReaderPreferences
+import cn.paperforge.app.model.PointN
 import cn.paperforge.app.pdf.PdfSearch
+import cn.paperforge.app.pdf.ReaderDocument
+import cn.paperforge.app.pdf.ReaderInfo
+import cn.paperforge.app.pdf.ReaderLink
+import cn.paperforge.app.pdf.ReaderTextBlock
 import java.io.File
 import kotlin.math.abs
 import kotlinx.coroutines.Dispatchers
@@ -142,6 +147,20 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
     var paperTone by rememberSaveable { mutableIntStateOf(saved.tone) }
     var bookmarks by remember(doc?.id) { mutableStateOf(preferences.bookmarks(doc?.id ?: "")) }
     var bookmarkDialog by remember { mutableStateOf(false) }
+    var navigation by remember { mutableStateOf(false) }
+    var textPage by remember { mutableStateOf<Int?>(null) }
+    var textPoint by remember { mutableStateOf<PointN?>(null) }
+    var focusedText by remember { mutableStateOf<Pair<Int, ReaderTextBlock>?>(null) }
+    val navigationBack = remember { mutableStateListOf<ReaderPosition>() }
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+    val documentInfo by
+        produceState(ReaderInfo(), file) {
+            value =
+                withContext(Dispatchers.IO) {
+                    file?.let { runCatching { ReaderDocument.info(it) }.getOrNull() }
+                        ?: ReaderInfo()
+                }
+        }
     val transforms =
         remember(doc?.id) {
             mutableStateMapOf(saved.page to PageTransform(saved.zoom, saved.panX, saved.panY))
@@ -214,15 +233,62 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
     var query by remember { mutableStateOf("") }
     var hitIndex by remember { mutableIntStateOf(0) }
     val hits by vm.searchHits.collectAsState()
+    val readerTarget by vm.readerTarget.collectAsState()
     fun goTo(index: Int) {
         val n = index.coerceIn(0, ((session?.count ?: 1) - 1).coerceAtLeast(0))
         scope.launch { if (horizontal) pager.scrollToPage(n) else list.scrollToItem(n) }
         interaction++
     }
+    val currentLinks by
+        produceState(emptyList<ReaderLink>(), file, page) {
+            value =
+                withContext(Dispatchers.IO) {
+                    file
+                        ?.let { runCatching { ReaderDocument.links(it, page) }.getOrNull() }
+                        .orEmpty()
+                }
+        }
+    fun navigate(index: Int) {
+        navigationBack.add(
+            latestPosition.copy(offset = if (horizontal) 0 else list.firstVisibleItemScrollOffset)
+        )
+        goTo(index)
+    }
+    fun returnToAnchor() {
+        val previous = navigationBack.removeLastOrNull() ?: return
+        transforms[previous.page] = PageTransform(previous.zoom, previous.panX, previous.panY)
+        horizontal = previous.horizontal
+        scope.launch {
+            withFrameNanos {}
+            if (previous.horizontal) pager.scrollToPage(previous.page)
+            else list.scrollToItem(previous.page, previous.offset)
+        }
+    }
+    fun activateLink(index: Int, point: PointN): Boolean {
+        if (index != page) return false
+        val link =
+            currentLinks.firstOrNull {
+                point.x in it.left..it.right && point.y in it.top..it.bottom
+            } ?: return false
+        if (link.page != null) navigate(link.page)
+        else
+            link.uri?.let { uri ->
+                runCatching { uriHandler.openUri(uri) }
+                    .onFailure { scope.launch { vm.messages.send("系统无法打开这个链接") } }
+            }
+        return true
+    }
     fun changeMode(value: Boolean) {
         val current = page
         horizontal = value
         scope.launch { if (value) pager.scrollToPage(current) else list.scrollToItem(current) }
+    }
+    LaunchedEffect(readerTarget, session) {
+        val target = readerTarget
+        if (target != null && target.first == doc?.id && session != null) {
+            goTo(target.second)
+            vm.readerTarget.value = null
+        }
     }
     BackHandler(fullscreen || search) {
         if (search) search = false
@@ -393,7 +459,22 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                             transforms[index] ?: PageTransform(),
                             paperTone,
                             true,
-                            hits.filter { it.page == index },
+                            hits.filter { it.page == index } +
+                                listOfNotNull(
+                                    focusedText
+                                        ?.takeIf { it.first == index }
+                                        ?.second
+                                        ?.let {
+                                            PdfSearch.Hit(
+                                                index,
+                                                it.text,
+                                                it.left,
+                                                it.top,
+                                                it.right,
+                                                it.bottom,
+                                            )
+                                        }
+                                ),
                             {
                                 transforms[index] = it
                                 interaction++
@@ -402,6 +483,12 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                                 controls = !controls
                                 interaction++
                             },
+                            onLongPress = { p ->
+                                textPage = index
+                                textPoint = p
+                                interaction++
+                            },
+                            onLinkTap = { p -> activateLink(index, p) },
                         )
                     }
                 else
@@ -419,7 +506,22 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                                 transforms[index] ?: PageTransform(),
                                 paperTone,
                                 false,
-                                hits.filter { it.page == index },
+                                hits.filter { it.page == index } +
+                                    listOfNotNull(
+                                        focusedText
+                                            ?.takeIf { it.first == index }
+                                            ?.second
+                                            ?.let {
+                                                PdfSearch.Hit(
+                                                    index,
+                                                    it.text,
+                                                    it.left,
+                                                    it.top,
+                                                    it.right,
+                                                    it.bottom,
+                                                )
+                                            }
+                                    ),
                                 {
                                     transforms[index] = it
                                     interaction++
@@ -428,8 +530,26 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                                     controls = !controls
                                     interaction++
                                 },
+                                onLongPress = { p ->
+                                    textPage = index
+                                    textPoint = p
+                                    interaction++
+                                },
+                                onLinkTap = { p -> activateLink(index, p) },
                             )
                         }
+                    }
+                if (navigationBack.isNotEmpty())
+                    TextButton(
+                        onClick = { returnToAnchor() },
+                        modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
+                        colors =
+                            ButtonDefaults.textButtonColors(
+                                containerColor =
+                                    MaterialTheme.colorScheme.surface.copy(alpha = .94f)
+                            ),
+                    ) {
+                        Text("返回阅读处")
                     }
                 if (s != null)
                     Surface(
@@ -464,12 +584,35 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
             }
         }
     }
+    if (navigation && file != null)
+        ReaderNavigationSheet(file, documentInfo, bookmarks, page, ::navigate) {
+            navigation = false
+        }
+    textPage?.let { selectedPage ->
+        if (file != null && doc != null)
+            ReaderTextSheet(
+                file,
+                selectedPage,
+                doc!!.id,
+                doc!!.title,
+                textPoint,
+                onFocus = { focusedText = selectedPage to it },
+                onLocate = { goTo(selectedPage) },
+                onDismiss = {
+                    textPage = null
+                    textPoint = null
+                },
+            )
+    }
     if (appearance)
         AlertDialog(
             onDismissRequest = { appearance = false },
             title = { Text("阅读设置") },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(
+                    Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
                     Text("翻页方式", style = MaterialTheme.typography.labelLarge)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         FilterChip(horizontal, { changeMode(true) }, label = { Text("左右翻页") })
@@ -494,6 +637,30 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                             Text("书签 ${bookmarks.size}")
                         }
                     }
+                    Row(Modifier.horizontalScroll(rememberScrollState())) {
+                        OutlinedButton(
+                            onClick = {
+                                appearance = false
+                                navigation = true
+                            }
+                        ) {
+                            Text("目录与链接")
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                appearance = false
+                                textPage = page
+                                textPoint = null
+                            }
+                        ) {
+                            Text("文字与朗读")
+                        }
+                    }
+                    Text(
+                        documentInfo.labels.getOrNull(page)?.let { "页面标签：$it · 物理页 ${page + 1}" }
+                            ?: "物理页 ${page + 1}",
+                        style = MaterialTheme.typography.labelMedium,
+                    )
                     Text("纸张显示", style = MaterialTheme.typography.labelLarge)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         listOf("原色", "暖纸", "夜读").forEachIndexed { index, title ->
@@ -640,13 +807,19 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                     value = jumpText,
                     onValueChange = { jumpText = it },
                     singleLine = true,
-                    label = { Text("1 – ${session?.count ?: 0}") },
+                    label = { Text("物理页 1 – ${session?.count ?: 0}，或标签:iii") },
                 )
             },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        val n = jumpText.toIntOrNull()
+                        val label =
+                            documentInfo.labels.indexOfFirst {
+                                it.equals(jumpText.removePrefix("标签:"), true)
+                            }
+                        val n =
+                            if (jumpText.startsWith("标签:")) (label + 1).takeIf { it > 0 }
+                            else jumpText.toIntOrNull() ?: (label + 1).takeIf { it > 0 }
                         val s = session
                         if (n != null && s != null && n in 1..s.count) {
                             goTo(n - 1)
@@ -734,6 +907,8 @@ private fun ReaderPage(
     hits: List<PdfSearch.Hit>,
     onTransform: (PageTransform) -> Unit,
     onTap: () -> Unit,
+    onLongPress: (PointN) -> Unit = {},
+    onLinkTap: (PointN) -> Boolean = { false },
 ) {
     val edge = if (transform.zoom > 1.5f) 2800 else 1600
     val bitmap by
@@ -747,6 +922,8 @@ private fun ReaderPage(
     val current by rememberUpdatedState(transform)
     val change by rememberUpdatedState(onTransform)
     val tap by rememberUpdatedState(onTap)
+    val longPress by rememberUpdatedState(onLongPress)
+    val linkTap by rememberUpdatedState(onLinkTap)
     val scope = rememberCoroutineScope()
     var tapJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
     var lastTap by remember { mutableLongStateOf(0L) }
@@ -767,11 +944,13 @@ private fun ReaderPage(
             Modifier.width(width).aspectRatio(ratio).clipToBounds().pointerInput(session, index) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
+                    var eventTime = down.uptimeMillis
                     var moved = false
                     var multiple = false
                     var travelled = Offset.Zero
                     do {
                         val event = awaitPointerEvent()
+                        eventTime = event.changes.maxOf { it.uptimeMillis }
                         val fingers = event.changes.count { it.pressed }
                         if (fingers > 1) multiple = true
                         val delta = event.calculatePan()
@@ -792,8 +971,24 @@ private fun ReaderPage(
                         }
                     } while (event.changes.any { it.pressed })
                     if (!moved && !multiple) {
-                        val now = android.os.SystemClock.uptimeMillis()
-                        if (now - lastTap < 280) {
+                        val now = eventTime
+                        val point =
+                            PointN(
+                                ((down.position.x / size.width - .5f - current.x) / current.zoom +
+                                        .5f)
+                                    .coerceIn(0f, 1f),
+                                ((down.position.y / size.height - .5f - current.y) / current.zoom +
+                                        .5f)
+                                    .coerceIn(0f, 1f),
+                            )
+                        if (now - down.uptimeMillis >= 500) {
+                            tapJob?.cancel()
+                            lastTap = 0
+                            longPress(point)
+                        } else if (linkTap(point)) {
+                            tapJob?.cancel()
+                            lastTap = 0
+                        } else if (now - lastTap < 280) {
                             tapJob?.cancel()
                             change(if (current.zoom > 1.01f) PageTransform() else PageTransform(2f))
                             lastTap = 0

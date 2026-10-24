@@ -2,7 +2,6 @@ package cn.paperforge.app.ui
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.automirrored.filled.*
@@ -11,24 +10,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import cn.paperforge.app.MainViewModel
 import cn.paperforge.app.UserSettings
 import cn.paperforge.app.data.PageRow
 import cn.paperforge.app.imaging.ScanProcessor
 import cn.paperforge.app.model.*
 import java.io.File
-import kotlin.math.hypot
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
@@ -65,6 +56,7 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
     var adjust by remember { mutableStateOf(false) }
     var searchable by remember { mutableStateOf(UserSettings.bool("searchable", true)) }
     var more by remember { mutableStateOf(false) }
+    var bookSplit by remember { mutableStateOf(false) }
     var dewarp by remember { mutableStateOf(false) }
     ScanEditorLayout(
         pages,
@@ -97,15 +89,25 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
         CropDialog(
             active,
             onDismiss = { crop = false },
-            onSave = {
+            onSave = { quad, aspect ->
                 vm.save(
                     active.copy(
-                        corners = it.encode(),
+                        corners = quad.encode(),
+                        outputAspect = aspect,
                         detectionConfidence = null,
                         detectionMethod = "manual",
                     )
                 )
                 crop = false
+            },
+        )
+    if (bookSplit && active != null)
+        BookSplitDialog(
+            active,
+            onDismiss = { bookSplit = false },
+            onApply = { top, bottom, keep ->
+                vm.splitBook(active, top, bottom, keep)
+                bookSplit = false
             },
         )
     if (dewarp && active != null) {
@@ -191,7 +193,7 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
             title = { Text("删除这一页？") },
-            text = { Text("会删除这页的私有原图和编辑参数。") },
+            text = { Text("移除本页，可通过撤销恢复。原图保留在编辑历史中。") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -399,10 +401,10 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                     TextButton(
                         onClick = {
                             more = false
-                            vm.splitBook(active)
+                            bookSplit = true
                         }
                     ) {
-                        Text("书本双页从中缝分割")
+                        Text("书籍双页与书脊")
                     }
                     TextButton(
                         onClick = {
@@ -461,142 +463,4 @@ fun ToolAction(
         }
         Text(label, style = MaterialTheme.typography.labelSmall)
     }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun CropDialog(page: PageRow, onDismiss: () -> Unit, onSave: (Quad) -> Unit) {
-    val bitmap = pageBitmap(page, 1400, true)
-    var points by remember { mutableStateOf(Quad.decode(page.corners).points) }
-    var dragged by remember { mutableIntStateOf(-1) }
-    var dragPoint by remember { mutableStateOf(Offset.Unspecified) }
-    var detecting by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
-    ) {
-        Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            Column(
-                Modifier.systemBarsPadding().padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Text("沿纸边拖动四角", style = MaterialTheme.typography.headlineSmall)
-                Text("长按角点移动；放大镜辅助对齐。", style = MaterialTheme.typography.bodyMedium)
-                Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    bitmap?.let { b ->
-                        BoxWithConstraints(
-                            Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            val ratio = b.width.toFloat() / b.height
-                            val imageModifier =
-                                if (maxWidth / maxHeight > ratio)
-                                    Modifier.fillMaxHeight().aspectRatio(ratio)
-                                else Modifier.fillMaxWidth().aspectRatio(ratio)
-                            Box(imageModifier.magnifier(sourceCenter = { dragPoint }, zoom = 2f)) {
-                                Image(b.asImageBitmap(), "裁切原图", modifier = Modifier.fillMaxSize())
-                                Canvas(
-                                    Modifier.fillMaxSize().pointerInput(b) {
-                                        detectDragGestures(
-                                            onDragStart = { position ->
-                                                dragged =
-                                                    points.indices.minBy { i ->
-                                                        hypot(
-                                                            points[i].x * size.width - position.x,
-                                                            points[i].y * size.height - position.y,
-                                                        )
-                                                    }
-                                                dragPoint = position
-                                            },
-                                            onDragEnd = {
-                                                dragged = -1
-                                                dragPoint = Offset.Unspecified
-                                            },
-                                            onDragCancel = {
-                                                dragged = -1
-                                                dragPoint = Offset.Unspecified
-                                            },
-                                        ) { change, _ ->
-                                            change.consume()
-                                            if (dragged >= 0) {
-                                                val candidate = points.toMutableList()
-                                                candidate[dragged] =
-                                                    PointN(
-                                                        (change.position.x / size.width).coerceIn(
-                                                            0f,
-                                                            1f,
-                                                        ),
-                                                        (change.position.y / size.height).coerceIn(
-                                                            0f,
-                                                            1f,
-                                                        ),
-                                                    )
-                                                if (Quad(candidate).valid()) points = candidate
-                                                dragPoint = change.position
-                                            }
-                                        }
-                                    }
-                                ) {
-                                    val path =
-                                        Path().apply {
-                                            points.forEachIndexed { i, p ->
-                                                if (i == 0)
-                                                    moveTo(p.x * size.width, p.y * size.height)
-                                                else lineTo(p.x * size.width, p.y * size.height)
-                                            }
-                                            close()
-                                        }
-                                    drawPath(path, Color(0xFF176B54).copy(alpha = .15f))
-                                    drawPath(path, Color(0xFF7DFFBD), style = Stroke(3.dp.toPx()))
-                                    points.forEach { p ->
-                                        drawCircle(
-                                            Color.White,
-                                            10.dp.toPx(),
-                                            Offset(p.x * size.width, p.y * size.height),
-                                        )
-                                        drawCircle(
-                                            Color(0xFF176B54),
-                                            5.dp.toPx(),
-                                            Offset(p.x * size.width, p.y * size.height),
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    } ?: CircularProgressIndicator()
-                }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    TextButton(onClick = { points = Quad.Full.points }) { Text("全图") }
-                    TextButton(
-                        enabled = bitmap != null && !detecting,
-                        onClick = {
-                            detecting = true
-                            scope.launchIoDetect(bitmap!!) { q ->
-                                q?.let { points = it.points }
-                                detecting = false
-                            }
-                        },
-                    ) {
-                        Text(if (detecting) "检测中…" else "重新检测")
-                    }
-                    TextButton(onClick = onDismiss) { Text("取消") }
-                    Button(onClick = { onSave(Quad(points)) }, enabled = Quad(points).valid()) {
-                        Text("应用")
-                    }
-                }
-            }
-        }
-    }
-}
-
-private fun kotlinx.coroutines.CoroutineScope.launchIoDetect(
-    bitmap: Bitmap,
-    done: (Quad?) -> Unit,
-) = launch {
-    done(
-        withContext(Dispatchers.Default) {
-            runCatching { ScanProcessor.detect(bitmap) }.getOrNull()
-        }
-    )
 }

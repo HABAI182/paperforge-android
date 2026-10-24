@@ -20,8 +20,10 @@ object BackupStore {
                     pages.map { it.original } +
                     history.flatMap {
                         listOf(
-                            DocumentCodec.page(JSONObject(it.beforeJson)).original,
-                            DocumentCodec.page(JSONObject(it.afterJson)).original,
+                            *HistoryState.pages(it.beforeJson)
+                                .map { p -> p.original }
+                                .toTypedArray(),
+                            *HistoryState.pages(it.afterJson).map { p -> p.original }.toTypedArray(),
                         )
                     })
                 .distinct()
@@ -32,7 +34,20 @@ object BackupStore {
         fun page(p: PageRow) = DocumentCodec.page(p.copy(original = mapping.getValue(p.original)))
         val metadata =
             JSONObject()
-                .put("format", 1)
+                .put("format", 2)
+                .put(
+                    "studyNotes",
+                    cn.paperforge.app.reader.StudyNotes.encode(
+                        cn.paperforge.app.reader.StudyNotes.load(repo.context)
+                    ),
+                )
+                .put("preferences", JSONObject(cn.paperforge.app.UserSettings.exportJson()))
+                .put(
+                    "reader",
+                    cn.paperforge.app
+                        .ReaderPreferences(repo.context)
+                        .export(documents.map { it.id }),
+                )
                 .put(
                     "annotations",
                     JSONObject().apply {
@@ -69,11 +84,15 @@ object BackupStore {
                                     .put("pageId", it.pageId)
                                     .put(
                                         "before",
-                                        page(DocumentCodec.page(JSONObject(it.beforeJson))),
+                                        HistoryState.map(it.beforeJson) { p ->
+                                            p.copy(original = mapping.getValue(p.original))
+                                        },
                                     )
                                     .put(
                                         "after",
-                                        page(DocumentCodec.page(JSONObject(it.afterJson))),
+                                        HistoryState.map(it.afterJson) { p ->
+                                            p.copy(original = mapping.getValue(p.original))
+                                        },
                                     )
                                     .put("applied", it.applied)
                             )
@@ -83,15 +102,32 @@ object BackupStore {
         val temporary = File(output.path + ".part")
         try {
             ZipOutputStream(temporary.outputStream().buffered()).use { zip ->
+                val integrity = JSONObject()
+                val metadataBytes = metadata.toString().toByteArray(Charsets.UTF_8)
                 zip.putNextEntry(ZipEntry("paperforge.json"))
-                zip.write(metadata.toString().toByteArray(Charsets.UTF_8))
+                zip.write(metadataBytes)
                 zip.closeEntry()
+                integrity.put(
+                    "paperforge.json",
+                    JSONObject().put("bytes", metadataBytes.size).put("sha256", sha(metadataBytes)),
+                )
                 paths.forEach { path ->
                     coroutineContext.ensureActive()
                     zip.putNextEntry(ZipEntry(mapping.getValue(path)))
-                    File(path).inputStream().use { it.copyTo(zip) }
+                    val digest = java.security.MessageDigest.getInstance("SHA-256")
+                    val bytes =
+                        java.security.DigestInputStream(File(path).inputStream(), digest).use {
+                            it.copyTo(zip)
+                        }
                     zip.closeEntry()
+                    integrity.put(
+                        mapping.getValue(path),
+                        JSONObject().put("bytes", bytes).put("sha256", hex(digest.digest())),
+                    )
                 }
+                zip.putNextEntry(ZipEntry("integrity.json"))
+                zip.write(integrity.toString().toByteArray(Charsets.UTF_8))
+                zip.closeEntry()
             }
             check(temporary.renameTo(output))
         } finally {
@@ -113,7 +149,21 @@ object BackupStore {
                             .bufferedReader()
                             .use { it.readText() }
                     )
-                require(metadata.getInt("format") == 1) { "不支持的备份版本" }
+                require(metadata.getInt("format") in 1..2) { "不支持的备份版本" }
+                val integrity =
+                    zip.getEntry("integrity.json")?.let { entry ->
+                        JSONObject(zip.getInputStream(entry).bufferedReader().use { it.readText() })
+                    }
+                if (metadata.getInt("format") >= 2) {
+                    require(integrity != null) { "备份缺少完整性清单" }
+                    val raw =
+                        zip.getInputStream(zip.getEntry("paperforge.json")).use { it.readBytes() }
+                    require(
+                        sha(raw) == integrity.getJSONObject("paperforge.json").getString("sha256")
+                    ) {
+                        "备份目录校验失败"
+                    }
+                }
                 val d = metadata.getJSONArray("documents")
                 val p = metadata.getJSONArray("pages")
                 val h = metadata.optJSONArray("history") ?: JSONArray()
@@ -137,10 +187,20 @@ object BackupStore {
                                 repo.folder(docId),
                                 "${UUID.randomUUID()}.${File(entry).extension}",
                             )
-                        zip.getInputStream(source).use { input ->
-                            target.outputStream().use { input.copyTo(it) }
-                        }
                         created.add(target)
+                        val digest = java.security.MessageDigest.getInstance("SHA-256")
+                        val copied =
+                            java.security
+                                .DigestInputStream(zip.getInputStream(source), digest)
+                                .use { input -> target.outputStream().use { input.copyTo(it) } }
+                        integrity?.optJSONObject(entry)?.let { expected ->
+                            require(
+                                copied == expected.getLong("bytes") &&
+                                    hex(digest.digest()) == expected.getString("sha256")
+                            ) {
+                                "备份资源校验失败：$entry"
+                            }
+                        }
                         target.path
                     }
                 fun page(old: PageRow): PageRow {
@@ -170,13 +230,17 @@ object BackupStore {
                 val histories =
                     (0 until h.length()).map { i ->
                         val old = h.getJSONObject(i)
-                        val before = page(DocumentCodec.page(old.getJSONObject("before")))
-                        val after = page(DocumentCodec.page(old.getJSONObject("after")))
+                        val before =
+                            HistoryState.map(old.getJSONObject("before").toString(), ::page)
+                        val after = HistoryState.map(old.getJSONObject("after").toString(), ::page)
                         EditHistory(
-                            documentId = before.documentId,
-                            pageId = before.id,
-                            beforeJson = DocumentCodec.page(before).toString(),
-                            afterJson = DocumentCodec.page(after).toString(),
+                            documentId = ids.getValue(old.getString("documentId")),
+                            pageId =
+                                pageIds.getOrPut(old.getString("pageId")) {
+                                    UUID.randomUUID().toString()
+                                },
+                            beforeJson = before.toString(),
+                            afterJson = after.toString(),
                             applied = old.getBoolean("applied"),
                         )
                     }
@@ -188,6 +252,15 @@ object BackupStore {
                 val signatures = repo.context.getSharedPreferences("signature", 0)
                 if (!signatures.contains("strokes") && metadata.has("signature"))
                     signatures.edit().putString("strokes", metadata.getString("signature")).apply()
+                metadata.optJSONObject("reader")?.let {
+                    cn.paperforge.app.ReaderPreferences(repo.context).restore(it, ids)
+                }
+                metadata.optJSONArray("studyNotes")?.let {
+                    cn.paperforge.app.reader.StudyNotes.restore(repo.context, it, ids)
+                }
+                metadata.optJSONObject("preferences")?.let {
+                    cn.paperforge.app.UserSettings.importJson(it.toString())
+                }
                 return restored.size
             }
         } catch (e: Exception) {
@@ -197,4 +270,9 @@ object BackupStore {
             archive.delete()
         }
     }
+
+    private fun hex(bytes: ByteArray) = bytes.joinToString("") { "%02x".format(it.toInt() and 255) }
+
+    private fun sha(bytes: ByteArray) =
+        hex(java.security.MessageDigest.getInstance("SHA-256").digest(bytes))
 }

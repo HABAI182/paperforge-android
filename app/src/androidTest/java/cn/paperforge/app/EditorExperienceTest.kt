@@ -110,12 +110,28 @@ class EditorExperienceTest {
             compose.onNodeWithContentDescription("原图对照").assertIsDisplayed()
             compose.onNodeWithText("查看增强").performClick()
             compose.onNodeWithText("收起").performClick()
+            compose.onNodeWithText("裁切", useUnmergedTree = true).performClick()
+            compose.onNodeWithTag("crop-canvas").performTouchInput {
+                swipe(
+                    androidx.compose.ui.geometry.Offset(width * .50125f, height * .08833f),
+                    androidx.compose.ui.geometry.Offset(width * .50125f, height * .12833f),
+                    400,
+                )
+            }
+            compose.onNodeWithText("A4/A5").performClick()
+            compose.onNodeWithText("应用").performClick()
+            compose.waitUntil(10000) {
+                !model.busy.value && model.pages.value.first().outputAspect > .7f
+            }
+            val edited = cn.paperforge.app.model.Quad.decode(model.pages.value.first().corners)
+            assertTrue(edited.points[0].y > .09f && edited.points[1].y > .10f)
+            assertEquals(.2425f, edited.points[0].x, .001f)
             compose.waitForIdle()
             Thread.sleep(350) // Wait for the platform system-bar inset transition, outside Compose.
             assertEquals(2, runBlocking { repo.dao.pages(doc.id).size })
             assertTrue(File(pages[0].original).exists())
             val shot = InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
-            File(app.filesDir, "v061-editor.png").outputStream().use {
+            File(app.filesDir, "next-editor.png").outputStream().use {
                 shot.compress(Bitmap.CompressFormat.PNG, 100, it)
             }
             shot.recycle()

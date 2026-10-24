@@ -309,7 +309,11 @@ class MainActivity : ComponentActivity() {
                                 source.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)?.let {
                                     vm.importImages(it)
                                 }
-                            Intent.ACTION_VIEW -> source.data?.let { vm.importPdf(it) }
+                            Intent.ACTION_VIEW ->
+                                source.data?.let {
+                                    if (it.scheme == "paperforge") vm.openDocumentLink(it)
+                                    else vm.importPdf(it)
+                                }
                         }
                         incoming = null
                     }
@@ -330,6 +334,7 @@ class MainActivity : ComponentActivity() {
                         "editor" -> EditorScreen(vm) { images.launch(arrayOf("image/*")) }
                         "reader" -> ReaderScreen(vm, share)
                         "tables" -> TableReviewScreen(vm)
+                        "notes" -> StudyNotesScreen(vm)
                         "convert" ->
                             ConversionScreen(
                                 vm,

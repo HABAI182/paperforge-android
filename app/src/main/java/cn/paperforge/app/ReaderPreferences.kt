@@ -44,6 +44,34 @@ class ReaderPreferences(context: Context) {
         prefs.edit().putStringSet("marks:$id", pages.map { it.toString() }.toSet()).apply()
     }
 
+    fun export(ids: List<String>): JSONObject =
+        JSONObject().apply {
+            ids.forEach { id ->
+                put(
+                    id,
+                    JSONObject()
+                        .put("position", JSONObject(prefs.getString(id, "{}") ?: "{}"))
+                        .put("bookmarks", org.json.JSONArray(bookmarks(id).sorted())),
+                )
+            }
+        }
+
+    fun restore(data: JSONObject, ids: Map<String, String>) {
+        val edit = prefs.edit()
+        ids.forEach { (old, new) ->
+            data.optJSONObject(old)?.let { state ->
+                state.optJSONObject("position")?.let { edit.putString(new, it.toString()) }
+                state.optJSONArray("bookmarks")?.let { marks ->
+                    edit.putStringSet(
+                        "marks:$new",
+                        (0 until marks.length()).map { marks.getInt(it).toString() }.toSet(),
+                    )
+                }
+            }
+        }
+        edit.apply()
+    }
+
     fun save(id: String, state: ReaderPosition) {
         prefs
             .edit()

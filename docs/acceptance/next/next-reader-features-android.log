@@ -1,0 +1,52 @@
+INSTRUMENTATION_STATUS: class=cn.paperforge.app.ReaderFeaturesTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=3
+INSTRUMENTATION_STATUS: stream=
+cn.paperforge.app.ReaderFeaturesTest:
+INSTRUMENTATION_STATUS: test=nativeOutlineLabelsLinksTextSelectionAndExcerptExportsAreUsable
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=cn.paperforge.app.ReaderFeaturesTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=3
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=nativeOutlineLabelsLinksTextSelectionAndExcerptExportsAreUsable
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=cn.paperforge.app.ReaderFeaturesTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=3
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=mixedNativeHeaderAndScannedBodyCanBeRecognizedWithoutReplacingHeader
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=cn.paperforge.app.ReaderFeaturesTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=3
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=mixedNativeHeaderAndScannedBodyCanBeRecognizedWithoutReplacingHeader
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=cn.paperforge.app.HistoryBackupTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=3
+INSTRUMENTATION_STATUS: stream=
+cn.paperforge.app.HistoryBackupTest:
+INSTRUMENTATION_STATUS: test=removedPagesAsymmetricSplitAndBackupRestoreKeepOriginalsAndReaderState
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=cn.paperforge.app.HistoryBackupTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=3
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=removedPagesAsymmetricSplitAndBackupRestoreKeepOriginalsAndReaderState
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: stream=
+
+Time: 9.619
+
+OK (3 tests)
+
+
+INSTRUMENTATION_CODE: -1
