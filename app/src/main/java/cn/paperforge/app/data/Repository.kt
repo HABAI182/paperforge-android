@@ -308,6 +308,10 @@ class Repository(val context: Context, val database: PaperDatabase) {
     suspend fun originalResources(id: String): Set<String> =
         (listOfNotNull(dao.document(id)?.pdfPath) +
                 DocumentResources.entries(this, id).map { it.path } +
+                dao.tasksForDocument(id)
+                    .flatMap { it.resourceEntries() }
+                    .map { it.path }
+                    .filter { File(it).isFile } +
                 dao.pages(id).flatMap { PageResources.paths(it) } +
                 dao.allHistory()
                     .filter { it.documentId == id }
@@ -332,8 +336,29 @@ class Repository(val context: Context, val database: PaperDatabase) {
     }
 
     suspend fun deleteDocument(doc: DocumentRow) {
-        dao.deleteDocument(doc.id)
-        dao.clearHistory(doc.id)
+        val work =
+            database.withTransaction {
+                val tasks = dao.tasksForDocument(doc.id)
+                tasks.forEach { row ->
+                    dao.putTask(
+                        row.copy(
+                            documentId = null,
+                            resources = "[]",
+                            state =
+                                if (row.state in LocalTaskRow.active) LocalTaskState.CANCELLED
+                                else row.state,
+                            detail = "来源文档已永久删除",
+                            updated = System.currentTimeMillis(),
+                        )
+                    )
+                }
+                dao.deleteDocument(doc.id)
+                dao.clearHistory(doc.id)
+                tasks.mapNotNull { it.workId }
+            }
+        work.forEach {
+            androidx.work.WorkManager.getInstance(context).cancelWorkById(UUID.fromString(it))
+        }
         // Only our UUID-named private directory is removed; external documents are never deleted.
         val directory = File(root, doc.id)
         require(directory.canonicalFile.parentFile == root.canonicalFile)

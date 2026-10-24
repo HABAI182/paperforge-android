@@ -131,8 +131,12 @@ object LearnedDocumentDetector {
         }
     }
 
-    fun detect(source: Mat, preview: Boolean = false): DetectionResult {
-        val engine = UserSettings.string("detector", "NEURAL")
+    fun detect(
+        source: Mat,
+        preview: Boolean = false,
+        engineOverride: String? = null,
+    ): DetectionResult {
+        val engine = engineOverride ?: UserSettings.string("detector", "NEURAL")
         if (engine == "STANDARD") return DocumentDetector.detect(source, preview)
         // HYBRID must not bypass the paper-edge model. The older fallback preferred high-score
         // background rectangles when DocQuad corner scores were low on small/curved documents.

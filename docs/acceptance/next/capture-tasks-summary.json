@@ -1,0 +1,32 @@
+{
+  "feature": "durable capture and task center",
+  "databaseVersion": 11,
+  "environment": "API35 AOSP x86_64 emulator",
+  "focusedInstrumentedTests": 1,
+  "seconds": 10.558,
+  "result": "passed",
+  "verified": [
+    "reverse callback arrival preserves shutter ordering",
+    "per-shot preset snapshot",
+    "raw draft exists before worker runs",
+    "write-ahead marker rebuilds missing task row",
+    "cancel and retry creates new work generation",
+    "manual edits survive background detection",
+    "retake conflict preserves old page and appends new photo",
+    "failed task raw included in protected resources",
+    "backup remaps task IDs, page IDs and raw resource paths",
+    "missing pending photo does not break backup",
+    "restored active tasks resume and missing photos fail visibly",
+    "permanent document deletion clears task resource references"
+  ],
+  "cameraUiSmoke": {
+    "manualEmulatorPhoto": "completed 0 to completed 1 using actual CameraX callback",
+    "physicalCamera": false
+  },
+  "notVerified": [
+    "real device process reclamation",
+    "owner ARM64 device camera and memory behavior",
+    "OCR/conversion/export task stages"
+  ],
+  "releaseCreated": false
+}

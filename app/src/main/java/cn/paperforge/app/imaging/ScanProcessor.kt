@@ -79,11 +79,15 @@ object ScanProcessor {
 
     fun detect(bitmap: Bitmap): Quad? = detectResult(bitmap).quad
 
-    fun detectResult(bitmap: Bitmap, preview: Boolean = false): DetectionResult =
+    fun detectResult(
+        bitmap: Bitmap,
+        preview: Boolean = false,
+        detectorOverride: String? = null,
+    ): DetectionResult =
         Mat().let { mat ->
             try {
                 Utils.bitmapToMat(bitmap, mat)
-                LearnedDocumentDetector.detect(mat, preview)
+                LearnedDocumentDetector.detect(mat, preview, detectorOverride)
             } finally {
                 mat.release()
             }
@@ -95,14 +99,12 @@ object ScanProcessor {
         file: File,
         previewQuad: Quad? = null,
         reference: CaptureReference? = null,
+        detectorOverride: String? = null,
+        lockReference: Boolean = cn.paperforge.app.UserSettings.bool("lockCrop", true),
     ): DetectionResult {
         val image = decode(file, 4000)
         return try {
-            if (
-                previewQuad != null &&
-                    previewQuad.valid() &&
-                    cn.paperforge.app.UserSettings.bool("lockCrop", true)
-            ) {
+            if (previewQuad != null && previewQuad.valid() && lockReference) {
                 val mat = Mat()
                 try {
                     Utils.bitmapToMat(image, mat)
@@ -117,7 +119,7 @@ object ScanProcessor {
                             )
                         if (reason != "matched") {
                             mat.release()
-                            return detectResult(image).let {
+                            return detectResult(image, detectorOverride = detectorOverride).let {
                                 it.copy(
                                     method = it.method + ";fresh-after-$reason",
                                     diagnostics =
@@ -143,7 +145,7 @@ object ScanProcessor {
                 } finally {
                     mat.release()
                 }
-            } else detectResult(image)
+            } else detectResult(image, detectorOverride = detectorOverride)
         } finally {
             image.recycle()
         }

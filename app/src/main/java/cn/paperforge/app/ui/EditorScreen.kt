@@ -24,18 +24,28 @@ import kotlinx.coroutines.withContext
 
 @Composable
 fun pageBitmap(page: PageRow, edge: Int = 1200, original: Boolean = false): Bitmap? {
-    val bitmap by
-        produceState<Bitmap?>(null, page, edge, original) {
+    return pagePreview(page, edge, original).bitmap
+}
+
+data class PagePreview(val bitmap: Bitmap? = null, val error: String? = null)
+
+@Composable
+fun pagePreview(page: PageRow, edge: Int = 1200, original: Boolean = false): PagePreview {
+    val preview by
+        produceState(PagePreview(), page, edge, original) {
             value =
                 withContext(Dispatchers.Default) {
                     runCatching {
                             if (original) ScanProcessor.decode(File(page.original), edge)
                             else ScanProcessor.render(page, edge)
                         }
-                        .getOrNull()
+                        .fold(
+                            onSuccess = { PagePreview(bitmap = it) },
+                            onFailure = { PagePreview(error = it.message ?: "预览无法打开") },
+                        )
                 }
         }
-    return bitmap
+    return preview
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,6 +54,7 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
     val pages by vm.pages.collectAsState()
     val doc by vm.selected.collectAsState()
     val busy by vm.busy.collectAsState()
+    val tasks by vm.localTasks.collectAsState()
     val pager = rememberPagerState(pageCount = { pages.size })
     val active = pages.getOrNull(pager.currentPage)
     val target by vm.editorTarget.collectAsState()
@@ -98,6 +109,7 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
         onAction = { action ->
             when (action) {
                 "back" -> vm.screen.value = "home"
+                "tasks" -> vm.screen.value = "tasks"
                 "capture" -> vm.screen.value = "capture"
                 "import" -> onImport()
                 "pages" -> vm.screen.value = "pages"
@@ -117,6 +129,16 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
         },
         onFilter = { page, filter -> vm.save(page.copy(filter = filter)) },
         highlights = highlights,
+        taskStatus =
+            tasks
+                .firstOrNull {
+                    it.documentId == doc?.id &&
+                        (it.pageId == active?.id ||
+                            it.targetPageId == active?.id ||
+                            active == null) &&
+                        it.state != cn.paperforge.app.data.LocalTaskState.SUCCEEDED
+                }
+                ?.let { "${taskStateName(it.state)} · ${it.detail}" },
     )
     if (crop && active != null)
         CropDialog(

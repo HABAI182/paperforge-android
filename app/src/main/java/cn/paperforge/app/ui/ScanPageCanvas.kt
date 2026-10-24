@@ -38,11 +38,12 @@ fun ScanPageCanvas(
 ) {
     var zoom by remember(page.id) { mutableFloatStateOf(1f) }
     var pan by remember(page.id) { mutableStateOf(Offset.Zero) }
-    val bitmap =
-        pageBitmap(
+    val preview =
+        pagePreview(
             if (compare) page.copy(filter = "ORIGINAL", brightness = 0f, contrast = 1f) else page,
             if (zoom > 1.5f) 2800 else 1800,
         )
+    val bitmap = preview.bitmap
     val scope = rememberCoroutineScope()
     var lastTap by remember { mutableLongStateOf(0L) }
     var tapJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
@@ -156,7 +157,13 @@ fun ScanPageCanvas(
                     }
                 }
             }
-        } ?: CircularProgressIndicator()
+        }
+            ?: if (preview.error != null)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("这张照片暂时无法显示", style = MaterialTheme.typography.titleMedium)
+                    Text("可在任务中心重试，或从更多菜单重拍", style = MaterialTheme.typography.bodySmall)
+                }
+            else CircularProgressIndicator()
     }
 }
 

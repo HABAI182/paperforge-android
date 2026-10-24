@@ -63,7 +63,7 @@
       "dependencies": [],
       "scope": "限制同时解码大图，捕获后先记录草稿，失败项可重试",
       "acceptance": "中断后已有页还在，失败输出不当成功文件",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "SCN01",
@@ -1057,7 +1057,7 @@
       "dependencies": [],
       "scope": "状态进度取消、页级检查点、部分失败与恢复",
       "acceptance": "进程重启后已完成阶段不全部重跑",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "JOB02",
@@ -1250,5 +1250,10 @@
       "status": "planned"
     }
   ],
-  "statusSource": "implementation-status.json"
+  "statusSource": "implementation-status.json",
+  "counts": {
+    "done": 29,
+    "planned": 45,
+    "partial": 24
+  }
 }

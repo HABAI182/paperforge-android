@@ -71,6 +71,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private var marksSave: Job? = null
     private var task: Job? = null
     private var exportId: UUID? = null
+    val localTasks =
+        repo.dao
+            .observeTasks()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    private val appScope = (app as PaperForgeApp).backgroundScope
 
     init {
         val prefs = app.getSharedPreferences("session", 0)
@@ -100,16 +105,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         } else editorTarget.value = doc.id to hit.page
     }
 
-    private fun perform(label: String, queue: Boolean = false, action: suspend () -> Unit) {
-        if (!queue && !busy.compareAndSet(false, true)) return
-        if (!queue) progress.value = label
+    private fun perform(label: String, action: suspend () -> Unit) {
+        if (!busy.compareAndSet(false, true)) return
+        progress.value = label
         val launched =
             viewModelScope.launch {
-                if (queue) {
-                    while (!busy.compareAndSet(false, true)) busy.first { !it }
-                    task = currentCoroutineContext()[Job]
-                    progress.value = label
-                }
                 try {
                     withContext(Dispatchers.IO) { action() }
                 } catch (e: CancellationException) {
@@ -121,7 +121,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     busy.value = false
                 }
             }
-        if (!queue) task = launched
+        task = launched
     }
 
     fun newScan(camera: Boolean = true) =
@@ -171,42 +171,71 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
 
-    fun captured(
-        file: File,
-        previewQuad: cn.paperforge.app.model.Quad? = null,
-        reference: cn.paperforge.app.model.CaptureReference? = null,
-        documentId: String? = null,
-        replacementId: String? = replacement.value,
+    suspend fun prepareCapture(
+        documentId: String,
+        reference: cn.paperforge.app.model.CaptureReference?,
+        replacementId: String? = null,
+        file: File = repo.captureFile(documentId),
     ) =
-        perform("正在检测纸张", queue = true) {
-            val id = documentId ?: selected.value!!.id
-            val target = replacementId
-            if (target == null) {
-                val page = repo.addCapture(id, file, previewQuad, reference)
-                if (page.corners == cn.paperforge.app.model.Quad.Full.encode())
-                    messages.send("本页未找到完整纸边，已保留全图；可点击自动裁边重试")
-            } else {
-                val page = repo.dao.pages(id).first { it.id == target }
-                val detection =
-                    cn.paperforge.app.imaging.ScanProcessor.detectFile(file, previewQuad, reference)
-                repo.savePage(
-                    page.copy(
-                        original = file.path,
-                        processingMetadata =
-                            cn.paperforge.app.imaging.CaptureMetadata.encode(reference, detection),
-                        corners = (detection.quad ?: cn.paperforge.app.model.Quad.Full).encode(),
-                        rotation = 0,
-                        deskewDegrees = 0f,
-                        detectionConfidence = detection.confidence,
-                        detectionMethod = detection.method,
+        cn.paperforge.app.imaging.CaptureTasks.prepare(
+            repo,
+            documentId,
+            reference,
+            replacementId,
+            file,
+        )
+
+    fun captureReady(row: LocalTaskRow) {
+        appScope.launch {
+            runCatching { cn.paperforge.app.imaging.CaptureTasks.accept(repo, row.id) }
+                .onFailure {
+                    cn.paperforge.app.imaging.CaptureTasks.fail(
+                        repo,
+                        row.id,
+                        it.message ?: "照片处理失败",
                     )
-                )
-                if (replacement.value == target) replacement.value = null
-                if (selected.value?.id == id) screen.value = "editor"
-            }
-            if (selected.value?.id == id && UserSettings.bool("reviewAfterCapture", false))
+                }
+            if (
+                selected.value?.id == row.documentId &&
+                    (row.targetPageId != null || UserSettings.bool("reviewAfterCapture", false))
+            ) {
+                if (replacement.value == row.targetPageId) replacement.value = null
                 screen.value = "editor"
+            }
         }
+    }
+
+    fun captureFailed(row: LocalTaskRow, error: String) {
+        appScope.launch { cn.paperforge.app.imaging.CaptureTasks.fail(repo, row.id, error) }
+    }
+
+    fun retryTask(row: LocalTaskRow) {
+        appScope.launch {
+            runCatching {
+                    cn.paperforge.app.imaging.CaptureTasks.accept(repo, row.id, retry = true)
+                }
+                .onFailure { messages.send(it.message ?: "重试未完成") }
+        }
+    }
+
+    fun cancelLocalTask(row: LocalTaskRow) {
+        appScope.launch { cn.paperforge.app.imaging.CaptureTasks.cancel(repo, row) }
+    }
+
+    fun openTask(row: LocalTaskRow, retake: Boolean = false) {
+        viewModelScope.launch {
+            val doc = row.documentId?.let { repo.dao.document(it) } ?: return@launch
+            open(doc)
+            val page =
+                repo.dao.pages(doc.id).firstOrNull {
+                    it.id == row.targetPageId || it.id == row.pageId
+                }
+            if (retake) {
+                replacement.value = page?.id
+                screen.value = "capture"
+            } else page?.let { editorTarget.value = doc.id to it.position }
+        }
+    }
 
     fun save(page: PageRow) = perform("正在更新页面") { repo.savePage(page) }
 

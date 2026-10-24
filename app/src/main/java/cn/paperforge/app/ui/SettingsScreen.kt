@@ -57,6 +57,13 @@ fun SettingsScreen(vm: MainViewModel) {
                 modifier = Modifier.fillMaxWidth(),
             )
             Text("修改自动保存，拍摄参数在下一次进入相机时生效。", style = MaterialTheme.typography.bodySmall)
+            if (visible("任务 后台 进度 失败 重试"))
+                OutlinedButton(
+                    onClick = { vm.screen.value = "tasks" },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("任务中心")
+                }
             if (visible("存储 空间 缓存 原件 历史 清理"))
                 OutlinedButton(
                     onClick = { vm.screen.value = "storage" },

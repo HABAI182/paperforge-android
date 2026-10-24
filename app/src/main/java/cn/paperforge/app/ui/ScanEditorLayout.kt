@@ -48,6 +48,7 @@ fun ScanEditorLayout(
     onRename: (String) -> Unit,
     onFilter: (PageRow, String) -> Unit,
     highlights: Map<String, List<List<PointN>>> = emptyMap(),
+    taskStatus: String? = null,
 ) {
     var fullscreen by rememberSaveable { mutableStateOf(false) }
     var enhance by rememberSaveable { mutableStateOf(false) }
@@ -159,6 +160,24 @@ fun ScanEditorLayout(
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
+            if (!fullscreen && taskStatus != null)
+                Surface(
+                    onClick = { onAction("tasks") },
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Row(
+                        Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            taskStatus,
+                            Modifier.weight(1f),
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                        Text("查看任务", style = MaterialTheme.typography.labelMedium)
+                    }
+                }
             Box(Modifier.weight(1f).fillMaxWidth().testTag("scan-canvas")) {
                 if (pages.isEmpty())
                     Column(

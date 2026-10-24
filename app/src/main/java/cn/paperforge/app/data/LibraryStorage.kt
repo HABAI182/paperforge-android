@@ -34,6 +34,7 @@ class LibraryStorage(private val repo: Repository) {
                             DocumentResources.entries(repo, it.id).map { r -> r.path }
                         } +
                         pages.flatMap { PageResources.paths(it) } +
+                        repo.dao.allTasks().flatMap { it.resourceEntries() }.map { it.path } +
                         repo.dao.allOutputs().map { it.path })
                     .toSet()
             val history =

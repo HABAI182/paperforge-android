@@ -7,15 +7,31 @@ import java.util.UUID
 import java.util.zip.*
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
 
 object BackupStore {
+    private data class Snapshot(
+        val documents: List<DocumentRow>,
+        val pages: List<PageRow>,
+        val history: List<EditHistory>,
+        val outputs: List<OutputRow>,
+        val tasks: List<LocalTaskRow>,
+    )
+
     suspend fun backup(repo: Repository, output: File) {
-        val documents = repo.dao.allDocuments()
-        val pages = repo.dao.allPages()
-        val history = repo.dao.allHistory()
-        val outputs = repo.dao.allOutputs()
+        val (documents, pages, history, outputs, tasks) =
+            repo.database.withTransaction {
+                Snapshot(
+                    repo.dao.allDocuments(),
+                    repo.dao.allPages(),
+                    repo.dao.allHistory(),
+                    repo.dao.allOutputs(),
+                    repo.dao.allTasks(),
+                )
+            }
+        val taskPaths = tasks.flatMap { it.resourceEntries() }.map { it.path }.distinct()
         val paths =
             (documents.mapNotNull { it.pdfPath } +
                     documents.flatMap {
@@ -23,6 +39,7 @@ object BackupStore {
                     } +
                     pages.flatMap { PageResources.paths(it) } +
                     outputs.map { it.path } +
+                    taskPaths.filter { File(it).isFile } +
                     history.flatMap {
                         listOf(
                             *HistoryState.pages(it.beforeJson)
@@ -35,13 +52,34 @@ object BackupStore {
                     })
                 .distinct()
         val mapping =
-            paths.associateWith {
+            (paths.associateWith {
                 "files/${UUID.randomUUID()}.${File(it).extension.ifBlank { "bin" }}"
-            }
+            } +
+                (taskPaths - paths.toSet()).associateWith {
+                    "pending/${UUID.randomUUID()}.${File(it).extension.ifBlank { "bin" }}"
+                })
         fun page(p: PageRow) = DocumentCodec.page(PageResources.remap(p, mapping::getValue))
         val metadata =
             JSONObject()
                 .put("format", 3)
+                .put(
+                    "tasks",
+                    JSONArray().apply {
+                        tasks.forEach { row ->
+                            put(
+                                row.copy(
+                                        resources =
+                                            DocumentResources.encode(
+                                                    row.resourceEntries(),
+                                                    mapping::getValue,
+                                                )
+                                                .toString()
+                                    )
+                                    .encode()
+                            )
+                        }
+                    },
+                )
                 .put(
                     "documentResources",
                     JSONObject().apply {
@@ -201,6 +239,7 @@ object BackupStore {
                     (0 until d.length()).map { DocumentCodec.document(d.getJSONObject(it)) }
                 val ids = documents.associate { it.id to UUID.randomUUID().toString() }
                 val pageIds = mutableMapOf<String, String>()
+                val taskIds = mutableMapOf<String, String>()
                 val files = mutableMapOf<Pair<String, String>, String>()
                 fun copy(entry: String, docId: String): String =
                     files.getOrPut(entry to docId) {
@@ -238,10 +277,24 @@ object BackupStore {
                     }
                 fun page(old: PageRow): PageRow {
                     val docId = ids[old.documentId] ?: error("备份页面缺少所属文档")
+                    val processing =
+                        JSONObject(old.processingMetadata)
+                            .apply {
+                                optString("captureJob")
+                                    .takeIf { it.isNotBlank() }
+                                    ?.let { id ->
+                                        put(
+                                            "captureJob",
+                                            taskIds.getOrPut(id) { UUID.randomUUID().toString() },
+                                        )
+                                    }
+                            }
+                            .toString()
                     return PageResources.remap(old) { path -> copy(path, docId) }
                         .copy(
                             id = pageIds.getOrPut(old.id) { UUID.randomUUID().toString() },
                             documentId = docId,
+                            processingMetadata = processing,
                         )
                 }
                 val restored =
@@ -305,11 +358,66 @@ object BackupStore {
                                 }
                         }
                         .orEmpty()
+                val taskRows =
+                    metadata
+                        .optJSONArray("tasks")
+                        ?.let { array ->
+                            (0 until array.length())
+                                .map { LocalTaskRow.decode(array.getJSONObject(it)) }
+                                .map { old ->
+                                    val document = old.documentId?.let(ids::get)
+                                    val resources =
+                                        if (document == null) emptyList()
+                                        else
+                                            old.resourceEntries().map { resource ->
+                                                val path =
+                                                    if (resource.path.startsWith("pending/"))
+                                                        files.getOrPut(resource.path to document) {
+                                                            File(
+                                                                    repo.folder(document),
+                                                                    "${UUID.randomUUID()}.jpg",
+                                                                )
+                                                                .path
+                                                        }
+                                                    else copy(resource.path, document)
+                                                resource.copy(path = path)
+                                            }
+                                    old.copy(
+                                        id =
+                                            taskIds.getOrPut(old.id) {
+                                                UUID.randomUUID().toString()
+                                            },
+                                        documentId = document,
+                                        pageId =
+                                            old.pageId?.let {
+                                                pageIds.getOrPut(it) {
+                                                    UUID.randomUUID().toString()
+                                                }
+                                            },
+                                        targetPageId =
+                                            old.targetPageId?.let {
+                                                pageIds.getOrPut(it) {
+                                                    UUID.randomUUID().toString()
+                                                }
+                                            },
+                                        resources = DocumentResources.encode(resources).toString(),
+                                        workId = UUID.randomUUID().toString(),
+                                        state =
+                                            if (document == null) LocalTaskState.CANCELLED
+                                            else if (old.state in LocalTaskRow.active)
+                                                LocalTaskState.CAPTURING
+                                            else old.state,
+                                        updated = System.currentTimeMillis(),
+                                    )
+                                }
+                        }
+                        .orEmpty()
                 repo.database.withTransaction {
                     restored.forEach { repo.dao.putDocument(it) }
                     pages.forEach { repo.dao.putPage(it) }
                     histories.forEach { repo.dao.addHistory(it) }
                     outputRows.forEach { repo.dao.putOutput(it) }
+                    taskRows.forEach { repo.dao.putTask(it) }
                     sideChanged = true
                     metadata.optJSONObject("library")?.let {
                         LibraryPreferences(repo.context).restore(it)
@@ -333,6 +441,9 @@ object BackupStore {
                 restored
                     .filter { it.kind == "pdf" }
                     .forEach { LibraryIndexer.enqueue(repo.context, it.id) }
+                (repo.context.applicationContext as? cn.paperforge.app.PaperForgeApp)
+                    ?.backgroundScope
+                    ?.launch { cn.paperforge.app.imaging.CaptureTasks.recover(repo) }
                 return restored.size
             }
         } catch (e: Exception) {

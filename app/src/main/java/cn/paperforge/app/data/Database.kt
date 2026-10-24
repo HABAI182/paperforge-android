@@ -146,6 +146,36 @@ interface DocumentDao {
 
     @Query("DELETE FROM document_outputs WHERE path=:path") suspend fun removeOutput(path: String)
 
+    @Query("SELECT * FROM local_tasks ORDER BY updated DESC")
+    fun observeTasks(): Flow<List<LocalTaskRow>>
+
+    @Query("SELECT * FROM local_tasks ORDER BY created,id")
+    suspend fun allTasks(): List<LocalTaskRow>
+
+    @Query("SELECT * FROM local_tasks WHERE id=:id") suspend fun task(id: String): LocalTaskRow?
+
+    @Query("SELECT * FROM local_tasks WHERE documentId=:id ORDER BY created,id")
+    suspend fun tasksForDocument(id: String): List<LocalTaskRow>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun putTask(row: LocalTaskRow)
+
+    @Query(
+        "UPDATE local_tasks SET state=:state,progress=:progress,detail=:detail,error=:error,updated=:now WHERE id=:id"
+    )
+    suspend fun taskState(
+        id: String,
+        state: LocalTaskState,
+        progress: Int,
+        detail: String,
+        error: String?,
+        now: Long = System.currentTimeMillis(),
+    )
+
+    @Query(
+        "SELECT MAX(position) FROM local_tasks WHERE documentId=:id AND type='CAPTURE' AND targetPageId IS NULL AND state IN ('CAPTURING','QUEUED','RUNNING')"
+    )
+    suspend fun reservedCapturePosition(id: String): Int?
+
     @Query("SELECT COUNT(*) FROM pages WHERE original=:path")
     suspend fun originalReferences(path: String): Int
 
@@ -235,14 +265,30 @@ interface DocumentDao {
             PdfLibraryText::class,
             PdfIndexRow::class,
             OutputRow::class,
+            LocalTaskRow::class,
         ],
-    version = 10,
+    version = 11,
     exportSchema = true,
 )
+@TypeConverters(TaskConverters::class)
 abstract class PaperDatabase : RoomDatabase() {
     abstract fun dao(): DocumentDao
 
     companion object {
+        val Migration10To11 =
+            object : Migration(10, 11) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        "CREATE TABLE IF NOT EXISTS local_tasks (id TEXT NOT NULL PRIMARY KEY,type TEXT NOT NULL,documentId TEXT,title TEXT NOT NULL,pageId TEXT,targetPageId TEXT,position INTEGER NOT NULL,state TEXT NOT NULL,progress INTEGER NOT NULL,detail TEXT NOT NULL,payload TEXT NOT NULL,resources TEXT NOT NULL,error TEXT,workId TEXT,created INTEGER NOT NULL,updated INTEGER NOT NULL)"
+                    )
+                    db.execSQL(
+                        "CREATE INDEX IF NOT EXISTS index_local_tasks_documentId ON local_tasks(documentId)"
+                    )
+                    db.execSQL(
+                        "CREATE INDEX IF NOT EXISTS index_local_tasks_state ON local_tasks(state)"
+                    )
+                }
+            }
         val Migration9To10 =
             object : Migration(9, 10) {
                 override fun migrate(db: SupportSQLiteDatabase) {

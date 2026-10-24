@@ -137,8 +137,9 @@ fun HomeScreen(
                         })
             }
             .let {
-                if(search.isNotBlank() && !inTrash) it.sortedBy { row -> if(hitsByDocument[row.id].isNullOrEmpty()) 1 else 0 }
-                else if(inTrash) it.sortedByDescending { row -> row.trashedAt }
+                if (search.isNotBlank() && !inTrash)
+                    it.sortedBy { row -> if (hitsByDocument[row.id].isNullOrEmpty()) 1 else 0 }
+                else if (inTrash) it.sortedByDescending { row -> row.trashedAt }
                 else if (tab == 0 && search.isBlank())
                     it.filter { row -> row.lastOpened > 0 }
                         .sortedByDescending { row -> row.lastOpened }
@@ -263,6 +264,9 @@ fun HomeScreen(
                             }
                     },
                     actions = {
+                        IconButton(onClick = { vm.screen.value = "tasks" }) {
+                            Icon(Icons.Default.PendingActions, "任务中心")
+                        }
                         if (!inTrash)
                             TextButton(
                                 onClick = {
@@ -474,6 +478,9 @@ fun HomeScreen(
                 }
                 val toolEntries =
                     listOf(
+                        HomeTool("任务中心", "查看扫描处理进度、失败页与原图，单独重试", Icons.Default.PendingActions) {
+                            vm.screen.value = "tasks"
+                        },
                         HomeTool("导出记录", "找回生成结果、来源与保存位置", Icons.Default.History) {
                             vm.outputSource.value = null
                             vm.screen.value = "outputs"
@@ -670,7 +677,8 @@ fun HomeScreen(
                     val opened = tab == 0 || sort == "OPENED"
                     val date = if (opened) doc.lastOpened else doc.modified
                     if (
-                        search.isBlank() && (tab == 0 || sort != "TITLE") &&
+                        search.isBlank() &&
+                            (tab == 0 || sort != "TITLE") &&
                             (index == 0 ||
                                 libraryDateGroup(date) !=
                                     libraryDateGroup(
@@ -744,7 +752,8 @@ fun HomeScreen(
                                 )
                                 factsByDocument[doc.id]?.let { f ->
                                     Text(
-                                        (if(doc.kind=="pdf" && f.pageCount==0) "文字索引待更新" else "${f.pageCount} 页 · ${f.recognizedPages} 页含文字") +
+                                        (if (doc.kind == "pdf" && f.pageCount == 0) "文字索引待更新"
+                                        else "${f.pageCount} 页 · ${f.recognizedPages} 页含文字") +
                                             (if (f.hasExport) " · 已导出" else ""),
                                         style = MaterialTheme.typography.labelSmall,
                                     )

@@ -51,6 +51,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.hypot
 import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
 import org.opencv.core.*
 
 @androidx.annotation.OptIn(androidx.camera.view.TransformExperimental::class)
@@ -138,40 +139,50 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
             }
         }
     }
+    val captureScope = rememberCoroutineScope()
     val latestAuto by rememberUpdatedState(auto)
     val latestBusy by rememberUpdatedState(busy)
     val takePhoto: () -> Unit = {
         val imageCapture = capture
         val doc = vm.selected.value
         if (imageCapture != null && doc != null && !busy && snapping.compareAndSet(false, true)) {
-            val file = vm.repo.captureFile(doc.id)
             val snapshot = rawQuad.takeIf { SystemClock.elapsedRealtime() - rawAt < 700 }
             val atShutter = reference?.copy(requestedAt = SystemClock.elapsedRealtime())
             val targetAtShutter = vm.replacement.value
             gate.markCaptured(snapshot, SystemClock.elapsedRealtime(), atShutter?.paper)
-            imageCapture.takePicture(
-                ImageCapture.OutputFileOptions.Builder(file).build(),
-                main,
-                object : ImageCapture.OnImageSavedCallback {
-                    override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                        snapping.set(false)
-                        vm.captured(
-                            file,
-                            snapshot,
-                            atShutter,
-                            documentId = doc.id,
-                            replacementId = targetAtShutter,
-                        )
-                    }
+            captureScope.launch {
+                var prepared: cn.paperforge.app.data.LocalTaskRow? = null
+                try {
+                    val row = vm.prepareCapture(doc.id, atShutter, targetAtShutter)
+                    prepared = row
+                    imageCapture.takePicture(
+                        ImageCapture.OutputFileOptions.Builder(
+                                cn.paperforge.app.imaging.CaptureTasks.raw(row)
+                            )
+                            .build(),
+                        main,
+                        object : ImageCapture.OnImageSavedCallback {
+                            override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                                snapping.set(false)
+                                vm.captureReady(row)
+                            }
 
-                    override fun onError(exception: ImageCaptureException) {
-                        snapping.set(false)
-                        file.delete()
-                        gate.reset(clearCaptured = true)
-                        cameraError = exception.message
-                    }
-                },
-            )
+                            override fun onError(exception: ImageCaptureException) {
+                                snapping.set(false)
+                                vm.captureFailed(row, exception.message ?: "拍照失败，请重拍")
+                                gate.reset(clearCaptured = true)
+                                cameraError = exception.message
+                            }
+                        },
+                    )
+                } catch (e: Exception) {
+                    prepared?.let { vm.captureFailed(it, e.message ?: "拍照未完成") }
+                    snapping.set(false)
+                    gate.reset(clearCaptured = true)
+                    if (e is kotlinx.coroutines.CancellationException) throw e
+                    cameraError = e.message
+                }
+            }
         }
     }
     val latestTakePhoto by rememberUpdatedState(takePhoto)
