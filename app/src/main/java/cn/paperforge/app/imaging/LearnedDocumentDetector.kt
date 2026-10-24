@@ -134,10 +134,14 @@ object LearnedDocumentDetector {
     fun detect(source: Mat, preview: Boolean = false): DetectionResult {
         val engine = UserSettings.string("detector", "NEURAL")
         if (engine == "STANDARD") return DocumentDetector.detect(source, preview)
-        if (engine == "NEURAL" && !neuralFailure) {
+        // HYBRID must not bypass the paper-edge model. The older fallback preferred high-score
+        // background rectangles when DocQuad corner scores were low on small/curved documents.
+        if ((engine == "NEURAL" || engine == "HYBRID") && !neuralFailure) {
             try {
                 val result = NeuralEdgeDetector.detect(source, preview)
-                if (result.quad != null) return result
+                if (result.quad != null)
+                    return if (engine == "HYBRID") result.copy(method = "auto-" + result.method)
+                    else result
             } catch (e: Exception) {
                 neuralFailure = true
                 android.util.Log.w("PaperForgeDetector", "Edge model unavailable; using hybrid", e)

@@ -1,0 +1,413 @@
+{
+  "photos": 50,
+  "runtimeSetting": "HYBRID",
+  "beforeCurrentMsMedian": 401.8673,
+  "afterCurrentMsMedian": 158.79245,
+  "beforeReturnedQuad": 49,
+  "afterReturnedQuad": 50,
+  "matchesPriorMnnCandidates": 50,
+  "notAccuracyMeasurement": true,
+  "environment": "AOSP API35 x86_64 emulator, not owner phone",
+  "rows": [
+    {
+      "file": "1_1.jpg",
+      "beforeMethod": "inverse-3+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 352.3563,
+      "afterMs": 165.5164,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "1_2.jpg",
+      "beforeMethod": "docquad-CORNERS+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 393.0216,
+      "afterMs": 132.5273,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "2_1.jpg",
+      "beforeMethod": "inverse-0+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 412.1233,
+      "afterMs": 189.5713,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "2_2.jpg",
+      "beforeMethod": "threshold-3+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 438.8548,
+      "afterMs": 138.7602,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "3_1.jpg",
+      "beforeMethod": "docquad-CORNERS+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 481.4746,
+      "afterMs": 158.892,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "3_2.jpg",
+      "beforeMethod": "ai+inverse-0+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 441.0485,
+      "afterMs": 141.8172,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "4_1.jpg",
+      "beforeMethod": "ai+channel-2-rect+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 336.1544,
+      "afterMs": 156.131,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "4_2.jpg",
+      "beforeMethod": "channel-2+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 373.1057,
+      "afterMs": 158.3462,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "5_1.jpg",
+      "beforeMethod": "ai+paper-luma-rect+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 532.8971,
+      "afterMs": 174.8455,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "5_2.jpg",
+      "beforeMethod": "ai+paper-luma-rect+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 371.9595,
+      "afterMs": 146.5633,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "6_1.jpg",
+      "beforeMethod": "docquad-CORNERS+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 396.1763,
+      "afterMs": 170.0283,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "6_2.jpg",
+      "beforeMethod": "docquad-CORNERS+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 446.2985,
+      "afterMs": 159.432,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "7_1.jpg",
+      "beforeMethod": "channel-0-rect+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 385.3804,
+      "afterMs": 173.1446,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "7_2.jpg",
+      "beforeMethod": "docquad-CORNERS+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 405.9529,
+      "afterMs": 130.6031,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "8_1.jpg",
+      "beforeMethod": "channel-0+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 315.9123,
+      "afterMs": 161.8325,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "8_2.jpg",
+      "beforeMethod": "paper-luma+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 357.2104,
+      "afterMs": 149.1165,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "9_1.jpg",
+      "beforeMethod": "ai+inverse-1+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 309.3518,
+      "afterMs": 168.8939,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "9_2.jpg",
+      "beforeMethod": "ai+channel-2-rect+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 459.8123,
+      "afterMs": 130.2344,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "10_1.jpg",
+      "beforeMethod": "docquad-CORNERS+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 515.695,
+      "afterMs": 340.6563,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "10_2.jpg",
+      "beforeMethod": "ai+channel-3-rect+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 456.2722,
+      "afterMs": 177.9749,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "11_1.jpg",
+      "beforeMethod": "ai+threshold-2-rect+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 539.7976,
+      "afterMs": 158.2988,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "11_2.jpg",
+      "beforeMethod": "docquad-CORNERS+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 425.6016,
+      "afterMs": 174.8189,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "12_1.jpg",
+      "beforeMethod": "docquad-CORNERS+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 465.1577,
+      "afterMs": 171.2631,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "12_2.jpg",
+      "beforeMethod": "docquad-CORNERS+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 486.0555,
+      "afterMs": 143.1388,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "13_1.jpg",
+      "beforeMethod": "docquad-CORNERS+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 426.9162,
+      "afterMs": 155.5609,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "13_2.jpg",
+      "beforeMethod": "inverse-0+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 364.9504,
+      "afterMs": 152.1058,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "14_1.jpg",
+      "beforeMethod": "paper-luma+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 397.7817,
+      "afterMs": 181.2994,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "14_2.jpg",
+      "beforeMethod": "docquad-CORNERS+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 388.6126,
+      "afterMs": 138.7687,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "15_1.jpg",
+      "beforeMethod": "ai+paper-luma+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 384.1751,
+      "afterMs": 177.4774,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "15_2.jpg",
+      "beforeMethod": "inverse-0+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 346.1893,
+      "afterMs": 139.8734,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "16_1.jpg",
+      "beforeMethod": "threshold-0+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 420.9431,
+      "afterMs": 164.4126,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "16_2.jpg",
+      "beforeMethod": "docquad-CORNERS+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 471.5621,
+      "afterMs": 132.0652,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "17_1.jpg",
+      "beforeMethod": "threshold-2-rect+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 424.1187,
+      "afterMs": 160.3382,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "17_2.jpg",
+      "beforeMethod": "docquad-CORNERS+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 447.8055,
+      "afterMs": 112.4599,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "18_1.jpg",
+      "beforeMethod": "channel-3-rect+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 372.7267,
+      "afterMs": 161.7007,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "18_2.jpg",
+      "beforeMethod": "ai+channel-2+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 356.0921,
+      "afterMs": 151.5276,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "19_1.jpg",
+      "beforeMethod": "channel-3+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 373.6533,
+      "afterMs": 172.1116,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "19_2.jpg",
+      "beforeMethod": "ai+channel-1+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 334.0199,
+      "afterMs": 126.9603,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "20_1.jpg",
+      "beforeMethod": "border-distance--1+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 649.9076,
+      "afterMs": 174.6213,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "20_2.jpg",
+      "beforeMethod": "docquad-CORNERS+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 530.6661,
+      "afterMs": 158.6929,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "21_1.jpg",
+      "beforeMethod": "channel-0-rect+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 425.4313,
+      "afterMs": 174.4073,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "21_2.jpg",
+      "beforeMethod": "channel-0+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 453.7957,
+      "afterMs": 148.4861,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "22_1.jpg",
+      "beforeMethod": "paper-luma-rect+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 361.605,
+      "afterMs": 181.493,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "22_2.jpg",
+      "beforeMethod": "threshold-3+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 359.9581,
+      "afterMs": 149.3778,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "23_1.jpg",
+      "beforeMethod": "ai+channel-3+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 614.7909,
+      "afterMs": 165.8361,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "23_2.jpg",
+      "beforeMethod": "border-distance--1+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 598.681,
+      "afterMs": 151.7483,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "24_1.jpg",
+      "beforeMethod": "border-distance-45",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 319.3375,
+      "afterMs": 211.945,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "24_2.jpg",
+      "beforeMethod": "docquad-CORNERS+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 339.4225,
+      "afterMs": 132.3271,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "25_1.jpg",
+      "beforeMethod": "channel-0+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 390.0345,
+      "afterMs": 154.969,
+      "matchesPriorMnn": true
+    },
+    {
+      "file": "25_2.jpg",
+      "beforeMethod": "inverse-0+refined",
+      "afterMethod": "auto-neural-edge+refined",
+      "beforeMs": 336.0162,
+      "afterMs": 165.301,
+      "matchesPriorMnn": true
+    }
+  ]
+}

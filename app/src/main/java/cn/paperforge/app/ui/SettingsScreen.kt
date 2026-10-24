@@ -70,7 +70,7 @@ fun SettingsScreen(vm: MainViewModel) {
                     "纸张定位",
                     "detector",
                     "NEURAL",
-                    listOf("NEURAL" to "神经边缘", "HYBRID" to "AI + 边缘", "STANDARD" to "传统边缘"),
+                    listOf("HYBRID" to "自动识边", "STANDARD" to "传统识边"),
                 )
                 SettingSlider("纸框平滑程度", "outlineWeight", 3f, 1f..8f, "")
                 SettingSlider("切换纸框确认帧数", "outlineSwitchFrames", 2f, 1f..6f, "帧")
@@ -268,7 +268,12 @@ private fun SettingChoices(
     options: List<Pair<String, String>>,
 ) {
     val revision by UserSettings.revision.collectAsState()
-    val current = remember(revision) { UserSettings.string(key, default) }
+    val current =
+        remember(revision) {
+            UserSettings.string(key, default).let {
+                if (key == "detector" && it == "NEURAL") "HYBRID" else it
+            }
+        }
     Column {
         Text(title, style = MaterialTheme.typography.labelLarge)
         Row(

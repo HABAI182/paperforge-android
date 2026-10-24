@@ -1,0 +1,1615 @@
+{
+  "dataset": "DocUNet public camera-photo subset",
+  "ownerPhonePhotos": false,
+  "groundTruthProvided": false,
+  "sdk": 35,
+  "abis": [
+    "x86_64"
+  ],
+  "device": "Android SDK built for x86_64",
+  "decodeEdge": 1800,
+  "rows": [
+    {
+      "file": "10_1.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 147.1356,
+      "heads": {
+        "current": {
+          "wallMs": 340.6563,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.24675798,
+              0.3380219
+            ],
+            [
+              0.76724046,
+              0.36280516
+            ],
+            [
+              0.7638794,
+              0.62315893
+            ],
+            [
+              0.21434392,
+              0.6079393
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "10_2.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 68.13,
+      "heads": {
+        "current": {
+          "wallMs": 177.9749,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.20655048,
+              0.4778294
+            ],
+            [
+              0.7290162,
+              0.4778567
+            ],
+            [
+              0.7339083,
+              0.66654015
+            ],
+            [
+              0.21613213,
+              0.6717053
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "11_1.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 65.147,
+      "heads": {
+        "current": {
+          "wallMs": 158.2988,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.26306355,
+              0.33451825
+            ],
+            [
+              0.73877037,
+              0.30835646
+            ],
+            [
+              0.78286034,
+              0.67324567
+            ],
+            [
+              0.31018436,
+              0.70992506
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "11_2.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 59.8287,
+      "heads": {
+        "current": {
+          "wallMs": 174.8189,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.28595626,
+              0.25755528
+            ],
+            [
+              0.679484,
+              0.24103618
+            ],
+            [
+              0.79335165,
+              0.63780695
+            ],
+            [
+              0.23035638,
+              0.69933605
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "12_1.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 61.2776,
+      "heads": {
+        "current": {
+          "wallMs": 171.2631,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.34748515,
+              0.31448245
+            ],
+            [
+              0.69362265,
+              0.27003333
+            ],
+            [
+              0.7315967,
+              0.7829121
+            ],
+            [
+              0.34491512,
+              0.7831711
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "12_2.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 76.7608,
+      "heads": {
+        "current": {
+          "wallMs": 143.1388,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.34470594,
+              0.34590206
+            ],
+            [
+              0.6613947,
+              0.33080006
+            ],
+            [
+              0.7143993,
+              0.68747354
+            ],
+            [
+              0.38711184,
+              0.71226114
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "13_1.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 60.3316,
+      "heads": {
+        "current": {
+          "wallMs": 155.5609,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.36730263,
+              0.2927727
+            ],
+            [
+              0.7001287,
+              0.30021486
+            ],
+            [
+              0.67672616,
+              0.665707
+            ],
+            [
+              0.3280099,
+              0.6865077
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "13_2.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 52.5593,
+      "heads": {
+        "current": {
+          "wallMs": 152.1058,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.32646966,
+              0.26805854
+            ],
+            [
+              0.66441095,
+              0.225853
+            ],
+            [
+              0.7822813,
+              0.7149492
+            ],
+            [
+              0.3890905,
+              0.746685
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "14_1.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 56.6787,
+      "heads": {
+        "current": {
+          "wallMs": 181.2994,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.31868732,
+              0.2922221
+            ],
+            [
+              0.78635275,
+              0.26006833
+            ],
+            [
+              0.7911504,
+              0.75668555
+            ],
+            [
+              0.33516535,
+              0.7148329
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "14_2.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 57.1503,
+      "heads": {
+        "current": {
+          "wallMs": 138.7687,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.33970088,
+              0.34315744
+            ],
+            [
+              0.6645479,
+              0.3224053
+            ],
+            [
+              0.70613813,
+              0.6380475
+            ],
+            [
+              0.38105112,
+              0.6752127
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "15_1.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 63.7155,
+      "heads": {
+        "current": {
+          "wallMs": 177.4774,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.32951555,
+              0.31544083
+            ],
+            [
+              0.70121604,
+              0.31403035
+            ],
+            [
+              0.69941235,
+              0.67232424
+            ],
+            [
+              0.32718492,
+              0.6816778
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "15_2.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 51.2737,
+      "heads": {
+        "current": {
+          "wallMs": 139.8734,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.26961932,
+              0.28586474
+            ],
+            [
+              0.7183925,
+              0.28982332
+            ],
+            [
+              0.7340874,
+              0.66602117
+            ],
+            [
+              0.27683753,
+              0.67968535
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "16_1.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 75.7096,
+      "heads": {
+        "current": {
+          "wallMs": 164.4126,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.2933082,
+              0.31157893
+            ],
+            [
+              0.6939675,
+              0.3114019
+            ],
+            [
+              0.6919452,
+              0.6977405
+            ],
+            [
+              0.28864852,
+              0.69690907
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "16_2.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 86.3415,
+      "heads": {
+        "current": {
+          "wallMs": 132.0652,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.3477332,
+              0.34041783
+            ],
+            [
+              0.7160683,
+              0.32009003
+            ],
+            [
+              0.7235983,
+              0.7024237
+            ],
+            [
+              0.33440542,
+              0.6899263
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "17_1.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 61.0775,
+      "heads": {
+        "current": {
+          "wallMs": 160.3382,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.28515068,
+              0.2728087
+            ],
+            [
+              0.6982408,
+              0.2665528
+            ],
+            [
+              0.739723,
+              0.61403227
+            ],
+            [
+              0.2464148,
+              0.63473314
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "17_2.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 50.8916,
+      "heads": {
+        "current": {
+          "wallMs": 112.4599,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.26337746,
+              0.29029503
+            ],
+            [
+              0.6879318,
+              0.32231942
+            ],
+            [
+              0.78900695,
+              0.69948554
+            ],
+            [
+              0.30671757,
+              0.713332
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "18_1.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 60.5693,
+      "heads": {
+        "current": {
+          "wallMs": 161.7007,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.2567321,
+              0.30694136
+            ],
+            [
+              0.6942039,
+              0.3074467
+            ],
+            [
+              0.6934885,
+              0.71852857
+            ],
+            [
+              0.24894853,
+              0.73099345
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "18_2.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 47.948,
+      "heads": {
+        "current": {
+          "wallMs": 151.5276,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.33440876,
+              0.30184254
+            ],
+            [
+              0.7554532,
+              0.30916288
+            ],
+            [
+              0.7507548,
+              0.6879238
+            ],
+            [
+              0.34060478,
+              0.68060744
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "19_1.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 52.3203,
+      "heads": {
+        "current": {
+          "wallMs": 172.1116,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.30573264,
+              0.2754985
+            ],
+            [
+              0.7472141,
+              0.30071983
+            ],
+            [
+              0.67362857,
+              0.7507164
+            ],
+            [
+              0.24190955,
+              0.69025105
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "19_2.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 46.4132,
+      "heads": {
+        "current": {
+          "wallMs": 126.9603,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.27024654,
+              0.3448984
+            ],
+            [
+              0.67350745,
+              0.33250943
+            ],
+            [
+              0.70684224,
+              0.65898633
+            ],
+            [
+              0.3348328,
+              0.6917652
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "1_1.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 47.9332,
+      "heads": {
+        "current": {
+          "wallMs": 165.5164,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.33452,
+              0.30028877
+            ],
+            [
+              0.648447,
+              0.30056396
+            ],
+            [
+              0.68777055,
+              0.6436834
+            ],
+            [
+              0.32807106,
+              0.6616853
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "1_2.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 57.1558,
+      "heads": {
+        "current": {
+          "wallMs": 132.5273,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.2818,
+              0.35347664
+            ],
+            [
+              0.63521904,
+              0.273142
+            ],
+            [
+              0.67988324,
+              0.659158
+            ],
+            [
+              0.30061883,
+              0.67162174
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "20_1.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 48.3591,
+      "heads": {
+        "current": {
+          "wallMs": 174.6213,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.3183264,
+              0.32880887
+            ],
+            [
+              0.66027004,
+              0.307051
+            ],
+            [
+              0.7311515,
+              0.62687
+            ],
+            [
+              0.37720644,
+              0.6685263
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "20_2.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 64.8054,
+      "heads": {
+        "current": {
+          "wallMs": 158.6929,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.3162401,
+              0.3244698
+            ],
+            [
+              0.66923666,
+              0.3012253
+            ],
+            [
+              0.7208684,
+              0.74438787
+            ],
+            [
+              0.3616915,
+              0.7696942
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "21_1.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 56.4417,
+      "heads": {
+        "current": {
+          "wallMs": 174.4073,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.38085797,
+              0.32464358
+            ],
+            [
+              0.6776993,
+              0.31620887
+            ],
+            [
+              0.65752614,
+              0.73221785
+            ],
+            [
+              0.32865775,
+              0.73221797
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "21_2.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 58.6689,
+      "heads": {
+        "current": {
+          "wallMs": 148.4861,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.3547334,
+              0.33420503
+            ],
+            [
+              0.6794575,
+              0.3108848
+            ],
+            [
+              0.6925007,
+              0.6599482
+            ],
+            [
+              0.3547,
+              0.67006826
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "22_1.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 59.2624,
+      "heads": {
+        "current": {
+          "wallMs": 181.493,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.28066117,
+              0.30283913
+            ],
+            [
+              0.6905757,
+              0.28618643
+            ],
+            [
+              0.70278853,
+              0.70001346
+            ],
+            [
+              0.34327257,
+              0.7203284
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "22_2.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 56.9837,
+      "heads": {
+        "current": {
+          "wallMs": 149.3778,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.31271252,
+              0.34053513
+            ],
+            [
+              0.7088831,
+              0.33492297
+            ],
+            [
+              0.6840482,
+              0.6804239
+            ],
+            [
+              0.34662557,
+              0.6405481
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "23_1.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 48.6331,
+      "heads": {
+        "current": {
+          "wallMs": 165.8361,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.30511668,
+              0.2988408
+            ],
+            [
+              0.66859996,
+              0.2624111
+            ],
+            [
+              0.702219,
+              0.6741997
+            ],
+            [
+              0.3048919,
+              0.6873377
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "23_2.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 61.1287,
+      "heads": {
+        "current": {
+          "wallMs": 151.7483,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.29736167,
+              0.296712
+            ],
+            [
+              0.6942239,
+              0.28168666
+            ],
+            [
+              0.7353923,
+              0.6266798
+            ],
+            [
+              0.3666782,
+              0.69344854
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "24_1.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 53.7956,
+      "heads": {
+        "current": {
+          "wallMs": 211.945,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.3075882,
+              0.3231802
+            ],
+            [
+              0.69768405,
+              0.32694134
+            ],
+            [
+              0.6596725,
+              0.69930077
+            ],
+            [
+              0.29969653,
+              0.65822625
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "24_2.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 47.8948,
+      "heads": {
+        "current": {
+          "wallMs": 132.3271,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.32743764,
+              0.24859521
+            ],
+            [
+              0.72169155,
+              0.2736321
+            ],
+            [
+              0.7232411,
+              0.67879605
+            ],
+            [
+              0.29047713,
+              0.6738755
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "25_1.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 64.1093,
+      "heads": {
+        "current": {
+          "wallMs": 154.969,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.31018424,
+              0.34019533
+            ],
+            [
+              0.6758139,
+              0.3309415
+            ],
+            [
+              0.6741376,
+              0.6232384
+            ],
+            [
+              0.30372027,
+              0.6404037
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "25_2.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 48.1961,
+      "heads": {
+        "current": {
+          "wallMs": 165.301,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.31702217,
+              0.3037283
+            ],
+            [
+              0.7190316,
+              0.2948887
+            ],
+            [
+              0.72659856,
+              0.7311529
+            ],
+            [
+              0.243462,
+              0.71068096
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "2_1.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 47.042,
+      "heads": {
+        "current": {
+          "wallMs": 189.5713,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.3914978,
+              0.24108773
+            ],
+            [
+              0.67987424,
+              0.24827223
+            ],
+            [
+              0.61330724,
+              0.81148726
+            ],
+            [
+              0.31864706,
+              0.76510775
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "2_2.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 48.6774,
+      "heads": {
+        "current": {
+          "wallMs": 138.7602,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.29456633,
+              0.20363934
+            ],
+            [
+              0.54431343,
+              0.19895819
+            ],
+            [
+              0.7274302,
+              0.7235611
+            ],
+            [
+              0.42533678,
+              0.77524316
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "3_1.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 49.4415,
+      "heads": {
+        "current": {
+          "wallMs": 158.892,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.35071692,
+              0.287353
+            ],
+            [
+              0.6096174,
+              0.2663611
+            ],
+            [
+              0.7050092,
+              0.6495261
+            ],
+            [
+              0.39833412,
+              0.6750386
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "3_2.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 61.3291,
+      "heads": {
+        "current": {
+          "wallMs": 141.8172,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.38311985,
+              0.32320914
+            ],
+            [
+              0.5880267,
+              0.27163512
+            ],
+            [
+              0.687198,
+              0.6486506
+            ],
+            [
+              0.3892689,
+              0.6577645
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "4_1.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 55.0872,
+      "heads": {
+        "current": {
+          "wallMs": 156.131,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.41017136,
+              0.29652068
+            ],
+            [
+              0.5947747,
+              0.2949024
+            ],
+            [
+              0.60065055,
+              0.72882783
+            ],
+            [
+              0.40374273,
+              0.7306583
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "4_2.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 53.7091,
+      "heads": {
+        "current": {
+          "wallMs": 158.3462,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.38630107,
+              0.3121778
+            ],
+            [
+              0.5722449,
+              0.28338236
+            ],
+            [
+              0.6473593,
+              0.6713779
+            ],
+            [
+              0.44768083,
+              0.6780557
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "5_1.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 55.331,
+      "heads": {
+        "current": {
+          "wallMs": 174.8455,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.3534827,
+              0.29434818
+            ],
+            [
+              0.6308346,
+              0.30810452
+            ],
+            [
+              0.63771284,
+              0.68095994
+            ],
+            [
+              0.3677113,
+              0.67484534
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "5_2.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 55.7611,
+      "heads": {
+        "current": {
+          "wallMs": 146.5633,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.34783867,
+              0.25084475
+            ],
+            [
+              0.67332953,
+              0.24287242
+            ],
+            [
+              0.6573791,
+              0.67729497
+            ],
+            [
+              0.34806624,
+              0.6748448
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "6_1.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 49.4965,
+      "heads": {
+        "current": {
+          "wallMs": 170.0283,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.35491338,
+              0.32216138
+            ],
+            [
+              0.6229784,
+              0.31870615
+            ],
+            [
+              0.6453489,
+              0.6745769
+            ],
+            [
+              0.3897937,
+              0.6855804
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "6_2.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 60.0999,
+      "heads": {
+        "current": {
+          "wallMs": 159.432,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.35798624,
+              0.27468464
+            ],
+            [
+              0.6391111,
+              0.26482484
+            ],
+            [
+              0.6535022,
+              0.7003262
+            ],
+            [
+              0.34308147,
+              0.68663204
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "7_1.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 54.9069,
+      "heads": {
+        "current": {
+          "wallMs": 173.1446,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.3699813,
+              0.28093517
+            ],
+            [
+              0.5915921,
+              0.27166292
+            ],
+            [
+              0.56982523,
+              0.6896289
+            ],
+            [
+              0.3550575,
+              0.6999132
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "7_2.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 70.4619,
+      "heads": {
+        "current": {
+          "wallMs": 130.6031,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.39551762,
+              0.3378887
+            ],
+            [
+              0.60153496,
+              0.32157606
+            ],
+            [
+              0.5840379,
+              0.7039832
+            ],
+            [
+              0.36185554,
+              0.70699966
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "8_1.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 48.1112,
+      "heads": {
+        "current": {
+          "wallMs": 161.8325,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.33084077,
+              0.30704564
+            ],
+            [
+              0.64579165,
+              0.29558682
+            ],
+            [
+              0.6506047,
+              0.6536426
+            ],
+            [
+              0.37598383,
+              0.67680097
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "8_2.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 56.3759,
+      "heads": {
+        "current": {
+          "wallMs": 149.1165,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.32674506,
+              0.2978379
+            ],
+            [
+              0.6010807,
+              0.27604192
+            ],
+            [
+              0.64667135,
+              0.6856359
+            ],
+            [
+              0.33848774,
+              0.69422543
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "9_1.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 49.6146,
+      "heads": {
+        "current": {
+          "wallMs": 168.8939,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.2046528,
+              0.32810384
+            ],
+            [
+              0.83194923,
+              0.34056666
+            ],
+            [
+              0.79456395,
+              0.6436291
+            ],
+            [
+              0.22091554,
+              0.59643906
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    },
+    {
+      "file": "9_2.jpg",
+      "width": 1350,
+      "height": 1800,
+      "decodeMs": 56.7342,
+      "heads": {
+        "current": {
+          "wallMs": 130.2344,
+          "method": "auto-neural-edge+refined",
+          "score": 0.99,
+          "quad": [
+            [
+              0.27069056,
+              0.32575414
+            ],
+            [
+              0.75406027,
+              0.32650858
+            ],
+            [
+              0.74952054,
+              0.59359723
+            ],
+            [
+              0.2730385,
+              0.593578
+            ]
+          ],
+          "diagnostics": {}
+        }
+      }
+    }
+  ],
+  "runtimeDetectorSetting": "HYBRID",
+  "interpretation": "Timing and returned candidates only; no accuracy or CER claim"
+}
