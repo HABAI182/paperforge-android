@@ -1,0 +1,23 @@
+INSTRUMENTATION_STATUS: class=cn.paperforge.app.OcrOptionsTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=
+cn.paperforge.app.OcrOptionsTest:
+INSTRUMENTATION_STATUS: test=quickUsesOneNativePassAndBalancedAvoidsWholePageRetryCascade
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=cn.paperforge.app.OcrOptionsTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=quickUsesOneNativePassAndBalancedAvoidsWholePageRetryCascade
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: stream=
+
+Time: 5.019
+
+OK (1 test)
+
+
+INSTRUMENTATION_CODE: -1

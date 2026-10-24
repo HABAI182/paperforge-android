@@ -19,9 +19,17 @@ import kotlinx.coroutines.tasks.await
 interface OcrEngine {
     val id: String
 
-    suspend fun layout(page: PageRow, chinese: Boolean = true): OcrLayout
+    suspend fun layout(
+        page: PageRow,
+        chinese: Boolean = true,
+        options: OcrOptions = OcrOptions.current(),
+    ): OcrLayout
 
-    suspend fun recognizeBitmap(source: Bitmap, chinese: Boolean = true): OcrLayout
+    suspend fun recognizeBitmap(
+        source: Bitmap,
+        chinese: Boolean = true,
+        options: OcrOptions = OcrOptions.current(),
+    ): OcrLayout
 
     suspend fun recognize(page: PageRow, chinese: Boolean = true): String =
         layout(page, chinese).text
@@ -31,19 +39,42 @@ interface OcrEngine {
 class BundledOcrEngine : OcrEngine {
     override val id = ID
 
-    override suspend fun layout(page: PageRow, chinese: Boolean): OcrLayout {
+    private inner class Run(val options: OcrOptions) {
+        val attempts = mutableListOf<String>()
+
+        suspend fun pass(source: Bitmap, chinese: Boolean, variant: String): OcrLayout {
+            currentCoroutineContext().ensureActive()
+            attempts += variant
+            return this@BundledOcrEngine.pass(source, chinese, variant)
+        }
+
+        fun vote(layout: OcrLayout) =
+            if (options.pageAgreement) OcrPageVoting.apply(layout) else layout
+
+        fun merge(base: OcrLayout, alternative: OcrLayout) =
+            this@BundledOcrEngine.merge(base, alternative, options.pageAgreement)
+
+        fun finish(layout: OcrLayout) =
+            layout.copy(recognitionMode = options.mode.name, attempts = attempts.toList())
+    }
+
+    override suspend fun layout(page: PageRow, chinese: Boolean, options: OcrOptions): OcrLayout {
+        val run = Run(options)
         val bitmap =
             ScanProcessor.render(
                 page.copy(filter = "ORIGINAL", brightness = 0f, contrast = 1f),
-                3200,
+                options.mode.edge,
             )
         return try {
-            var result = recognizeBitmap(bitmap, chinese)
-            if ((result.meanConfidence ?: 1f) < ScanConfig.float("ocrLowConfidence", .82f)) {
+            var result = recognizeBitmap(bitmap, chinese, run)
+            if (
+                options.mode == OcrMode.DETAILED &&
+                    (result.meanConfidence ?: 1f) < ScanConfig.float("ocrLowConfidence", .82f)
+            ) {
                 var alternative =
                     ScanProcessor.render(
                         page.copy(filter = "ORIGINAL", brightness = 0f, contrast = 1f),
-                        3200,
+                        options.mode.edge,
                         ocrSampling = true,
                     )
                 try {
@@ -57,10 +88,10 @@ class BundledOcrEngine : OcrEngine {
                             )
                         old.recycle()
                     }
-                    var candidate = pass(alternative, chinese, "cubic-sample")
+                    var candidate = run.pass(alternative, chinese, "cubic-sample")
                     if (rotation != 0)
                         candidate = unrotate(candidate, bitmap.width, bitmap.height, rotation)
-                    result = OcrPageVoting.apply(merge(result, candidate))
+                    result = run.vote(run.merge(result, candidate))
                 } finally {
                     alternative.recycle()
                 }
@@ -72,7 +103,8 @@ class BundledOcrEngine : OcrEngine {
                         page.deskewDegrees == 0f &&
                         result.orientationCorrection == 0
                 ) {
-                    val source = ScanProcessor.decode(java.io.File(page.original), 3200)
+                    val source =
+                        ScanProcessor.decode(java.io.File(page.original), options.mode.edge)
                     try {
                         val quad = Quad.decode(page.corners)
                         val mapping = Matrix()
@@ -84,7 +116,7 @@ class BundledOcrEngine : OcrEngine {
                                 mapping.mapPoints(xy)
                                 return xy.toList().chunked(2).map { PointN(it[0], it[1]) }
                             }
-                            val raw = pass(source, chinese, "source-pixels")
+                            val raw = run.pass(source, chinese, "source-pixels")
                             val candidate =
                                 raw.copy(
                                     width = bitmap.width,
@@ -110,26 +142,34 @@ class BundledOcrEngine : OcrEngine {
                                                 )
                                         },
                                 )
-                            result = OcrPageVoting.apply(merge(result, candidate))
+                            result = run.vote(run.merge(result, candidate))
                         }
                     } finally {
                         source.recycle()
                     }
                 }
             }
-            result.copy(
-                sourceRevision = page.revision,
-                deskewDegrees = if (page.deskewDegrees == 0f) result.deskewDegrees else 0f,
+            run.finish(
+                result.copy(
+                    sourceRevision = page.revision,
+                    deskewDegrees = if (page.deskewDegrees == 0f) result.deskewDegrees else 0f,
+                )
             )
         } finally {
             bitmap.recycle()
         }
     }
 
-    override suspend fun recognizeBitmap(source: Bitmap, chinese: Boolean): OcrLayout {
-        var best = pass(source, chinese, "original")
+    override suspend fun recognizeBitmap(
+        source: Bitmap,
+        chinese: Boolean,
+        options: OcrOptions,
+    ): OcrLayout = recognizeBitmap(source, chinese, Run(options))
+
+    private suspend fun recognizeBitmap(source: Bitmap, chinese: Boolean, run: Run): OcrLayout {
+        var best = run.pass(source, chinese, "original")
+        if (run.options.mode == OcrMode.FAST) return run.finish(OcrReadingOrder.arrange(best))
         // 0/missing confidence is unknown; these observed scores are not calibrated probabilities.
-        val confidence = best.meanConfidence ?: .65f
         val medianAngle = median(best.lines.mapNotNull { it.angle })
         if (best.text.count { it.isLetterOrDigit() } < 24 || abs(medianAngle) > 45) {
             val inferred = ((-medianAngle / 90).roundToInt() * 90 % 360 + 360) % 360
@@ -149,7 +189,7 @@ class BundledOcrEngine : OcrEngine {
                         true,
                     )
                 try {
-                    val candidate = pass(rotated, chinese, "rotate-$angle")
+                    val candidate = run.pass(rotated, chinese, "rotate-$angle")
                     if (score(candidate) > score(best) * 1.04 + .5)
                         best = unrotate(candidate, source.width, source.height, angle)
                 } finally {
@@ -181,12 +221,13 @@ class BundledOcrEngine : OcrEngine {
                 }
             val smallType = median(heights) < ScanConfig.int("ocrMinCharacterHeight", 48)
             if (
-                (normalized.meanConfidence ?: .65f) < ScanConfig.float("ocrLowConfidence", .82f) ||
-                    smallType
+                run.options.mode == OcrMode.DETAILED &&
+                    ((normalized.meanConfidence ?: .65f) <
+                        ScanConfig.float("ocrLowConfidence", .82f) || smallType)
             ) {
                 val clean = ScanProcessor.transform(upright, Quad.Full, "CLEAN")
                 try {
-                    normalized = merge(normalized, pass(clean, chinese, "clean"))
+                    normalized = run.merge(normalized, run.pass(clean, chinese, "clean"))
                 } finally {
                     clean.recycle()
                 }
@@ -200,19 +241,34 @@ class BundledOcrEngine : OcrEngine {
                             true,
                         )
                     try {
-                        normalized = merge(normalized, pass(enlarged, chinese, "upscale"))
+                        normalized = run.merge(normalized, run.pass(enlarged, chinese, "upscale"))
                     } finally {
                         if (enlarged !== upright) enlarged.recycle()
                     }
                 }
-                val lineAlternative = recognizeLineTiles(upright, normalized, chinese)
-                if (lineAlternative != null) normalized = merge(normalized, lineAlternative)
+                val lineAlternative = recognizeLineTiles(upright, normalized, chinese, run)
+                if (lineAlternative != null) normalized = run.merge(normalized, lineAlternative)
                 val binary = ScanProcessor.transform(upright, Quad.Full, "BW")
                 try {
-                    val alternative = recognizeLineTiles(binary, normalized, chinese, "line-bw")
-                    if (alternative != null) normalized = merge(normalized, alternative)
+                    val alternative =
+                        recognizeLineTiles(binary, normalized, chinese, run, "line-bw")
+                    if (alternative != null) normalized = run.merge(normalized, alternative)
                 } finally {
                     binary.recycle()
+                }
+            }
+            if (run.options.mode == OcrMode.BALANCED) {
+                if (normalized.text.isBlank()) {
+                    val clean = ScanProcessor.transform(upright, Quad.Full, "CLEAN")
+                    try {
+                        normalized = run.merge(normalized, run.pass(clean, chinese, "clean-empty"))
+                    } finally {
+                        clean.recycle()
+                    }
+                } else {
+                    val local =
+                        recognizeLineTiles(upright, normalized, chinese, run, "uncertain-lines")
+                    if (local != null) normalized = run.merge(normalized, local)
                 }
             }
             val skew = median(normalized.lines.mapNotNull { it.angle })
@@ -221,7 +277,7 @@ class BundledOcrEngine : OcrEngine {
                 val geometry = DeskewGeometry(upright.width, upright.height, -skew)
                 val straight = cn.paperforge.app.imaging.PageOrientation.rotate(upright, -skew)
                 try {
-                    val candidate = pass(straight, chinese, "deskew")
+                    val candidate = run.pass(straight, chinese, "deskew")
                     if (
                         candidate.text.length >= normalized.text.length * .95 &&
                             (candidate.meanConfidence ?: 0f) >=
@@ -238,7 +294,7 @@ class BundledOcrEngine : OcrEngine {
             }
             val result =
                 OcrReadingOrder.arrange(
-                    OcrPageVoting.apply(
+                    run.vote(
                         normalized.copy(
                             width = upright.width,
                             height = upright.height,
@@ -246,8 +302,10 @@ class BundledOcrEngine : OcrEngine {
                         )
                     )
                 )
-            return if (rotation == 0) result
-            else unrotate(result, source.width, source.height, rotation)
+            return run.finish(
+                if (rotation == 0) result
+                else unrotate(result, source.width, source.height, rotation)
+            )
         } finally {
             if (upright !== source) upright.recycle()
         }
@@ -328,10 +386,14 @@ class BundledOcrEngine : OcrEngine {
         source: Bitmap,
         layout: OcrLayout,
         chinese: Boolean,
+        run: Run,
         variant: String = "line-scale",
     ): OcrLayout? {
         data class Tile(val source: android.graphics.Rect, val destination: android.graphics.Rect)
-        val selected = layout.lines.filter { (it.confidence ?: 1f) < .70f }.take(24)
+        val selected =
+            layout.lines
+                .filter { (it.confidence ?: 1f) < .70f || it.text.contains('\uFFFD') }
+                .take(if (run.options.mode == OcrMode.BALANCED) 12 else 24)
         if (selected.isEmpty()) return null
         val tiles = mutableListOf<Tile>()
         var y = 16
@@ -373,7 +435,7 @@ class BundledOcrEngine : OcrEngine {
             canvas.drawColor(android.graphics.Color.WHITE)
             val paint = android.graphics.Paint(android.graphics.Paint.FILTER_BITMAP_FLAG)
             tiles.forEach { canvas.drawBitmap(source, it.source, it.destination, paint) }
-            val result = pass(bitmap, chinese, variant)
+            val result = run.pass(bitmap, chinese, variant)
             fun mapped(points: List<PointN>, tile: Tile) =
                 points.map { p ->
                     PointN(
@@ -415,7 +477,7 @@ class BundledOcrEngine : OcrEngine {
         return ln(1.0 + chars) * (confidence * confidence) * 100 * horizontal
     }
 
-    private fun merge(base: OcrLayout, alternative: OcrLayout): OcrLayout {
+    private fun merge(base: OcrLayout, alternative: OcrLayout, voting: Boolean): OcrLayout {
         if (base.lines.isEmpty()) return alternative.copy(width = base.width, height = base.height)
         fun bounds(p: List<PointN>) =
             floatArrayOf(p.minOf { it.x }, p.minOf { it.y }, p.maxOf { it.x }, p.maxOf { it.y })
@@ -462,7 +524,7 @@ class BundledOcrEngine : OcrEngine {
                             else original.text
                         val ballot = hypotheses.filter { it.text.length == selected.text.length }
                         val voted =
-                            if (ballot.size >= 3)
+                            if (voting && ballot.size >= 3)
                                 selected.text.indices
                                     .map { i ->
                                         val counts = ballot.groupingBy { it.text[i] }.eachCount()
@@ -472,6 +534,8 @@ class BundledOcrEngine : OcrEngine {
                                         else selected.text[i]
                                     }
                                     .joinToString("")
+                                    .takeIf { value -> hypotheses.any { it.text == value } }
+                                    ?: selected.text
                             else selected.text
                         if (voted != selected.text)
                             selected.copy(
@@ -495,7 +559,7 @@ class BundledOcrEngine : OcrEngine {
         if (values.isEmpty()) 0f else values.sorted()[values.size / 2]
 
     companion object {
-        const val ID = "mlkit-bundled-v030"
+        const val ID = "mlkit-bundled-v031"
         private val mutex = Mutex()
         private val chineseClient by lazy {
             TextRecognition.getClient(ChineseTextRecognizerOptions.Builder().build())

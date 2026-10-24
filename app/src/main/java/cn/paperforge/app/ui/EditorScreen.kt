@@ -120,7 +120,7 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                 "adjust" -> adjust = true
                 "more" -> more = true
                 "applyAll" -> active?.let(vm::applyAll)
-                "ocr" -> active?.let { vm.recognize(it, true) }
+                "ocr" -> active?.let { vm.recognize(it) }
             }
         },
         onRename = { value ->
@@ -389,6 +389,8 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
             title = { Text("扫描页面工具") },
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
+                    OcrOptionsControl()
+                    HorizontalDivider(Modifier.padding(vertical = 12.dp))
                     TextButton(
                         onClick = {
                             more = false

@@ -127,6 +127,8 @@ fun SettingsScreen(vm: MainViewModel) {
             }
             if (visible("导出 PDF OCR 文字 识别 DPI")) {
                 Text("导出与识别", style = MaterialTheme.typography.titleLarge)
+                OcrOptionsControl()
+                SettingToggle("结合多次识别结果校对", "ocrVoting", true)
                 SettingChoices(
                     "OCR 语言",
                     "ocrLanguage",

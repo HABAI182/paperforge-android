@@ -484,7 +484,7 @@
       "dependencies": [],
       "scope": "单路优先、疑难局部补识别、多路显式选择",
       "acceptance": "清晰页不强制跑全部重试，取消可用",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "OCR02",
@@ -1252,8 +1252,8 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 32,
-    "planned": 42,
+    "done": 33,
+    "planned": 41,
     "partial": 24
   }
 }

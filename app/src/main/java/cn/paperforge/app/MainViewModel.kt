@@ -555,7 +555,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun recognize(page: PageRow, chinese: Boolean) = perform("正在离线识别文字") { showOcr(page, chinese) }
+    fun recognize(
+        page: PageRow,
+        chinese: Boolean = UserSettings.string("ocrLanguage", "CHINESE") != "LATIN",
+    ) = perform("正在离线识别文字") { showOcr(page, chinese) }
 
     private suspend fun showOcr(page: PageRow, chinese: Boolean) {
         val (updated, result) =
@@ -566,7 +569,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     chinese && UserSettings.string("ocrLanguage", "CHINESE") != "LATIN",
                 ),
             )
-        ocrReview.value = "${result.lines.size} 行 · 可直接编辑、复制或导出"
+        ocrReview.value =
+            "${cn.paperforge.app.ocr.OcrMode.parse(result.recognitionMode).label} · ${result.lines.size} 行 · 可编辑、复制或导出"
         if (result.text.isBlank()) messages.send("没有识别到文字。请将纸面拍清楚、减少反光，或旋转页面后重试。")
         else {
             ocrPage = updated

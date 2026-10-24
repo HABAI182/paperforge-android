@@ -35,6 +35,8 @@ data class OcrLayout(
     val orientationCorrection: Int = 0,
     val deskewDegrees: Float = 0f,
     val warnings: List<String> = emptyList(),
+    val recognitionMode: String = "legacy",
+    val attempts: List<String> = emptyList(),
 ) {
     val text
         get() = lines.joinToString("\n") { it.text }
@@ -44,7 +46,7 @@ data class OcrLayout(
 
     fun encode() =
         JSONObject()
-            .put("schema", 2)
+            .put("schema", 3)
             .put("width", width)
             .put("height", height)
             .put("engineId", engineId)
@@ -53,6 +55,8 @@ data class OcrLayout(
             .put("orientationCorrection", orientationCorrection)
             .put("deskewDegrees", deskewDegrees)
             .put("warnings", JSONArray(warnings))
+            .put("recognitionMode", recognitionMode)
+            .put("attempts", JSONArray(attempts))
             .put(
                 "lines",
                 JSONArray().apply {
@@ -188,6 +192,9 @@ data class OcrLayout(
                 o.optInt("orientationCorrection"),
                 o.optDouble("deskewDegrees", 0.0).toFloat(),
                 o.optJSONArray("warnings")?.let { w -> List(w.length()) { w.getString(it) } }
+                    ?: emptyList(),
+                o.optString("recognitionMode", "legacy"),
+                o.optJSONArray("attempts")?.let { a -> List(a.length()) { a.getString(it) } }
                     ?: emptyList(),
             )
         }

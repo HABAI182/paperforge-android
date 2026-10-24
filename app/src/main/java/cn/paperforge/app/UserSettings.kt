@@ -33,6 +33,8 @@ object UserSettings {
             "brightness" to 0f,
             "contrast" to 1f,
             "ocrLanguage" to "CHINESE",
+            "ocrMode" to "BALANCED",
+            "ocrVoting" to true,
             "searchable" to true,
             "paper" to "Auto",
             "resolution" to "STANDARD",
@@ -145,6 +147,7 @@ object UserSettings {
                 "filter" to
                     setOf("ORIGINAL", "AUTO", "TEXT", "CLEAN", "GRAY", "BW", "COLOR", "WHITEBOARD"),
                 "ocrLanguage" to setOf("CHINESE", "LATIN"),
+                "ocrMode" to setOf("FAST", "BALANCED", "DETAILED"),
                 "paper" to setOf("Auto", "A4", "A5", "Letter"),
                 "resolution" to setOf("DRAFT", "STANDARD", "HIGH", "CUSTOM"),
                 "theme" to setOf("SYSTEM", "LIGHT", "DARK", "AMOLED"),
@@ -153,6 +156,7 @@ object UserSettings {
         val booleans =
             setOf(
                 "autoShutter",
+                "ocrVoting",
                 "turnRearm",
                 "reviewAfterCapture",
                 "lockCrop",

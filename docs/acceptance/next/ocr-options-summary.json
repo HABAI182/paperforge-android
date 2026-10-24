@@ -1,0 +1,27 @@
+{
+  "feature": "FAST BALANCED DETAILED OCR modes",
+  "environment": "API35 AOSP x86_64 emulator, bundled MLKit Latin engine",
+  "check": "one focused test, 5.019 seconds, passed",
+  "sample": "synthetic clear 1400x1800 image, 20 lines with leading zero 00123",
+  "observed": {
+    "FAST": [
+      "original"
+    ],
+    "BALANCED": [
+      "original"
+    ],
+    "balancedLines": 20
+  },
+  "verified": [
+    "single native pass in FAST",
+    "clear BALANCED page avoids full-page cascade",
+    "leading zero sequence preserved",
+    "mode and attempts codec round trip"
+  ],
+  "limits": [
+    "not a real document accuracy benchmark",
+    "DETAILED accuracy and all input orientations not rerun",
+    "native MLKit work retains input until completion when cancellation requested"
+  ],
+  "releaseCreated": false
+}
