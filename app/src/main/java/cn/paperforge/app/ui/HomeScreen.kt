@@ -14,7 +14,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
@@ -83,6 +82,7 @@ fun HomeScreen(
     fun toggle(id: String) {
         selection = if (id in selection) selection - id else selection + id
     }
+    BackHandler(inTrash && !selecting) { showTrash = false }
     BackHandler(selecting) { finishSelection() }
     LaunchedEffect(tab, search, showTrash, favoritesOnly, folder) { finishSelection() }
     Scaffold(
@@ -111,6 +111,45 @@ fun HomeScreen(
                         }
                     },
                 )
+            else
+                TopAppBar(
+                    title = {
+                        Text(
+                            if (inTrash) "回收站"
+                            else
+                                when (tab) {
+                                    1 -> "我的文档"
+                                    2 -> "工具"
+                                    else -> "纸匠"
+                                }
+                        )
+                    },
+                    navigationIcon = {
+                        if (inTrash)
+                            IconButton(onClick = { showTrash = false }) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回文档")
+                            }
+                    },
+                    actions = {
+                        if (!inTrash)
+                            TextButton(
+                                onClick = {
+                                    tab = 1
+                                    showTrash = true
+                                    favoritesOnly = false
+                                    folder = ""
+                                    vm.query.value = ""
+                                }
+                            ) {
+                                Icon(Icons.Default.DeleteOutline, null, Modifier.size(18.dp))
+                                Text("回收站")
+                            }
+                        IconButton(onClick = { vm.screen.value = "settings" }) {
+                            Icon(Icons.Default.Settings, "个性化设置")
+                        }
+                        IconButton(onClick = onAbout) { Icon(Icons.Default.Info, "关于与隐私") }
+                    },
+                )
         },
         bottomBar = {
             if (selecting) {
@@ -131,7 +170,7 @@ fun HomeScreen(
                             }
                             ToolAction(
                                 Icons.Default.DeleteOutline,
-                                "回收站",
+                                "移入回收站",
                                 chosen.isNotEmpty() && !busy,
                             ) {
                                 vm.trashDocuments(chosen.map { it.id }.toSet())
@@ -205,7 +244,10 @@ fun HomeScreen(
                                 selected = tab == (if (i == 3) 2 else i) && i != 2,
                                 onClick = {
                                     if (i == 2) vm.screen.value = "convert"
-                                    else tab = if (i == 3) 2 else i
+                                    else {
+                                        tab = if (i == 3) 2 else i
+                                        showTrash = false
+                                    }
                                     if (i != 1) vm.query.value = ""
                                 },
                                 icon = { Icon(icon, label) },
@@ -220,7 +262,7 @@ fun HomeScreen(
                 }
         },
         floatingActionButton = {
-            if (tab != 0 && !selecting)
+            if (!selecting && !inTrash)
                 ExtendedFloatingActionButton(
                     onClick = { if (!busy) vm.newScan() },
                     icon = { Icon(Icons.Default.DocumentScanner, null) },
@@ -233,69 +275,19 @@ fun HomeScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            item {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text(
-                            "纸匠",
-                            style = MaterialTheme.typography.headlineLarge,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        Text(
-                            "PAPERFORGE  /  离线文档工作台",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    IconButton(onClick = { vm.screen.value = "settings" }) {
-                        Icon(Icons.Default.Settings, "个性化设置")
-                    }
-                    IconButton(onClick = onAbout) { Icon(Icons.Default.Info, "关于与隐私") }
-                }
-            }
-            if (tab == 0) {
+            if (tab != 2)
                 item {
-                    Card(
-                        colors =
-                            CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.primary
-                            ),
-                        shape = RoundedCornerShape(26.dp),
-                    ) {
-                        Row(
-                            Modifier.fillMaxWidth().padding(18.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                        ) {
-                            Column(Modifier.weight(1f)) {
-                                Text(
-                                    "扫描文档",
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold,
-                                )
-                                Text(
-                                    "自动裁边 · 连续拍摄",
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    style = MaterialTheme.typography.bodySmall,
-                                )
-                            }
-                            Button(
-                                onClick = { vm.newScan() },
-                                enabled = !busy,
-                                colors =
-                                    ButtonDefaults.buttonColors(
-                                        containerColor = Color.White,
-                                        contentColor = MaterialTheme.colorScheme.primary,
-                                    ),
-                            ) {
-                                Icon(Icons.Default.DocumentScanner, null)
-                                Spacer(Modifier.width(8.dp))
-                                Text("开始扫描")
-                            }
-                        }
-                    }
+                    OutlinedTextField(
+                        value = search,
+                        onValueChange = { vm.query.value = it },
+                        placeholder = { Text(if (inTrash) "搜索回收站" else "搜索文件、文字或标签") },
+                        leadingIcon = { Icon(Icons.Default.Search, null) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        shape = RoundedCornerShape(14.dp),
+                    )
                 }
+            if (tab == 0) {
                 val shortcuts =
                     UserSettings.string("homeTools", "images,pdf,ocr,merge,compress,tools")
                         .split(',')
@@ -332,8 +324,8 @@ fun HomeScreen(
             if (tab == 2) {
                 item {
                     Text(
-                        "小工具，大用处",
-                        style = MaterialTheme.typography.headlineMedium,
+                        "文档工具",
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                     )
                     Text("搜索名称，直接选择文件开始。", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -403,7 +395,7 @@ fun HomeScreen(
                 item {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            if (tab == 0) "最近文档" else "我的文档",
+                            if (inTrash) "已移入回收站" else if (tab == 0) "最近文档" else "全部文档",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.weight(1f),
@@ -417,28 +409,13 @@ fun HomeScreen(
                             )
                     }
                 }
-                item {
-                    OutlinedTextField(
-                        value = search,
-                        onValueChange = { vm.query.value = it },
-                        label = { Text("搜索文档与文字") },
-                        leadingIcon = { Icon(Icons.Default.Search, null) },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                    )
-                }
-                if (tab == 1) {
+                if (tab == 1 && !inTrash) {
                     item {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             FilterChip(
                                 favoritesOnly,
                                 { favoritesOnly = !favoritesOnly },
                                 label = { Text("收藏") },
-                            )
-                            FilterChip(
-                                showTrash,
-                                { showTrash = !showTrash },
-                                label = { Text("回收站 ${trash.size}") },
                             )
                         }
                     }
@@ -465,11 +442,12 @@ fun HomeScreen(
                                 tint = MaterialTheme.colorScheme.outline,
                             )
                             Text(
-                                if (search.isEmpty()) "第一份文档，从这里开始" else "没有匹配的文档",
+                                if (inTrash) "回收站是空的"
+                                else if (search.isEmpty()) "第一份文档，从这里开始" else "没有匹配的文档",
                                 modifier = Modifier.padding(10.dp),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
-                            if (search.isEmpty())
+                            if (search.isEmpty() && !inTrash)
                                 Text("扫描、导入，全程留在设备。", style = MaterialTheme.typography.bodySmall)
                         }
                     }
@@ -492,7 +470,7 @@ fun HomeScreen(
                                 containerColor =
                                     if (doc.id in selection && selecting)
                                         MaterialTheme.colorScheme.secondaryContainer
-                                    else MaterialTheme.colorScheme.surfaceContainerLow
+                                    else MaterialTheme.colorScheme.surfaceContainerLowest
                             ),
                     ) {
                         Row(
@@ -512,18 +490,7 @@ fun HomeScreen(
                                             contentDescription = "选择文档 ${doc.title}"
                                         },
                                 )
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.primaryContainer,
-                            ) {
-                                Icon(
-                                    if (doc.kind == "scan") Icons.Default.Description
-                                    else Icons.Default.PictureAsPdf,
-                                    null,
-                                    modifier = Modifier.padding(14.dp),
-                                    tint = MaterialTheme.colorScheme.primary,
-                                )
-                            }
+                            DocumentCover(doc, vm.repo)
                             Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
                                 Text(
                                     (if (doc.favorite) "★ " else "") + doc.title,

@@ -18,9 +18,9 @@ class HomeUiTest {
     @Test
     fun homeToolsAndPrivacyAreUsable() {
         compose.onNodeWithText("纸匠", useUnmergedTree = true).assertIsDisplayed()
-        compose.onNodeWithText("扫描文档").assertIsDisplayed()
-        compose.onNodeWithText("工具", useUnmergedTree = true).performClick()
-        compose.onNodeWithText("小工具，大用处").assertIsDisplayed()
+        compose.onNodeWithText("扫描", useUnmergedTree = true).assertIsDisplayed()
+        compose.onAllNodesWithText("工具", useUnmergedTree = true).onLast().performClick()
+        compose.onNodeWithText("文档工具").assertIsDisplayed()
         compose.onNodeWithContentDescription("关于与隐私").performClick()
         compose.onNodeWithText("纸匠 PaperForge", substring = true).assertIsDisplayed()
         compose.onNodeWithText("知道了").performClick()

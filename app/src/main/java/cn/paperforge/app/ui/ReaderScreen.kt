@@ -791,7 +791,7 @@ private fun ReaderPage(
                             event.changes.forEach { it.consume() }
                         }
                     } while (event.changes.any { it.pressed })
-                    if (!moved && !multiple && !down.isConsumed) {
+                    if (!moved && !multiple) {
                         val now = android.os.SystemClock.uptimeMillis()
                         if (now - lastTap < 280) {
                             tapJob?.cancel()

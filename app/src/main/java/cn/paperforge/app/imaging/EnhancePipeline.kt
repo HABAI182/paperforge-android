@@ -91,7 +91,12 @@ object EnhancePipeline {
             }
             corrected.create(rgb.rows(), rgb.cols(), CvType.CV_8UC3)
             corrected.put(0, 0, input)
-            if (mode in listOf("AUTO", "COLOR", "WHITEBOARD")) {
+            if (mode in listOf("AUTO", "TEXT", "COLOR")) {
+                enhanceLuminance(corrected, destination, mode, strength)
+                return
+            }
+            if (mode in listOf("CLEAN", "WHITEBOARD")) {
+                // CLEAN used to fall into the gray path and silently discard colored stamps.
                 corrected.copyTo(destination)
                 return
             }
@@ -155,6 +160,48 @@ object EnhancePipeline {
             Core.compare(f, threshold, destination, Core.CMP_GT)
         } finally {
             owned.forEach { it.release() }
+        }
+    }
+
+    /** Local contrast and a thresholded unsharp mask affect luminance, preserving chroma. */
+    private fun enhanceLuminance(rgb: Mat, destination: Mat, mode: String, strength: Float) {
+        val ycc = Mat()
+        val blurred = Mat()
+        val channels = mutableListOf<Mat>()
+        val clahe = Imgproc.createCLAHE(if (mode == "TEXT") 1.8 else 1.25, Size(8.0, 8.0))
+        try {
+            Imgproc.cvtColor(rgb, ycc, Imgproc.COLOR_RGB2YCrCb)
+            Core.split(ycc, channels)
+            val original = channels[0].clone()
+            try {
+                clahe.apply(original, channels[0])
+                // Blend avoids flattening pencil and avoids amplifying noise like full CLAHE.
+                val blend =
+                    strength * (if (mode == "TEXT") .64 else if (mode == "COLOR") .42 else .28)
+                Core.addWeighted(channels[0], blend, original, 1.0 - blend, 0.0, channels[0])
+                Imgproc.GaussianBlur(channels[0], blurred, Size(0.0, 0.0), .85)
+                val data = ByteArray(channels[0].rows() * channels[0].cols())
+                val low = ByteArray(data.size)
+                channels[0].get(0, 0, data)
+                blurred.get(0, 0, low)
+                val amount = (if (mode == "TEXT") .55f else .22f) * strength
+                for (i in data.indices) {
+                    val value = data[i].toInt() and 255
+                    val detail = value - (low[i].toInt() and 255)
+                    if (abs(detail) > 3)
+                        data[i] = (value + detail * amount).roundToInt().coerceIn(0, 255).toByte()
+                }
+                channels[0].put(0, 0, data)
+                Core.merge(channels, ycc)
+                Imgproc.cvtColor(ycc, destination, Imgproc.COLOR_YCrCb2RGB)
+            } finally {
+                original.release()
+            }
+        } finally {
+            channels.forEach { it.release() }
+            ycc.release()
+            blurred.release()
+            clahe.collectGarbage()
         }
     }
 

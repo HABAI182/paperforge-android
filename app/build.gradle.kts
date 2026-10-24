@@ -12,8 +12,8 @@ android {
         applicationId = "cn.paperforge.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 6
-        versionName = "0.6.0"
+        versionCode = 7
+        versionName = "0.6.1-dev"
         externalNativeBuild {
             cmake {
                 arguments += "-DANDROID_STL=c++_static"

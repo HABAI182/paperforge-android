@@ -834,6 +834,17 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             output.value = file
         }
 
+    fun exportScanCase(page: PageRow) =
+        perform("正在保存扫描诊断") {
+            output.value =
+                cn.paperforge.app.imaging.ScanDiagnostics.export(
+                    getApplication(),
+                    page,
+                    repo.exports,
+                )
+            outputLocked.value = false
+        }
+
     fun backup() =
         perform("正在离线备份") {
             val file = File(repo.exports, "PaperForge-backup-${System.currentTimeMillis()}.zip")

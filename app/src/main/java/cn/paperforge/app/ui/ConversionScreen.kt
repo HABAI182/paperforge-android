@@ -108,7 +108,7 @@ fun ConversionScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
-                Text("让文件自由流转", style = MaterialTheme.typography.headlineMedium)
+                Text("格式转换", style = MaterialTheme.typography.titleLarge)
                 Text(
                     "选择转换方式，再选择文件。全程本机处理。",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

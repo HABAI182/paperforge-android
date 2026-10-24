@@ -1,0 +1,11 @@
+{
+  "tests": 16,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "environment": "API35 AOSP x86_64 emulator",
+  "physicalDeviceTested": false,
+  "focusedAndroidTests": 5,
+  "extraEditorImageAndDiagnosticsCheck": true,
+  "releaseCreated": false
+}

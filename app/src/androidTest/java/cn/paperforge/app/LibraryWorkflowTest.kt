@@ -27,7 +27,7 @@ class LibraryWorkflowTest {
             compose.onNodeWithText("$prefix-0").performScrollTo().performTouchInput { longClick() }
             compose.onNodeWithText("$prefix-1").performScrollTo().performClick()
             compose.onNodeWithText("已选 2 项").assertIsDisplayed()
-            compose.onNodeWithText("回收站", useUnmergedTree = true).performClick()
+            compose.onNodeWithText("移入回收站", useUnmergedTree = true).performClick()
             compose.waitUntil(10000) {
                 runBlocking {
                     documents.take(2).all { repo.dao.document(it.id)?.trashedAt != null }
@@ -35,14 +35,14 @@ class LibraryWorkflowTest {
             }
             assertNull(runBlocking { repo.dao.document(documents[2].id) }!!.trashedAt)
             compose.onNodeWithText("文档", useUnmergedTree = true).performClick()
-            compose.onNodeWithText("回收站", substring = true).performScrollTo().performClick()
+            compose.onNodeWithText("回收站").performClick()
             compose.onNodeWithText("多选").performScrollTo().performClick()
             compose.onNodeWithText("全选").performClick()
             compose.onNodeWithText("恢复", useUnmergedTree = true).performClick()
             compose.waitUntil(10000) {
                 runBlocking { documents.all { repo.dao.document(it.id)?.trashedAt == null } }
             }
-            compose.onNodeWithText("回收站", substring = true).performScrollTo().performClick()
+            compose.onNodeWithContentDescription("返回文档").performClick()
             compose.onNodeWithText("多选").performScrollTo().performClick()
             compose.onNodeWithText("$prefix-0").performScrollTo().performClick()
             compose.onNodeWithText("直接删除", useUnmergedTree = true).performClick()
@@ -84,9 +84,12 @@ class LibraryWorkflowTest {
             compose.onNodeWithText("完成 1").performClick()
             compose.waitUntil(10000) {
                 model.screen.value == "editor" &&
-                    runCatching { compose.onNodeWithText("整理扫描").assertIsDisplayed() }.isSuccess
+                    runCatching {
+                            compose.onNodeWithText("整理扫描", substring = true).assertIsDisplayed()
+                        }
+                        .isSuccess
             }
-            compose.onNodeWithText("整理扫描").assertIsDisplayed()
+            compose.onNodeWithText("整理扫描", substring = true).assertIsDisplayed()
             assertEquals(1, runBlocking { repo.dao.pages(doc.id).size })
         } finally {
             runBlocking { repo.deleteDocument(doc) }

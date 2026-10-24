@@ -13,7 +13,7 @@ import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
 
 object ScanProcessor {
-    val filters = listOf("ORIGINAL", "AUTO", "CLEAN", "GRAY", "BW", "COLOR", "WHITEBOARD")
+    val filters = listOf("ORIGINAL", "AUTO", "TEXT", "CLEAN", "GRAY", "BW", "COLOR", "WHITEBOARD")
 
     fun decode(file: File, maxEdge: Int = 2400): Bitmap {
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }

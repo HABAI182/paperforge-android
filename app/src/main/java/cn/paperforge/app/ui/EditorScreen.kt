@@ -3,12 +3,8 @@ package cn.paperforge.app.ui
 import android.graphics.Bitmap
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -57,8 +53,8 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
     val pages by vm.pages.collectAsState()
     val doc by vm.selected.collectAsState()
     val busy by vm.busy.collectAsState()
-    var activeId by remember { mutableStateOf<String?>(null) }
-    val active = pages.find { it.id == activeId } ?: pages.firstOrNull()
+    val pager = rememberPagerState(pageCount = { pages.size })
+    val active = pages.getOrNull(pager.currentPage)
     var crop by remember { mutableStateOf(false) }
     var name by remember(doc?.id) { mutableStateOf(doc?.title ?: "") }
     var export by remember { mutableStateOf(false) }
@@ -68,219 +64,35 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
     var quality by remember { mutableIntStateOf(UserSettings.number("quality", 90f).toInt()) }
     var adjust by remember { mutableStateOf(false) }
     var searchable by remember { mutableStateOf(UserSettings.bool("searchable", true)) }
-    var original by remember { mutableStateOf(false) }
     var more by remember { mutableStateOf(false) }
     var dewarp by remember { mutableStateOf(false) }
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("整理扫描") },
-                navigationIcon = {
-                    IconButton(onClick = { vm.screen.value = "home" }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = vm::undo, enabled = !busy) {
-                        Icon(Icons.AutoMirrored.Filled.Undo, "撤销")
-                    }
-                    IconButton(onClick = vm::redo, enabled = !busy) {
-                        Icon(Icons.AutoMirrored.Filled.Redo, "重做")
-                    }
-                    IconButton(onClick = { vm.screen.value = "pages" }, enabled = !busy) {
-                        Icon(Icons.Default.GridView, "页面管理")
-                    }
-                },
-            )
-        },
-        bottomBar = {
-            Row(
-                Modifier.fillMaxWidth().navigationBarsPadding().padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                OutlinedButton(onClick = { vm.screen.value = "capture" }, enabled = !busy) {
-                    Icon(Icons.Default.Add, "增页")
-                    Text("继续拍")
-                }
-                OutlinedButton(onClick = onImport, enabled = !busy) { Text("导图") }
-                Button(
-                    onClick = { export = true },
-                    enabled = pages.isNotEmpty() && !busy,
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text("导出 PDF")
-                }
+    ScanEditorLayout(
+        pages,
+        pager,
+        name,
+        busy,
+        onAction = { action ->
+            when (action) {
+                "back" -> vm.screen.value = "home"
+                "capture" -> vm.screen.value = "capture"
+                "import" -> onImport()
+                "pages" -> vm.screen.value = "pages"
+                "export" -> export = true
+                "undo" -> vm.undo()
+                "redo" -> vm.redo()
+                "crop" -> crop = true
+                "adjust" -> adjust = true
+                "more" -> more = true
+                "applyAll" -> active?.let(vm::applyAll)
+                "ocr" -> active?.let { vm.recognize(it, true) }
             }
         },
-    ) { padding ->
-        Column(
-            Modifier.padding(padding)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("文档名称") },
-                singleLine = true,
-                trailingIcon = {
-                    IconButton(onClick = { doc?.let { vm.rename(it, name) } }, enabled = !busy) {
-                        Icon(Icons.Default.Check, "保存名称")
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-            )
-            if (active != null)
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    ToolAction(Icons.Default.AutoFixHigh, "自动裁边", !busy) { vm.detectPage(active) }
-                    ToolAction(Icons.Default.Crop, "调四角", !busy) { crop = true }
-                    ToolAction(Icons.Default.TextFields, "识文字", !busy) {
-                        vm.recognize(active, true)
-                    }
-                    ToolAction(Icons.Default.Tune, "调参数", !busy) { adjust = true }
-                    ToolAction(Icons.Default.MoreHoriz, "更多", !busy) { more = true }
-                }
-            if (active == null) {
-                Column(
-                    Modifier.fillMaxWidth().height(320.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Icon(
-                        Icons.Default.NoteAdd,
-                        null,
-                        modifier = Modifier.size(48.dp),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                    Text("草稿已保存，添加第一页吧", modifier = Modifier.padding(20.dp))
-                }
-            } else {
-                val bitmap = pageBitmap(active, original = original)
-                Box(
-                    Modifier.fillMaxWidth()
-                        .height(280.dp)
-                        .background(
-                            MaterialTheme.colorScheme.surfaceContainer,
-                            RoundedCornerShape(20.dp),
-                        )
-                        .pointerInput(active.id) {
-                            detectTapGestures(
-                                onPress = {
-                                    original = true
-                                    tryAwaitRelease()
-                                    original = false
-                                }
-                            )
-                        },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    if (bitmap != null)
-                        Image(
-                            bitmap.asImageBitmap(),
-                            "扫描预览",
-                            modifier = Modifier.fillMaxSize().padding(12.dp),
-                            contentScale = ContentScale.Fit,
-                        )
-                    else CircularProgressIndicator()
-                    Surface(
-                        Modifier.align(Alignment.BottomEnd).padding(12.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.surface,
-                    ) {
-                        Text(
-                            "${pages.indexOf(active)+1} / ${pages.size}",
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                        )
-                    }
-                }
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    itemsIndexed(pages, key = { _, it -> it.id }) { i, page ->
-                        val thumb = pageBitmap(page, 240)
-                        Column(
-                            Modifier.width(64.dp)
-                                .clickable { activeId = page.id }
-                                .border(
-                                    if (active.id == page.id) 2.dp else 0.dp,
-                                    MaterialTheme.colorScheme.primary,
-                                    RoundedCornerShape(8.dp),
-                                )
-                                .padding(4.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            thumb?.let {
-                                Image(
-                                    it.asImageBitmap(),
-                                    "第 ${i+1} 页",
-                                    modifier = Modifier.height(68.dp),
-                                )
-                            }
-                            Text("${i+1}")
-                        }
-                    }
-                }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    ToolAction(Icons.AutoMirrored.Filled.MenuBook, "曲面校正", !busy) { dewarp = true }
-                    ToolAction(Icons.Default.RotateRight, "旋转", !busy) {
-                        vm.save(active.copy(rotation = (active.rotation + 90) % 360))
-                    }
-                    ToolAction(Icons.Default.DeleteOutline, "删除", !busy) { confirmDelete = true }
-                }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    TextButton(onClick = { vm.applyAll(active) }, enabled = !busy) {
-                        Text("滤镜应用全部")
-                    }
-                    TextButton(
-                        onClick = {
-                            vm.replacement.value = active.id
-                            vm.screen.value = "capture"
-                        },
-                        enabled = !busy,
-                    ) {
-                        Text("重拍本页")
-                    }
-                }
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    val names = listOf("原图", "自动增强", "去阴影", "灰度", "黑白文档", "彩色增强", "白板")
-                    itemsIndexed(ScanProcessor.filters) { i, filter ->
-                        val sample = pageBitmap(active.copy(filter = filter), 160)
-                        FilterChip(
-                            selected = active.filter == filter,
-                            onClick = { if (!busy) vm.save(active.copy(filter = filter)) },
-                            label = { Text(names[i]) },
-                            leadingIcon = {
-                                sample?.let {
-                                    Image(it.asImageBitmap(), null, Modifier.size(32.dp))
-                                }
-                            },
-                            enabled = !busy,
-                        )
-                    }
-                }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    TextButton(
-                        onClick = { vm.move(active, -1) },
-                        enabled = pages.indexOf(active) > 0 && !busy,
-                    ) {
-                        Text("← 前移一页")
-                    }
-                    TextButton(
-                        onClick = { vm.move(active, 1) },
-                        enabled = pages.indexOf(active) < pages.lastIndex && !busy,
-                    ) {
-                        Text("后移一页 →")
-                    }
-                }
-                Text(
-                    "按住预览对比原图 · 修改自动保存",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Spacer(Modifier.height(12.dp))
-        }
-    }
+        onRename = { value ->
+            name = value
+            doc?.let { vm.rename(it, value) }
+        },
+        onFilter = { page, filter -> vm.save(page.copy(filter = filter)) },
+    )
     if (crop && active != null)
         CropDialog(
             active,
@@ -518,7 +330,64 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
             onDismissRequest = { more = false },
             title = { Text("扫描页面工具") },
             text = {
-                Column {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    TextButton(
+                        onClick = {
+                            more = false
+                            vm.detectPage(active)
+                        }
+                    ) {
+                        Text("自动裁边")
+                    }
+                    TextButton(
+                        onClick = {
+                            more = false
+                            dewarp = true
+                        }
+                    ) {
+                        Text("曲面校正")
+                    }
+                    TextButton(
+                        onClick = {
+                            more = false
+                            vm.save(active.copy(rotation = (active.rotation + 90) % 360))
+                        }
+                    ) {
+                        Text("旋转本页")
+                    }
+                    TextButton(
+                        onClick = {
+                            more = false
+                            vm.replacement.value = active.id
+                            vm.screen.value = "capture"
+                        }
+                    ) {
+                        Text("重拍本页")
+                    }
+                    TextButton(
+                        onClick = {
+                            more = false
+                            vm.screen.value = "pages"
+                        }
+                    ) {
+                        Text("页面管理与排序")
+                    }
+                    TextButton(
+                        onClick = {
+                            more = false
+                            confirmDelete = true
+                        }
+                    ) {
+                        Text("删除本页")
+                    }
+                    TextButton(
+                        onClick = {
+                            more = false
+                            vm.exportScanCase(active)
+                        }
+                    ) {
+                        Text("保存本页诊断包（含原图）")
+                    }
                     TextButton(
                         onClick = {
                             more = false

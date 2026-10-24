@@ -113,7 +113,7 @@
       "dependencies": [],
       "scope": "自然/清晰/去阴影/黑白分工，保护细笔画和彩色印章",
       "acceptance": "原图对比可用，不把浅色字擦成空白",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "SCN05",
@@ -176,7 +176,7 @@
       "dependencies": [],
       "scope": "共享页模型，HorizontalPager与连续布局切换",
       "acceptance": "左右滑动逐页停稳，切模式保持当前页",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "R02",
@@ -189,7 +189,7 @@
       ],
       "scope": "轻点显隐工具，系统栏全屏与返回退出",
       "acceptance": "全屏可退出，系统边缘导航可用",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "R03",
@@ -202,7 +202,7 @@
       ],
       "scope": "保存文档页、归一化锚点、缩放和布局",
       "acceptance": "重新进入和进程重启回到原处",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "R04",
@@ -215,7 +215,7 @@
       ],
       "scope": "压缩/转换移入面板，保留搜索/目录/分享快捷动作",
       "acceptance": "普通阅读画布显著增加，功能仍可找到",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "R05",
@@ -228,7 +228,7 @@
       ],
       "scope": "放大优先页内平移，边缘抬手后再翻页；双击适配",
       "acceptance": "读放大表格不会一拖就跳页",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "R06",
@@ -241,7 +241,7 @@
       ],
       "scope": "分块、基础预览、有限预取、取消过期渲染",
       "acceptance": "放大变清晰，长文档不预渲染全部页",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "R07",
@@ -267,7 +267,7 @@
       ],
       "scope": "导入大纲、手动书签、物理页与页面标签区分",
       "acceptance": "罗马页码/正文页跳转不混乱",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "R09",
@@ -293,7 +293,7 @@
       ],
       "scope": "应用深色与PDF着色分开，暖纸/反色可选",
       "acceptance": "照片不被强制反色，原文件不变",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "R11",
@@ -369,7 +369,7 @@
       "dependencies": [],
       "scope": "完整明暗语义色、字号、间距、形状、状态",
       "acceptance": "主色与选中容器一致，大字号可读",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "UI02",
@@ -382,7 +382,7 @@
       ],
       "scope": "收敛大卡，搜索/最近/列表与扫描主操作清楚",
       "acceptance": "首屏能找文件和开始扫描",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "UI03",
@@ -395,7 +395,7 @@
       ],
       "scope": "分类、别名、收藏/常用动作，现有入口保留",
       "acceptance": "搜索Word/OCR/图片均命中实际工具",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "UI04",
@@ -408,7 +408,7 @@
       ],
       "scope": "名称点按修改、上下文底栏、缩略图可收起",
       "acceptance": "画布变大，当前/批量应用范围清楚",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "UI05",
@@ -434,7 +434,7 @@
       ],
       "scope": "长按/选择入口、范围、数量、退出位置、直接删除保留",
       "acceptance": "最近/全部/回收站批量操作不丢功能",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "UI07",
@@ -447,7 +447,7 @@
       ],
       "scope": "区分等待/失败/部分完成，提示不盖按钮",
       "acceptance": "失败可操作，成功有打开与保存位置",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "UI08",
@@ -610,7 +610,7 @@
       "dependencies": [],
       "scope": "输入目标模式引擎能力、参数与输出说明",
       "acceptance": "未支持路线不出现可执行假按钮",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "CVT02",
@@ -623,7 +623,7 @@
       ],
       "scope": "整合PDF现有文本图片DOCX转换，类别和直接入口",
       "acceptance": "同一路线不需要两套参数流程",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "CVT03",
@@ -636,7 +636,7 @@
       ],
       "scope": "TXT导入/编辑、中文字体、换行分页与纸张",
       "acceptance": "中文长文本跨页可读，源文本保留",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "CVT04",
@@ -649,7 +649,7 @@
       ],
       "scope": "JPG/PNG/WebP、尺寸质量与透明背景",
       "acceptance": "真实编码与扩展名一致，方向正确",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "CVT05",
@@ -662,7 +662,7 @@
       ],
       "scope": "顺序拼接、宽度间距、过长分段与页码范围",
       "acceptance": "不因超长OOM，页序不乱",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "CVT06",
@@ -676,7 +676,7 @@
       ],
       "scope": "多文件同预设，逐项覆盖，只重试失败项",
       "acceptance": "一个文件失败不丢其他输出",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "CVT07",
@@ -689,7 +689,7 @@
       ],
       "scope": "原件/结果预览，外观/编辑/对象保留模式",
       "acceptance": "预览是真实输出，不用原图冒充结果",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "CVT08",
@@ -715,7 +715,7 @@
       ],
       "scope": "单元格预览、列类型、分隔编码和前导零",
       "acceptance": "Excel粘贴后编号和金额未变",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "CVT10",
@@ -728,7 +728,7 @@
       ],
       "scope": "多表工作表、合并单元格、行列与文本类型",
       "acceptance": "不是整页图片嵌入Excel",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "CVT11",
@@ -741,7 +741,7 @@
       ],
       "scope": "DOCX/XLSX/PPTX先行，纸张范围字体和预览",
       "acceptance": "文档表格幻灯片各有代表页正确",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "CVT12",
@@ -754,7 +754,7 @@
       ],
       "scope": "标题段落表格图片与编辑优先/外观优先",
       "acceptance": "输出真实结构，模式损失说清楚",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "CVT13",
@@ -767,7 +767,7 @@
       ],
       "scope": "PDF整页图PPTX、PPT图片包及后续编辑模式",
       "acceptance": "整页图模式不声称文字可编辑",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "CVT14",
@@ -817,7 +817,7 @@
       "dependencies": [],
       "scope": "独立lastOpened和阅读进度，排序可切换",
       "acceptance": "打开不改内容时间，最近列表语义正确",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "LIB02",
@@ -1145,7 +1145,7 @@
       "dependencies": [],
       "scope": "版本从包信息读取，主页/发布页/更新记录可点",
       "acceptance": "无网络权限也能由浏览器打开真实链接",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "SET04",
@@ -1184,7 +1184,7 @@
       ],
       "scope": "任务包/结果包、引擎探测和明确日志",
       "acceptance": "手机离线基础能力不受影响",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "EXT02",
@@ -1221,7 +1221,7 @@
       "dependencies": [],
       "scope": "改动、未做项、实际验证范围、APK与源码哈希",
       "acceptance": "版本/标签/附件指向一致，旧发布保留",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "REL02",
@@ -1249,5 +1249,6 @@
       "acceptance": "包体减少有清单，首开离线主能力不退化",
       "status": "planned"
     }
-  ]
+  ],
+  "statusSource": "implementation-status.json"
 }

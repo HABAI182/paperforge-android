@@ -88,6 +88,7 @@ fun SettingsScreen(vm: MainViewModel) {
                     listOf(
                         "ORIGINAL" to "原图",
                         "AUTO" to "自动",
+                        "TEXT" to "清晰文字",
                         "CLEAN" to "去阴影",
                         "GRAY" to "灰度",
                         "BW" to "黑白",
@@ -130,8 +131,9 @@ fun SettingsScreen(vm: MainViewModel) {
                     "主题",
                     "theme",
                     "SYSTEM",
-                    listOf("SYSTEM" to "跟随系统", "LIGHT" to "浅色", "DARK" to "深色"),
+                    listOf("SYSTEM" to "跟随系统", "LIGHT" to "浅色", "DARK" to "深色", "AMOLED" to "纯黑"),
                 )
+                SettingToggle("使用系统动态配色", "dynamicColor", false)
                 SettingChoices(
                     "主题色",
                     "accent",

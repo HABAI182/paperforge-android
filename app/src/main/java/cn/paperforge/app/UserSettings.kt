@@ -36,6 +36,7 @@ object UserSettings {
             "quality" to 90f,
             "theme" to "SYSTEM",
             "accent" to "GREEN",
+            "dynamicColor" to false,
             "fontScale" to 1f,
             "compactRows" to false,
             "recentCount" to 6f,
@@ -119,11 +120,12 @@ object UserSettings {
         val options =
             mapOf(
                 "detector" to setOf("NEURAL", "HYBRID", "STANDARD"),
-                "filter" to setOf("ORIGINAL", "AUTO", "CLEAN", "GRAY", "BW", "COLOR", "WHITEBOARD"),
+                "filter" to
+                    setOf("ORIGINAL", "AUTO", "TEXT", "CLEAN", "GRAY", "BW", "COLOR", "WHITEBOARD"),
                 "ocrLanguage" to setOf("CHINESE", "LATIN"),
                 "paper" to setOf("Auto", "A4", "A5", "Letter"),
                 "resolution" to setOf("DRAFT", "STANDARD", "HIGH", "CUSTOM"),
-                "theme" to setOf("SYSTEM", "LIGHT", "DARK"),
+                "theme" to setOf("SYSTEM", "LIGHT", "DARK", "AMOLED"),
                 "accent" to setOf("GREEN", "BLUE", "PURPLE", "ORANGE"),
             )
         val booleans =
@@ -135,6 +137,7 @@ object UserSettings {
                 "strictQuality",
                 "searchable",
                 "compactRows",
+                "dynamicColor",
             )
         val edit = prefs.edit()
         var count = 0

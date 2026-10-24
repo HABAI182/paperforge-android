@@ -1,5 +1,5 @@
 {
-  "version": "0.6.0",
+  "version": "next-development",
   "updated": "2026-10-24",
   "defaultExecution": "Android-local",
   "officeRequiresOptionalPhoneEngine": true,
@@ -56,8 +56,8 @@
     {
       "id": "SCN04",
       "title": "增强效果与内容保护",
-      "status": "planned",
-      "note": "完整目标保留，未在本版标记完成"
+      "status": "partial",
+      "note": "分开自然/自动/清晰/去阴影等模式，修复CLEAN变灰，保留红蓝色及黑块；同裁边原图对比；真实淡字/铅笔/反光验证仍待补"
     },
     {
       "id": "SCN05",
@@ -177,13 +177,13 @@
       "id": "UI01",
       "title": "统一视觉变量",
       "status": "partial",
-      "note": "明暗语义色与容器统一；完整尺寸/状态设计变量仍可继续整理"
+      "note": "明暗语义色、Typography、Shapes、动态配色与纯黑完成；全应用状态/动效和大字号覆盖仍待继续"
     },
     {
       "id": "UI02",
       "title": "文档优先首页",
       "status": "done",
-      "note": "单行快捷区，首屏最近文件、扫描与搜索均可见"
+      "note": "移除大宣传卡，搜索置顶、扫描悬浮按钮、真实首页缩略图；固定顶栏回收站"
     },
     {
       "id": "UI03",
@@ -194,8 +194,8 @@
     {
       "id": "UI04",
       "title": "扫描编辑画布优先",
-      "status": "planned",
-      "note": "完整目标保留，未在本版标记完成"
+      "status": "done",
+      "note": "大画布、点按改名、底栏上下文工具、可收起滤镜/页条；左右翻页、缩放、全屏已操作验证"
     },
     {
       "id": "UI05",
@@ -578,8 +578,8 @@
     {
       "id": "REL01",
       "title": "本次版本与交付记录",
-      "status": "ready",
-      "note": "最终构建、签名、ABI/16KB与验收记录已备齐；发布状态以交付清单与发布回读记录为准"
+      "status": "done",
+      "note": "0.6.0九附件发布与完整回读已完成；0.6.1交付状态以本版独立发布核验记录为准"
     },
     {
       "id": "REL02",
@@ -593,5 +593,12 @@
       "status": "planned",
       "note": "完整目标保留，未在本版标记完成"
     }
-  ]
+  ],
+  "counts": {
+    "planned": 67,
+    "partial": 19,
+    "done": 12
+  },
+  "releaseHold": true,
+  "publishedBaseline": "0.6.0"
 }

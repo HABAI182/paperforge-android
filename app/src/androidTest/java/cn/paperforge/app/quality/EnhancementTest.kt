@@ -34,7 +34,7 @@ class EnhancementTest {
             }
         original.setPixels(pixels, 0, 800, 0, 0, 800, 1000)
         try {
-            for (mode in listOf("AUTO", "WHITEBOARD", "BW")) {
+            for (mode in listOf("AUTO", "TEXT", "CLEAN", "COLOR", "WHITEBOARD", "BW")) {
                 val result = ScanProcessor.transform(original, Quad.Full, mode)
                 try {
                     val dark = result.getPixel(result.width * 3 / 8, result.height * 44 / 100)
