@@ -69,6 +69,11 @@ class AutoCaptureGate(
     private var manualUnknown = false
     private var changedFrames = 0
     private var absentSince: Long? = null
+    private var priorFrame: List<Float>? = null
+    private var turnStarted = 0L
+    private var lastMotion = 0L
+    private var motionFrames = 0
+    private var turnSeen = false
     var progress = 0f
         private set
 
@@ -77,7 +82,40 @@ class AutoCaptureGate(
         now: Long,
         qualityReady: Boolean = true,
         scene: List<Float>? = null,
+        fullFrame: List<Float>? = null,
+        turnRearm: Boolean = true,
+        turnThreshold: Float = .06f,
     ): Boolean {
+        val prior = priorFrame
+        priorFrame = fullFrame?.toList()
+        if (
+            captured != null &&
+                turnRearm &&
+                fullFrame != null &&
+                prior != null &&
+                now - lastCapture >= 250
+        ) {
+            val moving = CaptureReference.signatureDistance(prior, fullFrame) > turnThreshold
+            if (moving) {
+                if (motionFrames == 0 || now - lastMotion > 700 || now - turnStarted > 2500) {
+                    turnStarted = now
+                    motionFrames = 0
+                    turnSeen = false
+                }
+                motionFrames++
+                lastMotion = now
+                if (motionFrames >= 3 && now - turnStarted >= 240) turnSeen = true
+                reset()
+                return false
+            }
+            if (turnSeen && now - lastMotion in 300..2500) {
+                captured = null
+                capturedScene = null
+                motionFrames = 0
+                turnSeen = false
+                reset()
+            }
+        }
         if (quad == null || !quad.valid() || quad.area < minimumArea) {
             if (absentSince == null) absentSince = now
             if (now - (absentSince ?: now) > 600) {
@@ -147,6 +185,8 @@ class AutoCaptureGate(
             captured = quad
             capturedScene = scene?.toList()
             changedFrames = 0
+            motionFrames = 0
+            turnSeen = false
             reset()
             return true
         }
@@ -159,17 +199,23 @@ class AutoCaptureGate(
             capturedScene = null
             manualUnknown = false
             changedFrames = 0
+            priorFrame = null
+            motionFrames = 0
+            turnSeen = false
         }
         anchor = null
         progress = 0f
     }
 
-    fun markCaptured(quad: Quad?, now: Long, scene: List<Float>?) {
+    fun markCaptured(quad: Quad?, now: Long, scene: List<Float>?, fullFrame: List<Float>? = null) {
         lastCapture = now
         captured = quad
         capturedScene = scene?.toList()
         manualUnknown = quad == null
         changedFrames = 0
+        priorFrame = fullFrame?.toList()
+        motionFrames = 0
+        turnSeen = false
         reset()
     }
 }

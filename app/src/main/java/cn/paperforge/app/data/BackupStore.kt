@@ -95,6 +95,7 @@ object BackupStore {
                     },
                 )
                 .put("library", LibraryPreferences(repo.context).export())
+                .put("profiles", SettingsProfiles(repo.context).export())
                 .put(
                     "outputs",
                     JSONArray().apply {
@@ -419,6 +420,9 @@ object BackupStore {
                     outputRows.forEach { repo.dao.putOutput(it) }
                     taskRows.forEach { repo.dao.putTask(it) }
                     sideChanged = true
+                    metadata.optJSONObject("profiles")?.let {
+                        SettingsProfiles(repo.context).importJson(it.toString())
+                    }
                     metadata.optJSONObject("library")?.let {
                         LibraryPreferences(repo.context).restore(it)
                     }

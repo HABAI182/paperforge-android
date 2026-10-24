@@ -139,7 +139,7 @@
       ],
       "scope": "日常/书籍/票据/证件/白板档案，快门/定时可选",
       "acceptance": "切档案只改声明参数，可恢复默认",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "SCN07",
@@ -421,7 +421,7 @@
       ],
       "scope": "主控与高级参数分层、轻提示、固定快门底栏",
       "acceptance": "按钮不盖落点，状态刷新不重绑相机",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "UI06",
@@ -1121,7 +1121,7 @@
       "dependencies": [],
       "scope": "分组覆盖、复制恢复、配置版本与JSON导出",
       "acceptance": "导入不带失效设备路径，旧设置兼容",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "SET02",
@@ -1252,8 +1252,8 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 29,
-    "planned": 45,
+    "done": 32,
+    "planned": 42,
     "partial": 24
   }
 }

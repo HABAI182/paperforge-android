@@ -57,6 +57,13 @@ fun SettingsScreen(vm: MainViewModel) {
                 modifier = Modifier.fillMaxWidth(),
             )
             Text("修改自动保存，拍摄参数在下一次进入相机时生效。", style = MaterialTheme.typography.bodySmall)
+            if (visible("档案 配置 预设 扫描 默认"))
+                OutlinedButton(
+                    onClick = { vm.openProfiles("settings") },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("配置档案与扫描模式")
+                }
             if (visible("任务 后台 进度 失败 重试"))
                 OutlinedButton(
                     onClick = { vm.screen.value = "tasks" },
@@ -82,6 +89,9 @@ fun SettingsScreen(vm: MainViewModel) {
                 SettingSlider("纸框平滑程度", "outlineWeight", 3f, 1f..8f, "")
                 SettingSlider("切换纸框确认帧数", "outlineSwitchFrames", 2f, 1f..6f, "帧")
                 SettingToggle("默认自动拍摄", "autoShutter", true)
+                SettingToggle("相似页翻动后重新自动拍摄", "turnRearm", true)
+                SettingSlider("翻页动作灵敏阈值", "turnThreshold", .06f, .025f..0.2f, "%", 100f)
+                SettingSlider("手动快门倒计时", "captureTimer", 0f, 0f..10f, "秒")
                 SettingToggle("拍一页即进入编辑", "reviewAfterCapture", false)
                 SettingToggle("照片沿用取景纸框", "lockCrop", true)
                 SettingToggle("显示纸边框", "showOutline", true)

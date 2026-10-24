@@ -14,6 +14,10 @@ object UserSettings {
             "outlineSwitchFrames" to 2f,
             "dewarpStrength" to 1f,
             "autoShutter" to true,
+            "turnRearm" to true,
+            "turnThreshold" to .06f,
+            "captureTimer" to 0f,
+            "scanAspect" to 0f,
             "reviewAfterCapture" to false,
             "lockCrop" to true,
             "showOutline" to true,
@@ -98,10 +102,27 @@ object UserSettings {
     fun importJson(text: String): Int {
         val root = JSONObject(text)
         require(root.optInt("format") == 1) { "不是支持的纸匠设置文件" }
-        val values = root.getJSONObject("preferences")
+        val values = normalizedValues(root.getJSONObject("preferences"))
+        val edit = prefs.edit()
+        values.keys().forEach { key ->
+            when (val value = values.get(key)) {
+                is Boolean -> edit.putBoolean(key, value)
+                is Number -> edit.putFloat(key, value.toFloat())
+                is String -> edit.putString(key, value)
+            }
+        }
+        edit.apply()
+        changed()
+        return values.length()
+    }
+
+    fun normalizedValues(values: JSONObject): JSONObject {
         val ranges =
             mapOf(
                 "stableMs" to 300f..2000f,
+                "turnThreshold" to .025f..0.2f,
+                "captureTimer" to 0f..10f,
+                "scanAspect" to 0f..2.5f,
                 "captureArea" to 0.05f..0.4f,
                 "captureConfidence" to 0.45f..0.95f,
                 "cooldownMs" to 800f..5000f,
@@ -132,6 +153,7 @@ object UserSettings {
         val booleans =
             setOf(
                 "autoShutter",
+                "turnRearm",
                 "reviewAfterCapture",
                 "lockCrop",
                 "showOutline",
@@ -141,18 +163,17 @@ object UserSettings {
                 "edgeTurn",
                 "dynamicColor",
             )
-        val edit = prefs.edit()
-        var count = 0
+        val result = JSONObject()
         values.keys().forEach { key ->
             val value = values.get(key)
             when {
                 key in ranges && value is Number && value.toFloat().isFinite() ->
-                    edit.putFloat(key, value.toFloat().coerceIn(ranges.getValue(key)))
+                    result.put(key, value.toFloat().coerceIn(ranges.getValue(key)))
                 key in options && value is String && value in options.getValue(key) ->
-                    edit.putString(key, value)
-                key in booleans && value is Boolean -> edit.putBoolean(key, value)
+                    result.put(key, value)
+                key in booleans && value is Boolean -> result.put(key, value)
                 key == "homeTools" && value is String ->
-                    edit.putString(
+                    result.put(
                         key,
                         value
                             .split(',')
@@ -164,12 +185,16 @@ object UserSettings {
                     )
                 else -> return@forEach
             }
-            count++
         }
-        edit.apply()
-        changed()
-        return count
+        return result
     }
+
+    fun values(keys: Set<String>, factory: Boolean = false) =
+        JSONObject().apply {
+            val snapshot =
+                if (factory) defaults else defaults + prefs.all.filterKeys { it in defaults }
+            keys.forEach { key -> snapshot[key]?.let { put(key, it) } }
+        }
 
     private fun changed() {
         revision.value += 1

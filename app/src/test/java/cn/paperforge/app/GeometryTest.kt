@@ -6,6 +6,30 @@ import org.junit.Test
 
 class GeometryTest {
     @Test
+    fun similarFormsRearmAfterSustainedTurnButNotExposureOrOneBadFrame() {
+        val paper = List(64) { .8f }
+        val clear = List(16) { .7f }
+        val shade = List(16) { if (it % 2 == 0) .3f else .85f }
+        val gate = AutoCaptureGate(stableMs = 600, cooldownMs = 1500)
+        gate.markCaptured(Quad.Full, 1000, paper, clear)
+        assertFalse(gate.update(Quad.Full, 1600, false, paper, shade))
+        assertFalse(gate.update(Quad.Full, 1760, false, paper, clear))
+        assertFalse(gate.update(Quad.Full, 1920, false, paper, shade))
+        assertFalse(gate.update(Quad.Full, 2080, true, paper, clear))
+        assertFalse(gate.update(Quad.Full, 2400, true, paper, clear))
+        assertFalse(gate.update(Quad.Full, 2800, true, paper, clear))
+        assertTrue(gate.update(Quad.Full, 3100, true, paper, clear))
+        assertFalse(gate.update(Quad.Full, 5000, true, paper, clear))
+        val unchanged = AutoCaptureGate(stableMs = 600, cooldownMs = 1500)
+        unchanged.markCaptured(Quad.Full, 1000, paper, clear)
+        for (time in 1400..4000 step 200) {
+            val frame =
+                if (time == 2000) shade else clear.map { it + if (time >= 2600) .12f else 0f }
+            assertFalse(unchanged.update(Quad.Full, time.toLong(), true, paper, frame))
+        }
+    }
+
+    @Test
     fun autoCaptureRecognizesPageChangeAtTheSameCorners() {
         val gate = AutoCaptureGate(stableMs = 600, cooldownMs = 1500)
         var captures = 0

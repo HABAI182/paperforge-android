@@ -1,0 +1,43 @@
+{
+  "features": [
+    "named grouped profiles",
+    "five scan modes",
+    "manual countdown",
+    "advanced camera control sheet",
+    "motion-based similar form rearm"
+  ],
+  "build": "app debug and AndroidTest succeeded",
+  "focusedChecks": {
+    "profiles": {
+      "tests": 1,
+      "seconds": 0.488,
+      "passed": true
+    },
+    "geometry": {
+      "name": "cn.paperforge.app.GeometryTest",
+      "tests": "10",
+      "skipped": "0",
+      "failures": "0",
+      "errors": "0",
+      "timestamp": "2026-10-24T12:47:11.230Z",
+      "hostname": "DESKTOP-DVV8TM5",
+      "time": "0.288"
+    }
+  },
+  "verified": [
+    "profile application leaves unrelated theme/export quality intact",
+    "custom profile copy and JSON import/export",
+    "unknown device paths stripped",
+    "old preference JSON compatibility",
+    "group default reset",
+    "per-shot output ratio snapshot",
+    "sustained scene movement followed by new stability can rearm same paper signature",
+    "single outlier frame or global exposure change does not rearm"
+  ],
+  "limits": [
+    "motion event heuristic requires real handheld validation; broad repeated occlusion can resemble a turn",
+    "timer/camera UI compilation succeeded; not yet owner phone camera acceptance",
+    "full system process death not tested here"
+  ],
+  "releaseCreated": false
+}

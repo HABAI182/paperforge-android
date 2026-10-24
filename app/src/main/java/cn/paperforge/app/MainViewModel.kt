@@ -56,6 +56,21 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val editorTarget = MutableStateFlow<Pair<String, Int>?>(null)
     val libraryFocus = MutableStateFlow<LibrarySearchHit?>(null)
     val outputSource = MutableStateFlow<String?>(null)
+    val profileReturn = MutableStateFlow("settings")
+
+    fun openProfiles(origin: String) {
+        profileReturn.value = origin
+        screen.value = "profiles"
+    }
+
+    fun exportProfiles() =
+        perform("导出配置档案") {
+            val file = File(repo.exports, "PaperForge-profiles-${System.currentTimeMillis()}.json")
+            file.writeText(SettingsProfiles(repo.context).export().toString(2), Charsets.UTF_8)
+            outputLocked.value = false
+            output.value = file
+        }
+
     val libraryFacts =
         repo.dao
             .libraryFacts()

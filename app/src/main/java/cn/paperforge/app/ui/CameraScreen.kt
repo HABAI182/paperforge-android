@@ -51,13 +51,18 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.hypot
 import kotlin.math.roundToInt
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.opencv.core.*
 
 @androidx.annotation.OptIn(androidx.camera.view.TransformExperimental::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
     val context = LocalContext.current
+    val settingsRevision by UserSettings.revision.collectAsState()
+    val timerSeconds =
+        remember(settingsRevision) { UserSettings.number("captureTimer", 0f).roundToInt() }
     val lifecycle = LocalLifecycleOwner.current
     var permitted by remember {
         mutableStateOf(
@@ -142,14 +147,21 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
     val captureScope = rememberCoroutineScope()
     val latestAuto by rememberUpdatedState(auto)
     val latestBusy by rememberUpdatedState(busy)
-    val takePhoto: () -> Unit = {
+    var countdown by remember { mutableIntStateOf(0) }
+    var timerJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+    val captureNow: () -> Unit = {
         val imageCapture = capture
         val doc = vm.selected.value
         if (imageCapture != null && doc != null && !busy && snapping.compareAndSet(false, true)) {
             val snapshot = rawQuad.takeIf { SystemClock.elapsedRealtime() - rawAt < 700 }
             val atShutter = reference?.copy(requestedAt = SystemClock.elapsedRealtime())
             val targetAtShutter = vm.replacement.value
-            gate.markCaptured(snapshot, SystemClock.elapsedRealtime(), atShutter?.paper)
+            gate.markCaptured(
+                snapshot,
+                SystemClock.elapsedRealtime(),
+                atShutter?.paper,
+                atShutter?.scene,
+            )
             captureScope.launch {
                 var prepared: cn.paperforge.app.data.LocalTaskRow? = null
                 try {
@@ -185,7 +197,30 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
             }
         }
     }
-    val latestTakePhoto by rememberUpdatedState(takePhoto)
+    val takePhoto: () -> Unit = {
+        if (countdown > 0) {
+            timerJob?.cancel()
+            countdown = 0
+        } else if (!busy && !snapping.get()) {
+            val seconds = timerSeconds
+            if (seconds == 0) captureNow()
+            else
+                timerJob =
+                    captureScope.launch {
+                        try {
+                            for (remaining in seconds downTo 1) {
+                                countdown = remaining
+                                delay(1000)
+                            }
+                            countdown = 0
+                            captureNow()
+                        } finally {
+                            countdown = 0
+                        }
+                    }
+        }
+    }
+    val latestTakePhoto by rememberUpdatedState(captureNow)
     LaunchedEffect(Unit) { if (!permitted) request.launch(Manifest.permission.CAMERA) }
     Column(Modifier.fillMaxSize().background(Color(0xFF121B18)).systemBarsPadding()) {
         Row(
@@ -231,6 +266,30 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                     "闪光灯",
                     tint = Color.White,
                 )
+            }
+        }
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            TextButton(onClick = { vm.openProfiles("capture") }) {
+                Text(
+                    "档案 · ${cn.paperforge.app.data.SettingsProfiles(context).active()}",
+                    color = Color.White,
+                )
+            }
+            TextButton(
+                onClick = {
+                    val choices = listOf(0f, 3f, 5f, 10f)
+                    val value = UserSettings.number("captureTimer", 0f)
+                    UserSettings.set(
+                        "captureTimer",
+                        choices[(choices.indexOf(value) + 1).mod(choices.size)],
+                    )
+                }
+            ) {
+                Text(if (timerSeconds == 0) "立即拍摄" else "倒计时 $timerSeconds 秒", color = Color.White)
             }
         }
         Box(
@@ -569,6 +628,7 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                                                     if (
                                                                         latestAuto &&
                                                                             !latestBusy &&
+                                                                            countdown == 0 &&
                                                                             !snapping.get()
                                                                     )
                                                                         gate.update(
@@ -576,6 +636,15 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                                                             now,
                                                                             acceptable,
                                                                             quality.signature,
+                                                                            quality.sceneSignature,
+                                                                            UserSettings.bool(
+                                                                                "turnRearm",
+                                                                                true,
+                                                                            ),
+                                                                            UserSettings.number(
+                                                                                "turnThreshold",
+                                                                                .06f,
+                                                                            ),
                                                                         )
                                                                     else false
                                                                 stability = gate.progress
@@ -660,38 +729,63 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                     }
                     TextButton(onClick = onImport) { Text("导入图片") }
                 }
+            if (countdown > 0)
+                Text(
+                    "$countdown",
+                    color = Color.White,
+                    style = MaterialTheme.typography.displayLarge,
+                    modifier = Modifier.align(Alignment.Center),
+                )
         }
         cameraError?.let { Text(it, color = Color(0xFFFFC4B7), modifier = Modifier.padding(16.dp)) }
         if (controls)
             camera?.let { cam ->
-                Column(Modifier.padding(horizontal = 24.dp)) {
-                    val zoomState = cam.cameraInfo.zoomState.value
-                    if (zoomState != null && zoomState.maxZoomRatio > zoomState.minZoomRatio) {
-                        Text("变焦 %.1f×".format(zoom), color = Color.White)
-                        Slider(
-                            zoom,
-                            {
-                                zoom = it
-                                cam.cameraControl.setZoomRatio(it)
-                            },
-                            valueRange = zoomState.minZoomRatio..minOf(zoomState.maxZoomRatio, 4f),
+                ModalBottomSheet(
+                    onDismissRequest = { controls = false },
+                    containerColor = Color(0xFF1C2924),
+                    contentColor = Color.White,
+                ) {
+                    Column(Modifier.padding(horizontal = 24.dp)) {
+                        Text(
+                            "相机调节",
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.padding(bottom = 16.dp),
                         )
-                    }
-                    val e = cam.cameraInfo.exposureState
-                    if (e.isExposureCompensationSupported) {
-                        Text("曝光 ${exposure.roundToInt()}", color = Color.White)
-                        Slider(
-                            exposure,
-                            {
-                                exposure = it
-                                cam.cameraControl.setExposureCompensationIndex(it.roundToInt())
-                            },
-                            valueRange =
-                                e.exposureCompensationRange.lower.toFloat()..e
-                                        .exposureCompensationRange
-                                        .upper
-                                        .toFloat(),
-                        )
+                        val zoomState = cam.cameraInfo.zoomState.value
+                        if (zoomState != null && zoomState.maxZoomRatio > zoomState.minZoomRatio) {
+                            Text("变焦 %.1f×".format(zoom), color = Color.White)
+                            Slider(
+                                zoom,
+                                {
+                                    zoom = it
+                                    cam.cameraControl.setZoomRatio(it)
+                                },
+                                valueRange =
+                                    zoomState.minZoomRatio..minOf(zoomState.maxZoomRatio, 4f),
+                            )
+                        }
+                        val e = cam.cameraInfo.exposureState
+                        if (e.isExposureCompensationSupported) {
+                            Text("曝光 ${exposure.roundToInt()}", color = Color.White)
+                            Slider(
+                                exposure,
+                                {
+                                    exposure = it
+                                    cam.cameraControl.setExposureCompensationIndex(it.roundToInt())
+                                },
+                                valueRange =
+                                    e.exposureCompensationRange.lower.toFloat()..e
+                                            .exposureCompensationRange
+                                            .upper
+                                            .toFloat(),
+                            )
+                        }
+                        TextButton(
+                            onClick = { controls = false },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text("完成调节", color = Color.White)
+                        }
                     }
                 }
             }
@@ -720,7 +814,7 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
             ) {
                 Icon(
                     Icons.Default.CameraAlt,
-                    "拍照",
+                    if (countdown > 0) "取消倒计时" else "拍照",
                     tint = Color(0xFF176B54),
                     modifier = Modifier.size(32.dp),
                 )

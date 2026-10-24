@@ -319,11 +319,12 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 BackHandler(screen != "home" && !busy) {
-                    vm.replacement.value = null
+                    if (screen != "profiles") vm.replacement.value = null
                     vm.screen.value =
                         when {
                             screen in listOf("annotations", "pdf-pages") -> "reader"
                             screen == "storage" -> "settings"
+                            screen == "profiles" -> vm.profileReturn.value
                             screen == "pages" ||
                                 screen == "capture" && vm.pages.value.isNotEmpty() -> "editor"
                             else -> "home"
@@ -388,6 +389,7 @@ class MainActivity : ComponentActivity() {
                         "settings" -> SettingsScreen(vm)
                         "storage" -> StorageScreen(vm)
                         "tasks" -> TaskCenterScreen(vm)
+                        "profiles" -> SettingsProfilesScreen(vm)
                         "outputs" -> OutputHistoryScreen(vm)
                         "pages" -> PageGridScreen(vm)
                         "pdf-pages" -> PdfPageGridScreen(vm)

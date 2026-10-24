@@ -46,7 +46,7 @@ data class CapturePreset(
                 existing?.brightness ?: p.getDouble("brightness").toFloat(),
                 existing?.contrast ?: p.getDouble("contrast").toFloat(),
                 existing?.enhanceStrength ?: p.getDouble("enhanceStrength").toFloat(),
-                existing?.outputAspect ?: 0f,
+                existing?.outputAspect ?: p.optDouble("scanAspect", 0.0).toFloat(),
                 p.getString("detector"),
                 p.getBoolean("lockCrop"),
             )
