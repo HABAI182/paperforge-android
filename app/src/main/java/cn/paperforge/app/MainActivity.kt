@@ -415,7 +415,14 @@ class MainActivity : ComponentActivity() {
                         snackbar,
                         Modifier.align(Alignment.BottomCenter)
                             .navigationBarsPadding()
-                            .padding(bottom = 88.dp),
+                            .padding(
+                                bottom =
+                                    when (screen) {
+                                        "reader" -> 160.dp
+                                        "editor" -> 168.dp
+                                        else -> 88.dp
+                                    }
+                            ),
                     )
                     if (busy)
                         Surface(

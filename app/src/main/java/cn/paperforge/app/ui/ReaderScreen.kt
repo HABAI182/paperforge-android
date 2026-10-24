@@ -2,10 +2,6 @@ package cn.paperforge.app.ui
 
 import android.app.Activity
 import android.graphics.Bitmap
-import android.graphics.Color as AndroidColor
-import android.graphics.pdf.PdfRenderer
-import android.os.ParcelFileDescriptor
-import android.util.LruCache
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.*
@@ -23,15 +19,8 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -48,60 +37,11 @@ import cn.paperforge.app.pdf.ReaderInfo
 import cn.paperforge.app.pdf.ReaderLink
 import cn.paperforge.app.pdf.ReaderTextBlock
 import java.io.File
-import kotlin.math.abs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
-class PdfSession(file: File) : AutoCloseable {
-    private val fd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
-    private val renderer =
-        try {
-            PdfRenderer(fd)
-        } catch (error: Throwable) {
-            fd.close()
-            throw error
-        }
-    val count = renderer.pageCount
-    private var closed = false
-    private val cache =
-        object : LruCache<String, Bitmap>(40 * 1024 * 1024) {
-            override fun sizeOf(key: String, value: Bitmap) = value.allocationByteCount
-        }
-
-    @Synchronized
-    fun render(n: Int, edge: Int = 1600): Bitmap {
-        check(!closed) { "阅读会话已关闭" }
-        val key = "$n:$edge"
-        return cache.get(key)
-            ?: renderer.openPage(n).use { page ->
-                val scale = edge.toFloat() / maxOf(page.width, page.height)
-                Bitmap.createBitmap(
-                        (page.width * scale).toInt().coerceAtLeast(1),
-                        (page.height * scale).toInt().coerceAtLeast(1),
-                        Bitmap.Config.ARGB_8888,
-                    )
-                    .also {
-                        it.eraseColor(AndroidColor.WHITE)
-                        page.render(it, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-                        cache.put(key, it)
-                    }
-            }
-    }
-
-    @Synchronized
-    override fun close() {
-        if (closed) return
-        closed = true
-        cache.evictAll()
-        renderer.close()
-        fd.close()
-    }
-}
-
-private data class PageTransform(val zoom: Float = 1f, val x: Float = 0f, val y: Float = 0f)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -147,6 +87,16 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
     var paperTone by rememberSaveable { mutableIntStateOf(saved.tone) }
     var bookmarks by remember(doc?.id) { mutableStateOf(preferences.bookmarks(doc?.id ?: "")) }
     var bookmarkDialog by remember { mutableStateOf(false) }
+    var edgeNotice by remember { mutableStateOf("") }
+    LaunchedEffect(edgeNotice) {
+        if (edgeNotice.isNotBlank()) {
+            delay(2200)
+            edgeNotice = ""
+        }
+    }
+    var edgeTurning by remember {
+        mutableStateOf(cn.paperforge.app.UserSettings.bool("edgeTurn", true))
+    }
     var navigation by remember { mutableStateOf(false) }
     var textPage by remember { mutableStateOf<Int?>(null) }
     var textPoint by remember { mutableStateOf<PointN?>(null) }
@@ -167,6 +117,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
         }
     val visiblePage by remember { derivedStateOf { list.firstVisibleItemIndex } }
     val page = if (horizontal) pager.currentPage else visiblePage
+    val livePage by rememberUpdatedState(page)
     val transform = transforms[page] ?: PageTransform()
     val latestPosition by
         rememberUpdatedState(
@@ -239,15 +190,15 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
         scope.launch { if (horizontal) pager.scrollToPage(n) else list.scrollToItem(n) }
         interaction++
     }
-    val currentLinks by
-        produceState(emptyList<ReaderLink>(), file, page) {
-            value =
+    val linkCache = remember(file) { mutableMapOf<Int, List<ReaderLink>>() }
+    LaunchedEffect(file, page) {
+        if (file != null && !linkCache.containsKey(page)) {
+            linkCache[page] =
                 withContext(Dispatchers.IO) {
-                    file
-                        ?.let { runCatching { ReaderDocument.links(it, page) }.getOrNull() }
-                        .orEmpty()
+                    runCatching { ReaderDocument.links(file, page) }.getOrDefault(emptyList())
                 }
         }
+    }
     fun navigate(index: Int) {
         navigationBack.add(
             latestPosition.copy(offset = if (horizontal) 0 else list.firstVisibleItemScrollOffset)
@@ -265,18 +216,51 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
         }
     }
     fun activateLink(index: Int, point: PointN): Boolean {
-        if (index != page) return false
-        val link =
-            currentLinks.firstOrNull {
-                point.x in it.left..it.right && point.y in it.top..it.bottom
-            } ?: return false
-        if (link.page != null) navigate(link.page)
-        else
-            link.uri?.let { uri ->
-                runCatching { uriHandler.openUri(uri) }
-                    .onFailure { scope.launch { vm.messages.send("系统无法打开这个链接") } }
+        if (index != livePage) return false
+        fun activate(links: List<ReaderLink>): Boolean {
+            val link =
+                links.firstOrNull { point.x in it.left..it.right && point.y in it.top..it.bottom }
+                    ?: return false
+            if (link.page != null) navigate(link.page)
+            else
+                link.uri?.let { uri ->
+                    runCatching { uriHandler.openUri(uri) }
+                        .onFailure { scope.launch { vm.messages.send("系统无法打开这个链接") } }
+                }
+            return true
+        }
+        val known = linkCache[index]
+        if (known != null) return activate(known)
+        if (file == null) return false
+        scope.launch {
+            val loaded =
+                withContext(Dispatchers.IO) {
+                    runCatching { ReaderDocument.links(file, index) }.getOrDefault(emptyList())
+                }
+            linkCache[index] = loaded
+            if (livePage == index && !activate(loaded)) {
+                controls = !controls
+                interaction++
             }
+        }
         return true
+    }
+    fun flipAtEdge(direction: Int) {
+        edgeNotice = ""
+        val next = page + direction
+        if (next in 0 until (session?.count ?: 0)) {
+            transforms[next] = PageTransform()
+            goTo(next)
+        }
+    }
+    fun edgeHint(direction: Int) {
+        edgeNotice =
+            when {
+                page + direction < 0 -> "已经是第一页"
+                page + direction >= (session?.count ?: 0) -> "已经是最后一页"
+                direction > 0 -> "已到页边，再次向左滑动翻页"
+                else -> "已到页边，再次向右滑动翻页"
+            }
     }
     fun changeMode(value: Boolean) {
         val current = page
@@ -320,6 +304,14 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
         hits.firstOrNull()?.let { goTo(it.page) }
     }
     LaunchedEffect(page) { vm.annotationPage.value = page }
+    LaunchedEffect(session, page, transform.zoom) {
+        val renderer = session
+        if (renderer != null && transform.zoom <= 1.01f && page + 1 < renderer.count) {
+            delay(300)
+            withContext(Dispatchers.IO) { runCatching { renderer.render(page + 1, 1600) } }
+        }
+    }
+
     val showChrome = !fullscreen || controls || search
     Scaffold(
         contentWindowInsets = if (fullscreen) WindowInsets(0, 0, 0, 0) else WindowInsets.systemBars,
@@ -489,6 +481,9 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                                 interaction++
                             },
                             onLinkTap = { p -> activateLink(index, p) },
+                            edgeTurning = edgeTurning,
+                            onEdgeTurn = ::flipAtEdge,
+                            onEdgeArm = ::edgeHint,
                         )
                     }
                 else
@@ -536,9 +531,25 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                                     interaction++
                                 },
                                 onLinkTap = { p -> activateLink(index, p) },
+                                edgeTurning = edgeTurning,
+                                onEdgeTurn = ::flipAtEdge,
+                                onEdgeArm = ::edgeHint,
                             )
                         }
                     }
+                if (edgeNotice.isNotBlank())
+                    Text(
+                        edgeNotice,
+                        modifier =
+                            Modifier.align(Alignment.BottomCenter)
+                                .padding(bottom = 80.dp)
+                                .background(
+                                    MaterialTheme.colorScheme.surface.copy(alpha = .94f),
+                                    MaterialTheme.shapes.medium,
+                                )
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                    )
                 if (navigationBack.isNotEmpty())
                     TextButton(
                         onClick = { returnToAnchor() },
@@ -614,6 +625,21 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Text("翻页方式", style = MaterialTheme.typography.labelLarge)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            "放大到页边，再滑一次翻页",
+                            Modifier.weight(1f),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                        Switch(
+                            edgeTurning,
+                            {
+                                edgeTurning = it
+                                cn.paperforge.app.UserSettings.set("edgeTurn", it)
+                            },
+                        )
+                    }
+
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         FilterChip(horizontal, { changeMode(true) }, label = { Text("左右翻页") })
                         FilterChip(!horizontal, { changeMode(false) }, label = { Text("连续滚动") })
@@ -895,201 +921,4 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
             },
             confirmButton = { TextButton(onClick = { thumbnails = false }) { Text("关闭") } },
         )
-}
-
-@Composable
-private fun ReaderPage(
-    session: PdfSession,
-    index: Int,
-    transform: PageTransform,
-    tone: Int,
-    paged: Boolean,
-    hits: List<PdfSearch.Hit>,
-    onTransform: (PageTransform) -> Unit,
-    onTap: () -> Unit,
-    onLongPress: (PointN) -> Unit = {},
-    onLinkTap: (PointN) -> Boolean = { false },
-) {
-    val edge = if (transform.zoom > 1.5f) 2800 else 1600
-    val bitmap by
-        produceState<Bitmap?>(null, session, index, edge) {
-            if (edge > 1600) delay(180)
-            value =
-                withContext(Dispatchers.IO) {
-                    runCatching { session.render(index, edge) }.getOrNull()
-                }
-        }
-    val current by rememberUpdatedState(transform)
-    val change by rememberUpdatedState(onTransform)
-    val tap by rememberUpdatedState(onTap)
-    val longPress by rememberUpdatedState(onLongPress)
-    val linkTap by rememberUpdatedState(onLinkTap)
-    val scope = rememberCoroutineScope()
-    var tapJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
-    var lastTap by remember { mutableLongStateOf(0L) }
-    val b = bitmap
-    if (b == null) {
-        Box(Modifier.fillMaxWidth().height(320.dp), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
-        }
-        return
-    }
-    BoxWithConstraints(
-        if (paged) Modifier.fillMaxSize() else Modifier.fillMaxWidth(),
-        contentAlignment = Alignment.Center,
-    ) {
-        val ratio = b.width.toFloat() / b.height
-        val width = if (paged) minOf(maxWidth, maxHeight * ratio) else maxWidth
-        Box(
-            Modifier.width(width).aspectRatio(ratio).clipToBounds().pointerInput(session, index) {
-                awaitEachGesture {
-                    val down = awaitFirstDown(requireUnconsumed = false)
-                    var eventTime = down.uptimeMillis
-                    var moved = false
-                    var multiple = false
-                    var travelled = Offset.Zero
-                    do {
-                        val event = awaitPointerEvent()
-                        eventTime = event.changes.maxOf { it.uptimeMillis }
-                        val fingers = event.changes.count { it.pressed }
-                        if (fingers > 1) multiple = true
-                        val delta = event.calculatePan()
-                        travelled += delta
-                        if (abs(travelled.x) + abs(travelled.y) > viewConfiguration.touchSlop)
-                            moved = true
-                        if (fingers > 1 || current.zoom > 1.01f) {
-                            val zoom = (current.zoom * event.calculateZoom()).coerceIn(1f, 5f)
-                            val limit = (zoom - 1f) / 2f
-                            change(
-                                PageTransform(
-                                    zoom,
-                                    (current.x + delta.x / size.width).coerceIn(-limit, limit),
-                                    (current.y + delta.y / size.height).coerceIn(-limit, limit),
-                                )
-                            )
-                            event.changes.forEach { it.consume() }
-                        }
-                    } while (event.changes.any { it.pressed })
-                    if (!moved && !multiple) {
-                        val now = eventTime
-                        val point =
-                            PointN(
-                                ((down.position.x / size.width - .5f - current.x) / current.zoom +
-                                        .5f)
-                                    .coerceIn(0f, 1f),
-                                ((down.position.y / size.height - .5f - current.y) / current.zoom +
-                                        .5f)
-                                    .coerceIn(0f, 1f),
-                            )
-                        if (now - down.uptimeMillis >= 500) {
-                            tapJob?.cancel()
-                            lastTap = 0
-                            longPress(point)
-                        } else if (linkTap(point)) {
-                            tapJob?.cancel()
-                            lastTap = 0
-                        } else if (now - lastTap < 280) {
-                            tapJob?.cancel()
-                            change(if (current.zoom > 1.01f) PageTransform() else PageTransform(2f))
-                            lastTap = 0
-                        } else {
-                            lastTap = now
-                            tapJob?.cancel()
-                            tapJob =
-                                scope.launch {
-                                    delay(280)
-                                    tap()
-                                }
-                        }
-                    }
-                }
-            }
-        ) {
-            Box(
-                Modifier.fillMaxSize().graphicsLayer {
-                    scaleX = transform.zoom
-                    scaleY = transform.zoom
-                    translationX = transform.x * size.width
-                    translationY = transform.y * size.height
-                }
-            ) {
-                val filter =
-                    when (tone) {
-                        1 ->
-                            ColorFilter.colorMatrix(
-                                ColorMatrix(
-                                    floatArrayOf(
-                                        1f,
-                                        0f,
-                                        0f,
-                                        0f,
-                                        0f,
-                                        0f,
-                                        .97f,
-                                        0f,
-                                        0f,
-                                        0f,
-                                        0f,
-                                        0f,
-                                        .88f,
-                                        0f,
-                                        0f,
-                                        0f,
-                                        0f,
-                                        0f,
-                                        1f,
-                                        0f,
-                                    )
-                                )
-                            )
-                        2 ->
-                            ColorFilter.colorMatrix(
-                                ColorMatrix(
-                                    floatArrayOf(
-                                        -1f,
-                                        0f,
-                                        0f,
-                                        0f,
-                                        245f,
-                                        0f,
-                                        -1f,
-                                        0f,
-                                        0f,
-                                        245f,
-                                        0f,
-                                        0f,
-                                        -1f,
-                                        0f,
-                                        245f,
-                                        0f,
-                                        0f,
-                                        0f,
-                                        1f,
-                                        0f,
-                                    )
-                                )
-                            )
-                        else -> null
-                    }
-                Image(
-                    b.asImageBitmap(),
-                    "第 ${index + 1} 页",
-                    Modifier.fillMaxSize(),
-                    colorFilter = filter,
-                )
-                Canvas(Modifier.fillMaxSize()) {
-                    hits.forEach { hit ->
-                        drawRect(
-                            Color(0x88FFD54F),
-                            Offset(hit.left * size.width, hit.top * size.height),
-                            Size(
-                                (hit.right - hit.left) * size.width,
-                                (hit.bottom - hit.top) * size.height,
-                            ),
-                        )
-                    }
-                }
-            }
-        }
-    }
 }

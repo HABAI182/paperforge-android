@@ -62,12 +62,23 @@ fun ScanPageCanvas(page: PageRow, compare: Boolean, onTap: () -> Unit, onZoom: (
                         if (abs(travel.x) + abs(travel.y) > viewConfiguration.touchSlop)
                             moved = true
                         if (fingers > 1 || zoom > 1.01f) {
-                            zoom = (zoom * event.calculateZoom()).coerceIn(1f, 5f)
+                            val nextZoom = (zoom * event.calculateZoom()).coerceIn(1f, 5f)
+                            val factor = nextZoom / zoom
+                            val anchor = event.calculateCentroid(useCurrent = false)
+                            val anchorX =
+                                if (anchor.x.isFinite()) anchor.x / size.width - .5f else 0f
+                            val anchorY =
+                                if (anchor.y.isFinite()) anchor.y / size.height - .5f else 0f
+                            zoom = nextZoom
                             val bound = (zoom - 1f) / 2f
                             pan =
                                 Offset(
-                                    (pan.x + delta.x / size.width).coerceIn(-bound, bound),
-                                    (pan.y + delta.y / size.height).coerceIn(-bound, bound),
+                                    (pan.x * factor + anchorX * (1 - factor) + delta.x / size.width)
+                                        .coerceIn(-bound, bound),
+                                    (pan.y * factor +
+                                            anchorY * (1 - factor) +
+                                            delta.y / size.height)
+                                        .coerceIn(-bound, bound),
                                 )
                             event.changes.forEach { it.consume() }
                         }
@@ -76,8 +87,15 @@ fun ScanPageCanvas(page: PageRow, compare: Boolean, onTap: () -> Unit, onZoom: (
                         val now = eventTime
                         if (now - lastTap < 280) {
                             tapJob?.cancel()
-                            zoom = if (zoom > 1.01f) 1f else 2f
-                            pan = Offset.Zero
+                            val reset = zoom > 1.01f
+                            zoom = if (reset) 1f else 2f
+                            pan =
+                                if (reset) Offset.Zero
+                                else
+                                    Offset(
+                                        (.5f - down.position.x / size.width).coerceIn(-.5f, .5f),
+                                        (.5f - down.position.y / size.height).coerceIn(-.5f, .5f),
+                                    )
                             lastTap = 0L
                         } else {
                             lastTap = now

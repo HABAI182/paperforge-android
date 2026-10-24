@@ -1,0 +1,19 @@
+{
+  "state": "development-only",
+  "releaseCreated": false,
+  "unitTests": 21,
+  "unitFailures": 0,
+  "tilePixelAndUiChecks": "next-tiles-android.log: 2 passed",
+  "combinedEdgeLinkNotesCheck": "next-hint-android.log: 1 passed",
+  "fixedIssues": [
+    "tiny crop drag touch slop",
+    "gesture event timing",
+    "page hint intercepting reset zoom"
+  ],
+  "originalPlanCounts": {
+    "partial": 24,
+    "planned": 56,
+    "done": 18
+  },
+  "physicalDeviceTested": false
+}

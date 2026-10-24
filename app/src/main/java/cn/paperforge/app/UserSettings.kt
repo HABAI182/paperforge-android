@@ -39,6 +39,7 @@ object UserSettings {
             "dynamicColor" to false,
             "fontScale" to 1f,
             "compactRows" to false,
+            "edgeTurn" to true,
             "recentCount" to 6f,
             "homeTools" to "images,pdf,ocr,merge,compress,tools",
         )
@@ -137,6 +138,7 @@ object UserSettings {
                 "strictQuality",
                 "searchable",
                 "compactRows",
+                "edgeTurn",
                 "dynamicColor",
             )
         val edit = prefs.edit()

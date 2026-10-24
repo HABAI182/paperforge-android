@@ -228,7 +228,7 @@
       ],
       "scope": "放大优先页内平移，边缘抬手后再翻页；双击适配",
       "acceptance": "读放大表格不会一拖就跳页",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "R06",
@@ -241,7 +241,7 @@
       ],
       "scope": "分块、基础预览、有限预取、取消过期渲染",
       "acceptance": "放大变清晰，长文档不预渲染全部页",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "R07",

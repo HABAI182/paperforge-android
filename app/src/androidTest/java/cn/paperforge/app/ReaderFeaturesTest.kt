@@ -116,6 +116,29 @@ class ReaderFeaturesTest {
             compose.waitUntil(15000) {
                 compose.onAllNodesWithText("1 / 3").fetchSemanticsNodes().isNotEmpty()
             }
+            compose.onNodeWithContentDescription("第 1 页").performTouchInput {
+                doubleClick(Offset(width * .8f, height * .7f))
+            }
+            compose.waitUntil(10000) {
+                runCatching {
+                        compose
+                            .onNodeWithTag("reader-tiles-0")
+                            .fetchSemanticsNode()
+                            .config[cn.paperforge.app.ui.PdfTileCountKey] > 0
+                    }
+                    .getOrDefault(false)
+            }
+            compose.onNodeWithContentDescription("第 1 页").performTouchInput { swipeLeft() }
+            compose.onNodeWithText("1 / 3").assertIsDisplayed()
+            compose.onNodeWithContentDescription("第 1 页").performTouchInput { swipeLeft() }
+            compose.waitUntil(10000) {
+                compose.onAllNodesWithText("2 / 3").fetchSemanticsNodes().isNotEmpty()
+            }
+            compose.runOnIdle { model.readerTarget.value = doc.id to 0 }
+            compose.waitUntil(10000) {
+                compose.onAllNodesWithText("1 / 3").fetchSemanticsNodes().isNotEmpty()
+            }
+            compose.onNodeWithText("恢复缩放").performClick()
             compose.onNodeWithContentDescription("阅读设置").performClick()
             compose.onNodeWithText("目录与链接").performScrollTo().performClick()
             compose.onNodeWithText("Chapter Three").performClick()
