@@ -44,6 +44,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val ocrReview = MutableStateFlow("")
     val canCorrectOcr = MutableStateFlow(false)
     private var ocrPage: PageRow? = null
+    val ocrVersions = MutableStateFlow<List<OcrTextVersion>>(emptyList())
     val messages = Channel<String>(Channel.BUFFERED)
     val replacement = MutableStateFlow<String?>(null)
     val mergeSources = MutableStateFlow<List<DocumentRow>>(emptyList())
@@ -561,6 +562,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     ) = perform("正在离线识别文字") { showOcr(page, chinese) }
 
     private suspend fun showOcr(page: PageRow, chinese: Boolean) {
+        ocrVersions.value = emptyList()
+        canCorrectOcr.value = false
         val (updated, result) =
             repo.cacheOcr(
                 page,
@@ -574,6 +577,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         if (result.text.isBlank()) messages.send("没有识别到文字。请将纸面拍清楚、减少反光，或旋转页面后重试。")
         else {
             ocrPage = updated
+            ocrVersions.value = OcrRecords.versions(updated)
             canCorrectOcr.value = true
             ocr.value = result.text
         }
@@ -596,36 +600,36 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 text.add("第 ${index+1} 页\n${result.text}")
             }
             ocrPage = null
+            ocrVersions.value = emptyList()
             canCorrectOcr.value = false
             ocr.value = text.joinToString("\n\n")
         }
 
+    fun openOcr(page: PageRow) =
+        perform("打开识别结果") {
+            val current =
+                repo.dao.pages(page.documentId).firstOrNull { it.id == page.id } ?: return@perform
+            if (current.ocrText == null)
+                showOcr(current, UserSettings.string("ocrLanguage", "CHINESE") != "LATIN")
+            else {
+                ocrPage = current
+                ocrVersions.value = OcrRecords.versions(current)
+                canCorrectOcr.value = true
+                ocrReview.value = "已保存文字 · 可查看原始识别与历次校正"
+                ocr.value = current.ocrText
+            }
+        }
+
     fun correctOcr(text: String) =
         perform("保存文字校正") {
-            val old = ocrPage ?: return@perform
-            val current =
-                repo.dao.pages(old.documentId).firstOrNull { it.id == old.id } ?: return@perform
-            val layout = old.ocrLayout?.let { cn.paperforge.app.model.OcrLayout.decode(it) }
-            val lines = text.lines()
-            require(current.revision == old.revision) { "页面已修改，请重新识别后再校正" }
-            val updated =
-                layout
-                    ?.takeIf { it.lines.size == lines.size }
-                    ?.let { l ->
-                        l.copy(
-                                lines =
-                                    l.lines.mapIndexed { i, line ->
-                                        line.copy(
-                                            text = lines[i],
-                                            elements = emptyList(),
-                                            corrected = true,
-                                        )
-                                    }
-                            )
-                            .encode()
-                    }
-            repo.dao.updatePage(current.copy(ocrText = text, ocrLayout = updated))
-            messages.send("已保存校正文字" + if (updated == null) "；行数改变后，PDF 文字层将重新识别" else "")
+            val page = ocrPage ?: return@perform
+            val updated = repo.correctOcr(page, text)
+            ocrPage = updated
+            ocrVersions.value = OcrRecords.versions(updated)
+            ocr.value = text
+            messages.send(
+                "校正已保存，原始识别与历史版本保留" + if (updated.ocrLayout == null) "；行数改变后，PDF文字层会重新识别" else ""
+            )
         }
 
     fun detectPage(page: PageRow) =
@@ -683,6 +687,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun extractText() =
         perform("正在提取 PDF 文字") {
             ocrPage = null
+            ocrVersions.value = emptyList()
             canCorrectOcr.value = false
             ocr.value =
                 PdfEngine.text(File(selected.value!!.pdfPath!!)).ifBlank {

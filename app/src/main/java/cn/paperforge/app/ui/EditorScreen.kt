@@ -120,7 +120,7 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                 "adjust" -> adjust = true
                 "more" -> more = true
                 "applyAll" -> active?.let(vm::applyAll)
-                "ocr" -> active?.let { vm.recognize(it) }
+                "ocr" -> active?.let(vm::openOcr)
             }
         },
         onRename = { value ->
@@ -390,6 +390,23 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
                     OcrOptionsControl()
+                    TextButton(
+                        onClick = {
+                            more = false
+                            vm.recognize(active)
+                        }
+                    ) {
+                        Text("重新识别本页")
+                    }
+                    if (active.ocrText != null)
+                        TextButton(
+                            onClick = {
+                                more = false
+                                vm.openOcr(active)
+                            }
+                        ) {
+                            Text("识别记录与文字校正")
+                        }
                     HorizontalDivider(Modifier.padding(vertical = 12.dp))
                     TextButton(
                         onClick = {
@@ -407,7 +424,11 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                     ) {
                         Text("曲面校正")
                     }
-                    if (active.processingMetadata != "{}")
+                    if (
+                        cn.paperforge.app.data.PageResources.entries(active).any {
+                            it.role == "dewarp-grid"
+                        }
+                    )
                         TextButton(
                             onClick = {
                                 more = false

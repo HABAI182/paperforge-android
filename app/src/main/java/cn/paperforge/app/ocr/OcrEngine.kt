@@ -41,11 +41,14 @@ class BundledOcrEngine : OcrEngine {
 
     private inner class Run(val options: OcrOptions) {
         val attempts = mutableListOf<String>()
+        var raw: String? = null
 
         suspend fun pass(source: Bitmap, chinese: Boolean, variant: String): OcrLayout {
             currentCoroutineContext().ensureActive()
             attempts += variant
-            return this@BundledOcrEngine.pass(source, chinese, variant)
+            return this@BundledOcrEngine.pass(source, chinese, variant).also {
+                if (raw == null) raw = it.encode()
+            }
         }
 
         fun vote(layout: OcrLayout) =
@@ -55,7 +58,11 @@ class BundledOcrEngine : OcrEngine {
             this@BundledOcrEngine.merge(base, alternative, options.pageAgreement)
 
         fun finish(layout: OcrLayout) =
-            layout.copy(recognitionMode = options.mode.name, attempts = attempts.toList())
+            layout.copy(
+                recognitionMode = options.mode.name,
+                attempts = attempts.toList(),
+                rawRecognition = raw,
+            )
     }
 
     override suspend fun layout(page: PageRow, chinese: Boolean, options: OcrOptions): OcrLayout {

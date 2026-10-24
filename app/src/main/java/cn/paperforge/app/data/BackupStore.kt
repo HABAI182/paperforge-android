@@ -278,8 +278,9 @@ object BackupStore {
                     }
                 fun page(old: PageRow): PageRow {
                     val docId = ids[old.documentId] ?: error("备份页面缺少所属文档")
+                    val remapped = PageResources.remap(old) { path -> copy(path, docId) }
                     val processing =
-                        JSONObject(old.processingMetadata)
+                        JSONObject(remapped.processingMetadata)
                             .apply {
                                 optString("captureJob")
                                     .takeIf { it.isNotBlank() }
@@ -291,12 +292,11 @@ object BackupStore {
                                     }
                             }
                             .toString()
-                    return PageResources.remap(old) { path -> copy(path, docId) }
-                        .copy(
-                            id = pageIds.getOrPut(old.id) { UUID.randomUUID().toString() },
-                            documentId = docId,
-                            processingMetadata = processing,
-                        )
+                    return remapped.copy(
+                        id = pageIds.getOrPut(old.id) { UUID.randomUUID().toString() },
+                        documentId = docId,
+                        processingMetadata = processing,
+                    )
                 }
                 val restored =
                     documents.map { old ->

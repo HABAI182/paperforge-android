@@ -1,0 +1,27 @@
+{
+  "feature": "separate raw, automatic and user-corrected OCR records",
+  "environment": "API35 AOSP x86_64 emulator",
+  "focusedTest": {
+    "tests": 1,
+    "seconds": 1.367,
+    "passed": true
+  },
+  "fixture": "crafted distinct raw/automatic/corrected strings; persistence test, not OCR accuracy measurement",
+  "verified": [
+    "raw record is immutable gzip resource, outside large Room text fields",
+    "automatic result retains hypotheses",
+    "two user corrections including changed line count preserve original record",
+    "correction undo/redo restores text and rebases valid sourceRevision",
+    "unbound stale legacy OCR text invalidated on history restore",
+    "history files protected in resource graph",
+    "backup restores record paths and OCR text versions",
+    "restored history undo retains raw source"
+  ],
+  "bugFoundAndFixed": "task ID remapping overwrote already-restored resource paths; remapping now operates on mapped metadata",
+  "limits": [
+    "freeform changes to line count retain text and audit, but cannot fabricate word geometry; PDF text layer may re-recognize",
+    "native raw first-pass collection is wired; this test uses crafted results",
+    "regional reruns and per-word correction UI remain OCR03"
+  ],
+  "releaseCreated": false
+}

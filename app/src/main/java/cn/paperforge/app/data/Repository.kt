@@ -132,7 +132,13 @@ class Repository(val context: Context, val database: PaperDatabase) {
         database.withTransaction {
             val current =
                 dao.pages(page.documentId).firstOrNull { it.id == page.id } ?: error("页面不存在")
-            val next = page.copy(revision = current.revision + 1, ocrText = null, ocrLayout = null)
+            val next =
+                page.copy(
+                    revision = current.revision + 1,
+                    ocrText = null,
+                    ocrLayout = null,
+                    processingMetadata = PageResources.withoutOcrRecord(page),
+                )
             dao.clearRedo(page.documentId)
             dao.addHistory(
                 EditHistory(
@@ -171,10 +177,82 @@ class Repository(val context: Context, val database: PaperDatabase) {
                             .map(adjusted, true)
             }
             adjusted = adjusted.copy(sourceRevision = current.revision, deskewDegrees = 0f)
-            val updated = current.copy(ocrText = adjusted.text, ocrLayout = adjusted.encode())
-            dao.updatePage(updated)
-            dao.touch(page.documentId, System.currentTimeMillis())
-            updated to adjusted
+            val file = OcrRecords.write(this@Repository, current, OcrRecords.create(page, adjusted))
+            adjusted = adjusted.copy(rawRecognition = null)
+            val updated =
+                current.copy(
+                    ocrText = adjusted.text,
+                    ocrLayout = adjusted.encode(),
+                    processingMetadata = PageResources.withOcrRecord(current, file),
+                )
+            try {
+                if (current.ocrText != null) {
+                    dao.clearRedo(page.documentId)
+                    dao.addHistory(
+                        EditHistory(
+                            documentId = page.documentId,
+                            pageId = page.id,
+                            beforeJson = DocumentCodec.page(current).toString(),
+                            afterJson = DocumentCodec.page(updated).toString(),
+                        )
+                    )
+                }
+                dao.updatePage(updated)
+                dao.touch(page.documentId, System.currentTimeMillis())
+                updated to adjusted
+            } catch (e: Exception) {
+                file.delete()
+                throw e
+            }
+        }
+
+    suspend fun correctOcr(page: PageRow, text: String): PageRow =
+        database.withTransaction {
+            val current =
+                dao.pages(page.documentId).firstOrNull { it.id == page.id } ?: error("页面不存在")
+            require(current.revision == page.revision) { "页面已修改，请重新打开识别结果" }
+            val lines = text.lines()
+            val layout = current.ocrLayout?.let { cn.paperforge.app.model.OcrLayout.decode(it) }
+            val corrected =
+                layout
+                    ?.takeIf { it.lines.size == lines.size }
+                    ?.copy(
+                        lines =
+                            layout.lines.mapIndexed { i, line ->
+                                if (line.text == lines[i]) line
+                                else
+                                    line.copy(
+                                        text = lines[i],
+                                        elements = emptyList(),
+                                        corrected = true,
+                                    )
+                            }
+                    )
+            val file =
+                OcrRecords.write(this@Repository, current, OcrRecords.corrected(current, text))
+            val updated =
+                current.copy(
+                    ocrText = text,
+                    ocrLayout = corrected?.encode(),
+                    processingMetadata = PageResources.withOcrRecord(current, file),
+                )
+            try {
+                dao.clearRedo(current.documentId)
+                dao.addHistory(
+                    EditHistory(
+                        documentId = current.documentId,
+                        pageId = current.id,
+                        beforeJson = DocumentCodec.page(current).toString(),
+                        afterJson = DocumentCodec.page(updated).toString(),
+                    )
+                )
+                dao.updatePage(updated)
+                dao.touch(current.documentId, System.currentTimeMillis())
+                updated
+            } catch (e: Exception) {
+                file.delete()
+                throw e
+            }
         }
 
     suspend fun undo(id: String, redo: Boolean = false) =
@@ -184,26 +262,30 @@ class Repository(val context: Context, val database: PaperDatabase) {
             val encoded = if (redo) history.afterJson else history.beforeJson
             val restored = HistoryState.pages(encoded)
             val current = dao.pages(id).associateBy { it.id }
+            fun restore(p: PageRow): PageRow {
+                val revision = (current[p.id]?.revision ?: p.revision) + 1
+                val layout =
+                    p.ocrLayout
+                        ?.let { cn.paperforge.app.model.OcrLayout.decode(it) }
+                        ?.takeIf { it.sourceRevision == p.revision }
+                return p.copy(
+                    revision = revision,
+                    ocrText =
+                        if (
+                            layout != null ||
+                                PageResources.entries(p).any { it.role == "ocr-record" }
+                        )
+                            p.ocrText
+                        else null,
+                    ocrLayout = layout?.copy(sourceRevision = revision)?.encode(),
+                )
+            }
             if (HistoryState.isSnapshot(encoded)) {
                 current.keys.forEach { dao.deletePage(it) }
-                restored.forEach { p ->
-                    dao.putPage(
-                        p.copy(
-                            revision = (current[p.id]?.revision ?: p.revision) + 1,
-                            ocrText = null,
-                            ocrLayout = null,
-                        )
-                    )
-                }
+                restored.forEach { p -> dao.putPage(restore(p)) }
             } else {
                 val p = restored.single()
-                dao.putPage(
-                    p.copy(
-                        revision = (current[p.id]?.revision ?: p.revision) + 1,
-                        ocrText = null,
-                        ocrLayout = null,
-                    )
-                )
+                dao.putPage(restore(p))
             }
             dao.updateHistory(history.copy(applied = redo))
             dao.touch(id, System.currentTimeMillis())

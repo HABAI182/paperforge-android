@@ -481,6 +481,8 @@ class MainActivity : ComponentActivity() {
                 ocr?.let { result ->
                     var text by remember(result) { mutableStateOf(result) }
                     val review by vm.ocrReview.collectAsState()
+                    val versions by vm.ocrVersions.collectAsState()
+                    var audit by remember(result) { mutableStateOf(false) }
                     AlertDialog(
                         onDismissRequest = { vm.ocr.value = null },
                         title = { Text("识别结果") },
@@ -488,6 +490,8 @@ class MainActivity : ComponentActivity() {
                             Column {
                                 if (canCorrectOcr && review.isNotBlank())
                                     Text(review, style = MaterialTheme.typography.bodySmall)
+                                if (canCorrectOcr && versions.isNotEmpty())
+                                    TextButton(onClick = { audit = true }) { Text("原始识别与校正记录") }
                                 OutlinedTextField(
                                     value = text,
                                     onValueChange = { text = it },
@@ -524,6 +528,15 @@ class MainActivity : ComponentActivity() {
                             }
                         },
                     )
+                    if (audit)
+                        OcrAuditDialog(
+                            versions,
+                            onDismiss = { audit = false },
+                            onUse = {
+                                text = it
+                                audit = false
+                            },
+                        )
                 }
                 passwordRequest?.let { uri ->
                     var password by remember(uri) { mutableStateOf("") }

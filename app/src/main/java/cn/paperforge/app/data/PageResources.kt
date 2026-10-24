@@ -9,6 +9,32 @@ data class PageResource(val id: String, val role: String, val path: String)
 
 /** Durable resources only. Regenerable thumbnails and OCR caches never enter this graph. */
 object PageResources {
+    fun withoutOcrRecord(page: PageRow): String {
+        val json = metadata(page)
+        json.remove("ocrRecord")
+        val resources = json.optJSONArray("resources")
+        if (resources != null)
+            json.put(
+                "resources",
+                JSONArray().apply {
+                    for (i in 0 until resources.length()) if (
+                        resources.getJSONObject(i).optString("role") != "ocr-record"
+                    )
+                        put(resources.get(i))
+                },
+            )
+        return json.toString()
+    }
+
+    fun withOcrRecord(page: PageRow, file: File): String {
+        val json = JSONObject(withoutOcrRecord(page)).put("format", 1)
+        val resources =
+            json.optJSONArray("resources") ?: JSONArray().also { json.put("resources", it) }
+        val id = UUID.randomUUID().toString()
+        resources.put(JSONObject().put("id", id).put("role", "ocr-record").put("path", file.path))
+        return json.put("ocrRecord", id).toString()
+    }
+
     fun metadata(page: PageRow) = JSONObject(page.processingMetadata)
 
     fun entries(page: PageRow): List<PageResource> {

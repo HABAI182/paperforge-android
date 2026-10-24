@@ -37,6 +37,7 @@ data class OcrLayout(
     val warnings: List<String> = emptyList(),
     val recognitionMode: String = "legacy",
     val attempts: List<String> = emptyList(),
+    val rawRecognition: String? = null,
 ) {
     val text
         get() = lines.joinToString("\n") { it.text }
@@ -57,6 +58,7 @@ data class OcrLayout(
             .put("warnings", JSONArray(warnings))
             .put("recognitionMode", recognitionMode)
             .put("attempts", JSONArray(attempts))
+            .put("rawRecognition", rawRecognition?.let { JSONObject(it) } ?: JSONObject.NULL)
             .put(
                 "lines",
                 JSONArray().apply {
@@ -196,6 +198,7 @@ data class OcrLayout(
                 o.optString("recognitionMode", "legacy"),
                 o.optJSONArray("attempts")?.let { a -> List(a.length()) { a.getString(it) } }
                     ?: emptyList(),
+                o.optJSONObject("rawRecognition")?.toString(),
             )
         }
     }
