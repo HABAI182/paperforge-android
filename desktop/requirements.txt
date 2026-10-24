@@ -1,0 +1,6 @@
+PyMuPDF==2.0
+pdf2docx==0.5.13
+openpyxl==3.1.5
+python-pptx==1.0.2
+rapidocr-onnxruntime==1.4.4
+Pillow==13.0.0

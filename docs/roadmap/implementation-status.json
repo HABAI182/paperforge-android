@@ -1,0 +1,597 @@
+{
+  "version": "0.6.0",
+  "updated": "2026-10-24",
+  "defaultExecution": "Android-local",
+  "officeRequiresOptionalPhoneEngine": true,
+  "computerRequired": false,
+  "tasks": [
+    {
+      "id": "CORE01",
+      "title": "原件与历史资源引用",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "CORE02",
+      "title": "捕获几何故障核对",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "CORE03",
+      "title": "拍摄结果与取景同步",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "CORE04",
+      "title": "翻页重触发和防误连拍",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "CORE05",
+      "title": "批量解码与草稿保全",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "SCN01",
+      "title": "裁切整边拖动与放大镜",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "SCN02",
+      "title": "书脊和非对称双页",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "SCN03",
+      "title": "曲面网格可追踪",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "SCN04",
+      "title": "增强效果与内容保护",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "SCN05",
+      "title": "长票据与图像拼接",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "SCN06",
+      "title": "扫描档案与快捷捕获",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "SCN07",
+      "title": "去手指和手写恢复试验",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "SCN08",
+      "title": "反光去噪超分试验",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "R01",
+      "title": "横向单页与纵向连续",
+      "status": "done",
+      "note": "左右/连续切换保持当前页，模拟器实际滑动"
+    },
+    {
+      "id": "R02",
+      "title": "专注与全屏阅读",
+      "status": "done",
+      "note": "全屏、轻触显隐、返回退出，交互检查通过"
+    },
+    {
+      "id": "R03",
+      "title": "阅读状态持久保存",
+      "status": "done",
+      "note": "页/布局/缩放/位置/纸色持久化；真实强停并重新打开仍为第2页"
+    },
+    {
+      "id": "R04",
+      "title": "阅读工具按需出现",
+      "status": "partial",
+      "note": "转换/压缩收进面板，画布扩大；原生目录快捷入口仍待补"
+    },
+    {
+      "id": "R05",
+      "title": "缩放平移与翻页分工",
+      "status": "partial",
+      "note": "放大优先平移、双击缩放通过；缩小时翻页，边缘再次滑动翻页尚未实现"
+    },
+    {
+      "id": "R06",
+      "title": "可见区域高清渲染",
+      "status": "partial",
+      "note": "1600/2800分级清晰度、有限缓存与取消；尚非真正分块渲染"
+    },
+    {
+      "id": "R07",
+      "title": "原生文字选择与OCR选择",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "R08",
+      "title": "目录书签和页码标签",
+      "status": "partial",
+      "note": "手动书签完成；PDF大纲和逻辑页码未接入"
+    },
+    {
+      "id": "R09",
+      "title": "链接与返回阅读处",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "R10",
+      "title": "纸色夜间和图片原色",
+      "status": "partial",
+      "note": "原色/暖纸/夜读不改源件；照片单独原色显示未实现"
+    },
+    {
+      "id": "R11",
+      "title": "临时显示裁边",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "R12",
+      "title": "双页封面与RTL",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "R13",
+      "title": "可回原页的文字重排",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "R14",
+      "title": "系统TTS与跟读",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "R15",
+      "title": "摘录卡和学习档案",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "UI01",
+      "title": "统一视觉变量",
+      "status": "partial",
+      "note": "明暗语义色与容器统一；完整尺寸/状态设计变量仍可继续整理"
+    },
+    {
+      "id": "UI02",
+      "title": "文档优先首页",
+      "status": "done",
+      "note": "单行快捷区，首屏最近文件、扫描与搜索均可见"
+    },
+    {
+      "id": "UI03",
+      "title": "工具搜索与固定项",
+      "status": "partial",
+      "note": "工具搜索、独立转换中心、已有可配快捷项；收藏/别名注册表仍可扩展"
+    },
+    {
+      "id": "UI04",
+      "title": "扫描编辑画布优先",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "UI05",
+      "title": "相机控制层简化",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "UI06",
+      "title": "多选一致性与快捷批处理",
+      "status": "done",
+      "note": "多选/直接删除保留，原流程关键检查通过"
+    },
+    {
+      "id": "UI07",
+      "title": "空加载错误完成状态",
+      "status": "partial",
+      "note": "转换加载、错误、结果和表格校对状态已提供；全应用一致性仍需继续整理"
+    },
+    {
+      "id": "UI08",
+      "title": "平板折叠与大字号",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "UI09",
+      "title": "个人工具与布局配置",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "OCR01",
+      "title": "快速均衡精细三档",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "OCR02",
+      "title": "原始文字与校正分离",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "OCR03",
+      "title": "区域重识别与同屏校对",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "OCR04",
+      "title": "统一结构和坐标IR",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "OCR05",
+      "title": "第二引擎限时原型",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "OCR06",
+      "title": "模型与语言包管理",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "OCR07",
+      "title": "有线表格结构识别",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "OCR08",
+      "title": "多栏竖排和脚本扩展",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "OCR09",
+      "title": "搜索与选择几何核对",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "OCR10",
+      "title": "原生PDF文字优先",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "CVT01",
+      "title": "转换能力注册表",
+      "status": "partial",
+      "note": "真实可执行转换入口登记；引擎能力元数据与细粒度参数仍可扩展"
+    },
+    {
+      "id": "CVT02",
+      "title": "统一转换中心",
+      "status": "done",
+      "note": "统一搜索、分类、文件选择、结果交接"
+    },
+    {
+      "id": "CVT03",
+      "title": "文字生成PDF",
+      "status": "partial",
+      "note": "中文分页PDF完成，10/12/16pt；自定义纸张/边距与编辑器仍待补"
+    },
+    {
+      "id": "CVT04",
+      "title": "基础图片格式互转",
+      "status": "partial",
+      "note": "真实JPG/PNG/WebP与EXIF方向；尺寸4096/质量92当前固定"
+    },
+    {
+      "id": "CVT05",
+      "title": "PDF与图片长图",
+      "status": "partial",
+      "note": "PDF→分段长图完成；图片间接缝/重叠拼接仍待补"
+    },
+    {
+      "id": "CVT06",
+      "title": "批量转换与失败重试",
+      "status": "partial",
+      "note": "图片批量逐项处理并打包；持久失败重试尚未统一"
+    },
+    {
+      "id": "CVT07",
+      "title": "转换预览与保真模式",
+      "status": "partial",
+      "note": "Office实际排版/结构Word/整页PPTX模式及表格校正；并排保真预览仍待补"
+    },
+    {
+      "id": "CVT08",
+      "title": "Markdown和HTML双向基础",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "CVT09",
+      "title": "表格区域TSV与CSV",
+      "status": "partial",
+      "note": "整页PDF/图片表格CSV完成；手工圈选区域/TSV尚未提供"
+    },
+    {
+      "id": "CVT10",
+      "title": "结构表格XLSX",
+      "status": "done",
+      "note": "手机原生与扫描表格、多表工作表、合并单元格、跨页连接与逐格校正，独立Excel解析通过"
+    },
+    {
+      "id": "CVT11",
+      "title": "Office转PDF可用引擎",
+      "status": "done",
+      "note": "手机LibreOfficeKit完成DOCX/XLSX/PPTX→PDF、同类格式互转并自动返回；字体/复杂版式限制明确"
+    },
+    {
+      "id": "CVT12",
+      "title": "版面DOCX导出",
+      "status": "partial",
+      "note": "手机真实字号/粗斜体、表格、嵌入图像与OCR结构；完整跨栏/脚注/裁剪对象还原不保证"
+    },
+    {
+      "id": "CVT13",
+      "title": "幻灯片与图片互转",
+      "status": "partial",
+      "note": "手机整页图PPTX完成；可编辑图表与全部幻灯片图片包入口仍可扩展"
+    },
+    {
+      "id": "CVT14",
+      "title": "EPUB与结构文本转换",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "CVT15",
+      "title": "OFD与DjVu等版式适配",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "CVT16",
+      "title": "特殊格式扩展",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "LIB01",
+      "title": "最近打开与内容修改分开",
+      "status": "partial",
+      "note": "独立lastOpened、旧数据迁移、最近排序与备份完成；自选排序菜单未补"
+    },
+    {
+      "id": "LIB02",
+      "title": "文档与输出记录",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "LIB03",
+      "title": "搜索片段与命中页",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "LIB04",
+      "title": "收件箱与智能集合",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "LIB05",
+      "title": "存储占用与可重建缓存",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "LIB06",
+      "title": "备份恢复完整性",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "LIB07",
+      "title": "命名模板与批量预览",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "LIB08",
+      "title": "文件夹标签与跨文档移页",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "LIB09",
+      "title": "重复检测和版本分组",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "PDF01",
+      "title": "可视页面组合工作台",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "PDF02",
+      "title": "标准批注与导出",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "PDF03",
+      "title": "目录表单链接保留",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "PDF04",
+      "title": "语义脱敏",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "PDF05",
+      "title": "目标大小与编码优化",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "PDF06",
+      "title": "PDF归档验证",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "PDF07",
+      "title": "文档比较",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "PDF08",
+      "title": "PDF属性与诊断",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "PDF09",
+      "title": "原生内容编辑",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "PDF10",
+      "title": "证书签名与高级表单",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "JOB01",
+      "title": "持久任务中心",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "JOB02",
+      "title": "原子输出与外部写入重试",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "JOB03",
+      "title": "资源预算与可见任务优先",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "JOB04",
+      "title": "配方编辑与步骤复用",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "JOB05",
+      "title": "可选自动导出",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "SET01",
+      "title": "命名配置档案",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "SET02",
+      "title": "导出预设与目录记忆",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "SET03",
+      "title": "项目主页与查看更新",
+      "status": "done",
+      "note": "项目主页、含预发布的更新页与实际安装版本"
+    },
+    {
+      "id": "SET04",
+      "title": "可选在线更新",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "SET05",
+      "title": "快捷方式与系统入口",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "EXT01",
+      "title": "电脑助手文件夹交接",
+      "status": "done",
+      "note": "可选电脑任务/结果包协议及实际跨端回传通过；手机默认流程独立运行"
+    },
+    {
+      "id": "EXT02",
+      "title": "局域网配对与断点传输",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "EXT03",
+      "title": "可选翻译与AI",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "REL01",
+      "title": "本次版本与交付记录",
+      "status": "ready",
+      "note": "最终构建、签名、ABI/16KB与验收记录已备齐；发布状态以交付清单与发布回读记录为准"
+    },
+    {
+      "id": "REL02",
+      "title": "签名与发布渠道整理",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    },
+    {
+      "id": "REL03",
+      "title": "按需包体裁剪",
+      "status": "planned",
+      "note": "完整目标保留，未在本版标记完成"
+    }
+  ]
+}

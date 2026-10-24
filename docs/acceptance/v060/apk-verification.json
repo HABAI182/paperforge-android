@@ -1,0 +1,698 @@
+[
+  {
+    "file": "PaperForge-0.6.0-debug.apk",
+    "bytes": 234856337,
+    "sha256": "c33c79c8d0662d0faaff292b2ab8e677f56d8215faec72eb97000d2944c86208",
+    "certificateSha256": "d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e",
+    "sameCertificateAsV020": true,
+    "zeroInternetPermission": true,
+    "zipalign16KiB": true,
+    "nativeLibraries": [
+      {
+        "name": "lib/arm64-v8a/libandroidx.graphics.path.so",
+        "bytes": 10096,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libc++_shared.so",
+        "bytes": 1292904,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libimage_processing_util_jni.so",
+        "bytes": 29008,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libmlkit_google_ocr_pipeline.so",
+        "bytes": 11064544,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libonnxruntime.so",
+        "bytes": 25763824,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libonnxruntime4j_jni.so",
+        "bytes": 83432,
+        "loadAlignments": [
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libopencv_java4.so",
+        "bytes": 23465088,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libpaperforge_scan.so",
+        "bytes": 7691168,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libsurface_util_jni.so",
+        "bytes": 4832,
+        "loadAlignments": [
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libandroidx.graphics.path.so",
+        "bytes": 10760,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libc++_shared.so",
+        "bytes": 1252080,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libimage_processing_util_jni.so",
+        "bytes": 48104,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libmlkit_google_ocr_pipeline.so",
+        "bytes": 11626128,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libonnxruntime.so",
+        "bytes": 31239096,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libonnxruntime4j_jni.so",
+        "bytes": 80592,
+        "loadAlignments": [
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libopencv_java4.so",
+        "bytes": 55830920,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libpaperforge_scan.so",
+        "bytes": 8488368,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libsurface_util_jni.so",
+        "bytes": 4928,
+        "loadAlignments": [
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      }
+    ],
+    "allElfLoadSegments16KiB": true
+  },
+  {
+    "file": "PaperForge-0.6.0-arm64-debug.apk",
+    "bytes": 126213217,
+    "sha256": "faba33fa1f4308974af03c0d961e1d7740175ee520a5f3f25f1e42ba95ab9498",
+    "certificateSha256": "d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e",
+    "sameCertificateAsV020": true,
+    "zeroInternetPermission": true,
+    "zipalign16KiB": true,
+    "nativeLibraries": [
+      {
+        "name": "lib/arm64-v8a/libandroidx.graphics.path.so",
+        "bytes": 10096,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libc++_shared.so",
+        "bytes": 1292904,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libimage_processing_util_jni.so",
+        "bytes": 29008,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libmlkit_google_ocr_pipeline.so",
+        "bytes": 11064544,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libonnxruntime.so",
+        "bytes": 25763824,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libonnxruntime4j_jni.so",
+        "bytes": 83432,
+        "loadAlignments": [
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libopencv_java4.so",
+        "bytes": 23465088,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libpaperforge_scan.so",
+        "bytes": 7691168,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libsurface_util_jni.so",
+        "bytes": 4832,
+        "loadAlignments": [
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      }
+    ],
+    "allElfLoadSegments16KiB": true
+  },
+  {
+    "file": "PaperForge-0.6.0-x86_64-debug.apk",
+    "bytes": 165371046,
+    "sha256": "eeb119e76f4cda4a17f9f8a9faba7c1d63d7a9bf9b91f0ea5fa6e2ae3438e7e2",
+    "certificateSha256": "d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e",
+    "sameCertificateAsV020": true,
+    "zeroInternetPermission": true,
+    "zipalign16KiB": true,
+    "nativeLibraries": [
+      {
+        "name": "lib/x86_64/libandroidx.graphics.path.so",
+        "bytes": 10760,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libc++_shared.so",
+        "bytes": 1252080,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libimage_processing_util_jni.so",
+        "bytes": 48104,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libmlkit_google_ocr_pipeline.so",
+        "bytes": 11626128,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libonnxruntime.so",
+        "bytes": 31239096,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libonnxruntime4j_jni.so",
+        "bytes": 80592,
+        "loadAlignments": [
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libopencv_java4.so",
+        "bytes": 55830920,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libpaperforge_scan.so",
+        "bytes": 8488368,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libsurface_util_jni.so",
+        "bytes": 4928,
+        "loadAlignments": [
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      }
+    ],
+    "allElfLoadSegments16KiB": true
+  },
+  {
+    "file": "PaperForge-Office-Engine-0.6.0-arm64-debug.apk",
+    "bytes": 96995593,
+    "sha256": "d74738a979724dd0530d7c662656cce1a9dbf7f2653b302ec324238db41ce54b",
+    "certificateSha256": "d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e",
+    "sameCertificateAsV020": true,
+    "zeroInternetPermission": true,
+    "zipalign16KiB": true,
+    "nativeLibraries": [
+      {
+        "name": "lib/arm64-v8a/libc++_shared.so",
+        "bytes": 1374336,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libfreebl3.so",
+        "bytes": 1340224,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/liblo-native-code.so",
+        "bytes": 196227296,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libnspr4.so",
+        "bytes": 365680,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libnss3.so",
+        "bytes": 1659152,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libnssckbi.so",
+        "bytes": 626888,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libnssdbm3.so",
+        "bytes": 199648,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libnssutil3.so",
+        "bytes": 269576,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libplc4.so",
+        "bytes": 23088,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libplds4.so",
+        "bytes": 14528,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libsmime3.so",
+        "bytes": 242160,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libsoftokn3.so",
+        "bytes": 483608,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libsqlite3.so",
+        "bytes": 1275288,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/arm64-v8a/libssl3.so",
+        "bytes": 701528,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      }
+    ],
+    "allElfLoadSegments16KiB": true
+  },
+  {
+    "file": "PaperForge-Office-Engine-0.6.0-x86_64-debug.apk",
+    "bytes": 104494995,
+    "sha256": "54086cbc410d81232db65180f78a123bfc1c3082019ca539b95ee994b62bf983",
+    "certificateSha256": "d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e",
+    "sameCertificateAsV020": true,
+    "zeroInternetPermission": true,
+    "zipalign16KiB": true,
+    "nativeLibraries": [
+      {
+        "name": "lib/x86_64/libc++_shared.so",
+        "bytes": 1337488,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libfreebl3.so",
+        "bytes": 1522664,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/liblo-native-code.so",
+        "bytes": 206865312,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libnspr4.so",
+        "bytes": 317992,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libnss3.so",
+        "bytes": 1523952,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libnssckbi.so",
+        "bytes": 614352,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libnssdbm3.so",
+        "bytes": 179464,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libnssutil3.so",
+        "bytes": 248200,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libplc4.so",
+        "bytes": 21040,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libplds4.so",
+        "bytes": 13344,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libsmime3.so",
+        "bytes": 218272,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libsoftokn3.so",
+        "bytes": 443160,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libsqlite3.so",
+        "bytes": 1143384,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      },
+      {
+        "name": "lib/x86_64/libssl3.so",
+        "bytes": 638224,
+        "loadAlignments": [
+          16384,
+          16384,
+          16384
+        ],
+        "allLoadSegments16KiB": true
+      }
+    ],
+    "allElfLoadSegments16KiB": true
+  }
+]

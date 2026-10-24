@@ -16,4 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "PaperForge"
 
-include(":app")
+include(":app", ":office-engine")

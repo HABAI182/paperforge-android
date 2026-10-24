@@ -43,3 +43,12 @@ open-source-licensed model weights. APK/model hashes, binary addresses and
 runtime source pin are in assets/scan/provenance.json. No original competitor
 .so or APK shell is bundled or executed. Edge contour fitting is PaperForge's
 implementation; display tracking and dense dewarp core adapt recovered logic.
+
+
+## 0.6.0 Office 与转换
+
+Office 手机引擎使用 LibreOfficeKit 26.2.6.3，JNI 包装原文件保留 MPL-2.0 文件头。F-Droid 两个 ABI 构建、对应源码、固定 SHA256 与重建脚本见 [office-engine/UPSTREAM.md](office-engine/UPSTREAM.md)。主 APK 不链接该引擎，需按需安装独立手机 APK；均无 INTERNET 权限。
+
+PPTX 空模板由 python-pptx 1.0.2 生成，模板许可文本保留在 `app/src/main/assets/templates/LICENSE-python-pptx.txt`。Android 表格、结构 DOCX、PPTX 打包与调用逻辑为本轮实现，复用既有 PDFBox/OpenCV/内置 ML Kit。
+
+`desktop/` 是可选源码适配器，Python 依赖版本固定在其 requirements 中；pdf2docx 上游已停止活跃维护，当前 MIT；PyMuPDF 等依赖继续适用各自许可。手机默认流程不依赖这些 Python 包，本次不发布 Windows 第三方运行时二进制。

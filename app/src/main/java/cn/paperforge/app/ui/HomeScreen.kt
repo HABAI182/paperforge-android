@@ -41,7 +41,8 @@ fun HomeScreen(
 ) {
     val docs by vm.documents.collectAsState()
     val busy by vm.busy.collectAsState()
-    var tab by remember { mutableIntStateOf(0) }
+    var tab by rememberSaveable { mutableIntStateOf(0) }
+    var toolQuery by rememberSaveable { mutableStateOf("") }
     val search by vm.query.collectAsState()
     val trash by vm.trash.collectAsState()
     var showTrash by remember { mutableStateOf(false) }
@@ -69,7 +70,7 @@ fun HomeScreen(
             }
             .let {
                 if (tab == 0)
-                    it.sortedByDescending { row -> row.modified }
+                    it.sortedByDescending { row -> maxOf(row.lastOpened, row.modified) }
                         .take(UserSettings.number("recentCount", 6f).toInt())
                 else it
             }
@@ -196,13 +197,15 @@ fun HomeScreen(
                     listOf(
                             "首页" to Icons.Default.Home,
                             "文档" to Icons.AutoMirrored.Filled.Article,
+                            "转换" to Icons.Default.SwapHoriz,
                             "工具" to Icons.Default.GridView,
                         )
                         .forEachIndexed { i, (label, icon) ->
                             NavigationBarItem(
-                                selected = tab == i,
+                                selected = tab == (if (i == 3) 2 else i) && i != 2,
                                 onClick = {
-                                    tab = i
+                                    if (i == 2) vm.screen.value = "convert"
+                                    else tab = if (i == 3) 2 else i
                                     if (i != 1) vm.query.value = ""
                                 },
                                 icon = { Icon(icon, label) },
@@ -300,36 +303,28 @@ fun HomeScreen(
                             it in setOf("images", "pdf", "ocr", "merge", "compress", "tools")
                         }
                         .distinct()
-                shortcuts.chunked(3).forEach { group ->
-                    item {
-                        Row(
-                            Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        ) {
-                            group.forEach { key ->
-                                val (label, icon, action) =
-                                    when (key) {
-                                        "images" ->
-                                            Triple(
-                                                "相册导入",
-                                                Icons.Default.AddPhotoAlternate,
-                                                onImages,
-                                            )
-                                        "pdf" -> Triple("打开 PDF", Icons.Default.PictureAsPdf, onPdf)
-                                        "ocr" ->
-                                            Triple("图片识字", Icons.Default.TextFields, onOcrImages)
-                                        "merge" -> Triple("合并 PDF", Icons.Default.Merge, onMerge)
-                                        "compress" ->
-                                            Triple(
-                                                "压缩 PDF",
-                                                Icons.Default.Compress,
-                                                { onPdfTool("compress") },
-                                            )
-                                        else -> Triple("全部工具", Icons.Default.Handyman, { tab = 2 })
-                                    }
-                                QuickCard(label, icon, Modifier.weight(1f), !busy, action)
-                            }
-                            repeat(3 - group.size) { Spacer(Modifier.weight(1f)) }
+                item {
+                    Row(
+                        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        shortcuts.forEach { key ->
+                            val (label, icon, action) =
+                                when (key) {
+                                    "images" ->
+                                        Triple("相册导入", Icons.Default.AddPhotoAlternate, onImages)
+                                    "pdf" -> Triple("打开 PDF", Icons.Default.PictureAsPdf, onPdf)
+                                    "ocr" -> Triple("图片识字", Icons.Default.TextFields, onOcrImages)
+                                    "merge" -> Triple("合并 PDF", Icons.Default.Merge, onMerge)
+                                    "compress" ->
+                                        Triple(
+                                            "压缩 PDF",
+                                            Icons.Default.Compress,
+                                            { onPdfTool("compress") },
+                                        )
+                                    else -> Triple("全部工具", Icons.Default.Handyman, { tab = 2 })
+                                }
+                            QuickCard(label, icon, Modifier.width(112.dp), !busy, action)
                         }
                     }
                 }
@@ -341,98 +336,68 @@ fun HomeScreen(
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                     )
+                    Text("搜索名称，直接选择文件开始。", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 item {
-                    Text(
-                        "每个入口都有实际流程。页面工具在打开 PDF 后使用。",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    OutlinedTextField(
+                        toolQuery,
+                        { toolQuery = it },
+                        label = { Text("搜索工具，如水印、压缩、备份") },
+                        leadingIcon = { Icon(Icons.Default.Search, null) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
-                item {
-                    ToolCard(
-                        "合并 PDF",
-                        "选择两份或更多 PDF，按选择器返回顺序合并",
-                        Icons.Default.Merge,
-                        !busy,
-                        onMerge,
-                    )
-                }
-                item {
-                    ToolCard(
-                        "图片转 PDF",
-                        "批量导图、调四角、滤镜、排序与纸张尺寸",
-                        Icons.Default.Collections,
-                        !busy,
-                        onImages,
-                    )
-                }
-                item {
-                    ToolCard(
-                        "抽页 / 拆分 / 旋转",
-                        "打开 PDF → 底部抽页工具 → 输入页码",
-                        Icons.Default.ContentCut,
-                        !busy,
-                        { onPdfTool("range") },
-                    )
-                }
-                item {
-                    ToolCard("PDF 图片压缩", "保留文字、链接和表单，比较实际体积", Icons.Default.Compress, !busy) {
-                        onPdfTool("compress")
+                val toolEntries =
+                    listOf(
+                        HomeTool("转换中心", "PDF、图片、文字、Office 与表格", Icons.Default.SwapHoriz) {
+                            vm.screen.value = "convert"
+                        },
+                        HomeTool("合并 PDF", "选择多份文件并调整顺序", Icons.Default.Merge, onMerge),
+                        HomeTool("图片转 PDF", "排序、裁边、滤镜和纸张尺寸", Icons.Default.Collections, onImages),
+                        HomeTool("离线 OCR 图片识字", "导入图片，识别中英文", Icons.Default.Translate, onOcrImages),
+                        HomeTool("抽页 / 拆分 / 旋转", "输入页码创建新副本", Icons.Default.ContentCut) {
+                            onPdfTool("range")
+                        },
+                        HomeTool("压缩 PDF", "保留文字、链接和表单", Icons.Default.Compress) {
+                            onPdfTool("compress")
+                        },
+                        HomeTool("PDF 批注与手写签名", "画笔、荧光笔、形状和文字", Icons.Default.Draw) {
+                            onPdfTool("annotate")
+                        },
+                        HomeTool("离线备份", "原图、PDF、OCR、分类与编辑历史", Icons.Default.Backup, vm::backup),
+                        HomeTool("恢复备份", "选择纸匠 ZIP 并保留现有文档", Icons.Default.Restore, onRestoreBackup),
+                    ) +
+                        listOf(
+                                "searchable" to "扫描 PDF 转可搜索 PDF",
+                                "watermark" to "添加中文水印",
+                                "number" to "添加页码",
+                                "crop" to "裁切 PDF 页面边缘",
+                                "blank" to "插入空白页",
+                                "nup2" to "2 合 1 拼版",
+                                "nup4" to "4 合 1 拼版",
+                                "encrypt" to "PDF 密码加密",
+                                "forms" to "填写 PDF 表单",
+                                "metadata" to "修改标题与作者",
+                                "extract-images" to "提取嵌入图片",
+                                "txt" to "提取 PDF 文字",
+                                "docx" to "PDF 转 Word 段落",
+                                "images-jpg" to "PDF 转 JPG 图片包",
+                                "images-png" to "PDF 转 PNG 图片包",
+                            )
+                            .map { (mode, title) ->
+                                HomeTool(title, "选择 PDF 后设置参数", Icons.Default.PictureAsPdf) {
+                                    onPdfTool(mode)
+                                }
+                            }
+                val found =
+                    toolEntries.filter {
+                        it.title.contains(toolQuery, true) ||
+                            it.description.contains(toolQuery, true)
                     }
-                }
-                item {
-                    ToolCard(
-                        "提取 PDF 文字",
-                        "保留可提取的原有文本；扫描图可单独 OCR",
-                        Icons.Default.TextSnippet,
-                        !busy,
-                        { onPdfTool("txt") },
-                    )
-                }
-                item {
-                    ToolCard(
-                        "中英文离线 OCR",
-                        "导入图片 → 整理扫描 → 识文字",
-                        Icons.Default.Translate,
-                        !busy,
-                        onOcrImages,
-                    )
-                }
-                item {
-                    ToolCard(
-                        "可搜索 PDF / 水印 / 密码",
-                        "打开 PDF → 工具箱，或扫描导出时开启 OCR",
-                        Icons.Default.ManageSearch,
-                        !busy,
-                        { onPdfTool("searchable") },
-                    )
-                }
-                item {
-                    ToolCard(
-                        "PDF 批注与手写签名",
-                        "打开 PDF → 批注，画笔、荧光笔、形状和文本",
-                        Icons.Default.Draw,
-                        !busy,
-                        { onPdfTool("annotate") },
-                    )
-                }
-                item {
-                    ToolCard(
-                        "离线备份",
-                        "包含原图、PDF、OCR、分类和编辑历史的 ZIP",
-                        Icons.Default.Backup,
-                        !busy,
-                        vm::backup,
-                    )
-                }
-                item {
-                    ToolCard(
-                        "恢复备份",
-                        "选择纸匠 ZIP，新建副本并保留现有文档",
-                        Icons.Default.Restore,
-                        !busy,
-                        onRestoreBackup,
-                    )
+                if (found.isEmpty()) item { Text("没有找到匹配的工具", Modifier.padding(24.dp)) }
+                items(found, key = { it.title }) { tool ->
+                    ToolCard(tool.title, tool.description, tool.icon, !busy, tool.action)
                 }
             } else {
                 item {
@@ -566,10 +531,16 @@ fun HomeScreen(
                                     style = MaterialTheme.typography.titleMedium,
                                 )
                                 Text(
-                                    (if (doc.kind == "scan") "扫描草稿" else "PDF 私有副本") +
+                                    (if (doc.kind == "scan") "扫描草稿" else "PDF 文档") +
                                         " · " +
                                         SimpleDateFormat("MM/dd HH:mm", Locale.CHINA)
-                                            .format(Date(doc.modified)),
+                                            .format(
+                                                Date(
+                                                    if (tab == 0)
+                                                        maxOf(doc.lastOpened, doc.modified)
+                                                    else doc.modified
+                                                )
+                                            ),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -827,3 +798,10 @@ private fun ToolCard(
         }
     }
 }
+
+private data class HomeTool(
+    val title: String,
+    val description: String,
+    val icon: ImageVector,
+    val action: () -> Unit,
+)

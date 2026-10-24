@@ -12,3 +12,7 @@ bench-results/
 __pycache__/
 *.pyc
 .cxx/
+
+office-engine/runtime/
+desktop/.venv/
+desktop/runtime/

@@ -17,6 +17,7 @@ data class DocumentRow(
     @ColumnInfo(defaultValue = "''") val tags: String = "",
     @ColumnInfo(defaultValue = "0") val favorite: Boolean = false,
     val trashedAt: Long? = null,
+    @ColumnInfo(defaultValue = "0") val lastOpened: Long = 0,
 )
 
 @Entity(
@@ -155,6 +156,9 @@ interface DocumentDao {
     @Query("UPDATE documents SET title=:title, modified=:now WHERE id=:id")
     suspend fun rename(id: String, title: String, now: Long)
 
+    @Query("UPDATE documents SET lastOpened=:now WHERE id=:id")
+    suspend fun opened(id: String, now: Long)
+
     @Query("UPDATE documents SET modified=:now WHERE id=:id")
     suspend fun touch(id: String, now: Long)
 
@@ -177,13 +181,22 @@ interface DocumentDao {
 
 @Database(
     entities = [DocumentRow::class, PageRow::class, EditHistory::class, PageSearch::class],
-    version = 6,
+    version = 7,
     exportSchema = true,
 )
 abstract class PaperDatabase : RoomDatabase() {
     abstract fun dao(): DocumentDao
 
     companion object {
+        val Migration6To7 =
+            object : Migration(6, 7) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        "ALTER TABLE documents ADD COLUMN lastOpened INTEGER NOT NULL DEFAULT 0"
+                    )
+                }
+            }
+
         val Migration5To6 =
             object : Migration(5, 6) {
                 override fun migrate(db: SupportSQLiteDatabase) {

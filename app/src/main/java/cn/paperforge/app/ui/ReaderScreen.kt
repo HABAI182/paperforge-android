@@ -1,92 +1,206 @@
 package cn.paperforge.app.ui
 
+import android.app.Activity
 import android.graphics.Bitmap
 import android.graphics.Color as AndroidColor
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
 import android.util.LruCache
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.calculatePan
-import androidx.compose.foundation.gestures.calculateZoom
+import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import cn.paperforge.app.MainViewModel
+import cn.paperforge.app.ReaderPosition
+import cn.paperforge.app.ReaderPreferences
+import cn.paperforge.app.pdf.PdfSearch
 import java.io.File
+import kotlin.math.abs
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class PdfSession(file: File) : AutoCloseable {
     private val fd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
-    private val renderer = PdfRenderer(fd)
+    private val renderer =
+        try {
+            PdfRenderer(fd)
+        } catch (error: Throwable) {
+            fd.close()
+            throw error
+        }
     val count = renderer.pageCount
-    // A bounded cache plus LazyColumn prevents rendering an entire document into memory.
+    private var closed = false
     private val cache =
-        object : LruCache<Int, Bitmap>(24 * 1024 * 1024) {
-            override fun sizeOf(key: Int, value: Bitmap) = value.allocationByteCount
+        object : LruCache<String, Bitmap>(40 * 1024 * 1024) {
+            override fun sizeOf(key: String, value: Bitmap) = value.allocationByteCount
         }
 
     @Synchronized
-    fun render(n: Int): Bitmap =
-        cache.get(n)
-            ?: renderer.openPage(n).use { p ->
-                val scale = 1100f / maxOf(p.width, p.height)
+    fun render(n: Int, edge: Int = 1600): Bitmap {
+        check(!closed) { "阅读会话已关闭" }
+        val key = "$n:$edge"
+        return cache.get(key)
+            ?: renderer.openPage(n).use { page ->
+                val scale = edge.toFloat() / maxOf(page.width, page.height)
                 Bitmap.createBitmap(
-                        (p.width * scale).toInt().coerceAtLeast(1),
-                        (p.height * scale).toInt().coerceAtLeast(1),
+                        (page.width * scale).toInt().coerceAtLeast(1),
+                        (page.height * scale).toInt().coerceAtLeast(1),
                         Bitmap.Config.ARGB_8888,
                     )
-                    .also { b ->
-                        b.eraseColor(AndroidColor.WHITE)
-                        p.render(b, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-                        cache.put(n, b)
+                    .also {
+                        it.eraseColor(AndroidColor.WHITE)
+                        page.render(it, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                        cache.put(key, it)
                     }
             }
+    }
 
     @Synchronized
     override fun close() {
+        if (closed) return
+        closed = true
         cache.evictAll()
         renderer.close()
         fd.close()
     }
 }
 
+private data class PageTransform(val zoom: Float = 1f, val x: Float = 0f, val y: Float = 0f)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReaderScreen(vm: MainViewModel, onShare: (File) -> Unit) {
     val doc by vm.selected.collectAsState()
+    key(doc?.id) { ReaderContent(vm, onShare) }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
+    val doc by vm.selected.collectAsState()
     val busy by vm.busy.collectAsState()
+    val context = LocalContext.current
+    val preferences = remember { ReaderPreferences(context) }
+    val saved = remember(doc?.id) { preferences.load(doc?.id ?: "") }
     val file = doc?.pdfPath?.let { File(it) }
-    val session by
-        produceState<PdfSession?>(null, file) {
-            value =
-                withContext(Dispatchers.IO) {
-                    runCatching { file?.let { PdfSession(it) } }.getOrNull()
-                }
+    var session by remember(file) { mutableStateOf<PdfSession?>(null) }
+    var loadError by remember(file) { mutableStateOf<String?>(null) }
+    // Close even when opening is cancelled between IO completion and state publication.
+    LaunchedEffect(file) {
+        var opened: PdfSession? = null
+        try {
+            withContext(Dispatchers.IO) { opened = file?.let(::PdfSession) }
+            session = opened
+            kotlinx.coroutines.awaitCancellation()
+        } catch (cancel: kotlinx.coroutines.CancellationException) {
+            throw cancel
+        } catch (error: Exception) {
+            loadError = error.message ?: "无法打开 PDF"
+        } finally {
+            withContext(kotlinx.coroutines.NonCancellable + Dispatchers.IO) { opened?.close() }
         }
-    val currentSession = session
-    DisposableEffect(currentSession) { onDispose { currentSession?.close() } }
-    val list = rememberLazyListState()
+    }
+    val list = rememberLazyListState(saved.page, saved.offset)
+    val pager = rememberPagerState(initialPage = saved.page) { session?.count ?: saved.page + 1 }
     val scope = rememberCoroutineScope()
+    var horizontal by rememberSaveable(doc?.id) { mutableStateOf(saved.horizontal) }
+    var fullscreen by rememberSaveable { mutableStateOf(false) }
+    var controls by remember { mutableStateOf(true) }
+    var interaction by remember { mutableIntStateOf(0) }
+    var appearance by remember { mutableStateOf(false) }
+    var paperTone by rememberSaveable { mutableIntStateOf(saved.tone) }
+    var bookmarks by remember(doc?.id) { mutableStateOf(preferences.bookmarks(doc?.id ?: "")) }
+    var bookmarkDialog by remember { mutableStateOf(false) }
+    val transforms =
+        remember(doc?.id) {
+            mutableStateMapOf(saved.page to PageTransform(saved.zoom, saved.panX, saved.panY))
+        }
+    val visiblePage by remember { derivedStateOf { list.firstVisibleItemIndex } }
+    val page = if (horizontal) pager.currentPage else visiblePage
+    val transform = transforms[page] ?: PageTransform()
+    val latestPosition by
+        rememberUpdatedState(
+            ReaderPosition(page, horizontal, transform.zoom, transform.x, transform.y, 0, paperTone)
+        )
+    val latestId by rememberUpdatedState(doc?.id)
+    fun persist() {
+        latestId?.let {
+            preferences.save(
+                it,
+                latestPosition.copy(
+                    offset = if (latestPosition.horizontal) 0 else list.firstVisibleItemScrollOffset
+                ),
+            )
+        }
+    }
+    DisposableEffect(doc?.id) { onDispose { persist() } }
+    LaunchedEffect(latestPosition) {
+        delay(350)
+        persist()
+    }
+    LaunchedEffect(list, horizontal) {
+        if (!horizontal)
+            snapshotFlow { list.firstVisibleItemIndex to list.firstVisibleItemScrollOffset }
+                .collectLatest {
+                    delay(350)
+                    persist()
+                }
+    }
+    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(lifecycle) {
+        val observer =
+            androidx.lifecycle.LifecycleEventObserver { _, event ->
+                if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP) persist()
+            }
+        lifecycle.lifecycle.addObserver(observer)
+        onDispose { lifecycle.lifecycle.removeObserver(observer) }
+    }
+    val window = (context as? Activity)?.window
+    DisposableEffect(window, fullscreen) {
+        val controller = window?.let { WindowCompat.getInsetsController(it, it.decorView) }
+        controller?.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        if (fullscreen) controller?.hide(WindowInsetsCompat.Type.systemBars())
+        else controller?.show(WindowInsetsCompat.Type.systemBars())
+        onDispose { controller?.show(WindowInsetsCompat.Type.systemBars()) }
+    }
+    LaunchedEffect(fullscreen, controls, interaction, appearance) {
+        if (fullscreen && controls && !appearance) {
+            delay(3500)
+            controls = false
+        }
+    }
     var rangeDialog by remember { mutableStateOf(false) }
     var compressDialog by remember { mutableStateOf(false) }
     var range by remember { mutableStateOf("") }
@@ -100,6 +214,27 @@ fun ReaderScreen(vm: MainViewModel, onShare: (File) -> Unit) {
     var query by remember { mutableStateOf("") }
     var hitIndex by remember { mutableIntStateOf(0) }
     val hits by vm.searchHits.collectAsState()
+    fun goTo(index: Int) {
+        val n = index.coerceIn(0, ((session?.count ?: 1) - 1).coerceAtLeast(0))
+        scope.launch { if (horizontal) pager.scrollToPage(n) else list.scrollToItem(n) }
+        interaction++
+    }
+    fun changeMode(value: Boolean) {
+        val current = page
+        horizontal = value
+        scope.launch { if (value) pager.scrollToPage(current) else list.scrollToItem(current) }
+    }
+    BackHandler(fullscreen || search) {
+        if (search) search = false
+        else {
+            fullscreen = false
+            controls = true
+        }
+    }
+    LaunchedEffect(session) {
+        val count = session?.count ?: return@LaunchedEffect
+        if (page >= count) goTo(count - 1)
+    }
     LaunchedEffect(doc?.id) {
         val entry = vm.pdfEntry.value
         vm.pdfEntry.value = null
@@ -116,112 +251,118 @@ fun ReaderScreen(vm: MainViewModel, onShare: (File) -> Unit) {
     }
     LaunchedEffect(hits) {
         hitIndex = 0
-        hits.firstOrNull()?.let { list.scrollToItem(it.page) }
+        hits.firstOrNull()?.let { goTo(it.page) }
     }
-    LaunchedEffect(list.firstVisibleItemIndex) {
-        vm.annotationPage.value = list.firstVisibleItemIndex
-    }
+    LaunchedEffect(page) { vm.annotationPage.value = page }
+    val showChrome = !fullscreen || controls || search
     Scaffold(
+        contentWindowInsets = if (fullscreen) WindowInsets(0, 0, 0, 0) else WindowInsets.systemBars,
         topBar = {
-            TopAppBar(
-                title = { Text(doc?.title ?: "PDF", maxLines = 1) },
-                navigationIcon = {
-                    IconButton(onClick = { vm.screen.value = "home" }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { file?.let { onShare(it) } }) {
-                        Icon(Icons.Default.Share, "分享 PDF")
-                    }
-                    IconButton(onClick = { search = !search }) {
-                        Icon(Icons.Default.Search, "搜索文字")
-                    }
-                    IconButton(
-                        onClick = {
+            if (showChrome)
+                TopAppBar(
+                    title = {
+                        Text(
+                            doc?.title ?: "PDF",
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = {
+                                if (fullscreen) {
+                                    fullscreen = false
+                                    controls = true
+                                } else vm.screen.value = "home"
+                            }
+                        ) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回")
+                        }
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = {
+                                search = !search
+                                interaction++
+                            }
+                        ) {
+                            Icon(Icons.Default.Search, "搜索文字")
+                        }
+                        IconButton(onClick = { appearance = true }) {
+                            Icon(Icons.Default.Tune, "阅读设置")
+                        }
+                        IconButton(
+                            onClick = {
+                                toolMode = ""
+                                tools = true
+                            }
+                        ) {
+                            Icon(Icons.Default.MoreVert, "PDF 工具")
+                        }
+                    },
+                )
+        },
+        bottomBar = {
+            if (showChrome)
+                Surface(tonalElevation = 2.dp) {
+                    Row(
+                        Modifier.fillMaxWidth().navigationBarsPadding().padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                    ) {
+                        ToolAction(Icons.Default.GridView, "页面", session != null) {
+                            thumbnails = true
+                        }
+                        ToolAction(Icons.Default.Draw, "批注", !busy) { vm.beginMarks() }
+                        ToolAction(Icons.Default.SwapHoriz, "转换", !busy) {
                             toolMode = ""
                             tools = true
                         }
-                    ) {
-                        Icon(Icons.Default.MoreVert, "PDF 工具")
+                        ToolAction(Icons.Default.Share, "分享", file != null) { file?.let(onShare) }
+                        ToolAction(
+                            if (fullscreen) Icons.Default.FullscreenExit
+                            else Icons.Default.Fullscreen,
+                            if (fullscreen) "退出全屏" else "全屏",
+                            true,
+                        ) {
+                            fullscreen = !fullscreen
+                            controls = !fullscreen
+                            interaction++
+                        }
                     }
-                },
-            )
-        },
-        bottomBar = {
-            Row(
-                Modifier.fillMaxWidth().navigationBarsPadding().padding(6.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-            ) {
-                ToolAction(Icons.Default.ContentCut, "抽页 / 旋转", !busy) { rangeDialog = true }
-                ToolAction(Icons.Default.Compress, "压缩图片", !busy) { compressDialog = true }
-                ToolAction(Icons.Default.Draw, "批注签名", !busy) { vm.beginMarks() }
-                ToolAction(Icons.Default.FindInPage, "跳页", session != null) { jump = true }
-            }
+                }
         },
     ) { padding ->
-        Column(Modifier.padding(padding).fillMaxSize()) {
-            Row(
-                Modifier.fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 10.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                AssistChip(
-                    onClick = {
-                        toolMode = "searchable"
-                        tools = true
-                    },
-                    label = { Text("OCR 识字") },
-                    enabled = !busy,
-                )
-                AssistChip(
-                    onClick = {
-                        toolMode = "docx"
-                        tools = true
-                    },
-                    label = { Text("转 Word") },
-                    enabled = !busy,
-                )
-                AssistChip(
-                    onClick = {
-                        toolMode = "images-jpg"
-                        tools = true
-                    },
-                    label = { Text("转图片") },
-                    enabled = !busy,
-                )
-                AssistChip(
-                    onClick = { vm.screen.value = "pdf-pages" },
-                    label = { Text("页面管理") },
-                    enabled = !busy,
-                )
-            }
+        Column(Modifier.fillMaxSize().padding(padding)) {
             if (search)
-                Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
+                Column(Modifier.padding(horizontal = 16.dp)) {
                     OutlinedTextField(
                         query,
                         { query = it },
                         singleLine = true,
                         label = { Text("搜索 PDF 文字层") },
+                        modifier = Modifier.fillMaxWidth(),
                         trailingIcon = {
                             TextButton(enabled = !busy, onClick = { vm.searchPdf(query) }) {
                                 Text("查找")
                             }
                         },
-                        modifier = Modifier.fillMaxWidth(),
                     )
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         Text(
-                            if (hits.isEmpty()) "${hits.size} 个结果；扫描件可先添加 OCR 文字层"
-                            else "${hitIndex+1} / ${hits.size}",
+                            if (hits.isEmpty()) "无结果 · 扫描件可先添加 OCR"
+                            else "${hitIndex + 1} / ${hits.size}",
                             style = MaterialTheme.typography.bodySmall,
                         )
                         TextButton(
                             enabled = hits.isNotEmpty(),
                             onClick = {
                                 hitIndex = (hitIndex + 1) % hits.size
-                                scope.launch { list.scrollToItem(hits[hitIndex].page) }
+                                goTo(hits[hitIndex].page)
                             },
                         ) {
                             Text("下一处")
@@ -231,135 +372,192 @@ fun ReaderScreen(vm: MainViewModel, onShare: (File) -> Unit) {
             Box(
                 Modifier.weight(1f)
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                    .background(
+                        if (paperTone == 2) Color(0xFF181C1D)
+                        else MaterialTheme.colorScheme.surfaceContainer
+                    )
             ) {
                 val s = session
                 if (s == null)
-                    Text(
-                        "无法读取 PDF 或仍在加载。加密文件暂不支持在此打开。",
-                        modifier = Modifier.align(Alignment.Center).padding(32.dp),
-                    )
-                else {
+                    Text(loadError ?: "正在打开 PDF…", Modifier.align(Alignment.Center).padding(32.dp))
+                else if (horizontal)
+                    HorizontalPager(
+                        pager,
+                        userScrollEnabled = transform.zoom <= 1.01f,
+                        modifier = Modifier.fillMaxSize(),
+                        beyondViewportPageCount = 0,
+                    ) { index ->
+                        ReaderPage(
+                            s,
+                            index,
+                            transforms[index] ?: PageTransform(),
+                            paperTone,
+                            true,
+                            hits.filter { it.page == index },
+                            {
+                                transforms[index] = it
+                                interaction++
+                            },
+                            {
+                                controls = !controls
+                                interaction++
+                            },
+                        )
+                    }
+                else
                     LazyColumn(
                         state = list,
-                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                        modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        userScrollEnabled = transform.zoom <= 1.01f,
                     ) {
                         items(s.count, key = { it }) { index ->
-                            val bitmap by
-                                produceState<Bitmap?>(null, s, index) {
-                                    value =
-                                        withContext(Dispatchers.IO) {
-                                            runCatching { s.render(index) }.getOrNull()
-                                        }
-                                }
-                            var zoom by remember { mutableFloatStateOf(1f) }
-                            var panX by remember { mutableFloatStateOf(0f) }
-                            var panY by remember { mutableFloatStateOf(0f) }
-                            Column {
-                                val b = bitmap
-                                if (b != null)
-                                    Box(
-                                        Modifier.fillMaxWidth()
-                                            .aspectRatio(b.width.toFloat() / b.height)
-                                            .clipToBounds()
-                                            .pointerInput(Unit) {
-                                                awaitEachGesture {
-                                                    awaitFirstDown(requireUnconsumed = false)
-                                                    do {
-                                                        val event = awaitPointerEvent()
-                                                        if (
-                                                            event.changes.count { it.pressed } >
-                                                                1 || zoom > 1f
-                                                        ) {
-                                                            val pan = event.calculatePan()
-                                                            val scale = event.calculateZoom()
-                                                            zoom = (zoom * scale).coerceIn(1f, 4f)
-                                                            val limitX = (zoom - 1) * size.width / 2
-                                                            val limitY =
-                                                                (zoom - 1) * size.height / 2
-                                                            panX =
-                                                                (panX + pan.x).coerceIn(
-                                                                    -limitX,
-                                                                    limitX,
-                                                                )
-                                                            panY =
-                                                                (panY + pan.y).coerceIn(
-                                                                    -limitY,
-                                                                    limitY,
-                                                                )
-                                                            event.changes.forEach { it.consume() }
-                                                        }
-                                                    } while (event.changes.any { it.pressed })
-                                                }
-                                            }
-                                    ) {
-                                        Box(
-                                            Modifier.fillMaxSize().graphicsLayer {
-                                                scaleX = zoom
-                                                scaleY = zoom
-                                                translationX = panX
-                                                translationY = panY
-                                            }
-                                        ) {
-                                            Image(
-                                                b.asImageBitmap(),
-                                                "第 ${index+1} 页",
-                                                Modifier.fillMaxSize(),
-                                            )
-                                            Canvas(Modifier.fillMaxSize()) {
-                                                hits
-                                                    .filter { it.page == index }
-                                                    .forEach { hit ->
-                                                        drawRect(
-                                                            Color(0x88FFD54F),
-                                                            Offset(
-                                                                hit.left * size.width,
-                                                                hit.top * size.height,
-                                                            ),
-                                                            Size(
-                                                                (hit.right - hit.left) * size.width,
-                                                                (hit.bottom - hit.top) * size.height,
-                                                            ),
-                                                        )
-                                                    }
-                                            }
-                                        }
-                                    }
-                                else
-                                    Box(
-                                        Modifier.fillMaxWidth().height(360.dp),
-                                        contentAlignment = Alignment.Center,
-                                    ) {
-                                        CircularProgressIndicator()
-                                    }
-                                Row(
-                                    Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                ) {
-                                    Text(
-                                        "${index+1} / ${s.count}",
-                                        modifier = Modifier.padding(8.dp),
-                                        style = MaterialTheme.typography.labelMedium,
-                                    )
-                                    if (zoom > 1f)
-                                        TextButton(
-                                            onClick = {
-                                                zoom = 1f
-                                                panX = 0f
-                                                panY = 0f
-                                            }
-                                        ) {
-                                            Text("恢复缩放")
-                                        }
-                                }
-                            }
+                            ReaderPage(
+                                s,
+                                index,
+                                transforms[index] ?: PageTransform(),
+                                paperTone,
+                                false,
+                                hits.filter { it.page == index },
+                                {
+                                    transforms[index] = it
+                                    interaction++
+                                },
+                                {
+                                    controls = !controls
+                                    interaction++
+                                },
+                            )
                         }
                     }
-                }
+                if (s != null)
+                    Surface(
+                        modifier = Modifier.align(Alignment.BottomCenter).padding(12.dp),
+                        shape = MaterialTheme.shapes.large,
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = .94f),
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            TextButton(
+                                onClick = {
+                                    jumpText = "${page + 1}"
+                                    jump = true
+                                }
+                            ) {
+                                Text("${page + 1} / ${s.count}")
+                            }
+                            if (transform.zoom > 1.01f)
+                                TextButton(onClick = { transforms[page] = PageTransform() }) {
+                                    Text("恢复缩放")
+                                }
+                            if (!showChrome)
+                                IconButton(
+                                    onClick = {
+                                        fullscreen = false
+                                        controls = true
+                                    }
+                                ) {
+                                    Icon(Icons.Default.FullscreenExit, "退出全屏")
+                                }
+                        }
+                    }
             }
         }
     }
+    if (appearance)
+        AlertDialog(
+            onDismissRequest = { appearance = false },
+            title = { Text("阅读设置") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("翻页方式", style = MaterialTheme.typography.labelLarge)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(horizontal, { changeMode(true) }, label = { Text("左右翻页") })
+                        FilterChip(!horizontal, { changeMode(false) }, label = { Text("连续滚动") })
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(
+                            onClick = {
+                                bookmarks =
+                                    if (page in bookmarks) bookmarks - page else bookmarks + page
+                                doc?.id?.let { preferences.bookmarks(it, bookmarks) }
+                            }
+                        ) {
+                            Text(if (page in bookmarks) "移除此页书签" else "收藏此页")
+                        }
+                        TextButton(
+                            onClick = {
+                                appearance = false
+                                bookmarkDialog = true
+                            }
+                        ) {
+                            Text("书签 ${bookmarks.size}")
+                        }
+                    }
+                    Text("纸张显示", style = MaterialTheme.typography.labelLarge)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf("原色", "暖纸", "夜读").forEachIndexed { index, title ->
+                            FilterChip(
+                                paperTone == index,
+                                { paperTone = index },
+                                label = { Text(title) },
+                            )
+                        }
+                    }
+                    Text(
+                        "双指缩放，放大后单指移动；双击放大或恢复。全屏轻触页面显示工具。",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    OutlinedButton(
+                        onClick = {
+                            appearance = false
+                            rangeDialog = true
+                        }
+                    ) {
+                        Text("抽页 / 旋转")
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            appearance = false
+                            compressDialog = true
+                        }
+                    ) {
+                        Text("压缩 PDF")
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            appearance = false
+                            vm.screen.value = "pdf-pages"
+                        }
+                    ) {
+                        Text("页面编排")
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { appearance = false }) { Text("完成") } },
+        )
+    if (bookmarkDialog)
+        AlertDialog(
+            onDismissRequest = { bookmarkDialog = false },
+            title = { Text("阅读书签") },
+            text = {
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (bookmarks.isEmpty()) item { Text("在阅读设置中收藏当前页") }
+                    items(bookmarks.size) { index ->
+                        val n = bookmarks.sorted()[index]
+                        TextButton(
+                            onClick = {
+                                goTo(n)
+                                bookmarkDialog = false
+                            }
+                        ) {
+                            Text("第 ${n + 1} 页")
+                        }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { bookmarkDialog = false }) { Text("关闭") } },
+        )
     if (rangeDialog)
         AlertDialog(
             onDismissRequest = { rangeDialog = false },
@@ -451,7 +649,7 @@ fun ReaderScreen(vm: MainViewModel, onShare: (File) -> Unit) {
                         val n = jumpText.toIntOrNull()
                         val s = session
                         if (n != null && s != null && n in 1..s.count) {
-                            scope.launch { list.scrollToItem(n - 1) }
+                            goTo(n - 1)
                             jump = false
                         }
                     }
@@ -500,12 +698,12 @@ fun ReaderScreen(vm: MainViewModel, onShare: (File) -> Unit) {
                                 produceState<Bitmap?>(null, s, n) {
                                     value =
                                         withContext(Dispatchers.IO) {
-                                            runCatching { s.render(n) }.getOrNull()
+                                            runCatching { s.render(n, 320) }.getOrNull()
                                         }
                                 }
                             Column(
                                 Modifier.clickable {
-                                    scope.launch { list.scrollToItem(n) }
+                                    goTo(n)
                                     thumbnails = false
                                 },
                                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -524,4 +722,179 @@ fun ReaderScreen(vm: MainViewModel, onShare: (File) -> Unit) {
             },
             confirmButton = { TextButton(onClick = { thumbnails = false }) { Text("关闭") } },
         )
+}
+
+@Composable
+private fun ReaderPage(
+    session: PdfSession,
+    index: Int,
+    transform: PageTransform,
+    tone: Int,
+    paged: Boolean,
+    hits: List<PdfSearch.Hit>,
+    onTransform: (PageTransform) -> Unit,
+    onTap: () -> Unit,
+) {
+    val edge = if (transform.zoom > 1.5f) 2800 else 1600
+    val bitmap by
+        produceState<Bitmap?>(null, session, index, edge) {
+            if (edge > 1600) delay(180)
+            value =
+                withContext(Dispatchers.IO) {
+                    runCatching { session.render(index, edge) }.getOrNull()
+                }
+        }
+    val current by rememberUpdatedState(transform)
+    val change by rememberUpdatedState(onTransform)
+    val tap by rememberUpdatedState(onTap)
+    val scope = rememberCoroutineScope()
+    var tapJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+    var lastTap by remember { mutableLongStateOf(0L) }
+    val b = bitmap
+    if (b == null) {
+        Box(Modifier.fillMaxWidth().height(320.dp), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+    BoxWithConstraints(
+        if (paged) Modifier.fillMaxSize() else Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center,
+    ) {
+        val ratio = b.width.toFloat() / b.height
+        val width = if (paged) minOf(maxWidth, maxHeight * ratio) else maxWidth
+        Box(
+            Modifier.width(width).aspectRatio(ratio).clipToBounds().pointerInput(session, index) {
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    var moved = false
+                    var multiple = false
+                    var travelled = Offset.Zero
+                    do {
+                        val event = awaitPointerEvent()
+                        val fingers = event.changes.count { it.pressed }
+                        if (fingers > 1) multiple = true
+                        val delta = event.calculatePan()
+                        travelled += delta
+                        if (abs(travelled.x) + abs(travelled.y) > viewConfiguration.touchSlop)
+                            moved = true
+                        if (fingers > 1 || current.zoom > 1.01f) {
+                            val zoom = (current.zoom * event.calculateZoom()).coerceIn(1f, 5f)
+                            val limit = (zoom - 1f) / 2f
+                            change(
+                                PageTransform(
+                                    zoom,
+                                    (current.x + delta.x / size.width).coerceIn(-limit, limit),
+                                    (current.y + delta.y / size.height).coerceIn(-limit, limit),
+                                )
+                            )
+                            event.changes.forEach { it.consume() }
+                        }
+                    } while (event.changes.any { it.pressed })
+                    if (!moved && !multiple && !down.isConsumed) {
+                        val now = android.os.SystemClock.uptimeMillis()
+                        if (now - lastTap < 280) {
+                            tapJob?.cancel()
+                            change(if (current.zoom > 1.01f) PageTransform() else PageTransform(2f))
+                            lastTap = 0
+                        } else {
+                            lastTap = now
+                            tapJob?.cancel()
+                            tapJob =
+                                scope.launch {
+                                    delay(280)
+                                    tap()
+                                }
+                        }
+                    }
+                }
+            }
+        ) {
+            Box(
+                Modifier.fillMaxSize().graphicsLayer {
+                    scaleX = transform.zoom
+                    scaleY = transform.zoom
+                    translationX = transform.x * size.width
+                    translationY = transform.y * size.height
+                }
+            ) {
+                val filter =
+                    when (tone) {
+                        1 ->
+                            ColorFilter.colorMatrix(
+                                ColorMatrix(
+                                    floatArrayOf(
+                                        1f,
+                                        0f,
+                                        0f,
+                                        0f,
+                                        0f,
+                                        0f,
+                                        .97f,
+                                        0f,
+                                        0f,
+                                        0f,
+                                        0f,
+                                        0f,
+                                        .88f,
+                                        0f,
+                                        0f,
+                                        0f,
+                                        0f,
+                                        0f,
+                                        1f,
+                                        0f,
+                                    )
+                                )
+                            )
+                        2 ->
+                            ColorFilter.colorMatrix(
+                                ColorMatrix(
+                                    floatArrayOf(
+                                        -1f,
+                                        0f,
+                                        0f,
+                                        0f,
+                                        245f,
+                                        0f,
+                                        -1f,
+                                        0f,
+                                        0f,
+                                        245f,
+                                        0f,
+                                        0f,
+                                        -1f,
+                                        0f,
+                                        245f,
+                                        0f,
+                                        0f,
+                                        0f,
+                                        1f,
+                                        0f,
+                                    )
+                                )
+                            )
+                        else -> null
+                    }
+                Image(
+                    b.asImageBitmap(),
+                    "第 ${index + 1} 页",
+                    Modifier.fillMaxSize(),
+                    colorFilter = filter,
+                )
+                Canvas(Modifier.fillMaxSize()) {
+                    hits.forEach { hit ->
+                        drawRect(
+                            Color(0x88FFD54F),
+                            Offset(hit.left * size.width, hit.top * size.height),
+                            Size(
+                                (hit.right - hit.left) * size.width,
+                                (hit.bottom - hit.top) * size.height,
+                            ),
+                        )
+                    }
+                }
+            }
+        }
+    }
 }

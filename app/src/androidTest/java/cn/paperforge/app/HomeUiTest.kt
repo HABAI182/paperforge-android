@@ -79,9 +79,12 @@ class HomeUiTest {
             compose.onAllNodesWithContentDescription("第 1 页").fetchSemanticsNodes().isNotEmpty()
         }
         compose.onNodeWithContentDescription("第 1 页").assertIsDisplayed().performTouchInput {
-            swipeUp()
+            swipeLeft()
         }
-        compose.onNodeWithText("跳页").performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("2 / 3").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText("2 / 3").performClick()
         compose.onNode(hasSetTextAction()).performTextReplacement("3")
         compose.onNodeWithText("跳转").performClick()
         compose.waitUntil(10000) {

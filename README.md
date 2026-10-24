@@ -2,7 +2,19 @@
 
 原生 Android 离线扫描与 PDF 工作台，供个人非商业使用。无登录、广告或水印，应用不声明 INTERNET 权限。
 
-当前版本 **0.5.0**，公开源码：[HABAI182/paperforge-android](https://github.com/HABAI182/paperforge-android)。安装包与源码见 [Releases](https://github.com/HABAI182/paperforge-android/releases)。旧 tag 和发布附件保留。
+当前版本 **0.6.0**，公开源码：[HABAI182/paperforge-android](https://github.com/HABAI182/paperforge-android)。安装包与源码见 [Releases](https://github.com/HABAI182/paperforge-android/releases)。旧 tag 和发布附件保留。
+
+## 0.6.0 新增：全程只用手机
+
+- 阅读器支持左右翻页、连续滚动、全屏、进度/缩放记忆、书签、暖纸与夜读。
+- 转换中心统一格式入口；新增文字 PDF、图片互转、PDF WebP、分段长图、手机结构 Word 和整页图片 PPTX。
+- 手机原生/扫描表格识别，有线/无线表、合并单元格、可选跨页连接；逐格校正后导出真正可编辑的 XLSX 或 CSV。
+- Office 排版使用 **Office 手机引擎**，首次在手机安装对应 APK，之后转换在手机本机运行并自动返回纸匠，用户不需要电脑或网络。
+- 首页更紧凑、工具可搜索，最近打开与内容修改分开；保留多选、直接删除和现有扫描/PDF功能。
+
+普通手机优先安装发布页的 `arm64` 主 APK；需要 Office 排版时再安装同页的 `Office-Engine-arm64` APK。x86_64 用于相应设备/模拟器，通用主 APK 包含两种 ABI。引擎源码/运行时来源见 [UPSTREAM](office-engine/UPSTREAM.md)。
+
+[详细计划](docs/roadmap/README.md) · [手机使用与实际范围](docs/roadmap/11-手机优先实施记录.md) · [本轮验证](docs/quality/READER-CONVERSION-0.6.0.md)
 
 ## 0.5.0 新增
 
@@ -40,7 +52,7 @@
 
 API35 无 GMS 模拟器已在飞行模式下运行内置中英 OCR；100 页草稿导出及取消已测。没有 ARM64 真机相机、国内 ROM、真实纸张弱光/反光、50MP 或电池/温升结论。
 
-DOCX 提供段落和可选参考图，不重建原始复杂版面或表格。自动曲面判断、去手指/手写、超分、结构表格/XLSX、高保真 Office、证书签名和 XFA 尚未实现。Paddle/Tesseract 备用引擎未交付；保持首开可用的内置 ML Kit。黑白使用实际测量的 1-bit Flate，未宣称 CCITT G4。
+DOCX 有段落、原页对照和手机结构重建模式；结构模式可输出文字、表格和嵌入图片，复杂跨栏/脚注/裁剪对象不保证还原。手机表格和 Office 排版已接入。自动曲面判断、去手指/手写、超分、完整原生PDF编辑和证书签名等研究目标仍保留，状态见本次实施清单。
 
 原图和草稿位于应用私有目录，卸载会丢失，请导出重要内容。普通 PDF 工具生成副本；手动脱敏和明确标记的扁平化生成图像 PDF。系统另存先生成完整本地文件；外部提供程序写入失败可重试。
 
@@ -52,8 +64,8 @@ Android 8.0+（API26），target/compile36；JDK17、SDK Platform36、Build Tool
 git clone https://github.com/HABAI182/paperforge-android.git
 cd paperforge-android
 # 设置本机 JAVA_HOME、ANDROID_HOME，或由 Android Studio 创建 local.properties。
-.\gradlew.bat assembleDebug testDebugUnitTest lintDebug
-.\gradlew.bat connectedDebugAndroidTest
+.\gradlew.bat :app:assembleDebug :app:testDebugUnitTest :app:lintDebug
+.\gradlew.bat :app:connectedDebugAndroidTest
 ```
 
 macOS/Linux 使用 `./gradlew`。首次构建需下载依赖，已安装应用核心流程离线运行。默认 APK 包含 arm64-v8a 和 x86_64；可用 `-PpaperforgeAbis=arm64-v8a` 单独构建手机包。不支持仅32位 ARM。发布文件为开发签名的预发布包，可覆盖原开发签名版本；密钥不进入仓库。
@@ -66,3 +78,6 @@ macOS/Linux 使用 `./gradlew`。首次构建需下载依赖，已安装应用�
 - [上游研究矩阵](docs/research/UPSTREAM_REFERENCE_MATRIX.md)、[审计](docs/research/OSS_AUDIT.md)、[许可](LICENSE_NOTICES.md)
 - [测试矩阵](docs/TEST_MATRIX.md)、[隐私](docs/PRIVACY.md)、[发布检查](docs/RELEASE_CHECKLIST.md)
 - [0.5.0 改动](docs/CHANGELOG-0.5.0.md)、[接续记录](docs/DEVELOPMENT_LOG.md)
+
+
+构建可选 Office 手机引擎：先运行 `python tools/fetch_office_runtime.py`（从固定来源下载并校验运行时），再执行 `gradlew.bat :office-engine:assembleDebug -PpaperforgeAbis=arm64-v8a`。主应用独立构建不需要该运行时。运行时目录不进入源码包。

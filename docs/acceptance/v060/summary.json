@@ -1,0 +1,35 @@
+{
+  "version": "0.6.0",
+  "date": "2026-10-24",
+  "environment": "API35 AOSP x86_64 emulator, Android main and Office plugin; offline bundled OCR",
+  "physicalDeviceTested": false,
+  "computerRequiredForUser": false,
+  "focusedAndroidTests": {
+    "uniqueTests": 8,
+    "failures": 0,
+    "coverage": [
+      "reader swipe/fullscreen/state/bookmarks",
+      "real local text/image encoding",
+      "existing multi-select/trash/delete",
+      "PDF segmented long images/WebP and actual desktop result import",
+      "phone native/scanned editable tables",
+      "phone borderless/cross-page tables",
+      "phone structured DOCX and picture PPTX",
+      "existing reader jump flow updated for new pager UI"
+    ]
+  },
+  "manualChecks": [
+    "Main app SAF→native phone Office→app result completed",
+    "Force-stop and reopen restores reader page2",
+    "Phone DOCX→PDF retained two pages, Chinese, image, header/footer and merged table",
+    "Phone XLSX→PDF/PPTX→PDF/DOCX→ODT outputs parsed",
+    "Independent openpyxl confirmed phone output values 00123,120.50 and merges; python-docx/pptx accepted structures"
+  ],
+  "scopeNotes": [
+    "No repeat of full scanning/OCR benchmark suite",
+    "No new physical ARM64 phone capture or performance test",
+    "An early desktop table content extraction bug was corrected and native/scanned values rechecked",
+    "An early Office output polling check could select a prior filename; corrected with unique fixtures and content assertions",
+    "Final package/signing/lint status is recorded separately"
+  ]
+}

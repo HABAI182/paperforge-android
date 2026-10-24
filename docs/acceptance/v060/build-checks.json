@@ -1,0 +1,43 @@
+{
+  "lint": {
+    "app": {
+      "Warning": 50
+    },
+    "office-engine": {
+      "Warning": 5
+    }
+  },
+  "unitTests": 16,
+  "unitFailures": 0,
+  "source": "final local Gradle reports",
+  "unitSuites": [
+    {
+      "name": "cn.paperforge.app.GeometryTest",
+      "tests": "9",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "cn.paperforge.app.ImageGeometryTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "cn.paperforge.app.OcrReadingOrderTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "cn.paperforge.app.OutlineTrackerTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    }
+  ]
+}

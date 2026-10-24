@@ -22,9 +22,13 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                     when (mode) {
                         "images-jpg",
                         "images-png",
+                        "images-webp",
+                        "long-image",
                         "extract-images",
                         "split-each" -> "zip"
-                        "docx-image" -> "docx"
+                        "docx-image",
+                        "docx-layout" -> "docx"
+                        "pdf-pptx" -> "pptx"
                         "txt",
                         "md",
                         "html",
@@ -90,19 +94,36 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                         )
                     "optimize" -> PdfTools.optimize(input, file)
                     "images-jpg",
-                    "images-png" ->
+                    "images-png",
+                    "images-webp" ->
                         PdfTools.images(
                             input,
                             file,
                             range,
-                            if (mode.endsWith("png")) "png" else "jpg",
+                            mode.substringAfter("images-"),
                             p.optInt("edge", 2200),
                         ) {
+                            setProgress(workDataOf("progress" to it))
+                        }
+                    "long-image" ->
+                        PdfLongImages.convert(input, file, range) {
                             setProgress(workDataOf("progress" to it))
                         }
                     "extract-images" -> PdfTools.extractImages(input, file)
                     "searchable" ->
                         PdfSearchable.convert(applicationContext, input, file) {
+                            setProgress(workDataOf("progress" to it))
+                        }
+                    "docx-layout" ->
+                        PhoneDocx.convert(
+                            input,
+                            file,
+                            (applicationContext as PaperForgeApp).ocrEngine,
+                        ) {
+                            setProgress(workDataOf("progress" to it))
+                        }
+                    "pdf-pptx" ->
+                        PhoneSlides.convert(applicationContext, input, file) {
                             setProgress(workDataOf("progress" to it))
                         }
                     "txt",

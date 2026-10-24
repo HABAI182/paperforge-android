@@ -91,6 +91,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun open(doc: DocumentRow) {
         if (busy.value) return
+        viewModelScope.launch(Dispatchers.IO) {
+            repo.dao.opened(doc.id, System.currentTimeMillis())
+        }
         selected.value = doc
         searchHits.value = emptyList()
         screen.value = if (doc.kind == "pdf") "reader" else "editor"
@@ -563,6 +566,146 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 PdfEngine.text(File(selected.value!!.pdfPath!!)).ifBlank {
                     "这份 PDF 没有可提取文字。扫描图请使用离线 OCR。"
                 }
+        }
+
+    val tableReview = MutableStateFlow<List<PhoneTables.Table>>(emptyList())
+    private var tableOutputCsv = false
+
+    fun phoneTables(uri: Uri, csv: Boolean, options: org.json.JSONObject) =
+        perform("正在手机上识别表格") {
+            val name = repo.displayName(uri)
+            val input =
+                File(
+                    getApplication<Application>().cacheDir,
+                    "table-${UUID.randomUUID()}.${name.substringAfterLast('.', "pdf")}",
+                )
+            try {
+                getApplication<Application>().contentResolver.openInputStream(uri)!!.use { source ->
+                    input.outputStream().use { source.copyTo(it) }
+                }
+                tableReview.value =
+                    PhoneTables.extract(input, ocrEngine, options) { progress.value = it }
+                tableOutputCsv = csv
+                screen.value = "tables"
+            } finally {
+                input.delete()
+            }
+        }
+
+    fun editTableCell(index: Int, row: Int, column: Int, text: String) {
+        tableReview.value =
+            tableReview.value.mapIndexed { i, table ->
+                if (i != index) table
+                else
+                    table.copy(
+                        rows =
+                            table.rows.mapIndexed { r, values ->
+                                values.mapIndexed { c, value ->
+                                    if (r == row && c == column) text else value
+                                }
+                            },
+                        cells =
+                            table.cells.map {
+                                if (it.row == row && it.column == column) it.copy(text = text)
+                                else it
+                            },
+                    )
+            }
+    }
+
+    fun exportPhoneTables(csv: Boolean = tableOutputCsv) =
+        perform("正在导出可编辑表格") {
+            val file =
+                File(
+                    repo.exports,
+                    "PaperForge-tables-${System.currentTimeMillis()}.${if (csv) "zip" else "xlsx"}",
+                )
+            PhoneTables.write(tableReview.value, file, csv)
+            outputLocked.value = false
+            output.value = file
+        }
+
+    fun officeResult(uri: Uri) =
+        perform("正在接收手机 Office 结果") {
+            val name = repo.displayName(uri)
+            val file = File(repo.exports, "${System.currentTimeMillis()}-${safeFileName(name)}")
+            try {
+                getApplication<Application>().contentResolver.openInputStream(uri)!!.use { source ->
+                    file.outputStream().use { source.copyTo(it) }
+                }
+            } catch (error: Throwable) {
+                file.delete()
+                throw error
+            }
+            if (file.extension.equals("pdf", true))
+                repo.registerPdf(file, name.substringBeforeLast('.'))
+            outputLocked.value = false
+            output.value = file
+            runCatching { getApplication<Application>().contentResolver.delete(uri, null, null) }
+        }
+
+    fun desktopTask(uri: Uri, mode: String, options: org.json.JSONObject = org.json.JSONObject()) =
+        perform("正在打包电脑转换任务") {
+            val file = File(repo.exports, "PaperForge-task-${System.currentTimeMillis()}.zip")
+            DesktopTasks.create(getApplication(), uri, repo.displayName(uri), mode, file, options)
+            outputLocked.value = false
+            output.value = file
+            messages.send("将任务包交给电脑助手处理，再从转换中心导入结果包")
+        }
+
+    fun importDesktopResult(uri: Uri) =
+        perform("正在导入电脑转换结果") {
+            val files = DesktopTasks.import(getApplication(), uri, repo.exports)
+            files
+                .filter { it.extension.equals("pdf", true) }
+                .forEach { repo.registerPdf(it, it.nameWithoutExtension) }
+            outputLocked.value = false
+            if (files.size == 1) output.value = files.first()
+            else {
+                val zip = File(repo.exports, "PaperForge-results-${System.currentTimeMillis()}.zip")
+                java.util.zip.ZipOutputStream(zip.outputStream()).use { stream ->
+                    files.forEach { file ->
+                        stream.putNextEntry(java.util.zip.ZipEntry(file.name))
+                        file.inputStream().use { it.copyTo(stream) }
+                        stream.closeEntry()
+                    }
+                }
+                output.value = zip
+            }
+            messages.send("已导入 ${files.size} 个结果；PDF 已加入文档库")
+        }
+
+    fun convertText(uri: Uri, size: Float) =
+        perform("正在生成文字 PDF") {
+            val name = repo.displayName(uri)
+            val file =
+                File(
+                    repo.exports,
+                    "${safeFileName(name.substringBeforeLast('.'))}-${System.currentTimeMillis()}.pdf",
+                )
+            cn.paperforge.app.pdf.LocalConversions.textToPdf(
+                getApplication(),
+                uri,
+                name,
+                file,
+                size,
+            )
+            repo.registerPdf(file, name.substringBeforeLast('.') + " · 文字 PDF")
+            outputLocked.value = false
+            output.value = file
+        }
+
+    fun convertImages(uris: List<Uri>, format: String) =
+        perform("正在转换图片") {
+            require(uris.isNotEmpty()) { "请先选择图片" }
+            val extension = if (uris.size > 1) "zip" else format
+            val file =
+                File(repo.exports, "PaperForge-images-${System.currentTimeMillis()}.$extension")
+            cn.paperforge.app.pdf.LocalConversions.images(getApplication(), uris, format, file) {
+                progress.value = it
+            }
+            outputLocked.value = false
+            output.value = file
         }
 
     fun previewOutput(file: File) =

@@ -1,0 +1,23 @@
+[
+  {
+    "source": "book.xlsx",
+    "target": "pdf",
+    "bytes": 24690,
+    "elapsedSeconds": 0.81,
+    "validated": true
+  },
+  {
+    "source": "slides.pptx",
+    "target": "pdf",
+    "bytes": 18412,
+    "elapsedSeconds": 1.26,
+    "validated": true
+  },
+  {
+    "source": "office.docx",
+    "target": "odt",
+    "bytes": 21474,
+    "elapsedSeconds": 0.77,
+    "validated": true
+  }
+]

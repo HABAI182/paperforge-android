@@ -1,0 +1,1052 @@
+{
+  "checked": "2026-10-24",
+  "sources": [
+    {
+      "id": "PF01",
+      "title": "PaperForge releases live check",
+      "url": "https://github.com/HABAI182/paperforge-android/releases",
+      "kind": "project-live",
+      "checked": "2026-10-24",
+      "note": "GitHub API releases collection confirms v0.5.0 newest, published 2026-10-23T15:57:07Z, prerelease=true, draft=false, six assets. All five releases are prereleases; releases/latest returned 404. No new application release this turn."
+    },
+    {
+      "id": "SC01",
+      "title": "CamScanner official product capabilities",
+      "url": "https://www.camscanner.com/",
+      "kind": "official-product",
+      "checked": "2026-10-24",
+      "note": "Lists scan modes documents/books/IDs/test papers/whiteboards/slides; shadow, glare, finger, bleed-through, moire cleanup; PDF/Word/Excel/PPT/JPG conversion; cloud and AI services. Marketing accuracy and quality claims are not independently benchmarked. Borrow integrated workflows and previews, not feature-count clutter."
+    },
+    {
+      "id": "SC02",
+      "title": "vFlat official scanning and book workflow",
+      "url": "https://vflat.com/",
+      "kind": "official-product",
+      "checked": "2026-10-24",
+      "note": "Book dewarping, finger removal, split two-page spreads, automatic capture, OCR and multiple exports. Site states OCR and Send to PC use servers. Plan separate local capture from optional network capabilities; evaluate real book quality, not marketing samples."
+    },
+    {
+      "id": "SC03",
+      "title": "Genius Scan organization and export",
+      "url": "https://blog.thegrizzlylabs.com/2025/03/organizing-documents.html",
+      "kind": "official-workflow",
+      "checked": "2026-10-24",
+      "published": "2025-03-05",
+      "note": "Folders including nested folders, filename/tag/content search, tag/name conditioned automatic export rules. Useful model for scan directly into folder, unified search and reusable export destination."
+    },
+    {
+      "id": "SC04",
+      "title": "Genius Scan current feature matrix",
+      "url": "https://thegrizzlylabs.com/genius-scan/pricing",
+      "kind": "official-product",
+      "checked": "2026-10-24",
+      "note": "Hands-free/batch capture, PDF/A, OCR, export providers, WebDAV and auto-export rules listed. Platform and entitlement details must not be conflated with SDK capabilities. Do not carry prices into long-lived plan."
+    },
+    {
+      "id": "SC05",
+      "title": "SwiftScan official features",
+      "url": "https://swiftscan.app/en",
+      "kind": "official-product",
+      "checked": "2026-10-24",
+      "note": "Automatic capture, QR/barcodes, filters, PDF/JPG, last export folder memory, auto upload, PDF annotation/page organization. Site states OCR runs on device. Use last-folder memory and batch efficiency; fax is peripheral for this personal app."
+    },
+    {
+      "id": "SC06",
+      "title": "Scanner Pro workflows",
+      "url": "https://support.readdle.com/scannerpro/tips-tricks/workflows",
+      "kind": "official-workflow",
+      "checked": "2026-10-24",
+      "note": "A user-defined sequence such as rename, save/upload and email can run from one export action. Some destructive action combinations restricted. Plan simple explicit recipe builder with per-step results and retry, without mandatory email or cloud."
+    },
+    {
+      "id": "SC07",
+      "title": "Scanner Pro OCR workflow",
+      "url": "https://support.readdle.com/scannerpro/apply-text-recognition-/text-recognition-ocr",
+      "kind": "official-workflow",
+      "checked": "2026-10-24",
+      "note": "Document/text dual view, language bundle selection, manual reprocess, copy selection/all and export. OCR is on-device. Useful separation of original page and extracted text plus visible processing state."
+    },
+    {
+      "id": "SC08",
+      "title": "QuickScan export favorites and groups",
+      "url": "https://www.quickscanapp.com/help/",
+      "kind": "official-workflow",
+      "checked": "2026-10-24",
+      "note": "Export Favorite combines processing settings, destination and filename; Export Group fans out to several favorites; widgets can start a preconfigured capture/export flow. File provider interoperability has explicit failure explanations. Good reference for presets and batch routing."
+    },
+    {
+      "id": "SC09",
+      "title": "QuickScan official overview",
+      "url": "https://www.quickscanapp.com/",
+      "kind": "official-product",
+      "checked": "2026-10-24",
+      "note": "Local OCR, signatures, table-to-Excel/CSV and automation are promoted. The modern minimalist scanner reference; table conversion claim is capability discovery, not a measured accuracy result."
+    },
+    {
+      "id": "SC10",
+      "title": "Microsoft Lens retirement",
+      "url": "https://support.microsoft.com/en-us/lens/retirement-of-microsoft-lens",
+      "kind": "official-lifecycle",
+      "checked": "2026-10-24",
+      "note": "Lens retirement started Jan 9 2026; support/store removal Feb 9; new scans stop after Mar 9. Recommended OneDrive replacement does not save scans locally. Plan durable local ownership, export and migration, rather than recommending the retired product."
+    },
+    {
+      "id": "SC11",
+      "title": "Google Drive scan documents",
+      "url": "https://support.google.com/drive/answer/3145835?hl=en",
+      "kind": "official-workflow",
+      "checked": "2026-10-24",
+      "note": "Mobile scanning creates searchable PDFs in Drive; web version has no scanner."
+    },
+    {
+      "id": "SC12",
+      "title": "Apple Notes scan and sign documents",
+      "url": "https://support.apple.com/en-gb/108963",
+      "kind": "official-workflow",
+      "checked": "2026-10-24",
+      "note": "Built-in note scanning and handwritten signing. Reference quick system integration and continuity; do not equate drawn signature with certificate signing."
+    },
+    {
+      "id": "CM01",
+      "title": "Lens retirement user discussion",
+      "url": "https://www.reddit.com/r/microsoft/comments/1qbpz5u/enraged_at_the_retirement_of_microsoft_lens/",
+      "kind": "community-anecdote",
+      "checked": "2026-10-24",
+      "note": "User describes loss of handwritten-note scan-to-PDF organization workflow. Individual discussion, not representative survey."
+    },
+    {
+      "id": "CM02",
+      "title": "Lens to OneDrive workflow friction",
+      "url": "https://www.reddit.com/r/microsoft/comments/1s5tgdn/microsoft_lens/",
+      "kind": "community-anecdote",
+      "checked": "2026-10-24",
+      "note": "Discussion of difficulty finding and exporting scans in replacement workflow. Do not adopt unverified comments about other app support as current product facts."
+    },
+    {
+      "id": "CM03",
+      "title": "QuickScan export groups and filename feedback",
+      "url": "https://www.reddit.com/r/apple/comments/1hen3h6/quickscan_is_in_v83_my_100_free_ios_scanner_with/",
+      "kind": "community-developer-post-with-comments",
+      "checked": "2026-10-24",
+      "note": "Developer announcement plus user desire for reusable naming templates and classification terms. Label developer promotion separately from user comments."
+    },
+    {
+      "id": "RD01",
+      "title": "Foxit mobile view settings",
+      "url": "https://help.foxit.com/manuals/pdf-editor/mobile/en_us/2023.3.0/Adjust_PDF_Views.html",
+      "kind": "official-versioned-manual",
+      "checked": "2026-10-24",
+      "note": "Versioned manual documents left/right single/facing/cover modes, vertical continuous, RTL, last-view memory, night/reflow, fit page/width, keep zoom, reversible margin hiding, keep awake. Reference design options; not a claim that every option is in every current edition."
+    },
+    {
+      "id": "RD02",
+      "title": "PDF Expert scrolling direction",
+      "url": "https://support.readdle.com/pdfexpert/en_US/reading-pdfs/select-vertical-or-horizontal-scrolling",
+      "kind": "official-workflow",
+      "checked": "2026-10-24",
+      "note": "Vertical and horizontal reading, page slider follows direction; annotation tools require a distinct navigation gesture. PaperForge should define gesture ownership rather than attach pager on top of uncontrolled zoom."
+    },
+    {
+      "id": "RD03",
+      "title": "Xodo view modes",
+      "url": "https://feedback.xodo.com/support/solutions/articles/35000202855-changing-view-modes-scrolling-direction-",
+      "kind": "official-workflow",
+      "checked": "2026-10-24",
+      "published": "2022-07-07",
+      "note": "Single/double/cover, reading view, scroll direction, night/sepia and crop. Center tap reveals hidden toolbar. Useful discoverable reading surface; source is older support documentation."
+    },
+    {
+      "id": "RD04",
+      "title": "Xodo full screen",
+      "url": "https://feedback.xodo.com/support/solutions/articles/35000202891-full-screen-mode",
+      "kind": "official-workflow",
+      "checked": "2026-10-24",
+      "published": "2022-07-06",
+      "note": "Explicit full-screen setting exists. PaperForge plan should offer an in-reader action and safe back behavior rather than burying full screen only in global settings."
+    },
+    {
+      "id": "RD05",
+      "title": "Adobe Acrobat mobile Liquid Mode",
+      "url": "https://helpx.adobe.com/acrobat/mobile/view-manage-files/liquid-mode.html",
+      "kind": "official-workflow",
+      "checked": "2026-10-24",
+      "published": "2026-08-18",
+      "note": "Temporary reflow with font/character/line spacing; original unchanged. More than 200 pages not supported. Do not promise arbitrary PDF reflow or treat reflow as file conversion."
+    },
+    {
+      "id": "RD06",
+      "title": "Adobe Liquid Mode technical limitations",
+      "url": "https://www.adobe.com/devnet-docs/acrobat/ios/en/lmode.html",
+      "kind": "official-technical",
+      "checked": "2026-10-24",
+      "note": "Lists language and document restrictions including scanned, encrypted, complex/table-heavy/nonstandard layouts and size/page thresholds. Reflow in PaperForge needs original-layout fallback and page-linked reading blocks."
+    },
+    {
+      "id": "RD07",
+      "title": "PDF Expert reading mode",
+      "url": "https://support.readdle.com/pdfexpert/cn_CN/reading-pdfs/reading-mode",
+      "kind": "official-workflow",
+      "checked": "2026-10-24",
+      "note": "Reading themes, single/double page, split view, bookmarks/outlines, text sizing, temporary reflow, keep-awake. Use simple daily reading defaults plus per-document overrides."
+    },
+    {
+      "id": "PD01",
+      "title": "PDFgear official overview",
+      "url": "https://www.pdfgear.com/",
+      "kind": "official-product",
+      "checked": "2026-10-24",
+      "note": "Desktop/mobile/online offerings differ. Advertises editing, annotation, batch conversion, OCR and AI; broad lossless/compatibility marketing is not an accuracy guarantee. Plan conversion result preview and explicit fidelity mode."
+    },
+    {
+      "id": "PD02",
+      "title": "PDF24 all tools",
+      "url": "https://tools.pdf24.org/en/all-tools",
+      "kind": "official-product",
+      "checked": "2026-10-24",
+      "note": "Category-based searchable tools/favorites; overlays, page size, repair, metadata, image conversion and archive conversion are useful adjacent operations. Personal app should avoid enterprise invoice complexity by default."
+    },
+    {
+      "id": "PD03",
+      "title": "PDF24 Creator offline desktop",
+      "url": "https://tools.pdf24.org/en/creator",
+      "kind": "official-product",
+      "checked": "2026-10-24",
+      "note": "Windows-only offline Creator, version 11.31.1 dated 2026-10-08 on page. Persistent settings, drag-drop document assembly, scanner import. Android PWA must not be confused with this offline desktop product."
+    },
+    {
+      "id": "PD04",
+      "title": "PDF24 mobile PWA limitations",
+      "url": "https://tools.pdf24.org/en/install-app",
+      "kind": "official-platform-limit",
+      "checked": "2026-10-24",
+      "note": "Browser-installable app still requires internet and many tools use servers; no current Play/App Store app. Use as example of platform deployment distinction."
+    },
+    {
+      "id": "PD05",
+      "title": "Stirling PDF overview",
+      "url": "https://www.stirling.com/",
+      "kind": "official-product",
+      "checked": "2026-10-24",
+      "note": "Reader/editor/processor, batch pipeline and APIs/self-hosting. Separate personal recipes from organization policy/team/approval machinery. Source repository and individual directories must be checked before reuse."
+    },
+    {
+      "id": "PD06",
+      "title": "iLovePDF tool catalog",
+      "url": "https://www.ilovepdf.com/",
+      "kind": "official-product",
+      "checked": "2026-10-24",
+      "note": "Office/PDF/image conversions, page organization, repair, OCR, PDF/A, compare, redact, workflows. Tool labels can overstate editability/fidelity; PaperForge should name actual output modes precisely."
+    },
+    {
+      "id": "PD07",
+      "title": "Smallpdf tool catalog",
+      "url": "https://smallpdf.com/pdf-tools",
+      "kind": "official-product",
+      "checked": "2026-10-24",
+      "note": "Broader conversions include ODF, RTF, HTML, EPUB, CSV and Pages/HWP. Useful input/output discovery pattern; not evidence Android can implement every engine locally. Flattening does not literally make a document impossible to edit."
+    },
+    {
+      "id": "PD08",
+      "title": "PDF-XChange Editor V10 feature overview",
+      "url": "https://help.pdf-xchange.com/pdfxe10/features-overview_ed.html",
+      "kind": "official-versioned-manual",
+      "checked": "2026-10-24",
+      "note": "Custom toolbars/workspaces/settings export, autosave/recovery, area OCR, page normalization, redaction, font replacement and content object editing. Borrow configurable favorites and recovery while keeping mobile UI compact."
+    },
+    {
+      "id": "PD09",
+      "title": "PDF-XChange Editor V11 scanned editing",
+      "url": "https://help.pdf-xchange.com/pdfxe11/edit-scanned-documents.html",
+      "kind": "official-versioned-manual",
+      "checked": "2026-10-24",
+      "note": "Distinguishes searchable invisible OCR text layer from enhanced editable scanned content. PaperForge must separate text recognition, layout export and native object editing."
+    },
+    {
+      "id": "OS01",
+      "title": "MakeACopy current repository",
+      "url": "https://github.com/egdels/makeacopy",
+      "kind": "official-open-source-project",
+      "checked": "2026-10-24",
+      "note": "Offline scanner with custom ONNX quad model, OpenCV, PaddleOCR flavor and legacy Tesseract flavor, OCR review, inbox mode, model/runtime size trimming. Useful reference for mobile engine alternatives and targeted rotation fallback. Do not assume claimed quality transfers to PaperForge."
+    },
+    {
+      "id": "OS02",
+      "title": "MakeACopy latest release v4.7.1",
+      "url": "https://github.com/egdels/makeacopy/releases/tag/v4.7.1",
+      "kind": "official-release",
+      "checked": "2026-10-24",
+      "published": "2026-10-10",
+      "note": "Latest stable API result. Options grouped in collapsible dialog, optional low-light prompt, bottom-bar insets fix, messages moved above controls, camera aspect strip fix. Concrete UI lessons; no code copied this planning turn."
+    },
+    {
+      "id": "OS03",
+      "title": "OSS Document Scanner repository",
+      "url": "https://github.com/ossappscollective/OSS-DocumentScanner",
+      "kind": "official-open-source-project",
+      "checked": "2026-10-24",
+      "note": "Repository moved from Akylas to ossappscollective. NativeScript, OpenCV and Tesseract, scanner/card-wallet. Old owner search failed; current canonical project verified. Use modules as references, not a reason to rewrite Compose app."
+    },
+    {
+      "id": "CM04",
+      "title": "OSS Scanner issue 738 edge instability",
+      "url": "https://github.com/ossappscollective/OSS-DocumentScanner/issues/738",
+      "kind": "community-reproducible-report",
+      "checked": "2026-10-24",
+      "published": "2026-10-13",
+      "status": "open",
+      "note": "Pixel 10 Pro Android 17 preview report: high-contrast paper still gets jittering polygon and skewed crop. Device/OS-specific user report, not independent reproduced result. Lesson: separate preview tracking from capture geometry and keep original."
+    },
+    {
+      "id": "CM05",
+      "title": "OSS Scanner issue 696 batch import crash",
+      "url": "https://github.com/ossappscollective/OSS-DocumentScanner/issues/696",
+      "kind": "community-reproducible-report",
+      "checked": "2026-10-24",
+      "published": "2026-07-22",
+      "status": "open",
+      "note": "Pixel 4a/6 GB Android14 report crash processing five or more selected images. Plan bounded decode concurrency, resumable per-page jobs, and a meaningful modest-memory batch check."
+    },
+    {
+      "id": "CM06",
+      "title": "OSS Scanner issue 570 magnifier offset",
+      "url": "https://github.com/ossappscollective/OSS-DocumentScanner/issues/570",
+      "kind": "community-reproducible-report",
+      "checked": "2026-10-24",
+      "published": "2026-02-16",
+      "status": "open",
+      "note": "Samsung OneUI report crosshair offset on left crop corners. Plan single coordinate contract for touch/preview/magnifier, verify each corner under rotation/crop."
+    },
+    {
+      "id": "CM07",
+      "title": "OSS Scanner issue 667 export friction and duplicate files",
+      "url": "https://github.com/ossappscollective/OSS-DocumentScanner/issues/667",
+      "kind": "community-feature-request",
+      "checked": "2026-10-24",
+      "published": "2026-06-02",
+      "status": "open",
+      "note": "User requests Done-to-PDF preset and explains confusion maintaining in-app originals plus exported PDFs. Plan explicit project/export distinction, destination presets, optional export-and-archive recipe, no silent deletion."
+    },
+    {
+      "id": "CM08",
+      "title": "OSS Scanner issue 707 OCR text alignment",
+      "url": "https://github.com/ossappscollective/OSS-DocumentScanner/issues/707",
+      "kind": "community-reproducible-report",
+      "checked": "2026-10-24",
+      "published": "2026-08-08",
+      "status": "open",
+      "note": "Searchable PDF selection does not align to scanned characters. OCR correctness includes geometry and reading order, not only extracted string accuracy."
+    },
+    {
+      "id": "CM09",
+      "title": "MakeACopy issue 50 text selection and reading order",
+      "url": "https://github.com/egdels/makeacopy/issues/50",
+      "kind": "community-historical-closed-issue",
+      "checked": "2026-10-24",
+      "published": "2025-12-21",
+      "status": "closed",
+      "note": "TXT was nearly correct while exported PDF selection boxes and copied sentence order were wrong. Closed by current check; use failure mode only, not claim of current product defect."
+    },
+    {
+      "id": "CM10",
+      "title": "MakeACopy issue 80 empty PDF after batch save",
+      "url": "https://github.com/egdels/makeacopy/issues/80",
+      "kind": "community-historical-closed-issue",
+      "checked": "2026-10-24",
+      "published": "2026-05-17",
+      "status": "closed",
+      "note": "User reports 40-page save crash and zero-byte PDF. Closed issue; plan temporary-file writing, complete validation and atomic publish to destination, never display a failed file as successfully exported."
+    },
+    {
+      "id": "CM11",
+      "title": "MakeACopy issue 8 tall receipt aspect ratio",
+      "url": "https://github.com/egdels/makeacopy/issues/8",
+      "kind": "community-feature-request",
+      "checked": "2026-10-24",
+      "published": "2025-09-01",
+      "status": "open",
+      "note": "Tall/narrow scans appeared compressed. Plan original/receipt/custom aspect policies and preview; four projected corners alone do not uniquely recover physical rectangle aspect without camera/calibration assumptions."
+    },
+    {
+      "id": "CM12",
+      "title": "MakeACopy issue 70 exported extension lost",
+      "url": "https://github.com/egdels/makeacopy/issues/70",
+      "kind": "community-historical-closed-issue",
+      "checked": "2026-10-24",
+      "published": "2026-04-22",
+      "status": "closed",
+      "note": "Nextcloud export missing .pdf extension. Plan MIME, extension and SAF provider verification; closed issue used as interoperability example."
+    },
+    {
+      "id": "CM13",
+      "title": "KOReader issue 15666 PDF reflow crash",
+      "url": "https://github.com/koreader/koreader/issues/15666",
+      "kind": "community-reproducible-report",
+      "checked": "2026-10-24",
+      "published": "2026-07-11",
+      "status": "open",
+      "note": "GrapheneOS/Android17 user reports reflow crash. No reproduction by us. Plan progressive optional reflow with cancellation and original view fallback."
+    },
+    {
+      "id": "CM14",
+      "title": "Stirling issue 3677 Markdown and HTML fidelity",
+      "url": "https://github.com/Stirling-Tools/Stirling-PDF/issues/3677",
+      "kind": "community-historical-closed-issue",
+      "checked": "2026-10-24",
+      "published": "2025-06-10",
+      "status": "closed",
+      "note": "Missing tables, bullets, rules and link layout in conversion. Closed; use as representative need for representative page preview and format-specific acceptance, not generic conversion-success file check."
+    },
+    {
+      "id": "CM15",
+      "title": "Stirling issue 499 semantic redaction request",
+      "url": "https://github.com/Stirling-Tools/Stirling-PDF/issues/499",
+      "kind": "community-historical-closed-issue",
+      "checked": "2026-10-24",
+      "published": "2023-12-05",
+      "status": "closed",
+      "note": "User wants redaction without rasterizing every page and losing other selectable text. Plan semantic content removal as advanced route, current raster route labeled accurately."
+    },
+    {
+      "id": "CM16",
+      "title": "Adobe users discuss slow new UI",
+      "url": "https://www.reddit.com/r/Adobe/comments/1rfbsn2/does_anyone_else_think_the_newest_adobe_acrobat/",
+      "kind": "community-anecdote",
+      "checked": "2026-10-24",
+      "published": "2026-02-26",
+      "note": "Multiple commenters report sluggishness and dislike persistent AI features; their suspected technical causes are unverified. Plan optional AI and reading startup independent of heavy tools. Do not recommend disabling PDF sandbox protection as a fix."
+    },
+    {
+      "id": "CM17",
+      "title": "Adobe new UI discoverability feedback",
+      "url": "https://www.reddit.com/r/Acrobat/comments/1rsu4bc/new_acrobat_stinks/",
+      "kind": "community-anecdote",
+      "checked": "2026-10-24",
+      "published": "2026-03-13",
+      "note": "User reports moved navigation, lost quick tools, floating toolbar and unexpected OCR crop/rotation. Individual account. Plan stable navigation, customizable favorite tools, visible processing changes and reversible edits."
+    },
+    {
+      "id": "CM18",
+      "title": "Users discuss broken PDF to Word layouts",
+      "url": "https://www.reddit.com/r/SoftwareTips/comments/1lw79jb/",
+      "kind": "community-anecdote",
+      "checked": "2026-10-24",
+      "published": "2025-07-10",
+      "note": "User reports misaligned images and broken tables. Some replies contain incorrect format facts; do not adopt them. Pair pain with Microsoft official explanation of fixed-layout reconstruction limits."
+    },
+    {
+      "id": "OF01",
+      "title": "Microsoft Opening PDFs in Word",
+      "url": "https://support.microsoft.com/en-us/word/opening-pdfs-in-word",
+      "kind": "official-format-limit",
+      "checked": "2026-10-24",
+      "note": "PDF is fixed-layout and often lacks paragraph/table relationships; Word reconstructs a copy. Mostly text converts best; charts can become images; tables, footnotes, tags, comments and font effects can be problematic. Supports explicit editable versus appearance modes."
+    },
+    {
+      "id": "OF02",
+      "title": "LibreOffice PDF export CLI parameters",
+      "url": "https://help.libreoffice.org/latest/en-US/text/shared/guide/pdf_params.html",
+      "kind": "official-technical",
+      "checked": "2026-10-24",
+      "note": "Current page identifies LibreOffice26.8; exposes page ranges, compression, PDF/A variants, tags, forms, bookmarks and other export properties. Strong candidate for optional PC conversion worker; not a ready-made lightweight Android SDK."
+    },
+    {
+      "id": "OF03",
+      "title": "ONLYOFFICE supported conversion matrix",
+      "url": "https://api.onlyoffice.com/docs/docs-api/additional-api/conversion-api/conversion-tables",
+      "kind": "official-format-matrix",
+      "checked": "2026-10-24",
+      "note": "Input/output support is directional and format-specific, across document/spreadsheet/presentation classes. Plan registry per conversion edge, not Cartesian all-format promise. Conversion API is part of Docs/server product."
+    },
+    {
+      "id": "OF04",
+      "title": "ONLYOFFICE conversion request API",
+      "url": "https://api.onlyoffice.com/docs/docs-api/additional-api/conversion-api/request",
+      "kind": "official-technical",
+      "checked": "2026-10-24",
+      "note": "Document-server converter endpoint, output type, password, locale, PDF form and asynchronous parameters. Candidate self-hosted adapter; edition and actual conversion path must be verified before inclusion."
+    },
+    {
+      "id": "OF05",
+      "title": "WPS PDF official overview",
+      "url": "https://www.wps.com/office/pdf/",
+      "kind": "official-product",
+      "checked": "2026-10-24",
+      "note": "Read/convert/compress/edit/sign and Office/image adjacency. Useful integrated document actions; avoid adopting misleading UI copy such as SHA256 being encryption or accuracy without disclosed test corpus."
+    },
+    {
+      "id": "OF06",
+      "title": "PDFelement official overview",
+      "url": "https://pdf.wondershare.com/",
+      "kind": "official-product",
+      "checked": "2026-10-24",
+      "note": "Batch processing, OCR, data extraction, forms and translation alongside PDF tools. Desktop/mobile/SDK are distinct. Borrow batch parameter reuse and structured extraction workflow, not assume feature parity."
+    },
+    {
+      "id": "OF07",
+      "title": "ABBYY cross-format document comparison",
+      "url": "https://pdf.abbyy.com/how-to/compare-documents/",
+      "kind": "official-workflow",
+      "checked": "2026-10-24",
+      "note": "Windows Corporate workflow compares PDF/scan/Office text with side-by-side matched regions and change report. Plan semantic and visual comparison as separate optional modes; do not copy internal speed claims."
+    },
+    {
+      "id": "OF08",
+      "title": "Collabora Office mobile26.04 release",
+      "url": "https://www.collaboraonline.com/blog/collabora-office-for-mobile-26-04-a-smaller-screen-bringing-more-power/",
+      "kind": "official-release",
+      "checked": "2026-10-24",
+      "published": "2026-10-08",
+      "note": "Offline engine, mobile toolbar simplification, system dark mode, reliable third-party file manager opening, retaining extension, optional in-place editing. Demonstrates native mobile Office is possible but a substantial full engine, not trivial wrapper."
+    },
+    {
+      "id": "OF09",
+      "title": "Collabora PDF export restoration",
+      "url": "https://www.collaboraonline.com/blog/add-pdf-export-functionality-back-to-the-new-collabora-office/",
+      "kind": "official-regression-report",
+      "checked": "2026-10-24",
+      "published": "2026-04-13",
+      "note": "Developer describes PDF export disappearing during UI revision and being restored. UI redesign plan must include feature parity inventory; visual cleanup cannot silently remove daily actions."
+    },
+    {
+      "id": "PD10",
+      "title": "Sejda desktop and tools",
+      "url": "https://www.sejda.com/desktop",
+      "kind": "official-product",
+      "checked": "2026-10-24",
+      "note": "Split by bookmarks/size/text, odd-even interleave, visual organization, deskew, workflows and file-name-from-content. Some conversions differ online/desktop, scanned text edit limitations explicit; platform-specific verification required."
+    },
+    {
+      "id": "PD11",
+      "title": "PDFsam Basic",
+      "url": "https://pdfsam.org/pdfsam-basic/",
+      "kind": "official-product",
+      "checked": "2026-10-24",
+      "note": "Local split/merge/mix/rotate/extract/insert; merge policies include bookmarks, forms with name collisions and generated table of contents. Plan semantic preservation rather than only correct page count."
+    },
+    {
+      "id": "RD08",
+      "title": "Okular universal document viewer",
+      "url": "https://okular.kde.org/",
+      "kind": "official-product",
+      "checked": "2026-10-24",
+      "note": "PDF/EPUB/DjVu/Markdown/comics, text/area selection, annotations, outline/thumbnails and real certificate signature verification. Universal viewing is different from reversible conversion."
+    },
+    {
+      "id": "RD09",
+      "title": "Sumatra PDF",
+      "url": "https://www.sumatrapdfreader.org/free-pdf-reader",
+      "kind": "official-product",
+      "checked": "2026-10-24",
+      "note": "Windows fast minimal reader, multiple formats, customizable shortcuts/theme/toolbar. Page currently stable3.6.1 and prerelease3.7; use for speed and restraint inspiration, not import desktop UI wholesale."
+    },
+    {
+      "id": "KN01",
+      "title": "LiquidText linked reading workspace",
+      "url": "https://www.liquidtext.net/",
+      "kind": "official-product",
+      "checked": "2026-10-24",
+      "note": "Connect excerpts/notes to source context across documents, context-preserving search and PDF/DOCX note exports. Candidate optional study workspace after core reader is reliable."
+    },
+    {
+      "id": "KN02",
+      "title": "Zotero PDF reader and note editor",
+      "url": "https://www.zotero.org/support/pdf_reader",
+      "kind": "official-workflow",
+      "checked": "2026-10-24",
+      "note": "Text highlights feed linked notes and citations; annotations stored in database need embedded export to be visible in other readers. External page edits can break annotation anchors. Plan page identity and export interoperability."
+    },
+    {
+      "id": "KN03",
+      "title": "Goodnotes editable and flattened export",
+      "url": "https://support.goodnotes.com/hc/en-us/articles/8537070839183-Choose-Between-Editable-and-Flattened-PDF-Export",
+      "kind": "official-format-tradeoff",
+      "checked": "2026-10-24",
+      "note": "Product-specific export modes trade editability/outline/hyperlink preservation and searchable handwriting. Do not generalize its implementation-specific losses as inherent PDF law. PaperForge should show retained/lost features per export mode."
+    },
+    {
+      "id": "KN04",
+      "title": "Flexcil gestures",
+      "url": "https://www.flexcil.com/support/%E2%98%85-instructions-on-how-to-use-gestures/",
+      "kind": "official-versioned-workflow",
+      "checked": "2026-10-24",
+      "published": "2021-11-04",
+      "note": "Two-finger navigation in pen mode, optional one-finger panning, pinch zoom. Useful touch/stylus separation; old documentation so avoid current-version parity claims."
+    },
+    {
+      "id": "KN05",
+      "title": "Readwise Reader PDFs",
+      "url": "https://docs.readwise.io/reader/docs/faqs/pdfs",
+      "kind": "official-workflow-and-limits",
+      "checked": "2026-10-24",
+      "note": "Original versus enhanced text views, snapshot excerpts, metadata editing, inverted-image color option, limited highlight interoperability. Do not adopt page's inaccurate shorthand that all PDFs are images or that cross-page selections are impossible for every app."
+    },
+    {
+      "id": "KN06",
+      "title": "MarginNote4 developer App Store description",
+      "url": "https://apps.apple.com/gb/app/marginnote-4-ai-notes-mindmap/id1531657269",
+      "kind": "official-store-description",
+      "checked": "2026-10-24",
+      "note": "Excerpt/card reused across PDF highlights, mind map and flashcards; immersive reading and collapsible toolbar. Optional study profile reference; homepage fetch failed, store developer description used instead."
+    },
+    {
+      "id": "MG01",
+      "title": "Paperless-ngx usage documentation",
+      "url": "https://github.com/paperless-ngx/paperless-ngx/blob/main/docs/usage.md",
+      "kind": "official-open-source-documentation",
+      "checked": "2026-10-24",
+      "note": "Local archive model, inbox, content/metadata search, saved views, bulk editing, versions, duplicates, rules and optional AI. Currentv3 no longer rejects duplicates by default, so don't repeat older advice. web docs403; GitHub canonical doc read via connector."
+    },
+    {
+      "id": "MG02",
+      "title": "Docspell documentation",
+      "url": "https://docspell.org/docs/",
+      "kind": "official-product-documentation",
+      "checked": "2026-10-24",
+      "note": "Quick intake followed by metadata suggestions, custom fields and reliable retrieval; suggestions can be corrected, job executor separated from UI. Useful inbox/smart collection concept without enterprise deployment complexity."
+    },
+    {
+      "id": "MG03",
+      "title": "DEVONthink4",
+      "url": "https://www.devontechnologies.com/apps/devonthink",
+      "kind": "official-product",
+      "checked": "2026-10-24",
+      "note": "Local databases, smart groups, links, versions and smart rules; current page4.4.2. Optional local/remote AI choice. Borrow personal archive lifecycle and data portability."
+    },
+    {
+      "id": "SC13",
+      "title": "Apple Preview scan text and documents",
+      "url": "https://support.apple.com/guide/iphone/scan-text-and-documents-iphd81075862/ios",
+      "kind": "official-workflow",
+      "checked": "2026-10-24",
+      "note": "Auto/manual switch, batch capture, thumbnail crop/rotate/color review, Done creates PDF. Reference clear direct capture flow; no need to copy system-specific visual style."
+    },
+    {
+      "id": "SC14",
+      "title": "Apple Preview overview",
+      "url": "https://support.apple.com/en-nz/guide/iphone/iph7239ea3b5/ios",
+      "kind": "official-workflow",
+      "checked": "2026-10-24",
+      "note": "PDF forms, scan, lock, image operations and text markup integrated with Files. Use simple source/output management and context actions."
+    },
+    {
+      "id": "OC01",
+      "title": "ML Kit Android text recognition integration",
+      "url": "https://developers.google.com/ml-kit/vision/text-recognition/v2/android",
+      "kind": "official-technical",
+      "checked": "2026-10-24",
+      "note": "Bundled and Play-services model delivery differ; input focus/pixel size matters. Bundled Latin and Chinese examples still16.0.1. Existing PaperForge bundled choice is not obsolete merely because Play-services Latin artifact has19.x."
+    },
+    {
+      "id": "OC02",
+      "title": "ML Kit script and language coverage",
+      "url": "https://developers.google.com/ml-kit/vision/text-recognition/v2/languages",
+      "kind": "official-technical",
+      "checked": "2026-10-24",
+      "note": "Supported/experimental/mapped levels; Chinese, Devanagari, Japanese and Korean are distinct script models. Add language options only when installed engine/model actually supports them."
+    },
+    {
+      "id": "OC03",
+      "title": "PaddleOCR v5 Android on-device demo",
+      "url": "https://paddlepaddle.github.io/PaddleOCR/main/en/version3.x/deployment/on_device_deployment.html",
+      "kind": "official-technical",
+      "checked": "2026-10-24",
+      "note": "Documented Android shell C++ demo validates v3/v4/v5 mobile CPU models with model-specific dictionaries/preprocessing. Mature v5 path useful; not proof v6 automatically runs through this exact demo."
+    },
+    {
+      "id": "OC04",
+      "title": "ML Kit document scanner delivery model",
+      "url": "https://developers.google.com/ml-kit/vision/doc-scanner/android",
+      "kind": "official-technical",
+      "checked": "2026-10-24",
+      "note": "Models, scan logic and UI dynamically downloaded by Google Play services; API21+ and at least1.7GB RAM. Cannot be the only first-run offline/no-GMS scanner path; optional comparison adapter at most."
+    },
+    {
+      "id": "OC05",
+      "title": "Docling formats",
+      "url": "https://github.com/docling-project/docling/blob/main/docs/usage/supported_formats.md",
+      "kind": "official-technical",
+      "checked": "2026-10-24",
+      "note": "Parses Office/PDF/images/HTML/EPUB and others to unified document; exports HTML/MD/JSON/text and more. Parsing Office into structure is not full Office page renderer or automatic high-fidelity DOCX writer. Legacy Office/RTF require LibreOffice."
+    },
+    {
+      "id": "AN01",
+      "title": "AndroidX PDF release notes",
+      "url": "https://developer.android.com/jetpack/androidx/releases/pdf",
+      "kind": "official-release",
+      "checked": "2026-10-24",
+      "note": "Latest1.0.0-beta01 Aug26,2026; some Compose/OCR/edit APIs remain experimental. Alpha18 backported read/render to minSdk28; alpha17 Compose compileSdk37/AGP9.2 note. Older guide still API31+extension13. Verify artifact-specific current constraints; keep API26/27 fallback."
+    },
+    {
+      "id": "AN02",
+      "title": "Compose Pager",
+      "url": "https://developer.android.com/develop/ui/compose/layouts/pager",
+      "kind": "official-technical",
+      "checked": "2026-10-24",
+      "note": "HorizontalPager/VerticalPager lazy composition and page state; prefetch pages controlled. Does not by itself solve PDF tiling, zoom/gesture arbitration, stable page identity or reading state persistence."
+    },
+    {
+      "id": "AN03",
+      "title": "Android immersive system bars",
+      "url": "https://developer.android.com/develop/ui/views/layout/immersive",
+      "kind": "official-technical",
+      "checked": "2026-10-24",
+      "note": "WindowInsetsControllerCompat hide/show with transient system bars by edge swipe. In desktop windows caption bar can remain. Full screen must cooperate with system gestures and restored insets."
+    },
+    {
+      "id": "AN04",
+      "title": "Android long-running WorkManager",
+      "url": "https://developer.android.com/develop/background-work/background-tasks/persistent/how-to/long-running",
+      "kind": "official-technical",
+      "checked": "2026-10-24",
+      "note": "Foreground long-running workers still use JobScheduler; Android16 can exhaust quota. Design chunked/resumable tasks and explicit cancel; choose direct foreground service only for appropriate user-initiated work, not blanket bypass."
+    },
+    {
+      "id": "AN05",
+      "title": "Android Storage Access Framework documents",
+      "url": "https://developer.android.com/training/data-storage/shared/documents-files",
+      "kind": "official-technical",
+      "checked": "2026-10-24",
+      "note": "Create/open document, persist URI permissions, provider capabilities; moving/deleting external file can invalidate access even with persistent grant. MIME/extension, failed destination write and reselect need clear behavior."
+    },
+    {
+      "id": "AN06",
+      "title": "Android DocumentsProvider",
+      "url": "https://developer.android.com/guide/topics/providers/create-document-provider",
+      "kind": "official-technical",
+      "checked": "2026-10-24",
+      "note": "Can expose durable PaperForge document exports through system picker; expensive virtual conversions should be explicit and capability-aware. Optional later integration, not initial architecture requirement."
+    },
+    {
+      "id": "AN07",
+      "title": "Android PdfRenderer API",
+      "url": "https://developer.android.com/reference/android/graphics/pdf/PdfRenderer",
+      "kind": "official-technical",
+      "checked": "2026-10-24",
+      "note": "Requires seekable descriptor and explicit lifetime; page rendering serialized and only one page open; newer text/search capabilities version-gated. Heavy construction on worker thread; separate processing interface useful."
+    },
+    {
+      "id": "UI01",
+      "title": "Compose accessibility API defaults",
+      "url": "https://developer.android.com/develop/ui/compose/accessibility/api-defaults",
+      "kind": "official-design-technical",
+      "checked": "2026-10-24",
+      "note": "At least48dp interactive target, semantics and consistent controls. Small visual icons can have larger touch area; do not rely only on automatic expansion causing overlapping hit regions."
+    },
+    {
+      "id": "UI02",
+      "title": "Compose adaptive list-detail",
+      "url": "https://developer.android.com/develop/ui/compose/layouts/adaptive/list-detail",
+      "kind": "official-design-technical",
+      "checked": "2026-10-24",
+      "note": "List/detail panes adapt to available width; navigation history policy must be explicit. Useful phone/tablet same information model, not stretched phone screen."
+    },
+    {
+      "id": "UI03",
+      "title": "Compose Material3 theming",
+      "url": "https://developer.android.com/develop/ui/compose/designsystems/material3",
+      "kind": "official-design-technical",
+      "checked": "2026-10-24",
+      "note": "Compose ColorScheme, typography and shapes form a coherent system. Official Compose page read; JS-only Material pages were not used as detailed evidence."
+    },
+    {
+      "id": "CV01",
+      "title": "DocRes official project",
+      "url": "https://github.com/ZZZHANG-jx/DocRes",
+      "kind": "official-research-code",
+      "checked": "2026-10-24",
+      "note": "CVPR2024 document restoration unifies dewarping/deshadowing/enhancement/deblur/binarization; demo includes prerequisites and task prompts. Research candidate, not ready Android SDK or evidence it preserves every character."
+    },
+    {
+      "id": "CV02",
+      "title": "UVDoc official project",
+      "url": "https://github.com/tanguymagne/UVDoc",
+      "kind": "official-research-code",
+      "checked": "2026-10-24",
+      "note": "Grid-based unwarping with pretrained model/demo/train/evaluation. Repository includes benchmark metric erratum, so compare exact evaluation definitions instead of copying old table. Model conversion and phone latency unverified."
+    },
+    {
+      "id": "CV03",
+      "title": "DocScanner official project",
+      "url": "https://github.com/fh2019ustc/DocScanner",
+      "kind": "official-research-code",
+      "checked": "2026-10-24",
+      "note": "Progressive document rectification, PyTorch/GPU reimplementation; accepted IJCV2025. Useful alternative for book/deformation experiments; not a complete recovered commercial algorithm."
+    },
+    {
+      "id": "CV04",
+      "title": "Doc3D dataset",
+      "url": "https://github.com/cvlab-stonybrook/doc3D-dataset",
+      "kind": "official-research-dataset",
+      "checked": "2026-10-24",
+      "note": "Synthetic/3D document warping dataset for training and comparing rectification. Use as development resource, not substitute for real phone photographs or independent holdout."
+    },
+    {
+      "id": "CV05",
+      "title": "UVDoc dataset",
+      "url": "https://github.com/tanguymagne/UVDoc-Dataset",
+      "kind": "official-research-dataset",
+      "checked": "2026-10-24",
+      "note": "Raw captures, geometry annotations and final training/benchmark data. Data/model/code provenance tracked individually; downloading entire corpus is unnecessary for this plan."
+    },
+    {
+      "id": "CV06",
+      "title": "qpdf CLI transformation and image optimization",
+      "url": "https://qpdf.readthedocs.io/en/stable/cli.html",
+      "kind": "official-technical",
+      "checked": "2026-10-24",
+      "note": "Structural rewriting, encryption, page selection and linearization; optional image recompression differs from resampling. Do not call every qpdf rewrite lossless or compression guaranteed. Candidate PC/helper or native adapter."
+    },
+    {
+      "id": "CV07",
+      "title": "calibre conversion limitations",
+      "url": "https://manual.calibre-ebook.com/conversion.html",
+      "kind": "official-format-limit",
+      "checked": "2026-10-24",
+      "note": "PDF paragraph reconstruction and headers difficult; complex columns/images/RTL/math have limitations. EPUB conversion requires reading structure, not concatenating page screenshots."
+    },
+    {
+      "id": "CV08",
+      "title": "OCRmyPDF installation and compression dependencies",
+      "url": "https://ocrmypdf.readthedocs.io/en/latest/installation.html",
+      "kind": "official-technical",
+      "checked": "2026-10-24",
+      "note": "Optional jbig2enc for lossless monochrome; lossy JBIG2 removed in17.0 due character substitutions. pngquant optional lossy palette; OCRmyPDF pipeline has external dependencies, not a drop-in Android library."
+    },
+    {
+      "id": "CV09",
+      "title": "OFDRW official project",
+      "url": "https://github.com/ofdrw/ofdrw",
+      "kind": "official-open-source-project",
+      "checked": "2026-10-24",
+      "note": "OFD modules for parse/layout/sign/convert/archive. README2.4.0; converter for migration, viewer for preview. Desktop Java/AWT dependencies and font/signature fidelity mean Android support must be assessed separately; conversion cannot preserve signature validity automatically."
+    },
+    {
+      "id": "UP01",
+      "title": "PaddleOCR latest release v3.7.0",
+      "url": "https://github.com/PaddlePaddle/PaddleOCR/releases/tag/v3.7.0",
+      "kind": "official-release",
+      "checked": "2026-10-24",
+      "published": "2026-06-11",
+      "note": "Release introduces PP-OCRv6 tiny/small/medium. Internal vendor benchmark and desktop/GPU speed claims not phone results. Plan bounded mobile-engine comparison, not blind replacement."
+    },
+    {
+      "id": "UP02",
+      "title": "PP-OCRv6 technical model description",
+      "url": "https://github.com/PaddlePaddle/PaddleOCR/blob/main/docs/version3.x/algorithm/PP-OCRv6/PP-OCRv6.en.md",
+      "kind": "official-technical",
+      "checked": "2026-10-24",
+      "note": "Tier-specific language coverage, dictionary and architecture differ; tiny49 languages excluding Japanese, small/medium50 per doc. Treat model/dictionary/preprocess/runtime as one versioned unit; useful mobile candidates."
+    },
+    {
+      "id": "UP03",
+      "title": "OpenCV release collection",
+      "url": "https://github.com/opencv/opencv/releases",
+      "kind": "official-release",
+      "checked": "2026-10-24",
+      "note": "Latest API points5.0.0 June6, while release collection contains newer4.14.0 July19. Branch/date-aware update check required. 5.0 Android original binaries have16KB-page issue note and fixed asset; prefer review4.x maintenance before major migration."
+    },
+    {
+      "id": "UP04",
+      "title": "ONNX Runtime v1.31.0",
+      "url": "https://github.com/microsoft/onnxruntime/releases/tag/v1.31.0",
+      "kind": "official-release",
+      "checked": "2026-10-24",
+      "published": "2026-10-09",
+      "note": "Core release current check1.31.0 vs app1.24.1; mobile Maven and required ops/provider compatibility must be verified independently. Use operator trimming and measured CPU/backend choices."
+    },
+    {
+      "id": "UP05",
+      "title": "MNN3.6.1",
+      "url": "https://github.com/alibaba/MNN/releases/tag/3.6.1",
+      "kind": "official-release",
+      "checked": "2026-10-24",
+      "published": "2026-07-23",
+      "note": "Latest stable API3.6.1 matches current pinned runtime. New NPU/LLM release highlights do not imply scanner speed benefit; keep stable model pipeline."
+    },
+    {
+      "id": "UP06",
+      "title": "PdfBox-Android v2.0.27.0",
+      "url": "https://github.com/TomRoush/PdfBox-Android/releases/tag/v2.0.27.0",
+      "kind": "official-release",
+      "checked": "2026-10-24",
+      "published": "2023-01-02",
+      "note": "Current latest release API; repository not archived, last pushed2024-03-18. Android fork differs from Apache PDFBox desktop release. Long maintenance gap warrants capability/backport review, not blindly changing Maven coordinate."
+    },
+    {
+      "id": "UP07",
+      "title": "CameraX release notes",
+      "url": "https://developer.android.com/jetpack/androidx/releases/camera",
+      "kind": "official-release",
+      "checked": "2026-10-24",
+      "note": "Stable1.6.2 Aug26,2026 vs app1.4.2;1.6 changes unified camera stack. Upgrade in isolated change with actual capture cases, not bundled with model and UI replacement."
+    },
+    {
+      "id": "UP08",
+      "title": "ML Kit release notes",
+      "url": "https://developers.google.com/ml-kit/release-notes",
+      "kind": "official-release",
+      "checked": "2026-10-24",
+      "note": "Bundled com.google.mlkit text-recognition and Chinese16.0.1 remain listed. Group/artifact variants must be exact; don't compare different delivery mechanisms as simple version upgrade."
+    },
+    {
+      "id": "UP09",
+      "title": "Docling latest release v2.142.1",
+      "url": "https://github.com/docling-project/docling/releases/tag/v2.142.1",
+      "kind": "official-release",
+      "checked": "2026-10-24",
+      "published": "2026-10-23",
+      "note": "Current release includes bounded archive/image handling fixes. Suitable optional PC document parser, not Android low-latency OCR replacement."
+    },
+    {
+      "id": "UP10",
+      "title": "Tesseract5.5.3",
+      "url": "https://github.com/tesseract-ocr/tesseract/releases/tag/5.5.3",
+      "kind": "official-release",
+      "checked": "2026-10-24",
+      "published": "2026-07-24",
+      "note": "Optional printed-text/script engine candidate; traineddata, native wrapper and engine version separate. Do not bundle all language packs by default."
+    },
+    {
+      "id": "UP11",
+      "title": "OCRmyPDF17.13.0",
+      "url": "https://github.com/ocrmypdf/OCRmyPDF/releases/tag/v17.13.0",
+      "kind": "official-release",
+      "checked": "2026-10-24",
+      "published": "2026-09-28",
+      "note": "Current stable API; internal/auto/Ghostscript PDF/A backend distinctions and link preservation changes show old version assumptions can be stale. Useful PC pipeline reference."
+    },
+    {
+      "id": "SC15",
+      "title": "Adobe Scan overview",
+      "url": "https://www.adobe.com/acrobat/mobile/scanner-app.html",
+      "kind": "official-product",
+      "checked": "2026-10-24",
+      "note": "Scan-to-searchable PDF and document organization/export integration. Marketing OCR/edit claims require platform/tier distinction; useful completed scan lifecycle reference, not benchmark evidence."
+    },
+    {
+      "id": "SC16",
+      "title": "Quark scanner official help",
+      "url": "https://www.quark.cn/documents/help/quark-scanner",
+      "kind": "official-product",
+      "checked": "2026-10-24",
+      "note": "Document/book/test-paper/ID capture, OCR text/table/formula/field extraction, long-image merge, format conversion and cross-device management. Borrow integrated content routes; cloud/client availability differs."
+    },
+    {
+      "id": "SC17",
+      "title": "Baimiao official overview",
+      "url": "https://baimiao.uzero.cn/homepage.html",
+      "kind": "official-product",
+      "checked": "2026-10-24",
+      "note": "Batch OCR, image/text same-screen proofreading, table-to-Excel, scan/PDF/ID layout and conversion web tools. Useful correction workflow and Chinese text focus; do not imply all recognition is offline."
+    },
+    {
+      "id": "SC18",
+      "title": "Pudding scanner developer listing",
+      "url": "https://apps.apple.com/cn/app/%E5%B8%83%E4%B8%81%E6%89%AB%E6%8F%8F/id1626815079",
+      "kind": "official-store-description",
+      "checked": "2026-10-24",
+      "note": "Scan-to-PDF, batch text/translation and filters; current listing has in-app purchases/subscriptions despite pure/ad-free positioning. Observe clean primary workflow, not assume free/unlimited across versions."
+    },
+    {
+      "id": "CM19",
+      "title": "WPS saved-file location confusion",
+      "url": "https://v2ex.com/t/1039865",
+      "kind": "community-anecdote",
+      "checked": "2026-10-24",
+      "published": "2024-05-11",
+      "note": "User cannot distinguish saved in-app copy and externally visible files; asks where older files went. Old discussion, not current WPS defect claim. Plan clear source/storage/output labels and actual save location."
+    },
+    {
+      "id": "CM20",
+      "title": "Android file provider and destination friction",
+      "url": "https://global.v2ex.com/t/1126235",
+      "kind": "community-anecdote",
+      "checked": "2026-10-24",
+      "published": "2025-04-17",
+      "note": "User wants remembered start location, provider access and remote storage in file chooser. Product design implication: remembered destinations/SAF interoperability; do not claim app can replace every OEM system picker."
+    },
+    {
+      "id": "CM21",
+      "title": "Collabora Android Save As discoverability",
+      "url": "https://forum.collaboraonline.com/t/android-app-no-save-as/3366",
+      "kind": "community-historical-discussion",
+      "checked": "2026-10-24",
+      "published": "2025-01-30",
+      "note": "User struggles finding Save As for local use; replies suggest workarounds. Pair with later official file-handling improvements, not claim current version unchanged."
+    },
+    {
+      "id": "UP12",
+      "title": "OSS Document Scanner1.26.2 build165",
+      "url": "https://github.com/ossappscollective/OSS-DocumentScanner/releases/tag/com.akylas.documentscanner/android/github/1.26.2/165",
+      "kind": "official-release",
+      "checked": "2026-10-24",
+      "published": "2026-10-22",
+      "note": "Latest release API result for Android scanner. Canonical project moved; record actual release channel/tag instead of old owner link."
+    },
+    {
+      "id": "UP13",
+      "title": "Paperless-ngx3.3.4",
+      "url": "https://github.com/paperless-ngx/paperless-ngx/releases/tag/v3.3.4",
+      "kind": "official-release",
+      "checked": "2026-10-24",
+      "published": "2026-10-22",
+      "note": "Current maintenance release. Useful external integration version reference, no server installed or changed for this task."
+    },
+    {
+      "id": "CV10",
+      "title": "Stirling root license per-directory exceptions",
+      "url": "https://github.com/Stirling-Tools/Stirling-PDF/blob/main/LICENSE",
+      "kind": "official-source-metadata",
+      "checked": "2026-10-24",
+      "note": "Root MIT text has explicit directory-specific exceptions, including engine and editor desktop/proprietary areas. Record per-component provenance before importing, rather than assuming root badge applies to every file. No moral review flow required."
+    },
+    {
+      "id": "MO01",
+      "title": "LibreOffice Android JNI initialization",
+      "url": "https://github.com/LibreOffice/core/blob/libreoffice-26.2.6.3/android/Bootstrap/src/org/libreoffice/kit/LibreOfficeKit.java",
+      "kind": "official-workflow",
+      "checked": "2026-10-24",
+      "note": "Pinned Android initialization code, native library loading and APK asset setup; copied unmodified with original MPL notice."
+    },
+    {
+      "id": "MO02",
+      "title": "LibreOfficeKit Document saveAs API",
+      "url": "https://github.com/LibreOffice/core/blob/libreoffice-26.2.6.3/android/Bootstrap/src/org/libreoffice/kit/Document.java",
+      "kind": "official-workflow",
+      "checked": "2026-10-24",
+      "note": "Android document load, rendering initialization and native saveAs are available in the upstream JNI wrapper."
+    },
+    {
+      "id": "MO03",
+      "title": "LibreOffice Viewer Android builds and corresponding source",
+      "url": "https://f-droid.org/packages/org.documentfoundation.libreoffice/",
+      "kind": "official-release",
+      "checked": "2026-10-24",
+      "note": "26.2.6.3 ARM64 code131 and x86_64 code129; runtime downloaded, hashes pinned and repackaged into optional on-phone engine."
+    },
+    {
+      "id": "MO04",
+      "title": "LibreOffice command line conversion",
+      "url": "https://help.libreoffice.org/latest/en-US/text/shared/guide/start_parameters.html",
+      "kind": "official-workflow",
+      "checked": "2026-10-24",
+      "note": "Optional desktop adapter uses the documented headless conversion and a separate per-job profile."
+    },
+    {
+      "id": "MO05",
+      "title": "PyMuPDF table extraction API",
+      "url": "https://pymupdf.readthedocs.io/en/latest/page.html",
+      "kind": "official-workflow",
+      "checked": "2026-10-24",
+      "note": "Optional desktop table implementation uses line/text strategies; mobile implementation instead uses PDFBox, OpenCV and bundled ML Kit."
+    },
+    {
+      "id": "MO06",
+      "title": "pdf2docx project status",
+      "url": "https://github.com/ArtifexSoftware/pdf2docx",
+      "kind": "official-release",
+      "checked": "2026-10-24",
+      "note": "MIT relicensing and no active Artifex maintenance explicitly recorded. Optional desktop adapter only; phone Word reconstruction is implemented independently."
+    }
+  ]
+}

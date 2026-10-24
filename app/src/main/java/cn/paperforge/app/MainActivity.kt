@@ -180,6 +180,92 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
+                var conversionFont by
+                    androidx.compose.runtime.saveable.rememberSaveable { mutableFloatStateOf(12f) }
+                var conversionFormat by
+                    androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("jpg") }
+                val textImport =
+                    rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
+                        it?.let { uri -> vm.convertText(uri, conversionFont) }
+                    }
+                val formatImport =
+                    rememberLauncherForActivityResult(
+                        ActivityResultContracts.OpenMultipleDocuments()
+                    ) {
+                        if (it.isNotEmpty()) vm.convertImages(it, conversionFormat)
+                    }
+                var mobileTarget by
+                    androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("pdf") }
+                val mobileOffice =
+                    rememberLauncherForActivityResult(
+                        ActivityResultContracts.StartActivityForResult()
+                    ) { result ->
+                        if (result.resultCode == RESULT_OK) result.data?.data?.let(vm::officeResult)
+                        else result.data?.getStringExtra("error")?.let { vm.messages.trySend(it) }
+                    }
+                val mobileOfficeInput =
+                    rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri
+                        ->
+                        uri?.let { inputUri ->
+                            val request =
+                                Intent("cn.paperforge.office.CONVERT")
+                                    .setComponent(
+                                        android.content.ComponentName(
+                                            "cn.paperforge.office",
+                                            "cn.paperforge.office.OfficeActivity",
+                                        )
+                                    )
+                                    .setDataAndType(
+                                        inputUri,
+                                        contentResolver.getType(inputUri)
+                                            ?: "application/octet-stream",
+                                    )
+                                    .putExtra("format", mobileTarget)
+                                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    .apply {
+                                        clipData =
+                                            android.content.ClipData.newRawUri(
+                                                "Office 原件副本",
+                                                inputUri,
+                                            )
+                                    }
+                            runCatching { mobileOffice.launch(request) }
+                                .onFailure {
+                                    vm.messages.trySend("请先从项目发布页安装「Office 手机引擎」；整个流程在手机本机运行")
+                                }
+                        }
+                    }
+                var mobileTableCsv by
+                    androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+                var mobileTableOptions by
+                    androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("{}") }
+                val mobileTableInput =
+                    rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri
+                        ->
+                        uri?.let {
+                            vm.phoneTables(
+                                it,
+                                mobileTableCsv,
+                                org.json.JSONObject(mobileTableOptions),
+                            )
+                        }
+                    }
+                var desktopMode by
+                    androidx.compose.runtime.saveable.rememberSaveable {
+                        mutableStateOf("office-pdf")
+                    }
+                var desktopOptions by
+                    androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("{}") }
+                val desktopImport =
+                    rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
+                        it?.let { uri ->
+                            vm.desktopTask(uri, desktopMode, org.json.JSONObject(desktopOptions))
+                        }
+                    }
+                val desktopResult =
+                    rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
+                        it?.let(vm::importDesktopResult)
+                    }
                 val share: (File) -> Unit = { file ->
                     scope.launch {
                         runCatching {
@@ -243,6 +329,56 @@ class MainActivity : ComponentActivity() {
                         "capture" -> CameraScreen(vm) { images.launch(arrayOf("image/*")) }
                         "editor" -> EditorScreen(vm) { images.launch(arrayOf("image/*")) }
                         "reader" -> ReaderScreen(vm, share)
+                        "tables" -> TableReviewScreen(vm)
+                        "convert" ->
+                            ConversionScreen(
+                                vm,
+                                onPdf = { mode ->
+                                    vm.pdfEntry.value = mode
+                                    pdf.launch(arrayOf("application/pdf"))
+                                },
+                                onImages = { images.launch(arrayOf("image/*")) },
+                                onMerge = { merge.launch(arrayOf("application/pdf")) },
+                                onText = { size ->
+                                    conversionFont = size
+                                    textImport.launch(
+                                        arrayOf(
+                                            "text/*",
+                                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                            "application/octet-stream",
+                                        )
+                                    )
+                                },
+                                onImageFormat = { format ->
+                                    conversionFormat = format
+                                    formatImport.launch(arrayOf("image/*"))
+                                },
+                                onDesktop = { mode, options ->
+                                    when {
+                                        mode.startsWith("office-") -> {
+                                            mobileTarget = mode.removePrefix("office-")
+                                            mobileOfficeInput.launch(arrayOf("*/*"))
+                                        }
+                                        mode.startsWith("tables-") -> {
+                                            mobileTableCsv = mode.endsWith("csv")
+                                            mobileTableOptions = options.toString()
+                                            mobileTableInput.launch(
+                                                arrayOf("application/pdf", "image/*")
+                                            )
+                                        }
+                                        else -> {
+                                            desktopMode = mode
+                                            desktopOptions = options.toString()
+                                            desktopImport.launch(arrayOf("*/*"))
+                                        }
+                                    }
+                                },
+                                onResult = {
+                                    desktopResult.launch(
+                                        arrayOf("application/zip", "application/octet-stream")
+                                    )
+                                },
+                            )
                         "settings" -> SettingsScreen(vm)
                         "pages" -> PageGridScreen(vm)
                         "pdf-pages" -> PdfPageGridScreen(vm)
@@ -433,12 +569,54 @@ class MainActivity : ComponentActivity() {
                 if (about)
                     AlertDialog(
                         onDismissRequest = { about = false },
-                        title = { Text("纸匠 PaperForge · 0.5.0") },
+                        title = {
+                            Text(
+                                "纸匠 PaperForge · " +
+                                    packageManager.getPackageInfo(packageName, 0).versionName
+                            )
+                        },
                         text = {
                             Column(Modifier.verticalScroll(rememberScrollState())) {
                                 Text(
-                                    "非商用个人项目\n\n无需账户、无广告、无水印。扫描与识别在本机完成。应用没有网络权限，不上传文档。\n\n通过系统文件选择器导入副本；删除应用内文档不会删除外部原件。卸载会删除应用私有草稿，请先导出或备份重要文件。\n\n扫描自动裁边、去阴影、中英文 OCR、可搜索 PDF；阅读与搜索、页面整理、批注签名、安全脱敏、密码、表单、图片和文字导出、备份恢复。曲面校正支持预览与强度调整。高保真 Office 转换和原生文字原位编辑尚未提供。",
+                                    "非商用个人项目\n\n无需账户、无广告、无水印。扫描与识别在本机完成。应用没有网络权限，不上传文档。\n\n通过系统文件选择器导入副本；删除应用内文档不会删除外部原件。卸载会删除应用私有草稿，请先导出或备份重要文件。\n\n扫描自动裁边、去阴影、中英文 OCR、可搜索 PDF；阅读与搜索、页面整理、批注签名、安全脱敏、密码、表单、图片和文字导出、备份恢复。曲面校正支持预览与强度调整。Office 排版可通过手机引擎处理，表格识别在手机本机完成；原生文字原位编辑尚未提供。",
                                     style = MaterialTheme.typography.bodyMedium,
+                                )
+                                Row(
+                                    Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    TextButton(
+                                        onClick = {
+                                            startActivity(
+                                                Intent(
+                                                    Intent.ACTION_VIEW,
+                                                    Uri.parse(
+                                                        "https://github.com/HABAI182/paperforge-android"
+                                                    ),
+                                                )
+                                            )
+                                        }
+                                    ) {
+                                        Text("项目主页")
+                                    }
+                                    TextButton(
+                                        onClick = {
+                                            startActivity(
+                                                Intent(
+                                                    Intent.ACTION_VIEW,
+                                                    Uri.parse(
+                                                        "https://github.com/HABAI182/paperforge-android/releases"
+                                                    ),
+                                                )
+                                            )
+                                        }
+                                    ) {
+                                        Text("检查更新")
+                                    }
+                                }
+                                Text(
+                                    "更新页会在浏览器中打开，包含预发布版本。当前版本见上方标题。",
+                                    style = MaterialTheme.typography.bodySmall,
                                 )
                                 SecuritySettings()
                                 Text("开源与模型声明：")
@@ -477,7 +655,18 @@ private fun mime(file: File) =
     when (file.extension.lowercase()) {
         "pdf" -> "application/pdf"
         "zip" -> "application/zip"
+        "jpg",
+        "jpeg" -> "image/jpeg"
+        "png" -> "image/png"
+        "webp" -> "image/webp"
         "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        "xlsx" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        "pptx" -> "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        "odt" -> "application/vnd.oasis.opendocument.text"
+        "ods" -> "application/vnd.oasis.opendocument.spreadsheet"
+        "odp" -> "application/vnd.oasis.opendocument.presentation"
+        "csv" -> "text/csv"
+        "rtf" -> "application/rtf"
         "html" -> "text/html"
         "md" -> "text/markdown"
         else -> "text/plain"

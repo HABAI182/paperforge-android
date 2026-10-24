@@ -1,0 +1,1253 @@
+{
+  "schema": 1,
+  "baseline": "0.5.0",
+  "checked": "2026-10-24",
+  "estimates": "rough person-day ranges; cards may overlap and are not additive deadlines",
+  "tasks": [
+    {
+      "id": "CORE01",
+      "phase": "M4",
+      "priority": "P1",
+      "title": "原件与历史资源引用",
+      "effort_person_days": "2–3",
+      "dependencies": [
+        "LIB05"
+      ],
+      "scope": "统一当前页、历史、批注和备份的资源引用及可重建缓存标记",
+      "acceptance": "删除页后历史仍可恢复；清缓存不删原件",
+      "status": "planned"
+    },
+    {
+      "id": "CORE02",
+      "phase": "M0",
+      "priority": "P0",
+      "title": "捕获几何故障核对",
+      "effort_person_days": "1–2",
+      "dependencies": [],
+      "scope": "核对取景、分析图、照片EXIF和裁切坐标，定位已发生的切角/错位",
+      "acceptance": "一组横竖与旋转照片最终裁切对应实际纸边",
+      "status": "planned"
+    },
+    {
+      "id": "CORE03",
+      "phase": "M0",
+      "priority": "P0",
+      "title": "拍摄结果与取景同步",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "CORE02"
+      ],
+      "scope": "沿用新鲜候选，画面变化/过期候选重新定位，显示平滑不影响原始角点",
+      "acceptance": "移动纸张后不沿用旧框；手动快门始终可拍",
+      "status": "planned"
+    },
+    {
+      "id": "CORE04",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "翻页重触发和防误连拍",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "CORE03"
+      ],
+      "scope": "运动、内容变化和稳定状态共同布防；相似表格允许继续拍",
+      "acceptance": "同页不持续连拍，换相似新页可拍",
+      "status": "planned"
+    },
+    {
+      "id": "CORE05",
+      "phase": "M0",
+      "priority": "P0",
+      "title": "批量解码与草稿保全",
+      "effort_person_days": "1–2",
+      "dependencies": [],
+      "scope": "限制同时解码大图，捕获后先记录草稿，失败项可重试",
+      "acceptance": "中断后已有页还在，失败输出不当成功文件",
+      "status": "planned"
+    },
+    {
+      "id": "SCN01",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "裁切整边拖动与放大镜",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "CORE02"
+      ],
+      "scope": "角点/整边拖动、落点放大镜、全图/比例/外扩边距",
+      "acceptance": "四个角和四条边跟手且坐标一致",
+      "status": "planned"
+    },
+    {
+      "id": "SCN02",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "书脊和非对称双页",
+      "effort_person_days": "2–3",
+      "dependencies": [
+        "SCN01"
+      ],
+      "scope": "升级已有中分为可移动书脊，两页分别修边和排序",
+      "acceptance": "非对称展开书不硬切对半，单页可保留",
+      "status": "planned"
+    },
+    {
+      "id": "SCN03",
+      "phase": "M3",
+      "priority": "P2",
+      "title": "曲面网格可追踪",
+      "effort_person_days": "2–4",
+      "dependencies": [
+        "CORE02"
+      ],
+      "scope": "保存非线性映射和来源版本，原图/结果联动",
+      "acceptance": "曲面后OCR框可映射回页面，撤销恢复原件",
+      "status": "planned"
+    },
+    {
+      "id": "SCN04",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "增强效果与内容保护",
+      "effort_person_days": "1–2",
+      "dependencies": [],
+      "scope": "自然/清晰/去阴影/黑白分工，保护细笔画和彩色印章",
+      "acceptance": "原图对比可用，不把浅色字擦成空白",
+      "status": "planned"
+    },
+    {
+      "id": "SCN05",
+      "phase": "M3",
+      "priority": "P2",
+      "title": "长票据与图像拼接",
+      "effort_person_days": "2–4",
+      "dependencies": [
+        "CVT05"
+      ],
+      "scope": "长图顺序/重叠两模式，手动接缝与分段输出",
+      "acceptance": "长票据不压扁，重叠接缝可调整",
+      "status": "planned"
+    },
+    {
+      "id": "SCN06",
+      "phase": "M3",
+      "priority": "P2",
+      "title": "扫描档案与快捷捕获",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "SET01"
+      ],
+      "scope": "日常/书籍/票据/证件/白板档案，快门/定时可选",
+      "acceptance": "切档案只改声明参数，可恢复默认",
+      "status": "planned"
+    },
+    {
+      "id": "SCN07",
+      "phase": "M5",
+      "priority": "P3",
+      "title": "去手指和手写恢复试验",
+      "effort_person_days": "2–4",
+      "dependencies": [
+        "SCN03"
+      ],
+      "scope": "专用模型、区域预览与强度，结果另存副本",
+      "acceptance": "不覆盖原件，失败不显示虚构成功",
+      "status": "planned"
+    },
+    {
+      "id": "SCN08",
+      "phase": "M5",
+      "priority": "P3",
+      "title": "反光去噪超分试验",
+      "effort_person_days": "2–4",
+      "dependencies": [
+        "SCN04"
+      ],
+      "scope": "对真实问题区域比较内容完整性，验证后才开放",
+      "acceptance": "恢复后没有新增假字，原图可回看",
+      "status": "planned"
+    },
+    {
+      "id": "R01",
+      "phase": "M1",
+      "priority": "P0",
+      "title": "横向单页与纵向连续",
+      "effort_person_days": "1–2",
+      "dependencies": [],
+      "scope": "共享页模型，HorizontalPager与连续布局切换",
+      "acceptance": "左右滑动逐页停稳，切模式保持当前页",
+      "status": "planned"
+    },
+    {
+      "id": "R02",
+      "phase": "M1",
+      "priority": "P0",
+      "title": "专注与全屏阅读",
+      "effort_person_days": "0.5–1",
+      "dependencies": [
+        "R01"
+      ],
+      "scope": "轻点显隐工具，系统栏全屏与返回退出",
+      "acceptance": "全屏可退出，系统边缘导航可用",
+      "status": "planned"
+    },
+    {
+      "id": "R03",
+      "phase": "M1",
+      "priority": "P0",
+      "title": "阅读状态持久保存",
+      "effort_person_days": "0.5–1",
+      "dependencies": [
+        "LIB01"
+      ],
+      "scope": "保存文档页、归一化锚点、缩放和布局",
+      "acceptance": "重新进入和进程重启回到原处",
+      "status": "planned"
+    },
+    {
+      "id": "R04",
+      "phase": "M1",
+      "priority": "P1",
+      "title": "阅读工具按需出现",
+      "effort_person_days": "0.5–1",
+      "dependencies": [
+        "UI01"
+      ],
+      "scope": "压缩/转换移入面板，保留搜索/目录/分享快捷动作",
+      "acceptance": "普通阅读画布显著增加，功能仍可找到",
+      "status": "planned"
+    },
+    {
+      "id": "R05",
+      "phase": "M1",
+      "priority": "P0",
+      "title": "缩放平移与翻页分工",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "R01"
+      ],
+      "scope": "放大优先页内平移，边缘抬手后再翻页；双击适配",
+      "acceptance": "读放大表格不会一拖就跳页",
+      "status": "planned"
+    },
+    {
+      "id": "R06",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "可见区域高清渲染",
+      "effort_person_days": "2–4",
+      "dependencies": [
+        "R01"
+      ],
+      "scope": "分块、基础预览、有限预取、取消过期渲染",
+      "acceptance": "放大变清晰，长文档不预渲染全部页",
+      "status": "planned"
+    },
+    {
+      "id": "R07",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "原生文字选择与OCR选择",
+      "effort_person_days": "2–4",
+      "dependencies": [
+        "OCR04"
+      ],
+      "scope": "文字提取和坐标覆盖，复制/高亮/区域识字",
+      "acceptance": "选择框对齐，多栏复制顺序可读",
+      "status": "planned"
+    },
+    {
+      "id": "R08",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "目录书签和页码标签",
+      "effort_person_days": "1–3",
+      "dependencies": [
+        "R03"
+      ],
+      "scope": "导入大纲、手动书签、物理页与页面标签区分",
+      "acceptance": "罗马页码/正文页跳转不混乱",
+      "status": "planned"
+    },
+    {
+      "id": "R09",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "链接与返回阅读处",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "R07"
+      ],
+      "scope": "内部/外部链接、跳转历史、回原段落",
+      "acceptance": "多次链接跳转后能回到原锚点",
+      "status": "planned"
+    },
+    {
+      "id": "R10",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "纸色夜间和图片原色",
+      "effort_person_days": "0.5–1",
+      "dependencies": [
+        "UI01"
+      ],
+      "scope": "应用深色与PDF着色分开，暖纸/反色可选",
+      "acceptance": "照片不被强制反色，原文件不变",
+      "status": "planned"
+    },
+    {
+      "id": "R11",
+      "phase": "M2",
+      "priority": "P2",
+      "title": "临时显示裁边",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "R03"
+      ],
+      "scope": "当前/全篇/奇偶边距、适宽适页",
+      "acceptance": "隐藏边距不改源PDF内容",
+      "status": "planned"
+    },
+    {
+      "id": "R12",
+      "phase": "M3",
+      "priority": "P2",
+      "title": "双页封面与RTL",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "R01"
+      ],
+      "scope": "宽屏面对页、封面单页、阅读方向",
+      "acceptance": "横竖切换页序稳定，封面不乱配对",
+      "status": "planned"
+    },
+    {
+      "id": "R13",
+      "phase": "M4",
+      "priority": "P2",
+      "title": "可回原页的文字重排",
+      "effort_person_days": "3–5",
+      "dependencies": [
+        "OCR04"
+      ],
+      "scope": "单栏先行，段落/图片/表格保留源锚点",
+      "acceptance": "复杂页可回原布局，不阻塞普通阅读",
+      "status": "planned"
+    },
+    {
+      "id": "R14",
+      "phase": "M4",
+      "priority": "P2",
+      "title": "系统TTS与跟读",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "R07"
+      ],
+      "scope": "安装声音探测、段落导航、暂停语速与高亮",
+      "acceptance": "选择处开始朗读，退出不继续误播",
+      "status": "planned"
+    },
+    {
+      "id": "R15",
+      "phase": "M5",
+      "priority": "P3",
+      "title": "摘录卡和学习档案",
+      "effort_person_days": "2–4",
+      "dependencies": [
+        "PDF02"
+      ],
+      "scope": "源页链接、笔记、MD/DOCX/Anki导出",
+      "acceptance": "摘录可回原页，导出不只留在应用内",
+      "status": "planned"
+    },
+    {
+      "id": "UI01",
+      "phase": "M1",
+      "priority": "P1",
+      "title": "统一视觉变量",
+      "effort_person_days": "0.5–1",
+      "dependencies": [],
+      "scope": "完整明暗语义色、字号、间距、形状、状态",
+      "acceptance": "主色与选中容器一致，大字号可读",
+      "status": "planned"
+    },
+    {
+      "id": "UI02",
+      "phase": "M1",
+      "priority": "P0",
+      "title": "文档优先首页",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "UI01"
+      ],
+      "scope": "收敛大卡，搜索/最近/列表与扫描主操作清楚",
+      "acceptance": "首屏能找文件和开始扫描",
+      "status": "planned"
+    },
+    {
+      "id": "UI03",
+      "phase": "M1",
+      "priority": "P1",
+      "title": "工具搜索与固定项",
+      "effort_person_days": "0.5–1",
+      "dependencies": [
+        "UI01"
+      ],
+      "scope": "分类、别名、收藏/常用动作，现有入口保留",
+      "acceptance": "搜索Word/OCR/图片均命中实际工具",
+      "status": "planned"
+    },
+    {
+      "id": "UI04",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "扫描编辑画布优先",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "UI01"
+      ],
+      "scope": "名称点按修改、上下文底栏、缩略图可收起",
+      "acceptance": "画布变大，当前/批量应用范围清楚",
+      "status": "planned"
+    },
+    {
+      "id": "UI05",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "相机控制层简化",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "CORE03"
+      ],
+      "scope": "主控与高级参数分层、轻提示、固定快门底栏",
+      "acceptance": "按钮不盖落点，状态刷新不重绑相机",
+      "status": "planned"
+    },
+    {
+      "id": "UI06",
+      "phase": "M1",
+      "priority": "P1",
+      "title": "多选一致性与快捷批处理",
+      "effort_person_days": "0.5–1",
+      "dependencies": [
+        "UI02"
+      ],
+      "scope": "长按/选择入口、范围、数量、退出位置、直接删除保留",
+      "acceptance": "最近/全部/回收站批量操作不丢功能",
+      "status": "planned"
+    },
+    {
+      "id": "UI07",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "空加载错误完成状态",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "JOB01"
+      ],
+      "scope": "区分等待/失败/部分完成，提示不盖按钮",
+      "acceptance": "失败可操作，成功有打开与保存位置",
+      "status": "planned"
+    },
+    {
+      "id": "UI08",
+      "phase": "M4",
+      "priority": "P2",
+      "title": "平板折叠与大字号",
+      "effort_person_days": "2–3",
+      "dependencies": [
+        "UI01"
+      ],
+      "scope": "列表详情、阅读侧栏、窗口变化恢复与系统insets",
+      "acceptance": "窄屏/深色/200%字号关键动作可达",
+      "status": "planned"
+    },
+    {
+      "id": "UI09",
+      "phase": "M4",
+      "priority": "P2",
+      "title": "个人工具与布局配置",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "SET01"
+      ],
+      "scope": "固定动作、密度、网格、主页筛选和恢复默认",
+      "acceptance": "配置变化不造成关键入口消失",
+      "status": "planned"
+    },
+    {
+      "id": "OCR01",
+      "phase": "M2",
+      "priority": "P0",
+      "title": "快速均衡精细三档",
+      "effort_person_days": "1–2",
+      "dependencies": [],
+      "scope": "单路优先、疑难局部补识别、多路显式选择",
+      "acceptance": "清晰页不强制跑全部重试，取消可用",
+      "status": "planned"
+    },
+    {
+      "id": "OCR02",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "原始文字与校正分离",
+      "effort_person_days": "1–2",
+      "dependencies": [],
+      "scope": "保存候选、自动选择和用户修订，投票可关",
+      "acceptance": "数字不被无依据润色，修改可追溯",
+      "status": "planned"
+    },
+    {
+      "id": "OCR03",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "区域重识别与同屏校对",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "OCR02"
+      ],
+      "scope": "框选区域、原图定位、逐词/逐行校正",
+      "acceptance": "只重跑选区，页面其余结果保留",
+      "status": "planned"
+    },
+    {
+      "id": "OCR04",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "统一结构和坐标IR",
+      "effort_person_days": "2–3",
+      "dependencies": [
+        "CORE02"
+      ],
+      "scope": "页面块段落行词表格及阅读顺序、源版本",
+      "acceptance": "旋转/曲面后的文字层不沿用旧坐标",
+      "status": "planned"
+    },
+    {
+      "id": "OCR05",
+      "phase": "M3",
+      "priority": "P2",
+      "title": "第二引擎限时原型",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "OCR04"
+      ],
+      "scope": "PPv6/v5mobile与MLKit比较，决定是否接入",
+      "acceptance": "有真实收益才发布开关，失败保留旧引擎",
+      "status": "planned"
+    },
+    {
+      "id": "OCR06",
+      "phase": "M3",
+      "priority": "P2",
+      "title": "模型与语言包管理",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "OCR05"
+      ],
+      "scope": "模型/字典/预处理版本绑定，本地导入与容量说明",
+      "acceptance": "未安装的语言不假装可识别",
+      "status": "planned"
+    },
+    {
+      "id": "OCR07",
+      "phase": "M3",
+      "priority": "P1",
+      "title": "有线表格结构识别",
+      "effort_person_days": "2–4",
+      "dependencies": [
+        "OCR04"
+      ],
+      "scope": "区域行列、单元格合并与原图对照",
+      "acceptance": "输出真单元格，先保护编号和金额",
+      "status": "planned"
+    },
+    {
+      "id": "OCR08",
+      "phase": "M4",
+      "priority": "P2",
+      "title": "多栏竖排和脚本扩展",
+      "effort_person_days": "2–4",
+      "dependencies": [
+        "OCR04"
+      ],
+      "scope": "按脚本与布局能力逐步支持，阅读顺序可调",
+      "acceptance": "竖排不逐行错拼，多栏顺序可核对",
+      "status": "planned"
+    },
+    {
+      "id": "OCR09",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "搜索与选择几何核对",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "OCR04"
+      ],
+      "scope": "字体/ToUnicode/方向与变换一致",
+      "acceptance": "外部阅读器复制顺序和框位置正确",
+      "status": "planned"
+    },
+    {
+      "id": "OCR10",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "原生PDF文字优先",
+      "effort_person_days": "0.5–1",
+      "dependencies": [
+        "OCR04"
+      ],
+      "scope": "按页/区域判断已有文字与坏文字层",
+      "acceptance": "原生页不重复OCR，页眉不使整页误跳过",
+      "status": "planned"
+    },
+    {
+      "id": "CVT01",
+      "phase": "M1",
+      "priority": "P1",
+      "title": "转换能力注册表",
+      "effort_person_days": "0.5–1",
+      "dependencies": [],
+      "scope": "输入目标模式引擎能力、参数与输出说明",
+      "acceptance": "未支持路线不出现可执行假按钮",
+      "status": "planned"
+    },
+    {
+      "id": "CVT02",
+      "phase": "M1",
+      "priority": "P0",
+      "title": "统一转换中心",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "CVT01"
+      ],
+      "scope": "整合PDF现有文本图片DOCX转换，类别和直接入口",
+      "acceptance": "同一路线不需要两套参数流程",
+      "status": "planned"
+    },
+    {
+      "id": "CVT03",
+      "phase": "M1",
+      "priority": "P1",
+      "title": "文字生成PDF",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "CVT01"
+      ],
+      "scope": "TXT导入/编辑、中文字体、换行分页与纸张",
+      "acceptance": "中文长文本跨页可读，源文本保留",
+      "status": "planned"
+    },
+    {
+      "id": "CVT04",
+      "phase": "M1",
+      "priority": "P1",
+      "title": "基础图片格式互转",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "CVT01"
+      ],
+      "scope": "JPG/PNG/WebP、尺寸质量与透明背景",
+      "acceptance": "真实编码与扩展名一致，方向正确",
+      "status": "planned"
+    },
+    {
+      "id": "CVT05",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "PDF与图片长图",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "CVT01"
+      ],
+      "scope": "顺序拼接、宽度间距、过长分段与页码范围",
+      "acceptance": "不因超长OOM，页序不乱",
+      "status": "planned"
+    },
+    {
+      "id": "CVT06",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "批量转换与失败重试",
+      "effort_person_days": "2–3",
+      "dependencies": [
+        "JOB01",
+        "CVT02"
+      ],
+      "scope": "多文件同预设，逐项覆盖，只重试失败项",
+      "acceptance": "一个文件失败不丢其他输出",
+      "status": "planned"
+    },
+    {
+      "id": "CVT07",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "转换预览与保真模式",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "CVT02"
+      ],
+      "scope": "原件/结果预览，外观/编辑/对象保留模式",
+      "acceptance": "预览是真实输出，不用原图冒充结果",
+      "status": "planned"
+    },
+    {
+      "id": "CVT08",
+      "phase": "M2",
+      "priority": "P2",
+      "title": "Markdown和HTML双向基础",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "CVT03"
+      ],
+      "scope": "标题列表表格有限语法、资源包与打印CSS",
+      "acceptance": "已声明语法正确，不支持项有回退",
+      "status": "planned"
+    },
+    {
+      "id": "CVT09",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "表格区域TSV与CSV",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "OCR07"
+      ],
+      "scope": "单元格预览、列类型、分隔编码和前导零",
+      "acceptance": "Excel粘贴后编号和金额未变",
+      "status": "planned"
+    },
+    {
+      "id": "CVT10",
+      "phase": "M3",
+      "priority": "P1",
+      "title": "结构表格XLSX",
+      "effort_person_days": "2–3",
+      "dependencies": [
+        "OCR07"
+      ],
+      "scope": "多表工作表、合并单元格、行列与文本类型",
+      "acceptance": "不是整页图片嵌入Excel",
+      "status": "planned"
+    },
+    {
+      "id": "CVT11",
+      "phase": "M3",
+      "priority": "P1",
+      "title": "Office转PDF可用引擎",
+      "effort_person_days": "2–4",
+      "dependencies": [
+        "EXT01"
+      ],
+      "scope": "DOCX/XLSX/PPTX先行，纸张范围字体和预览",
+      "acceptance": "文档表格幻灯片各有代表页正确",
+      "status": "planned"
+    },
+    {
+      "id": "CVT12",
+      "phase": "M3",
+      "priority": "P2",
+      "title": "版面DOCX导出",
+      "effort_person_days": "3–5",
+      "dependencies": [
+        "OCR04"
+      ],
+      "scope": "标题段落表格图片与编辑优先/外观优先",
+      "acceptance": "输出真实结构，模式损失说清楚",
+      "status": "planned"
+    },
+    {
+      "id": "CVT13",
+      "phase": "M4",
+      "priority": "P2",
+      "title": "幻灯片与图片互转",
+      "effort_person_days": "1–3",
+      "dependencies": [
+        "CVT11"
+      ],
+      "scope": "PDF整页图PPTX、PPT图片包及后续编辑模式",
+      "acceptance": "整页图模式不声称文字可编辑",
+      "status": "planned"
+    },
+    {
+      "id": "CVT14",
+      "phase": "M4",
+      "priority": "P2",
+      "title": "EPUB与结构文本转换",
+      "effort_person_days": "2–4",
+      "dependencies": [
+        "CVT08"
+      ],
+      "scope": "章节spine、目录、封面与脚注链接",
+      "acceptance": "按阅读顺序，PDF复杂布局可回退",
+      "status": "planned"
+    },
+    {
+      "id": "CVT15",
+      "phase": "M4",
+      "priority": "P2",
+      "title": "OFD与DjVu等版式适配",
+      "effort_person_days": "2–4",
+      "dependencies": [
+        "EXT01"
+      ],
+      "scope": "独立引擎、保留源文件、版面与字体核对",
+      "acceptance": "印章外观和证书有效性不混淆",
+      "status": "planned"
+    },
+    {
+      "id": "CVT16",
+      "phase": "M5",
+      "priority": "P3",
+      "title": "特殊格式扩展",
+      "effort_person_days": "2–5",
+      "dependencies": [
+        "CVT01"
+      ],
+      "scope": "CAJ/XPS/邮件/LaTeX/CAD按实际引擎逐项接",
+      "acceptance": "每条路线有样例和真实能力声明",
+      "status": "planned"
+    },
+    {
+      "id": "LIB01",
+      "phase": "M1",
+      "priority": "P0",
+      "title": "最近打开与内容修改分开",
+      "effort_person_days": "0.5–1",
+      "dependencies": [],
+      "scope": "独立lastOpened和阅读进度，排序可切换",
+      "acceptance": "打开不改内容时间，最近列表语义正确",
+      "status": "planned"
+    },
+    {
+      "id": "LIB02",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "文档与输出记录",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "CVT02"
+      ],
+      "scope": "一份项目关联多次导出，显示来源与目标位置",
+      "acceptance": "导出一次不制造一堆同名文档",
+      "status": "planned"
+    },
+    {
+      "id": "LIB03",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "搜索片段与命中页",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "OCR09"
+      ],
+      "scope": "中文短词/编号、页内片段与点击定位",
+      "acceptance": "精确编号优先，能从结果到正确页",
+      "status": "planned"
+    },
+    {
+      "id": "LIB04",
+      "phase": "M4",
+      "priority": "P2",
+      "title": "收件箱与智能集合",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "LIB03"
+      ],
+      "scope": "未整理/缺OCR/待导出/含批注与保存筛选",
+      "acceptance": "规则可看可改，不强制自动分类",
+      "status": "planned"
+    },
+    {
+      "id": "LIB05",
+      "phase": "M4",
+      "priority": "P1",
+      "title": "存储占用与可重建缓存",
+      "effort_person_days": "1–2",
+      "dependencies": [],
+      "scope": "原件历史缩略图OCR导出容量，清理范围预览",
+      "acceptance": "清缓存不删除唯一原件或可恢复历史",
+      "status": "planned"
+    },
+    {
+      "id": "LIB06",
+      "phase": "M4",
+      "priority": "P1",
+      "title": "备份恢复完整性",
+      "effort_person_days": "2–3",
+      "dependencies": [
+        "R03",
+        "SET01"
+      ],
+      "scope": "设置书签阅读状态配方纳入，追加与重复策略",
+      "acceptance": "恢复后可继续编辑和阅读，不只得到PDF",
+      "status": "planned"
+    },
+    {
+      "id": "LIB07",
+      "phase": "M3",
+      "priority": "P2",
+      "title": "命名模板与批量预览",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "LIB02"
+      ],
+      "scope": "日期类型序号用户字段，冲突自动编号",
+      "acceptance": "批量预览显示最终名字，支持撤销重命名",
+      "status": "planned"
+    },
+    {
+      "id": "LIB08",
+      "phase": "M3",
+      "priority": "P2",
+      "title": "文件夹标签与跨文档移页",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "UI06"
+      ],
+      "scope": "多级文件夹/标签、复制移动页、保留原件关系",
+      "acceptance": "移动后内容与OCR可读，来源不丢",
+      "status": "planned"
+    },
+    {
+      "id": "LIB09",
+      "phase": "M4",
+      "priority": "P2",
+      "title": "重复检测和版本分组",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "LIB02"
+      ],
+      "scope": "内容哈希与相似页提示，用户决定保留",
+      "acceptance": "相似文件不被无提示自动删除",
+      "status": "planned"
+    },
+    {
+      "id": "PDF01",
+      "phase": "M3",
+      "priority": "P1",
+      "title": "可视页面组合工作台",
+      "effort_person_days": "2–3",
+      "dependencies": [
+        "UI06"
+      ],
+      "scope": "跨文件选页、交错/反序、封面目录与重排",
+      "acceptance": "双面扫描能恢复正确奇偶页序",
+      "status": "planned"
+    },
+    {
+      "id": "PDF02",
+      "phase": "M3",
+      "priority": "P1",
+      "title": "标准批注与导出",
+      "effort_person_days": "2–3",
+      "dependencies": [
+        "R07"
+      ],
+      "scope": "文本标记便签区域图章，可编辑/扁平导出",
+      "acceptance": "另一阅读器看到正确批注，不只是黄矩形",
+      "status": "planned"
+    },
+    {
+      "id": "PDF03",
+      "phase": "M3",
+      "priority": "P1",
+      "title": "目录表单链接保留",
+      "effort_person_days": "2–3",
+      "dependencies": [
+        "PDF01"
+      ],
+      "scope": "合并/抽页的目录、字段重名、页标签与附件策略",
+      "acceptance": "页面操作后链接和表单目标正确",
+      "status": "planned"
+    },
+    {
+      "id": "PDF04",
+      "phase": "M4",
+      "priority": "P2",
+      "title": "语义脱敏",
+      "effort_person_days": "3–5",
+      "dependencies": [
+        "PDF03"
+      ],
+      "scope": "删除目标内容，原页其他对象保留；栅格回退另命名",
+      "acceptance": "被删内容无法提取，未删文字仍可选",
+      "status": "planned"
+    },
+    {
+      "id": "PDF05",
+      "phase": "M3",
+      "priority": "P2",
+      "title": "目标大小与编码优化",
+      "effort_person_days": "1–3",
+      "dependencies": [],
+      "scope": "真实灰度/二值编码、画质预览、不可缩小时保原件",
+      "acceptance": "不虚报压缩率，不损坏数字笔画",
+      "status": "planned"
+    },
+    {
+      "id": "PDF06",
+      "phase": "M4",
+      "priority": "P2",
+      "title": "PDF归档验证",
+      "effort_person_days": "2–4",
+      "dependencies": [
+        "EXT01"
+      ],
+      "scope": "PDF/A目标等级、字体和元数据验证",
+      "acceptance": "验证失败不标归档成功",
+      "status": "planned"
+    },
+    {
+      "id": "PDF07",
+      "phase": "M4",
+      "priority": "P2",
+      "title": "文档比较",
+      "effort_person_days": "2–4",
+      "dependencies": [
+        "R07"
+      ],
+      "scope": "并排同步、文本差异/视觉差异和报告",
+      "acceptance": "能回到差异源区域，忽略项可配置",
+      "status": "planned"
+    },
+    {
+      "id": "PDF08",
+      "phase": "M3",
+      "priority": "P2",
+      "title": "PDF属性与诊断",
+      "effort_person_days": "1–2",
+      "dependencies": [],
+      "scope": "文字图像字体表单签名概况和工具适用性",
+      "acceptance": "诊断不修改文件，不阻塞普通打开",
+      "status": "planned"
+    },
+    {
+      "id": "PDF09",
+      "phase": "M5",
+      "priority": "P3",
+      "title": "原生内容编辑",
+      "effort_person_days": "4–8",
+      "dependencies": [
+        "PDF03"
+      ],
+      "scope": "文字对象和字体替换，局部编辑与历史",
+      "acceptance": "不悄悄重排整页，复杂页可保留原件",
+      "status": "planned"
+    },
+    {
+      "id": "PDF10",
+      "phase": "M5",
+      "priority": "P3",
+      "title": "证书签名与高级表单",
+      "effort_person_days": "4–8",
+      "dependencies": [
+        "PDF03"
+      ],
+      "scope": "签名核验/证书签署、字段类型、XFA适配评估",
+      "acceptance": "手写签名与证书签名界面明确分开",
+      "status": "planned"
+    },
+    {
+      "id": "JOB01",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "持久任务中心",
+      "effort_person_days": "2–3",
+      "dependencies": [],
+      "scope": "状态进度取消、页级检查点、部分失败与恢复",
+      "acceptance": "进程重启后已完成阶段不全部重跑",
+      "status": "planned"
+    },
+    {
+      "id": "JOB02",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "原子输出与外部写入重试",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "JOB01"
+      ],
+      "scope": "先完整本地结果，再写提供程序，保留重试来源",
+      "acceptance": "目标失败不出现0字节成功项",
+      "status": "planned"
+    },
+    {
+      "id": "JOB03",
+      "phase": "M3",
+      "priority": "P2",
+      "title": "资源预算与可见任务优先",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "JOB01"
+      ],
+      "scope": "OCR/渲染/大图限并发、取消过期请求",
+      "acceptance": "后台转换不使当前阅读持续卡顿",
+      "status": "planned"
+    },
+    {
+      "id": "JOB04",
+      "phase": "M4",
+      "priority": "P2",
+      "title": "配方编辑与步骤复用",
+      "effort_person_days": "2–4",
+      "dependencies": [
+        "JOB01",
+        "CVT01"
+      ],
+      "scope": "有序步骤、类型匹配、失败定位与复制预设",
+      "acceptance": "修改保存目录不重跑昂贵OCR",
+      "status": "planned"
+    },
+    {
+      "id": "JOB05",
+      "phase": "M4",
+      "priority": "P2",
+      "title": "可选自动导出",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "JOB04"
+      ],
+      "scope": "标签/文件夹条件，成功记录与手动重试",
+      "acceptance": "离线不死循环，不默认删除原件",
+      "status": "planned"
+    },
+    {
+      "id": "SET01",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "命名配置档案",
+      "effort_person_days": "1–2",
+      "dependencies": [],
+      "scope": "分组覆盖、复制恢复、配置版本与JSON导出",
+      "acceptance": "导入不带失效设备路径，旧设置兼容",
+      "status": "planned"
+    },
+    {
+      "id": "SET02",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "导出预设与目录记忆",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "AN05"
+      ],
+      "scope": "纸张DPI质量OCR格式命名目的地组合",
+      "acceptance": "一次套用，下次保留，权限失效可重选",
+      "status": "planned"
+    },
+    {
+      "id": "SET03",
+      "phase": "M1",
+      "priority": "P1",
+      "title": "项目主页与查看更新",
+      "effort_person_days": "0.5",
+      "dependencies": [],
+      "scope": "版本从包信息读取，主页/发布页/更新记录可点",
+      "acceptance": "无网络权限也能由浏览器打开真实链接",
+      "status": "planned"
+    },
+    {
+      "id": "SET04",
+      "phase": "M4",
+      "priority": "P2",
+      "title": "可选在线更新",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "SET03"
+      ],
+      "scope": "渠道过滤版本比较、ABI、下载取消、签名哈希",
+      "acceptance": "预发布不漏报，失败不说没有更新",
+      "status": "planned"
+    },
+    {
+      "id": "SET05",
+      "phase": "M3",
+      "priority": "P2",
+      "title": "快捷方式与系统入口",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "CVT02"
+      ],
+      "scope": "直接扫描/识字/继续阅读，分享与文件打开直达",
+      "acceptance": "不必先回首页再找文件",
+      "status": "planned"
+    },
+    {
+      "id": "EXT01",
+      "phase": "M3",
+      "priority": "P1",
+      "title": "电脑助手文件夹交接",
+      "effort_person_days": "2–4",
+      "dependencies": [
+        "CVT01"
+      ],
+      "scope": "任务包/结果包、引擎探测和明确日志",
+      "acceptance": "手机离线基础能力不受影响",
+      "status": "planned"
+    },
+    {
+      "id": "EXT02",
+      "phase": "M4",
+      "priority": "P2",
+      "title": "局域网配对与断点传输",
+      "effort_person_days": "2–4",
+      "dependencies": [
+        "EXT01"
+      ],
+      "scope": "二维码配对、队列、离线等待、取消恢复",
+      "acceptance": "电脑不在时能取消或保留待处理",
+      "status": "planned"
+    },
+    {
+      "id": "EXT03",
+      "phase": "M5",
+      "priority": "P3",
+      "title": "可选翻译与AI",
+      "effort_person_days": "2–4",
+      "dependencies": [
+        "R15"
+      ],
+      "scope": "页码引用、本地/BYOK、手动运行、可禁用",
+      "acceptance": "不改原始OCR，回答可回查原文",
+      "status": "planned"
+    },
+    {
+      "id": "REL01",
+      "phase": "M1",
+      "priority": "P1",
+      "title": "本次版本与交付记录",
+      "effort_person_days": "0.5–1",
+      "dependencies": [],
+      "scope": "改动、未做项、实际验证范围、APK与源码哈希",
+      "acceptance": "版本/标签/附件指向一致，旧发布保留",
+      "status": "planned"
+    },
+    {
+      "id": "REL02",
+      "phase": "M2",
+      "priority": "P1",
+      "title": "签名与发布渠道整理",
+      "effort_person_days": "1–2",
+      "dependencies": [
+        "REL01"
+      ],
+      "scope": "开发签名延续，正式版迁移方案与稳定/预发布",
+      "acceptance": "覆盖更新不丢文档，证书不进仓库",
+      "status": "planned"
+    },
+    {
+      "id": "REL03",
+      "phase": "M3",
+      "priority": "P2",
+      "title": "按需包体裁剪",
+      "effort_person_days": "1–3",
+      "dependencies": [
+        "OCR06"
+      ],
+      "scope": "ABI、算子、语言字体和可选模型包",
+      "acceptance": "包体减少有清单，首开离线主能力不退化",
+      "status": "planned"
+    }
+  ]
+}

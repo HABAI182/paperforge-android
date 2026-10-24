@@ -274,8 +274,12 @@ object PdfTools {
                                     )
                                     zip.putNextEntry(ZipEntry("page-%04d.%s".format(n + 1, format)))
                                     bitmap.compress(
-                                        if (format == "png") Bitmap.CompressFormat.PNG
-                                        else Bitmap.CompressFormat.JPEG,
+                                        when (format) {
+                                            "png" -> Bitmap.CompressFormat.PNG
+                                            "webp" ->
+                                                @Suppress("DEPRECATION") Bitmap.CompressFormat.WEBP
+                                            else -> Bitmap.CompressFormat.JPEG
+                                        },
                                         92,
                                         zip,
                                     )
