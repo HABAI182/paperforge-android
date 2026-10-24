@@ -1,0 +1,24 @@
+{
+  "state": "development-only",
+  "releaseCreated": false,
+  "build": "work/next-doc-resources-build.log: app and androidTest assemble SUCCESS",
+  "focusedAndroid": "work/next-doc-resources-android.log: 1 pass,17.579s,API35 AOSP x86_64",
+  "covers": [
+    "unique document attachment survives remapped backup",
+    "legacy encrypted-original.pdf without manifest is captured",
+    "restored original encrypted PDF opens with original fixture password",
+    "prior library navigation/hidden outputs and alias paths remain working"
+  ],
+  "resourceTypes": [
+    "current and historical page originals",
+    "nonlinear dewarp dependencies",
+    "document-level originals and attachments",
+    "annotation drafts",
+    "output records and their files"
+  ],
+  "cachePolicy": "Only known regenerable directories; all durable references excluded",
+  "limits": [
+    "No physical handset acceptance",
+    "PDF embedded attachments are preserved within their source PDF; attachment editing/policies remain PDF03 work"
+  ]
+}

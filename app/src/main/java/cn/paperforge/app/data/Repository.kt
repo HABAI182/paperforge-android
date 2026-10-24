@@ -303,7 +303,9 @@ class Repository(val context: Context, val database: PaperDatabase) {
         }
 
     suspend fun originalResources(id: String): Set<String> =
-        (dao.pages(id).flatMap { PageResources.paths(it) } +
+        (listOfNotNull(dao.document(id)?.pdfPath) +
+                DocumentResources.entries(this, id).map { it.path } +
+                dao.pages(id).flatMap { PageResources.paths(it) } +
                 dao.allHistory()
                     .filter { it.documentId == id }
                     .flatMap {

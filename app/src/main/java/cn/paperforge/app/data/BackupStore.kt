@@ -18,6 +18,9 @@ object BackupStore {
         val outputs = repo.dao.allOutputs()
         val paths =
             (documents.mapNotNull { it.pdfPath } +
+                    documents.flatMap {
+                        DocumentResources.entries(repo, it.id).map { r -> r.path }
+                    } +
                     pages.flatMap { PageResources.paths(it) } +
                     outputs.map { it.path } +
                     history.flatMap {
@@ -39,6 +42,20 @@ object BackupStore {
         val metadata =
             JSONObject()
                 .put("format", 3)
+                .put(
+                    "documentResources",
+                    JSONObject().apply {
+                        documents.forEach { doc ->
+                            put(
+                                doc.id,
+                                DocumentResources.encode(
+                                    DocumentResources.entries(repo, doc.id),
+                                    mapping::getValue,
+                                ),
+                            )
+                        }
+                    },
+                )
                 .put("library", LibraryPreferences(repo.context).export())
                 .put(
                     "outputs",
@@ -233,6 +250,18 @@ object BackupStore {
                         old.copy(id = id, pdfPath = old.pdfPath?.let { copy(it, id) })
                     }
                 val annotations = metadata.optJSONObject("annotations")
+                metadata.optJSONObject("documentResources")?.let { resources ->
+                    documents.forEach { doc ->
+                        resources.optJSONArray(doc.id)?.let { array ->
+                            val id = ids.getValue(doc.id)
+                            val entries =
+                                DocumentResources.decode(array).map {
+                                    it.copy(path = copy(it.path, id))
+                                }
+                            created.add(DocumentResources.write(repo, id, entries))
+                        }
+                    }
+                }
                 documents.forEach { old ->
                     annotations?.optJSONArray(old.id)?.let { marks ->
                         File(repo.folder(ids.getValue(old.id)), "annotations.json").also {

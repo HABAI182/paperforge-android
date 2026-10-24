@@ -15,7 +15,7 @@
       ],
       "scope": "统一当前页、历史、批注和备份的资源引用及可重建缓存标记",
       "acceptance": "删除页后历史仍可恢复；清缓存不删原件",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "CORE02",

@@ -79,6 +79,19 @@ class LibraryFlowTest {
                 pdf.save(file)
             }
             val native = repo.registerPdf(file, "Native search ${System.nanoTime()}")
+            val attachment =
+                File(repo.folder(scan.id), "reference.txt").apply {
+                    writeText("preserved attachment 001234")
+                }
+            DocumentResources.register(repo, scan.id, "attachment", attachment)
+            val encryptedOriginal = File(repo.folder(native.id), "encrypted-original.pdf")
+            cn.paperforge.app.pdf.PdfTools.encrypt(
+                file,
+                encryptedOriginal,
+                "fixture-password",
+                true,
+                true,
+            )
             val derived =
                 File(repo.exports, "library-derived-${System.nanoTime()}.pdf").also {
                     file.copyTo(it)
@@ -152,6 +165,17 @@ class LibraryFlowTest {
                 repo.dao.document(checkNotNull(output.outputDocumentId))?.pdfPath,
             )
             assertTrue(library.saved().any { it.name == "Library check" && it.tags == "发票" })
+            val restoredAttachment =
+                DocumentResources.entries(repo, restored.id).single { it.role == "attachment" }
+            assertEquals("preserved attachment 001234", File(restoredAttachment.path).readText())
+            val restoredNative = repo.dao.document(checkNotNull(output.outputDocumentId))!!
+            val original =
+                DocumentResources.entries(repo, restoredNative.id).single {
+                    it.role == "encrypted-original"
+                }
+            PDDocument.load(File(original.path), "fixture-password").use {
+                assertEquals(2, it.numberOfPages)
+            }
         } finally {
             compose.runOnIdle {
                 model.screen.value = "home"

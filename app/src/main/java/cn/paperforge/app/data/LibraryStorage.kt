@@ -30,6 +30,9 @@ class LibraryStorage(private val repo: Repository) {
             val pages = repo.dao.allPages()
             val current =
                 (docs.mapNotNull { it.pdfPath } +
+                        docs.flatMap {
+                            DocumentResources.entries(repo, it.id).map { r -> r.path }
+                        } +
                         pages.flatMap { PageResources.paths(it) } +
                         repo.dao.allOutputs().map { it.path })
                     .toSet()
