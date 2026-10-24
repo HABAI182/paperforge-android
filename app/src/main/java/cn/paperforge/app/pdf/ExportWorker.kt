@@ -61,7 +61,8 @@ class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 ) {
                     setProgress(workDataOf("progress" to it))
                 }
-                repo.registerPdf(file, doc.title)
+                repo.registerPdf(file, doc.title, listed = false)
+                repo.recordOutput(file, doc)
                 Result.success(workDataOf("path" to file.path))
             } catch (e: CancellationException) {
                 throw e

@@ -18,6 +18,7 @@ data class DocumentRow(
     @ColumnInfo(defaultValue = "0") val favorite: Boolean = false,
     val trashedAt: Long? = null,
     @ColumnInfo(defaultValue = "0") val lastOpened: Long = 0,
+    @ColumnInfo(defaultValue = "1") val listed: Boolean = true,
 )
 
 @Entity(
@@ -70,14 +71,18 @@ data class PageSearch(val pageId: String, val documentId: String, val tokens: St
 
 @Dao
 interface DocumentDao {
-    @Query("SELECT * FROM documents WHERE trashedAt IS NULL ORDER BY favorite DESC,modified DESC")
+    @Query(
+        "SELECT * FROM documents WHERE trashedAt IS NULL AND listed=1 ORDER BY favorite DESC,modified DESC"
+    )
     fun observeDocuments(): Flow<List<DocumentRow>>
 
-    @Query("SELECT * FROM documents WHERE trashedAt IS NOT NULL ORDER BY trashedAt DESC")
+    @Query(
+        "SELECT * FROM documents WHERE trashedAt IS NOT NULL AND listed=1 ORDER BY trashedAt DESC"
+    )
     fun observeTrash(): Flow<List<DocumentRow>>
 
     @Query(
-        "SELECT DISTINCT d.* FROM documents d WHERE d.trashedAt IS NULL AND (d.title LIKE '%'||:query||'%' OR d.tags LIKE '%'||:query||'%' OR d.folder LIKE '%'||:query||'%' OR d.id IN (SELECT documentId FROM page_search WHERE page_search MATCH :expression)) ORDER BY d.favorite DESC,d.modified DESC"
+        "SELECT DISTINCT d.* FROM documents d WHERE d.trashedAt IS NULL AND d.listed=1 AND (d.title LIKE '%'||:query||'%' OR d.tags LIKE '%'||:query||'%' OR d.folder LIKE '%'||:query||'%' OR d.id IN (SELECT documentId FROM page_search WHERE page_search MATCH :expression) OR d.id IN (SELECT documentId FROM pdf_search WHERE pdf_search MATCH :expression)) ORDER BY d.favorite DESC,d.modified DESC"
     )
     fun search(
         query: String,
@@ -103,6 +108,43 @@ interface DocumentDao {
     @Query("SELECT * FROM pages") suspend fun allPages(): List<PageRow>
 
     @Query("SELECT * FROM edit_history ORDER BY id") suspend fun allHistory(): List<EditHistory>
+
+    @Query(
+        "SELECT p.documentId,p.position AS page,p.ocrText AS text,p.id AS pageId FROM pages p WHERE p.id IN (SELECT pageId FROM page_search WHERE page_search MATCH :expression) UNION ALL SELECT documentId,page,text,NULL AS pageId FROM pdf_search WHERE pdf_search MATCH :expression ORDER BY documentId,page"
+    )
+    fun searchHits(expression: String): Flow<List<LibrarySearchHit>>
+
+    @Query(
+        "SELECT d.id AS documentId,CASE WHEN d.kind='pdf' THEN COALESCE(i.pageCount,0) ELSE (SELECT COUNT(*) FROM pages p WHERE p.documentId=d.id) END AS pageCount,CASE WHEN d.kind='pdf' THEN COALESCE(i.textPages,0) ELSE (SELECT COUNT(*) FROM pages p WHERE p.documentId=d.id AND p.ocrText IS NOT NULL AND p.ocrText!='') END AS recognizedPages,EXISTS(SELECT 1 FROM document_outputs o WHERE o.sourceDocumentId=d.id) AS hasExport,COALESCE(i.annotations,0) AS annotations FROM documents d LEFT JOIN pdf_index i ON i.documentId=d.id"
+    )
+    fun libraryFacts(): Flow<List<LibraryFacts>>
+
+    @Query("SELECT * FROM pdf_index WHERE documentId=:id")
+    suspend fun pdfIndex(id: String): PdfIndexRow?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun putPdfIndex(row: PdfIndexRow)
+
+    @Insert suspend fun putPdfTexts(rows: List<PdfLibraryText>)
+
+    @Query("DELETE FROM pdf_search WHERE documentId=:id") suspend fun deletePdfTexts(id: String)
+
+    @Query("DELETE FROM pdf_index WHERE documentId=:id") suspend fun deletePdfIndex(id: String)
+
+    @Query("SELECT * FROM document_outputs ORDER BY created DESC")
+    fun outputs(): Flow<List<OutputRow>>
+
+    @Query("SELECT * FROM document_outputs ORDER BY created DESC")
+    suspend fun allOutputs(): List<OutputRow>
+
+    @Query("SELECT * FROM document_outputs WHERE path=:path")
+    suspend fun output(path: String): OutputRow?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun putOutput(row: OutputRow)
+
+    @Query("UPDATE document_outputs SET externalUri=:uri WHERE path=:path")
+    suspend fun outputDestination(path: String, uri: String)
+
+    @Query("DELETE FROM document_outputs WHERE path=:path") suspend fun removeOutput(path: String)
 
     @Query("SELECT COUNT(*) FROM pages WHERE original=:path")
     suspend fun originalReferences(path: String): Int
@@ -177,19 +219,53 @@ interface DocumentDao {
     @Transaction
     suspend fun deleteDocument(id: String) {
         deleteDocumentSearch(id)
+        deletePdfTexts(id)
+        deletePdfIndex(id)
         deleteDocumentRaw(id)
     }
 }
 
 @Database(
-    entities = [DocumentRow::class, PageRow::class, EditHistory::class, PageSearch::class],
-    version = 8,
+    entities =
+        [
+            DocumentRow::class,
+            PageRow::class,
+            EditHistory::class,
+            PageSearch::class,
+            PdfLibraryText::class,
+            PdfIndexRow::class,
+            OutputRow::class,
+        ],
+    version = 10,
     exportSchema = true,
 )
 abstract class PaperDatabase : RoomDatabase() {
     abstract fun dao(): DocumentDao
 
     companion object {
+        val Migration9To10 =
+            object : Migration(9, 10) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL("ALTER TABLE documents ADD COLUMN listed INTEGER NOT NULL DEFAULT 1")
+                }
+            }
+        val Migration8To9 =
+            object : Migration(8, 9) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        "CREATE VIRTUAL TABLE IF NOT EXISTS pdf_search USING FTS4(documentId TEXT NOT NULL,page INTEGER NOT NULL,text TEXT NOT NULL,tokens TEXT NOT NULL,tokenize=unicode61)"
+                    )
+                    db.execSQL(
+                        "CREATE TABLE IF NOT EXISTS pdf_index (documentId TEXT NOT NULL PRIMARY KEY,fingerprint TEXT NOT NULL,pageCount INTEGER NOT NULL,textPages INTEGER NOT NULL,annotations INTEGER NOT NULL,updated INTEGER NOT NULL)"
+                    )
+                    db.execSQL(
+                        "CREATE TABLE IF NOT EXISTS document_outputs (path TEXT NOT NULL PRIMARY KEY,sourceDocumentId TEXT,sourceTitle TEXT NOT NULL,format TEXT NOT NULL,created INTEGER NOT NULL,externalUri TEXT,outputDocumentId TEXT)"
+                    )
+                    db.execSQL(
+                        "CREATE INDEX IF NOT EXISTS index_document_outputs_sourceDocumentId ON document_outputs(sourceDocumentId)"
+                    )
+                }
+            }
         val Migration7To8 =
             object : Migration(7, 8) {
                 override fun migrate(db: SupportSQLiteDatabase) {

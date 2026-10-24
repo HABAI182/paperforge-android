@@ -15,9 +15,11 @@ object BackupStore {
         val documents = repo.dao.allDocuments()
         val pages = repo.dao.allPages()
         val history = repo.dao.allHistory()
+        val outputs = repo.dao.allOutputs()
         val paths =
             (documents.mapNotNull { it.pdfPath } +
                     pages.flatMap { PageResources.paths(it) } +
+                    outputs.map { it.path } +
                     history.flatMap {
                         listOf(
                             *HistoryState.pages(it.beforeJson)
@@ -37,6 +39,13 @@ object BackupStore {
         val metadata =
             JSONObject()
                 .put("format", 3)
+                .put("library", LibraryPreferences(repo.context).export())
+                .put(
+                    "outputs",
+                    JSONArray().apply {
+                        outputs.forEach { put(it.copy(path = mapping.getValue(it.path)).encode()) }
+                    },
+                )
                 .put(
                     "studyNotes",
                     cn.paperforge.app.reader.StudyNotes.encode(
@@ -188,7 +197,7 @@ object BackupStore {
                         val source = zip.getEntry(entry) ?: error("备份缺少文件")
                         val target =
                             File(
-                                repo.folder(docId),
+                                if (docId.isEmpty()) repo.exports else repo.folder(docId),
                                 "${UUID.randomUUID()}.${File(entry).extension}",
                             )
                         created.add(target)
@@ -251,11 +260,31 @@ object BackupStore {
                             applied = old.getBoolean("applied"),
                         )
                     }
+                val outputRows =
+                    metadata
+                        .optJSONArray("outputs")
+                        ?.let { array ->
+                            (0 until array.length())
+                                .map { OutputRow.decode(array.getJSONObject(it)) }
+                                .map { old ->
+                                    val outputId = old.outputDocumentId?.let(ids::get)
+                                    old.copy(
+                                        path = copy(old.path, outputId ?: ""),
+                                        sourceDocumentId = old.sourceDocumentId?.let(ids::get),
+                                        outputDocumentId = outputId,
+                                    )
+                                }
+                        }
+                        .orEmpty()
                 repo.database.withTransaction {
                     restored.forEach { repo.dao.putDocument(it) }
                     pages.forEach { repo.dao.putPage(it) }
                     histories.forEach { repo.dao.addHistory(it) }
+                    outputRows.forEach { repo.dao.putOutput(it) }
                     sideChanged = true
+                    metadata.optJSONObject("library")?.let {
+                        LibraryPreferences(repo.context).restore(it)
+                    }
                     val signatures = repo.context.getSharedPreferences("signature", 0)
                     if (!signatures.contains("strokes") && metadata.has("signature"))
                         signatures
@@ -272,6 +301,9 @@ object BackupStore {
                         cn.paperforge.app.UserSettings.importJson(it.toString())
                     }
                 }
+                restored
+                    .filter { it.kind == "pdf" }
+                    .forEach { LibraryIndexer.enqueue(repo.context, it.id) }
                 return restored.size
             }
         } catch (e: Exception) {

@@ -6,7 +6,7 @@ import cn.paperforge.app.reader.StudyNotes
 /** Companion state is restored before the Room transaction commits; failures roll it back. */
 internal class RestoreSideState(private val context: Context) {
     private val preferences =
-        listOf("preferences", "reader", "reader-view", "signature").associateWith {
+        listOf("preferences", "reader", "reader-view", "signature", "library").associateWith {
             context.getSharedPreferences(it, 0).all.toMap()
         }
     private val notes = StudyNotes.load(context)

@@ -1,10 +1,12 @@
 package cn.paperforge.app.pdf
 
+import cn.paperforge.app.model.CjkSearch
 import cn.paperforge.app.model.PointN
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.text.PDFTextStripper
 import com.tom_roush.pdfbox.text.TextPosition
 import java.io.File
+import java.text.Normalizer
 import java.util.Locale
 
 object PdfSearch {
@@ -27,13 +29,15 @@ object PdfSearch {
                         val chars = StringBuilder()
                         val mapping = mutableListOf<TextPosition>()
                         positions.forEach { p ->
-                            p.unicode.forEach {
-                                chars.append(it)
-                                mapping.add(p)
-                            }
+                            Normalizer.normalize(p.unicode, Normalizer.Form.NFKC)
+                                .lowercase(Locale.ROOT)
+                                .forEach {
+                                    chars.append(it)
+                                    mapping.add(p)
+                                }
                         }
                         val content = chars.toString().lowercase(Locale.ROOT)
-                        val target = query.lowercase(Locale.ROOT)
+                        val target = CjkSearch.normalize(query)
                         var from = 0
                         while (from < content.length) {
                             val at = content.indexOf(target, from)

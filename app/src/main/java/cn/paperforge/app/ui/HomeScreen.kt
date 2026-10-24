@@ -5,6 +5,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
@@ -15,6 +16,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -22,9 +24,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
 import cn.paperforge.app.UserSettings
-import cn.paperforge.app.data.DocumentRow
+import cn.paperforge.app.data.*
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -43,10 +48,52 @@ fun HomeScreen(
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var toolQuery by rememberSaveable { mutableStateOf("") }
     val search by vm.query.collectAsState()
+    val facts by vm.libraryFacts.collectAsState()
+    val allHits by vm.librarySearchHits.collectAsState()
+    val hitsByDocument = remember(allHits) { allHits.groupBy { it.documentId } }
+    val factsByDocument = remember(facts) { facts.associateBy { it.documentId } }
+    val context = LocalContext.current
+    val library = remember { LibraryPreferences(context) }
+    val savedView = remember { library.view() }
+    var collection by rememberSaveable { mutableStateOf(savedView.collection) }
+    var sort by rememberSaveable { mutableStateOf(savedView.sort) }
+    var tagQuery by rememberSaveable { mutableStateOf(savedView.tags) }
+    var savedFilters by remember { mutableStateOf(library.saved()) }
+    var savingFilter by remember { mutableStateOf(false) }
+    var filterName by remember { mutableStateOf("") }
+    var moreHits by remember { mutableStateOf<DocumentRow?>(null) }
     val trash by vm.trash.collectAsState()
     var showTrash by remember { mutableStateOf(false) }
-    var favoritesOnly by remember { mutableStateOf(false) }
-    var folder by remember { mutableStateOf("") }
+    var favoritesOnly by rememberSaveable { mutableStateOf(savedView.favorites) }
+    var folder by rememberSaveable { mutableStateOf(savedView.folder) }
+    val annotated by
+        produceState(emptySet<String>(), docs) {
+            value =
+                withContext(Dispatchers.IO) {
+                    docs
+                        .filter { doc ->
+                            val f = File(vm.repo.folder(doc.id), "annotations.json")
+                            f.exists() && f.readText().trim() !in setOf("", "[]")
+                        }
+                        .map { it.id }
+                        .toSet()
+                }
+        }
+    LaunchedEffect(docs) {
+        docs.filter { it.kind == "pdf" }.forEach { LibraryIndexer.enqueue(context, it.id) }
+    }
+    LaunchedEffect(collection, sort, tagQuery, favoritesOnly, folder, search) {
+        library.view(
+            LibraryFilter(
+                collection = collection,
+                sort = sort,
+                folder = folder,
+                tags = tagQuery,
+                favorites = favoritesOnly,
+                query = search,
+            )
+        )
+    }
     var categorizing by remember { mutableStateOf<DocumentRow?>(null) }
     var deleting by remember { mutableStateOf<DocumentRow?>(null) }
     var renaming by remember { mutableStateOf<DocumentRow?>(null) }
@@ -59,8 +106,30 @@ fun HomeScreen(
     val filtered =
         (if (inTrash) trash else docs)
             .filter {
-                (tab == 0 || !favoritesOnly || it.favorite) &&
-                    (tab == 0 || folder.isEmpty() || it.folder == folder) &&
+                (tab == 0 || inTrash || !favoritesOnly || it.favorite) &&
+                    (tab == 0 ||
+                        inTrash ||
+                        folder.isEmpty() ||
+                        it.folder == folder ||
+                        it.folder.startsWith("$folder/")) &&
+                    (tab == 0 ||
+                        inTrash ||
+                        tagQuery.isBlank() ||
+                        it.tags.contains(tagQuery, true)) &&
+                    (tab == 0 ||
+                        inTrash ||
+                        when (collection) {
+                            "INBOX" -> it.folder.isBlank() && it.tags.isBlank()
+                            "NO_OCR" ->
+                                factsByDocument[it.id]?.let { f ->
+                                    f.pageCount > 0 && f.recognizedPages < f.pageCount
+                                } == true
+                            "NEEDS_EXPORT" ->
+                                it.kind == "scan" && factsByDocument[it.id]?.hasExport != true
+                            "ANNOTATED" ->
+                                it.id in annotated || (factsByDocument[it.id]?.annotations ?: 0) > 0
+                            else -> true
+                        }) &&
                     (!inTrash ||
                         search.isBlank() ||
                         listOf(it.title, it.folder, it.tags).any { value ->
@@ -68,10 +137,18 @@ fun HomeScreen(
                         })
             }
             .let {
-                if (tab == 0)
-                    it.sortedByDescending { row -> maxOf(row.lastOpened, row.modified) }
+                if(search.isNotBlank() && !inTrash) it.sortedBy { row -> if(hitsByDocument[row.id].isNullOrEmpty()) 1 else 0 }
+                else if(inTrash) it.sortedByDescending { row -> row.trashedAt }
+                else if (tab == 0 && search.isBlank())
+                    it.filter { row -> row.lastOpened > 0 }
+                        .sortedByDescending { row -> row.lastOpened }
                         .take(UserSettings.number("recentCount", 6f).toInt())
-                else it
+                else
+                    when (sort) {
+                        "OPENED" -> it.sortedByDescending { row -> row.lastOpened }
+                        "TITLE" -> it.sortedBy { row -> row.title.lowercase() }
+                        else -> it.sortedByDescending { row -> row.modified }
+                    }
             }
     val chosen = filtered.filter { it.id in selection }
     fun finishSelection() {
@@ -84,7 +161,62 @@ fun HomeScreen(
     }
     BackHandler(inTrash && !selecting) { showTrash = false }
     BackHandler(selecting) { finishSelection() }
-    LaunchedEffect(tab, search, showTrash, favoritesOnly, folder) { finishSelection() }
+    LaunchedEffect(tab, search, showTrash, favoritesOnly, folder, collection, sort, tagQuery) {
+        finishSelection()
+    }
+    if (savingFilter)
+        AlertDialog(
+            onDismissRequest = { savingFilter = false },
+            title = { Text("保存筛选") },
+            text = {
+                OutlinedTextField(
+                    filterName,
+                    { filterName = it },
+                    label = { Text("筛选名称") },
+                    singleLine = true,
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = filterName.isNotBlank(),
+                    onClick = {
+                        library.save(
+                            LibraryFilter(
+                                filterName.trim(),
+                                collection,
+                                sort,
+                                folder,
+                                tagQuery,
+                                favoritesOnly,
+                                search,
+                            )
+                        )
+                        savedFilters = library.saved()
+                        savingFilter = false
+                    },
+                ) {
+                    Text("保存")
+                }
+            },
+            dismissButton = { TextButton(onClick = { savingFilter = false }) { Text("取消") } },
+        )
+    moreHits?.let { doc ->
+        AlertDialog(
+            onDismissRequest = { moreHits = null },
+            title = { Text("${doc.title} · 命中页") },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    hitsByDocument[doc.id].orEmpty().forEach { hit ->
+                        LibrarySnippet(hit, search) {
+                            moreHits = null
+                            vm.openSearchHit(doc, hit, search)
+                        }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { moreHits = null }) { Text("关闭") } },
+        )
+    }
     Scaffold(
         topBar = {
             if (selecting)
@@ -342,6 +474,10 @@ fun HomeScreen(
                 }
                 val toolEntries =
                     listOf(
+                        HomeTool("导出记录", "找回生成结果、来源与保存位置", Icons.Default.History) {
+                            vm.outputSource.value = null
+                            vm.screen.value = "outputs"
+                        },
                         HomeTool(
                             "学习摘录与笔记",
                             "来源页定位、Markdown、Word、Anki TSV",
@@ -410,7 +546,9 @@ fun HomeScreen(
                 item {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            if (inTrash) "已移入回收站" else if (tab == 0) "最近文档" else "全部文档",
+                            if (inTrash) "已移入回收站"
+                            else if (search.isNotBlank()) "搜索结果"
+                            else if (tab == 0) "最近文档" else "全部文档",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.weight(1f),
@@ -426,12 +564,67 @@ fun HomeScreen(
                 }
                 if (tab == 1 && !inTrash) {
                     item {
+                        LibraryFilterControls(collection, sort, { collection = it }, { sort = it })
+                    }
+                    if (savedFilters.isNotEmpty())
+                        item {
+                            Row(
+                                Modifier.horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                savedFilters.forEach { preset ->
+                                    InputChip(
+                                        false,
+                                        onClick = {
+                                            collection = preset.collection
+                                            sort = preset.sort
+                                            folder = preset.folder
+                                            tagQuery = preset.tags
+                                            favoritesOnly = preset.favorites
+                                            vm.query.value = preset.query
+                                        },
+                                        label = { Text(preset.name) },
+                                        trailingIcon = {
+                                            Icon(
+                                                Icons.Default.Close,
+                                                "删除筛选 ${preset.name}",
+                                                Modifier.size(16.dp).clickable {
+                                                    library.remove(preset.name)
+                                                    savedFilters = library.saved()
+                                                },
+                                            )
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                    item {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             FilterChip(
                                 favoritesOnly,
                                 { favoritesOnly = !favoritesOnly },
                                 label = { Text("收藏") },
                             )
+                            TextButton(
+                                onClick = {
+                                    filterName = ""
+                                    savingFilter = true
+                                }
+                            ) {
+                                Text("保存筛选")
+                            }
+                            TextButton(
+                                onClick = {
+                                    collection = "ALL"
+                                    sort = "MODIFIED"
+                                    favoritesOnly = false
+                                    folder = ""
+                                    tagQuery = ""
+                                    vm.query.value = ""
+                                }
+                            ) {
+                                Text("重置筛选")
+                            }
                         }
                     }
                     item {
@@ -439,6 +632,13 @@ fun HomeScreen(
                             value = folder,
                             onValueChange = { folder = it },
                             label = { Text("按文件夹筛选，留空显示全部") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        OutlinedTextField(
+                            tagQuery,
+                            { tagQuery = it },
+                            label = { Text("按标签筛选") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -466,7 +666,24 @@ fun HomeScreen(
                                 Text("扫描、导入，全程留在设备。", style = MaterialTheme.typography.bodySmall)
                         }
                     }
-                items(filtered, key = { it.id }) { doc ->
+                itemsIndexed(filtered, key = { _, doc -> doc.id }) { index, doc ->
+                    val opened = tab == 0 || sort == "OPENED"
+                    val date = if (opened) doc.lastOpened else doc.modified
+                    if (
+                        search.isBlank() && (tab == 0 || sort != "TITLE") &&
+                            (index == 0 ||
+                                libraryDateGroup(date) !=
+                                    libraryDateGroup(
+                                        if (opened) filtered[index - 1].lastOpened
+                                        else filtered[index - 1].modified
+                                    ))
+                    )
+                        Text(
+                            libraryDateGroup(date),
+                            Modifier.padding(top = 10.dp, bottom = 6.dp),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
                     Card(
                         modifier =
                             Modifier.combinedClickable(
@@ -518,14 +735,20 @@ fun HomeScreen(
                                         SimpleDateFormat("MM/dd HH:mm", Locale.CHINA)
                                             .format(
                                                 Date(
-                                                    if (tab == 0)
-                                                        maxOf(doc.lastOpened, doc.modified)
+                                                    if (tab == 0 || sort == "OPENED") doc.lastOpened
                                                     else doc.modified
                                                 )
                                             ),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
+                                factsByDocument[doc.id]?.let { f ->
+                                    Text(
+                                        (if(doc.kind=="pdf" && f.pageCount==0) "文字索引待更新" else "${f.pageCount} 页 · ${f.recognizedPages} 页含文字") +
+                                            (if (f.hasExport) " · 已导出" else ""),
+                                        style = MaterialTheme.typography.labelSmall,
+                                    )
+                                }
                                 if (doc.folder.isNotEmpty() || doc.tags.isNotEmpty())
                                     Text(
                                         listOf(doc.folder, doc.tags)
@@ -533,6 +756,18 @@ fun HomeScreen(
                                             .joinToString(" · "),
                                         style = MaterialTheme.typography.labelSmall,
                                     )
+                                if (!selecting && search.isNotBlank() && !inTrash) {
+                                    val matches = hitsByDocument[doc.id].orEmpty()
+                                    matches.take(2).forEach { hit ->
+                                        LibrarySnippet(hit, search) {
+                                            vm.openSearchHit(doc, hit, search)
+                                        }
+                                    }
+                                    if (matches.size > 2)
+                                        TextButton(onClick = { moreHits = doc }) {
+                                            Text("查看 ${matches.size} 个命中页")
+                                        }
+                                }
                             }
                             var menu by remember { mutableStateOf(false) }
                             if (!selecting)
@@ -549,6 +784,14 @@ fun HomeScreen(
                                             onClick = {
                                                 menu = false
                                                 renaming = doc
+                                            },
+                                        )
+                                        DropdownMenuItem(
+                                            text = { Text("导出记录") },
+                                            onClick = {
+                                                menu = false
+                                                vm.outputSource.value = doc.id
+                                                vm.screen.value = "outputs"
                                             },
                                         )
                                         DropdownMenuItem(

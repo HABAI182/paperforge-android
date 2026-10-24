@@ -53,6 +53,20 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val searchHits = MutableStateFlow<List<cn.paperforge.app.pdf.PdfSearch.Hit>>(emptyList())
     val annotationPage = MutableStateFlow(0)
     val readerTarget = MutableStateFlow<Pair<String, Int>?>(null)
+    val editorTarget = MutableStateFlow<Pair<String, Int>?>(null)
+    val libraryFocus = MutableStateFlow<LibrarySearchHit?>(null)
+    val outputSource = MutableStateFlow<String?>(null)
+    val libraryFacts =
+        repo.dao
+            .libraryFacts()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val librarySearchHits =
+        query
+            .flatMapLatest { q ->
+                if (q.isBlank()) flowOf(emptyList())
+                else repo.dao.searchHits(cn.paperforge.app.model.CjkSearch.expression(q))
+            }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val marks = MutableStateFlow<List<PdfMark>>(emptyList())
     private var marksSave: Job? = null
     private var task: Job? = null
@@ -62,6 +76,28 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val prefs = app.getSharedPreferences("session", 0)
         val pending = prefs.getString("export", null)
         if (pending != null) runCatching { UUID.fromString(pending) }.onSuccess { watchExport(it) }
+    }
+
+    private suspend fun publishOutput(file: File, source: DocumentRow? = null) {
+        withContext(Dispatchers.IO) { repo.recordOutput(file, source) }
+        output.value = file
+    }
+
+    fun reopenOutput(row: OutputRow) {
+        if (File(row.path).exists()) {
+            outputLocked.value = false
+            output.value = File(row.path)
+        } else viewModelScope.launch { messages.send("本地结果已移除，外部保存位置仍在记录中") }
+    }
+
+    fun openSearchHit(doc: DocumentRow, hit: LibrarySearchHit, text: String) {
+        if (busy.value) return
+        open(doc)
+        libraryFocus.value = hit
+        if (doc.kind == "pdf") {
+            readerTarget.value = doc.id to hit.page
+            searchPdf(text)
+        } else editorTarget.value = doc.id to hit.page
     }
 
     private fun perform(label: String, action: suspend () -> Unit) {
@@ -92,6 +128,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun open(doc: DocumentRow) {
         if (busy.value) return
+        libraryFocus.value = null
         viewModelScope.launch(Dispatchers.IO) {
             repo.dao.opened(doc.id, System.currentTimeMillis())
         }
@@ -360,7 +397,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 currentCoroutineContext().ensureActive()
                 check(partial.renameTo(file)) { "无法完成文档包" }
                 outputLocked.value = false
-                output.value = file
+                publishOutput(file)
             } finally {
                 partial.delete()
                 temporary.deleteRecursively()
@@ -434,7 +471,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                             .apply()
                         if (info.state == WorkInfo.State.SUCCEEDED) {
                             outputLocked.value = false
-                            output.value = File(info.outputData.getString("path")!!)
+                            publishOutput(File(info.outputData.getString("path")!!))
                             if (info.outputData.getString("mode") in listOf("compress", "optimize"))
                                 messages.send(
                                     "${info.outputData.getLong("inputBytes",0)/1024} KB → ${info.outputData.getLong("outputBytes",0)/1024} KB"
@@ -558,8 +595,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 File(repo.exports, "${safeFileName(doc.title)}-${System.currentTimeMillis()}.pdf")
             PdfEngine.extract(File(doc.pdfPath!!), range, file, rotate)
             selected.value =
-                repo.registerPdf(file, doc.title + if (rotate == 0) " · 抽页" else " · 旋转")
-            output.value = file
+                repo.registerPdf(
+                    file,
+                    doc.title + if (rotate == 0) " · 抽页" else " · 旋转",
+                    listed = false,
+                )
+            publishOutput(file, doc)
         }
 
     fun compress(quality: Int) =
@@ -573,8 +614,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 "${source.length()/1024} KB → ${file.length()/1024} KB；" +
                     if (change > 0) "减少 %.1f%%".format(change) else "本次未减小体积"
             )
-            selected.value = repo.registerPdf(file, doc.title + " · 图片压缩")
-            output.value = file
+            selected.value = repo.registerPdf(file, doc.title + " · 图片压缩", listed = false)
+            publishOutput(file, doc)
         }
 
     fun extractText() =
@@ -641,7 +682,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 )
             PhoneTables.write(tableReview.value, file, csv)
             outputLocked.value = false
-            output.value = file
+            publishOutput(file)
         }
 
     fun officeResult(uri: Uri) =
@@ -659,7 +700,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             if (file.extension.equals("pdf", true))
                 repo.registerPdf(file, name.substringBeforeLast('.'))
             outputLocked.value = false
-            output.value = file
+            publishOutput(file)
             runCatching { getApplication<Application>().contentResolver.delete(uri, null, null) }
         }
 
@@ -668,7 +709,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             val file = File(repo.exports, "PaperForge-task-${System.currentTimeMillis()}.zip")
             DesktopTasks.create(getApplication(), uri, repo.displayName(uri), mode, file, options)
             outputLocked.value = false
-            output.value = file
+            publishOutput(file)
             messages.send("将任务包交给电脑助手处理，再从转换中心导入结果包")
         }
 
@@ -679,7 +720,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 .filter { it.extension.equals("pdf", true) }
                 .forEach { repo.registerPdf(it, it.nameWithoutExtension) }
             outputLocked.value = false
-            if (files.size == 1) output.value = files.first()
+            if (files.size == 1) publishOutput(files.first())
             else {
                 val zip = File(repo.exports, "PaperForge-results-${System.currentTimeMillis()}.zip")
                 java.util.zip.ZipOutputStream(zip.outputStream()).use { stream ->
@@ -689,7 +730,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                         stream.closeEntry()
                     }
                 }
-                output.value = zip
+                publishOutput(zip)
             }
             messages.send("已导入 ${files.size} 个结果；PDF 已加入文档库")
         }
@@ -711,7 +752,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             )
             repo.registerPdf(file, name.substringBeforeLast('.') + " · 文字 PDF")
             outputLocked.value = false
-            output.value = file
+            publishOutput(file)
         }
 
     fun convertImages(uris: List<Uri>, format: String) =
@@ -724,7 +765,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 progress.value = it
             }
             outputLocked.value = false
-            output.value = file
+            publishOutput(file)
         }
 
     fun previewOutput(file: File) =
@@ -764,7 +805,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 )
             PdfTools.encrypt(File(doc.pdfPath!!), file, password, printing, copying)
             outputLocked.value = true
-            output.value = file
+            publishOutput(file, doc)
         }
 
     fun forms() =
@@ -781,9 +822,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             val doc = selected.value!!
             val file = File(repo.exports, "表单-${System.currentTimeMillis()}.pdf")
             PdfTools.fillForms(File(doc.pdfPath!!), file, values, getApplication())
-            selected.value = repo.registerPdf(file, doc.title + " · 表单")
+            selected.value = repo.registerPdf(file, doc.title + " · 表单", listed = false)
             outputLocked.value = false
-            output.value = file
+            publishOutput(file, doc)
             formFields.value = null
         }
 
@@ -851,24 +892,27 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 }
             }
             outputLocked.value = false
-            output.value = file
+            publishOutput(file, doc)
         }
 
     fun exportScanCase(page: PageRow) =
         perform("正在保存扫描诊断") {
-            output.value =
+            publishOutput(
                 cn.paperforge.app.imaging.ScanDiagnostics.export(
                     getApplication(),
                     page,
                     repo.exports,
-                )
+                ),
+                selected.value,
+            )
             outputLocked.value = false
         }
 
     fun exportStudyNotes(format: String) =
         perform("正在导出摘录") {
-            output.value =
+            publishOutput(
                 cn.paperforge.app.reader.StudyNotes.export(getApplication(), repo.exports, format)
+            )
             outputLocked.value = false
         }
 

@@ -46,6 +46,37 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
     val busy by vm.busy.collectAsState()
     val pager = rememberPagerState(pageCount = { pages.size })
     val active = pages.getOrNull(pager.currentPage)
+    val target by vm.editorTarget.collectAsState()
+    val focus by vm.libraryFocus.collectAsState()
+    val query by vm.query.collectAsState()
+    LaunchedEffect(target, pages, doc?.id) {
+        val value = target
+        if (
+            value != null &&
+                value.first == doc?.id &&
+                pages.isNotEmpty() &&
+                pages.all { it.documentId == doc?.id }
+        ) {
+            pager.scrollToPage(value.second.coerceIn(0, pages.lastIndex))
+            vm.editorTarget.value = null
+        }
+    }
+    val highlights =
+        remember(focus, pages, query) {
+            val page = pages.firstOrNull { it.id == focus?.pageId }
+            val terms = CjkSearch.normalize(query).split(Regex("\\s+")).filter { it.isNotBlank() }
+            if (page?.ocrLayout == null || terms.isEmpty()) emptyMap()
+            else
+                mapOf(
+                    page.id to
+                        OcrLayout.decode(page.ocrLayout)
+                            .lines
+                            .filter { line ->
+                                terms.any { CjkSearch.normalize(line.text).contains(it) }
+                            }
+                            .map { it.corners }
+                )
+        }
     var crop by remember { mutableStateOf(false) }
     var name by remember(doc?.id) { mutableStateOf(doc?.title ?: "") }
     var export by remember { mutableStateOf(false) }
@@ -85,6 +116,7 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
             doc?.let { vm.rename(it, value) }
         },
         onFilter = { page, filter -> vm.save(page.copy(filter = filter)) },
+        highlights = highlights,
     )
     if (crop && active != null)
         CropDialog(

@@ -22,6 +22,7 @@ class Repository(val context: Context, val database: PaperDatabase) {
         DocumentRow(
                 UUID.randomUUID().toString(),
                 "扫描 ${java.text.SimpleDateFormat("MM-dd HH.mm",java.util.Locale.CHINA).format(java.util.Date())}",
+                lastOpened = System.currentTimeMillis(),
             )
             .also { dao.putDocument(it) }
 
@@ -92,8 +93,12 @@ class Repository(val context: Context, val database: PaperDatabase) {
                         displayName(uri).removeSuffix(".pdf"),
                         kind = "pdf",
                         pdfPath = file.path,
+                        lastOpened = System.currentTimeMillis(),
                     )
-                    .also { dao.putDocument(it) }
+                    .also {
+                        dao.putDocument(it)
+                        LibraryIndexer.enqueue(context, it.id)
+                    }
             } catch (e: Exception) {
                 file.delete()
                 throw e
@@ -331,10 +336,13 @@ class Repository(val context: Context, val database: PaperDatabase) {
         doc.pdfPath?.let { path ->
             val file = File(path)
             if (
-                file.canonicalFile.parentFile == exports.canonicalFile &&
-                    dao.pdfReferences(path) == 0
-            )
+                dao.pdfReferences(path) == 0 &&
+                    (file.canonicalFile.parentFile == exports.canonicalFile ||
+                        file.canonicalPath.startsWith(directory.canonicalPath + File.separator))
+            ) {
+                dao.removeOutput(path)
                 file.delete()
+            }
         }
     }
 
@@ -348,17 +356,45 @@ class Repository(val context: Context, val database: PaperDatabase) {
                 file.inputStream().use { it.copyTo(output) }
                 output.flush()
             } ?: error("无法写入所选位置")
+            dao.outputDestination(file.path, uri.toString())
         }
 
-    suspend fun registerPdf(file: File, title: String): DocumentRow =
-        database.withTransaction {
-            dao.documentByPath(file.path)
-                ?: DocumentRow(
-                        UUID.randomUUID().toString(),
-                        title,
-                        kind = "pdf",
-                        pdfPath = file.path,
-                    )
-                    .also { dao.putDocument(it) }
-        }
+    suspend fun registerPdf(file: File, title: String, listed: Boolean = true): DocumentRow =
+        database
+            .withTransaction {
+                dao.documentByPath(file.path)
+                    ?: DocumentRow(
+                            UUID.randomUUID().toString(),
+                            title,
+                            kind = "pdf",
+                            pdfPath = file.path,
+                            listed = listed,
+                        )
+                        .also { dao.putDocument(it) }
+            }
+            .also { LibraryIndexer.enqueue(context, it.id) }
+
+    suspend fun recordOutput(file: File, source: DocumentRow? = null) {
+        val existing = dao.output(file.path)
+        val parentOutput =
+            if (source?.listed == false) source.pdfPath?.let { dao.output(it) } else null
+        val sourceId = parentOutput?.sourceDocumentId ?: source?.id ?: existing?.sourceDocumentId
+        val sourceTitle =
+            sourceId?.let { dao.document(it)?.title }
+                ?: parentOutput?.sourceTitle
+                ?: source?.title
+                ?: existing?.sourceTitle
+                ?: "独立导出"
+        dao.putOutput(
+            OutputRow(
+                file.path,
+                sourceId,
+                sourceTitle,
+                file.extension.lowercase(),
+                existing?.created ?: System.currentTimeMillis(),
+                existing?.externalUri,
+                dao.documentByPath(file.path)?.id ?: existing?.outputDocumentId,
+            )
+        )
+    }
 }

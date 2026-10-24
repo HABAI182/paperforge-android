@@ -34,6 +34,8 @@ class PaperForgeApp : Application() {
                         PaperDatabase.Migration5To6,
                         PaperDatabase.Migration6To7,
                         PaperDatabase.Migration7To8,
+                        PaperDatabase.Migration8To9,
+                        PaperDatabase.Migration9To10,
                     )
                     .build(),
             )

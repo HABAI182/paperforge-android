@@ -1,0 +1,23 @@
+{
+  "state": "development-only",
+  "releaseCreated": false,
+  "roomMigrations": [
+    "8->9 PDF index/output rows",
+    "9->10 visible library vs derived results"
+  ],
+  "build": "work/next-library-listed-build.log: app and androidTest assemble succeeded",
+  "focusedAndroidCheck": "work/next-library-listed-android.log: 1 passed, 21.17s, API35 AOSP x86_64",
+  "covers": [
+    "native PDF and scan OCR numbered search",
+    "both actual UI page jumps",
+    "opening preserves content modified time",
+    "derived PDF not added to visible library automatically",
+    "two outputs and external URI survive backup with correct result document alias",
+    "saved library filters restore"
+  ],
+  "limits": [
+    "Indexes are native text and existing OCR only; automatic image-region supplementation and failed-index task display remain separate OCR10/JOB01/UI07 work",
+    "Imported old duplicates remain intact; new derived results use the output-history model",
+    "No physical phone acceptance claim"
+  ]
+}

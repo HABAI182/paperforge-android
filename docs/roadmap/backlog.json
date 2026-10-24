@@ -817,7 +817,7 @@
       "dependencies": [],
       "scope": "独立lastOpened和阅读进度，排序可切换",
       "acceptance": "打开不改内容时间，最近列表语义正确",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "LIB02",
@@ -830,7 +830,7 @@
       ],
       "scope": "一份项目关联多次导出，显示来源与目标位置",
       "acceptance": "导出一次不制造一堆同名文档",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "LIB03",
@@ -843,7 +843,7 @@
       ],
       "scope": "中文短词/编号、页内片段与点击定位",
       "acceptance": "精确编号优先，能从结果到正确页",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "LIB04",
@@ -856,7 +856,7 @@
       ],
       "scope": "未整理/缺OCR/待导出/含批注与保存筛选",
       "acceptance": "规则可看可改，不强制自动分类",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "LIB05",

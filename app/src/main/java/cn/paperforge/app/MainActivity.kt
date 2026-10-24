@@ -387,6 +387,7 @@ class MainActivity : ComponentActivity() {
                             )
                         "settings" -> SettingsScreen(vm)
                         "storage" -> StorageScreen(vm)
+                        "outputs" -> OutputHistoryScreen(vm)
                         "pages" -> PageGridScreen(vm)
                         "pdf-pages" -> PdfPageGridScreen(vm)
                         "merge" -> MergeScreen(vm)

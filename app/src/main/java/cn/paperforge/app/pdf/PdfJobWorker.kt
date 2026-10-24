@@ -160,7 +160,12 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 if (mode in listOf("compress", "optimize"))
                     setProgress(workDataOf("progress" to 100))
                 if (extension == "pdf")
-                    repo.registerPdf(file, (doc?.title ?: "合并文档") + " · " + mode)
+                    repo.registerPdf(
+                        file,
+                        (doc?.title ?: "合并文档") + " · " + mode,
+                        listed = doc == null,
+                    )
+                repo.recordOutput(file, doc)
                 Result.success(
                     workDataOf(
                         "path" to file.path,

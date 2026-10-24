@@ -1,5 +1,6 @@
 package cn.paperforge.app.ui
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.layout.*
@@ -9,6 +10,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -19,13 +22,20 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import cn.paperforge.app.data.PageRow
+import cn.paperforge.app.model.PointN
 import kotlin.math.abs
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /** Shares the reader gesture contract: at fit size swipe pages, when enlarged pan the page. */
 @Composable
-fun ScanPageCanvas(page: PageRow, compare: Boolean, onTap: () -> Unit, onZoom: (Boolean) -> Unit) {
+fun ScanPageCanvas(
+    page: PageRow,
+    compare: Boolean,
+    onTap: () -> Unit,
+    onZoom: (Boolean) -> Unit,
+    highlights: List<List<PointN>> = emptyList(),
+) {
     var zoom by remember(page.id) { mutableFloatStateOf(1f) }
     var pan by remember(page.id) { mutableStateOf(Offset.Zero) }
     val bitmap =
@@ -112,17 +122,40 @@ fun ScanPageCanvas(page: PageRow, compare: Boolean, onTap: () -> Unit, onZoom: (
         contentAlignment = Alignment.Center,
     ) {
         bitmap?.let {
-            Image(
-                it.asImageBitmap(),
-                if (compare) "原图对照" else "扫描预览",
+            Box(
                 Modifier.fillMaxSize().graphicsLayer {
                     scaleX = zoom
                     scaleY = zoom
                     translationX = pan.x * size.width
                     translationY = pan.y * size.height
-                },
-                contentScale = ContentScale.Fit,
-            )
+                }
+            ) {
+                Image(
+                    it.asImageBitmap(),
+                    if (compare) "原图对照" else "扫描预览",
+                    Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit,
+                )
+                val bitmap = it
+                Canvas(Modifier.fillMaxSize()) {
+                    val scale = minOf(size.width / bitmap.width, size.height / bitmap.height)
+                    val width = bitmap.width * scale
+                    val height = bitmap.height * scale
+                    val left = (size.width - width) / 2
+                    val top = (size.height - height) / 2
+                    highlights.forEach { polygon ->
+                        val path =
+                            Path().apply {
+                                polygon.forEachIndexed { i, p ->
+                                    if (i == 0) moveTo(left + p.x * width, top + p.y * height)
+                                    else lineTo(left + p.x * width, top + p.y * height)
+                                }
+                                close()
+                            }
+                        drawPath(path, Color(0x66FFD54F))
+                    }
+                }
+            }
         } ?: CircularProgressIndicator()
     }
 }

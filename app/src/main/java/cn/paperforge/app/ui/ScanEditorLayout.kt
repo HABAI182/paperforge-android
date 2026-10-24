@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.data.PageRow
 import cn.paperforge.app.imaging.ScanProcessor
+import cn.paperforge.app.model.PointN
 import kotlinx.coroutines.launch
 
 fun scanFilterName(filter: String) =
@@ -46,6 +47,7 @@ fun ScanEditorLayout(
     onAction: (String) -> Unit,
     onRename: (String) -> Unit,
     onFilter: (PageRow, String) -> Unit,
+    highlights: Map<String, List<List<PointN>>> = emptyMap(),
 ) {
     var fullscreen by rememberSaveable { mutableStateOf(false) }
     var enhance by rememberSaveable { mutableStateOf(false) }
@@ -179,6 +181,7 @@ fun ScanEditorLayout(
                             compare && index == pager.currentPage,
                             onTap = { fullscreen = !fullscreen },
                             onZoom = { if (index == pager.currentPage) zoomed = it },
+                            highlights = highlights[pages[index].id].orEmpty(),
                         )
                     }
                 if (fullscreen)

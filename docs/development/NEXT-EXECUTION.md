@@ -11,6 +11,7 @@
 3. 原生大纲/页码标签/链接；原页长按文字选择、补识别扫描区域的入口；可回源页的摘录、Word/MD/Anki TSV；离线系统朗读接口与声音缺失提示。
 4. 阅读可见分块、焦点缩放、页边二次翻页；按文档保存的显示裁边/适宽适页、图片原色；宽屏面对页/封面与RTL，横竖切换保留物理页。验证见 `docs/acceptance/next/reader-display-summary.json`。
 5. 曲面输入/逆映射/模型来源持久保存与联动对照；格式3备份资源重映射，恢复失败完整回滚；存储分类与引用保护的缓存清理。验证见 `docs/acceptance/next/resources-summary.json`。
+6. 文档库独立打开/修改排序、全文命中片段与页定位、智能集合与保存筛选；持久输出记录、外部保存位置、派生结果单独收纳。验证见 `docs/acceptance/next/library-summary.json`。
 
 实际验证与限制见 `docs/acceptance/next/core-reader-summary.json`。实体 ARM64、真实纸张标注集、实际朗读声音和竞品同图比较尚未完成。当前只验证模拟器可证明的内容。
 
