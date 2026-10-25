@@ -54,6 +54,8 @@
 
 27. 桌面直接扫描/图片识字/继续阅读、快捷设置扫描按钮和继续阅读小组件，设置可请求固定入口；小组件跟随上次页码并遵守应用锁显示。实际Android组件、图像选择器和系统Tile检查见 `docs/acceptance/next/system-entrypoints-summary.json`。
 
+28. 首页可保存集合，列表/封面网格、列数与密度支持自定义和档案；缩小快捷入口、固定导入、保留多选及全部文档操作。重启保留/全选切换/200%首页检查见 `docs/acceptance/next/personal-layout-summary.json`。平板折叠及全应用可访问性保留在UI08。
+
 ## 后续执行顺序
 
 页序历史补充：重排只记录页面ID，删页/分割仅记录内容差异；新旧可读快照的撤销保留后来新增的扫描页和与操作无关的新OCR。备份对独立页序ID重映射，集中检查见 `docs/acceptance/next/sparse-history-summary.json`。不将此修复重复计为新完成的计划卡。

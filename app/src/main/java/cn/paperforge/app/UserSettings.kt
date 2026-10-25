@@ -45,6 +45,9 @@ object UserSettings {
             "dynamicColor" to false,
             "fontScale" to 1f,
             "compactRows" to false,
+            "documentLayout" to "LIST",
+            "gridColumns" to "AUTO",
+            "homeCollection" to "RECENT",
             "edgeTurn" to true,
             "recentCount" to 6f,
             "homeTools" to "images,pdf,ocr,merge,compress,tools",
@@ -152,6 +155,9 @@ object UserSettings {
                 "resolution" to setOf("DRAFT", "STANDARD", "HIGH", "CUSTOM"),
                 "theme" to setOf("SYSTEM", "LIGHT", "DARK", "AMOLED"),
                 "accent" to setOf("GREEN", "BLUE", "PURPLE", "ORANGE"),
+                "documentLayout" to setOf("LIST", "COVERS"),
+                "gridColumns" to setOf("AUTO", "2", "3", "4"),
+                "homeCollection" to setOf("RECENT", "FAVORITES", "INBOX", "NO_OCR", "NEEDS_EXPORT"),
             )
         val booleans =
             setOf(

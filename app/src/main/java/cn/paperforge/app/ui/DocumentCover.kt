@@ -29,27 +29,36 @@ private val coverWorkers = Semaphore(2)
 
 /** Derived, disposable first-page previews. An edit changes modified and invalidates the key. */
 @Composable
-fun DocumentCover(document: DocumentRow, repository: Repository) {
+fun DocumentCover(
+    document: DocumentRow,
+    repository: Repository,
+    modifier: Modifier = Modifier.size(width = 54.dp, height = 72.dp),
+    previewEdge: Int = 260,
+) {
     val cache = File(LocalContext.current.cacheDir, "document-covers")
     val image by
-        produceState<Bitmap?>(null, document.id, document.modified) {
+        produceState<Bitmap?>(null, document.id, document.modified, previewEdge) {
             value =
                 withContext(Dispatchers.IO) {
                     coverWorkers.withPermit {
                         runCatching {
                                 cache.mkdirs()
-                                val target = File(cache, "${document.id}-${document.modified}.jpg")
+                                val target =
+                                    File(
+                                        cache,
+                                        "${document.id}-${document.modified}-$previewEdge.jpg",
+                                    )
                                 BitmapFactory.decodeFile(target.path)
                                     ?: run {
                                         val bitmap =
                                             if (document.kind == "pdf") {
                                                 PdfSession(File(requireNotNull(document.pdfPath)))
-                                                    .use { it.render(0, 260) }
+                                                    .use { it.render(0, previewEdge) }
                                             } else {
                                                 repository.dao
                                                     .pages(document.id)
                                                     .firstOrNull()
-                                                    ?.let { ScanProcessor.render(it, 260) }
+                                                    ?.let { ScanProcessor.render(it, previewEdge) }
                                             }
                                         bitmap?.let {
                                             val temp = File(target.path + ".part")
@@ -79,7 +88,7 @@ fun DocumentCover(document: DocumentRow, repository: Repository) {
                 }
         }
     Surface(
-        Modifier.size(width = 54.dp, height = 72.dp),
+        modifier,
         shape = RoundedCornerShape(8.dp),
         color = MaterialTheme.colorScheme.surfaceContainer,
         border =

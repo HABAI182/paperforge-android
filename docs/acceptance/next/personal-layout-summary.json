@@ -1,0 +1,23 @@
+{
+  "feature": "personal home collection and document list/cover layout",
+  "updated": "2026-10-25",
+  "verification": "targeted actual UI interactions and screenshots; no new or repeated test suites",
+  "verified": [
+    "Five persistent home collections; favorite-empty state provides a route to all documents",
+    "Force-stop/reopen retains selected favorites collection and cover layout",
+    "Cover grid and list share existing document action/detail slots and multi-selection",
+    "Selectall6documents then switch to list: selected6 persists and direct-delete/trash/share actions remain",
+    "Opened cover document menu: rename/output/favorite/folder/trash/direct-delete all present",
+    "Permanent import menu provides album/PDF/OCR independently of optional quick tools; scan FAB remains",
+    "Actual200percent system font reduces phone cover grid to1column; collection heading actions wrap onto a separate row",
+    "Search placeholder/title ellipsis and lower scroll clearance keep layout usable",
+    "Layout/column count/compact density and home collection are included in profile groups, normalization and defaults",
+    "No real user document was deleted in UI verification; source data paths unchanged"
+  ],
+  "limits": [
+    "200percent check covers the home collection/grid, not every application panel or TalkBack",
+    "Tablet/foldable list-detail remainsUI08; grid columns adapt only to available configuration width",
+    "Real phone/OEM and tablet visual acceptance still pending"
+  ],
+  "releaseCreated": false
+}

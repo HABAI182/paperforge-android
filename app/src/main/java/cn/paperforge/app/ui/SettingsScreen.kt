@@ -152,7 +152,7 @@ fun SettingsScreen(vm: MainViewModel) {
                 SettingSlider("自定义分辨率", "customDpi", 300f, 72f..600f, "DPI")
                 SettingSlider("PDF 图片画质", "quality", 90f, 40f..100f, "")
             }
-            if (visible("外观 主题 颜色 字体")) {
+            if (visible("外观 主题 颜色 字体 布局 密度 列表 封面 网格 列数")) {
                 Text("外观", style = MaterialTheme.typography.titleLarge)
                 SettingChoices(
                     "主题",
@@ -168,8 +168,35 @@ fun SettingsScreen(vm: MainViewModel) {
                     listOf("GREEN" to "墨绿", "BLUE" to "蓝色", "PURPLE" to "紫色", "ORANGE" to "橙色"),
                 )
                 SettingSlider("应用字体比例", "fontScale", 1f, 0.85f..1.3f, "%", 100f)
-                SettingToggle("紧凑文档列表", "compactRows", false)
+                SettingToggle("紧凑文档卡片", "compactRows", false)
+                SettingChoices(
+                    "文档布局",
+                    "documentLayout",
+                    "LIST",
+                    listOf("LIST" to "列表", "COVERS" to "封面"),
+                )
+                SettingChoices(
+                    "封面网格列数",
+                    "gridColumns",
+                    "AUTO",
+                    listOf("AUTO" to "自动", "2" to "2列", "3" to "3列", "4" to "4列"),
+                )
+                Text("窄屏和大字号时自动减少列数，便于阅读和点选。", style = MaterialTheme.typography.bodySmall)
                 SettingSlider("首页最近文档数量", "recentCount", 6f, 4f..20f, "份")
+            }
+            if (visible("首页 筛选 收藏 收件箱 未识字 未导出")) {
+                SettingChoices(
+                    "首页默认集合",
+                    "homeCollection",
+                    "RECENT",
+                    listOf(
+                        "RECENT" to "最近",
+                        "FAVORITES" to "收藏",
+                        "INBOX" to "未整理",
+                        "NO_OCR" to "未识字",
+                        "NEEDS_EXPORT" to "待导出",
+                    ),
+                )
             }
             if (visible("首页 快捷 工具 入口 排序")) {
                 Text("首页快捷入口", style = MaterialTheme.typography.titleLarge)

@@ -167,9 +167,11 @@ class SettingsProfiles(context: Context) {
                         "dynamicColor",
                         "fontScale",
                         "compactRows",
+                        "documentLayout",
+                        "gridColumns",
                         "edgeTurn",
                     ),
-                "home" to setOf("recentCount", "homeTools"),
+                "home" to setOf("recentCount", "homeTools", "homeCollection"),
             )
 
         fun keys(groups: Set<String>) = groups.flatMap { groupKeys[it].orEmpty() }.toSet()

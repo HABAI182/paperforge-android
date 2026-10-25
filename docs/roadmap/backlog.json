@@ -460,7 +460,7 @@
       ],
       "scope": "列表详情、阅读侧栏、窗口变化恢复与系统insets",
       "acceptance": "窄屏/深色/200%字号关键动作可达",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "UI09",
@@ -473,7 +473,7 @@
       ],
       "scope": "固定动作、密度、网格、主页筛选和恢复默认",
       "acceptance": "配置变化不造成关键入口消失",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "OCR01",
@@ -1252,9 +1252,9 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 50,
-    "planned": 28,
-    "partial": 20
+    "done": 51,
+    "planned": 26,
+    "partial": 21
   },
   "updated": "2026-10-25"
 }
