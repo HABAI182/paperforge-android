@@ -554,8 +554,8 @@
     {
       "id": "SET05",
       "title": "快捷方式与系统入口",
-      "status": "planned",
-      "note": "完整目标保留，未在本版标记完成"
+      "status": "done",
+      "note": "桌面长按/固定扫描、图片识字、继续阅读三入口；快捷设置扫描Tile、继续阅读小组件和按需设置面板。延续原页码，排除回收站/缺失/隐藏PDF，应用锁隐藏组件标题，忙时保留入口意图；真实Android组件7.721秒及图片选择器/系统Tile已走通。旧API分支只编译，未作OEM实机验收。"
     },
     {
       "id": "EXT01",
@@ -595,8 +595,8 @@
     }
   ],
   "counts": {
-    "done": 49,
-    "planned": 29,
+    "done": 50,
+    "planned": 28,
     "partial": 20
   },
   "releaseHold": true,

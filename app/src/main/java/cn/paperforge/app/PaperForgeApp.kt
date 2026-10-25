@@ -19,6 +19,10 @@ class PaperForgeApp : Application() {
     override fun onCreate() {
         super.onCreate()
         UserSettings.initialize(this)
+        runCatching { cn.paperforge.app.system.SystemEntrypoints.register(this) }
+            .onFailure {
+                android.util.Log.w("PaperForgeShortcuts", "Launcher shortcuts unavailable", it)
+            }
         cn.paperforge.app.imaging.LearnedDocumentDetector.initialize(this)
         cn.paperforge.app.imaging.ScanModel.initialize(this)
         PDFBoxResourceLoader.init(this)

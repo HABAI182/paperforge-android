@@ -376,6 +376,19 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             screen.value = if (camera) "capture" else "editor"
         }
 
+    fun continueReading() =
+        viewModelScope.launch {
+            val recent =
+                withContext(Dispatchers.IO) {
+                    cn.paperforge.app.system.SystemEntrypoints.latestReadable(repo)
+                }
+            if (recent != null) open(recent)
+            else {
+                screen.value = "home"
+                messages.send("还没有可继续阅读的 PDF，可先扫描或打开文件")
+            }
+        }
+
     fun open(doc: DocumentRow) {
         if (busy.value) return
         comparisonReturn.value = false

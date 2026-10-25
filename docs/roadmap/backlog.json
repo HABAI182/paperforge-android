@@ -1171,7 +1171,7 @@
       ],
       "scope": "直接扫描/识字/继续阅读，分享与文件打开直达",
       "acceptance": "不必先回首页再找文件",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "EXT01",
@@ -1252,8 +1252,8 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 49,
-    "planned": 29,
+    "done": 50,
+    "planned": 28,
     "partial": 20
   },
   "updated": "2026-10-25"

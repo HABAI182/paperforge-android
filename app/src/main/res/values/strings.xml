@@ -1,0 +1,9 @@
+<resources>
+    <string name="shortcut_scan">扫描纸张</string>
+    <string name="shortcut_ocr">图片识字</string>
+    <string name="shortcut_continue">继续阅读</string>
+    <string name="widget_empty">打开 PDF 后可从上次位置继续</string>
+    <string name="widget_unlock">解锁并继续阅读</string>
+    <string name="widget_locked_description">点击后使用应用的设备验证</string>
+    <string name="widget_description">继续上次阅读，或直接扫描新纸张</string>
+</resources>

@@ -1,0 +1,18 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="horizontal" android:gravity="center_vertical"
+    android:padding="16dp" android:background="@drawable/widget_background">
+    <LinearLayout android:id="@+id/widget_read" android:layout_width="0dp" android:layout_weight="1"
+        android:layout_height="match_parent" android:orientation="vertical" android:gravity="center_vertical"
+        android:paddingEnd="8dp" android:contentDescription="@string/shortcut_continue">
+        <TextView android:id="@+id/widget_title" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/shortcut_continue" android:textSize="17sp" android:textStyle="bold"
+            android:textColor="#F7FBF8" android:maxLines="2" android:ellipsize="end" />
+        <TextView android:id="@+id/widget_subtitle" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/widget_empty" android:textSize="12sp" android:textColor="#CCE3D6"
+            android:layout_marginTop="6dp" android:maxLines="2" android:ellipsize="end" />
+    </LinearLayout>
+    <ImageButton android:id="@+id/widget_scan" android:layout_width="48dp" android:layout_height="48dp"
+        android:src="@drawable/ic_shortcut_scan" android:padding="12dp" android:background="@android:color/transparent"
+        android:tint="#FFFFFF" android:contentDescription="@string/shortcut_scan" />
+</LinearLayout>

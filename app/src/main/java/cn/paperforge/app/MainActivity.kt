@@ -74,6 +74,12 @@ class MainActivity : ComponentActivity() {
         if (!isChangingConfigurations && !authenticating)
             LocalAppLock.backgroundAt = android.os.SystemClock.elapsedRealtime()
         super.onStop()
+        if (!isChangingConfigurations)
+            (application as PaperForgeApp).backgroundScope.launch {
+                runCatching {
+                    cn.paperforge.app.system.SystemEntrypoints.refreshWidgets(this@MainActivity)
+                }
+            }
     }
 
     private var incoming by mutableStateOf<Intent?>(null)
@@ -342,10 +348,20 @@ class MainActivity : ComponentActivity() {
                     if (vm.renameNotice.value == notice) vm.renameNotice.value = null
                     if (result == SnackbarResult.ActionPerformed) vm.undoBatchNames()
                 }
-                LaunchedEffect(incoming) {
+                LaunchedEffect(incoming, busy) {
+                    if (busy) return@LaunchedEffect
                     incoming?.let { source ->
                         @Suppress("DEPRECATION")
                         when (source.action) {
+                            cn.paperforge.app.system.SystemEntrypoints.SCAN -> vm.newScan()
+                            cn.paperforge.app.system.SystemEntrypoints.CONTINUE ->
+                                vm.continueReading()
+                            cn.paperforge.app.system.SystemEntrypoints.OCR -> {
+                                vm.screen.value = "home"
+                                vm.selected.value = null
+                                recognizeImport = true
+                                images.launch(arrayOf("image/*"))
+                            }
                             Intent.ACTION_SEND ->
                                 source.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)?.let {
                                     if (source.type == "application/pdf") vm.importPdf(it)
@@ -754,6 +770,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent)
         incoming = intent
     }
 }

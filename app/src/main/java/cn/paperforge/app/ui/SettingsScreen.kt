@@ -57,6 +57,7 @@ fun SettingsScreen(vm: MainViewModel) {
                 modifier = Modifier.fillMaxWidth(),
             )
             Text("修改自动保存，拍摄参数在下一次进入相机时生效。", style = MaterialTheme.typography.bodySmall)
+            if (visible("桌面 系统 快捷 扫描 识字 阅读 小组件")) SystemEntrypointsSettings()
             if (visible("档案 配置 预设 扫描 默认"))
                 OutlinedButton(
                     onClick = { vm.openProfiles("settings") },

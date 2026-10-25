@@ -1,0 +1,9 @@
+<resources>
+    <string name="shortcut_scan">Scan paper</string>
+    <string name="shortcut_ocr">Image OCR</string>
+    <string name="shortcut_continue">Continue reading</string>
+    <string name="widget_empty">Open a PDF to resume your last position</string>
+    <string name="widget_unlock">Unlock and continue</string>
+    <string name="widget_locked_description">Tap to verify with your device credentials</string>
+    <string name="widget_description">Resume reading or scan a new page</string>
+</resources>

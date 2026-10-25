@@ -1,0 +1,24 @@
+{
+  "feature": "Android launcher shortcuts, scan tile and continue-reading widget",
+  "updated": "2026-10-25",
+  "focusedPlatformCheck": {
+    "passed": true,
+    "seconds": 7.721
+  },
+  "verified": [
+    "3 distinct ranked launcher actions with icons registered; locale labels match Android locale",
+    "Actual widget host binds, applies RemoteViews with title and page2, draws840x330proof",
+    "Continue cold launch selects latest readable PDF; scan intent creates a new draft and opens capture",
+    "Widget PendingIntent returns from capture to original PDF; source documents retained",
+    "App lock hides document title and page info in widget",
+    "Actual OCR intent opened Android image picker directly",
+    "Actual SystemUI tile invoked scan camera with API35 PendingIntent route",
+    "Temporary emulator widget binding grant revoked and test host/widget removed"
+  ],
+  "limits": [
+    "API26to33 legacy tile route compiled; actual platform run usedAPI35",
+    "No physical launcher, lock-screen credential or OEM tile compatibility acceptance yet",
+    "Widget uses last open readable listed PDF, refreshes on leaving the Activity, provider update or package/locale change"
+  ],
+  "releaseCreated": false
+}
