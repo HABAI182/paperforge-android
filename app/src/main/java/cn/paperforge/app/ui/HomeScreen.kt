@@ -45,7 +45,8 @@ fun HomeScreen(
 ) {
     val docs by vm.documents.collectAsState()
     val busy by vm.busy.collectAsState()
-    var tab by rememberSaveable { mutableIntStateOf(0) }
+    var tab by rememberSaveable { mutableIntStateOf(vm.homeTab.value) }
+    LaunchedEffect(tab) { vm.homeTab.value = tab }
     var toolQuery by rememberSaveable { mutableStateOf("") }
     val search by vm.query.collectAsState()
     val facts by vm.libraryFacts.collectAsState()
@@ -102,6 +103,7 @@ fun HomeScreen(
     var bulkDelete by remember { mutableStateOf(emptyList<String>()) }
     var bulkCategory by remember { mutableStateOf(emptyList<String>()) }
     var selectionMenu by remember { mutableStateOf(false) }
+    val canUndoNames by vm.canUndoNames.collectAsState()
     val inTrash = showTrash && tab == 1
     val filtered =
         (if (inTrash) trash else docs)
@@ -331,6 +333,21 @@ fun HomeScreen(
                                 }
                                 DropdownMenu(selectionMenu, { selectionMenu = false }) {
                                     DropdownMenuItem(
+                                        text = { Text("批量命名") },
+                                        onClick = {
+                                            vm.beginBatchRename(chosen.map { it.id })
+                                            finishSelection()
+                                        },
+                                    )
+                                    if (canUndoNames)
+                                        DropdownMenuItem(
+                                            text = { Text("撤销上次批量命名") },
+                                            onClick = {
+                                                vm.undoBatchNames()
+                                                finishSelection()
+                                            },
+                                        )
+                                    DropdownMenuItem(
                                         text = { Text("收藏所选") },
                                         onClick = {
                                             vm.favoriteDocuments(chosen.map { it.id }.toSet(), true)
@@ -477,7 +494,19 @@ fun HomeScreen(
                     )
                 }
                 val toolEntries =
-                    listOf(
+                    listOfNotNull(
+                        HomeTool(
+                            "批量命名",
+                            "多选重命名，日期、序号、自定义字段，重名自动编号",
+                            Icons.Default.DriveFileRenameOutline,
+                        ) {
+                            vm.beginBatchRename(emptyList())
+                        },
+                        if (canUndoNames)
+                            HomeTool("撤销批量命名", "保留之后手工修改的名称", Icons.Default.Undo) {
+                                vm.undoBatchNames()
+                            }
+                        else null,
                         HomeTool("任务中心", "查看扫描处理进度、失败页与原图，单独重试", Icons.Default.PendingActions) {
                             vm.screen.value = "tasks"
                         },

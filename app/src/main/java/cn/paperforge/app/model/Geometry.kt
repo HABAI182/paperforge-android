@@ -235,7 +235,29 @@ fun parsePageRange(input: String, pageCount: Int): List<Int> {
     return result.toList()
 }
 
-fun safeFileName(input: String): String =
-    input.replace(Regex("[\\\\/:*?\"<>|\\p{Cntrl}]"), "_").trim().trim('.').take(100).ifBlank {
-        "纸匠文档"
+fun fileStemPrefix(value: String, maxBytes: Int = 200, maxCharacters: Int = 100): String {
+    var index = 0
+    var bytes = 0
+    var count = 0
+    while (index < value.length && count < maxCharacters) {
+        val point = Character.codePointAt(value, index)
+        val size =
+            when {
+                point <= 0x7f -> 1
+                point <= 0x7ff -> 2
+                point <= 0xffff -> 3
+                else -> 4
+            }
+        if (bytes + size > maxBytes) break
+        bytes += size
+        count++
+        index += Character.charCount(point)
     }
+    return value.substring(0, index)
+}
+
+fun safeFileName(input: String): String =
+    fileStemPrefix(input.replace(Regex("[\\\\/:*?\"<>|\\p{Cntrl}]"), "_").trim().trim('.'))
+        .trim()
+        .trim('.')
+        .ifBlank { "纸匠文档" }

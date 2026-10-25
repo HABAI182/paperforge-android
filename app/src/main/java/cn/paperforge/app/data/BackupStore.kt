@@ -424,7 +424,7 @@ object BackupStore {
                         SettingsProfiles(repo.context).importJson(it.toString())
                     }
                     metadata.optJSONObject("library")?.let {
-                        LibraryPreferences(repo.context).restore(it)
+                        LibraryPreferences(repo.context).restore(it, ids)
                     }
                     val signatures = repo.context.getSharedPreferences("signature", 0)
                     if (!signatures.contains("strokes") && metadata.has("signature"))

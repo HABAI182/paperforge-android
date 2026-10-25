@@ -894,7 +894,7 @@
       ],
       "scope": "日期类型序号用户字段，冲突自动编号",
       "acceptance": "批量预览显示最终名字，支持撤销重命名",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "LIB08",
@@ -1252,8 +1252,8 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 35,
-    "planned": 39,
+    "done": 36,
+    "planned": 38,
     "partial": 24
   },
   "updated": "2026-10-25"

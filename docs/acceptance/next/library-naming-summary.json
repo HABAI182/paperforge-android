@@ -1,0 +1,27 @@
+{
+  "feature": "batch naming previews and persistent undo",
+  "updated": "2026-10-25",
+  "environment": "API35 AOSP x86_64 emulator",
+  "focusedTest": {
+    "tests": 1,
+    "seconds": 1.644,
+    "passed": true
+  },
+  "verified": [
+    "date/type/sequence and named fields",
+    "literal braces are supported on Android ICU regex",
+    "title collisions automatically numbered",
+    "undo preserves later manual changes",
+    "Unicode names are truncated on code point boundaries with200byte stem budget",
+    "actual long Chinese and emoji file creation succeeds",
+    "backup remaps naming undo to restored document IDs",
+    "undoing restored copies leaves original documents unchanged",
+    "actual UI tool entry and27document preview displayed"
+  ],
+  "notes": [
+    "one-level naming undo is persisted; page history remains separate",
+    "final small UX changes return to library and clear stale title query after applying",
+    "OS status clock clipping also reproduced on the emulator launcher; it is not treated as a PaperForge-only layout fault"
+  ],
+  "releaseCreated": false
+}

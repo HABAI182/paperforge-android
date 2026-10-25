@@ -296,6 +296,18 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 LaunchedEffect(Unit) { for (message in vm.messages) snackbar.showSnackbar(message) }
+                val renameNotice by vm.renameNotice.collectAsState()
+                LaunchedEffect(renameNotice) {
+                    val notice = renameNotice ?: return@LaunchedEffect
+                    val result =
+                        snackbar.showSnackbar(
+                            "已命名 ${notice.second} 份文档",
+                            actionLabel = "撤销",
+                            duration = SnackbarDuration.Long,
+                        )
+                    if (vm.renameNotice.value == notice) vm.renameNotice.value = null
+                    if (result == SnackbarResult.ActionPerformed) vm.undoBatchNames()
+                }
                 LaunchedEffect(incoming) {
                     incoming?.let { source ->
                         @Suppress("DEPRECATION")
@@ -392,6 +404,7 @@ class MainActivity : ComponentActivity() {
                         "tasks" -> TaskCenterScreen(vm)
                         "profiles" -> SettingsProfilesScreen(vm)
                         "ocr-proof" -> OcrProofreadScreen(vm)
+                        "rename-batch" -> BatchRenameScreen(vm)
                         "outputs" -> OutputHistoryScreen(vm)
                         "pages" -> PageGridScreen(vm)
                         "pdf-pages" -> PdfPageGridScreen(vm)

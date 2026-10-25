@@ -40,6 +40,31 @@ data class LibraryFilter(
 class LibraryPreferences(context: Context) {
     private val prefs = context.getSharedPreferences("library", 0)
 
+    fun naming() = NamingOptions.decode(JSONObject(prefs.getString("naming", "{}") ?: "{}"))
+
+    fun naming(value: NamingOptions) {
+        prefs.edit().putString("naming", value.encode().toString()).apply()
+    }
+
+    fun renameUndo(): List<NameChange> {
+        val rows = JSONArray(prefs.getString("renameUndo", "[]"))
+        return (0 until rows.length()).map { NameChange.decode(rows.getJSONObject(it)) }
+    }
+
+    fun renameUndo(rows: List<NameChange>) {
+        check(
+            prefs
+                .edit()
+                .putString(
+                    "renameUndo",
+                    JSONArray().apply { rows.forEach { put(it.encode()) } }.toString(),
+                )
+                .commit()
+        ) {
+            "无法保存命名撤销记录"
+        }
+    }
+
     fun view() =
         runCatching { LibraryFilter.decode(JSONObject(prefs.getString("view", "{}") ?: "{}")) }
             .getOrDefault(LibraryFilter())
@@ -87,8 +112,20 @@ class LibraryPreferences(context: Context) {
         JSONObject()
             .put("view", view().encode())
             .put("saved", JSONArray().apply { saved().forEach { put(it.encode()) } })
+            .put("naming", naming().encode())
+            .put("renameUndo", JSONArray().apply { renameUndo().forEach { put(it.encode()) } })
 
-    fun restore(j: JSONObject) {
+    fun restore(j: JSONObject, documentIds: Map<String, String>? = null) {
+        j.optJSONObject("naming")?.let { naming(NamingOptions.decode(it)) }
+        j.optJSONArray("renameUndo")?.let { rows ->
+            renameUndo(
+                (0 until rows.length()).mapNotNull {
+                    val row = NameChange.decode(rows.getJSONObject(it))
+                    if (documentIds == null) row
+                    else documentIds[row.documentId]?.let { id -> row.copy(documentId = id) }
+                }
+            )
+        }
         j.optJSONObject("view")?.let { view(LibraryFilter.decode(it)) }
         j.optJSONArray("saved")?.let { a ->
             (0 until a.length()).forEach { save(LibraryFilter.decode(a.getJSONObject(it))) }

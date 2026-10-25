@@ -19,6 +19,40 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val repo = (app as PaperForgeApp).repository
     private val ocrEngine = (app as PaperForgeApp).ocrEngine
     val query = MutableStateFlow("")
+    val homeTab = MutableStateFlow(0)
+    val renameSelection = MutableStateFlow<List<String>>(emptyList())
+    val canUndoNames = MutableStateFlow(LibraryPreferences(repo.context).renameUndo().isNotEmpty())
+    val renameNotice = MutableStateFlow<Pair<String, Int>?>(null)
+
+    fun beginBatchRename(ids: List<String>) {
+        renameSelection.value = ids
+        screen.value = "rename-batch"
+    }
+
+    fun applyBatchNames(rows: List<NameChange>, options: NamingOptions) =
+        perform("更新文档名称") {
+            val count = repo.renameBatch(rows, options)
+            canUndoNames.value = true
+            homeTab.value = 1
+            query.value = ""
+            screen.value = "home"
+            renameNotice.value = UUID.randomUUID().toString() to count
+        }
+
+    fun undoBatchNames() {
+        viewModelScope.launch {
+            busy.first { !it }
+            perform("撤销批量命名") {
+                val result = repo.undoBatchRename()
+                canUndoNames.value = false
+                messages.send(
+                    "已撤销 ${result.restored} 份" +
+                        if (result.preserved > 0) "，其余 ${result.preserved} 份保留现状" else ""
+                )
+            }
+        }
+    }
+
     val documents =
         query
             .flatMapLatest {
@@ -1063,6 +1097,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun restoreBackup(uri: Uri) =
         perform("正在恢复备份") {
             val count = BackupStore.restore(repo, uri)
+            canUndoNames.value = LibraryPreferences(repo.context).renameUndo().isNotEmpty()
             messages.send("已恢复 $count 份文档")
         }
 
