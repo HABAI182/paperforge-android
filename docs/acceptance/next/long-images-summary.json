@@ -1,0 +1,30 @@
+{
+  "feature": "configurable sequential PDF/image long-strip output with bounded segment canvases",
+  "updated": "2026-10-25",
+  "focusedTests": {
+    "count": 2,
+    "passed": true,
+    "seconds": 2.17
+  },
+  "verified": [
+    "PDF source page order3,1 is retained;128px output and13px separators reconstruct781logicalrows across4segments",
+    "Source/page row-to-segment mapping covers every logical row continuously, including separators",
+    "All eight EXIF orientations match explicit quadrant expectations through region decoding",
+    "A12000px-tall image retains final rows through512row strips; all9 source images reconstruct6456rows across26segments",
+    "Width/gap/segment upper limit/background/PNG-or-JPG/quality are configurable; PDF page-range selection retained",
+    "Segment canvas limited to16million pixels, strips requested at most512rows; final report records actualheightcap",
+    "Source hashes unchanged",
+    "Independent Pillow fully decodes every segment and confirms manifest dimensions and continuousmapping"
+  ],
+  "limits": [
+    "Sequential concatenation only; overlap alignment/manual seams for scanning receipts remainSCN05",
+    "System codec internals and extreme-file memory pressure have not been profiled on a physicalphone",
+    "Newlong-imagekind uses the existing durableCONVERT worker; the new branch was reviewed but not separately rerun throughWorkManager",
+    "Image ordering follows the supplied picker list;PDF range expressions permit explicit ordering"
+  ],
+  "releaseCreated": false,
+  "uiVerified": [
+    "English long search locates direct image long-strip route",
+    "Opened actual options dialog with width/gap/segment limit/background/format controls"
+  ]
+}

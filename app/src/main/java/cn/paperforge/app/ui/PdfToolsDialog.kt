@@ -13,6 +13,8 @@ import org.json.JSONObject
 
 @Composable
 fun PdfToolsDialog(vm: MainViewModel, initialMode: String = "", onDismiss: () -> Unit) {
+    var longOptions by remember { mutableStateOf(cn.paperforge.app.pdf.LongImageOptions()) }
+    var longValid by remember { mutableStateOf(true) }
     var mode by remember { mutableStateOf(initialMode) }
     var query by remember { mutableStateOf("") }
     var group by remember { mutableStateOf("全部") }
@@ -136,6 +138,8 @@ fun PdfToolsDialog(vm: MainViewModel, initialMode: String = "", onDismiss: () ->
                             onValueChange = { text = it },
                             label = { Text("水印文字") },
                         )
+                    if (mode == "long-image")
+                        LongImageControls(longOptions, { longOptions = it }, { longValid = it })
                     if (mode == "metadata") {
                         OutlinedTextField(
                             value = text,
@@ -196,6 +200,7 @@ fun PdfToolsDialog(vm: MainViewModel, initialMode: String = "", onDismiss: () ->
         confirmButton = {
             if (mode.isNotEmpty())
                 TextButton(
+                    enabled = mode != "long-image" || longValid,
                     onClick = {
                         when (mode) {
                             "encrypt" ->
@@ -213,7 +218,7 @@ fun PdfToolsDialog(vm: MainViewModel, initialMode: String = "", onDismiss: () ->
                             }
                             else -> {
                                 val p =
-                                    JSONObject()
+                                    (if (mode == "long-image") longOptions.json() else JSONObject())
                                         .put("range", range)
                                         .put("text", text)
                                         .put("title", text)
@@ -224,7 +229,7 @@ fun PdfToolsDialog(vm: MainViewModel, initialMode: String = "", onDismiss: () ->
                                 onDismiss()
                             }
                         }
-                    }
+                    },
                 ) {
                     Text("执行")
                 }

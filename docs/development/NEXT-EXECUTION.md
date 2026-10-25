@@ -46,6 +46,8 @@
 
 23. 基础文字转PDF的原件/可编辑分块草稿/续编/TXT另存及纸张/方向/字号/边距/行距；图片互转的质量/尺寸/透明/底色/无损WebP与逐项缓存、部分结果报告、失败重试。修正启动恢复覆写完成状态和中文字体户→部首的复制映射错误；原生检查、独立MuPDF/Pillow和实际重启续编见 `docs/acceptance/next/basic-conversion-summary.json`。Office/表格和复杂转换的剩余任务保持未完成。
 
+24. PDF按选页顺序与多张图片直接拼长图；自定义宽度/间距/分段/底色/格式与质量，连续分段和源行映射。8种EXIF方向、12000px长图末行和独立Pillow复读见 `docs/acceptance/next/long-images-summary.json`。这里完成CVT05顺序长图；SCN05的重叠接缝扫描仍未完成。
+
 ## 后续执行顺序
 
 页序历史补充：重排只记录页面ID，删页/分割仅记录内容差异；新旧可读快照的撤销保留后来新增的扫描页和与操作无关的新OCR。备份对独立页序ID重映射，集中检查见 `docs/acceptance/next/sparse-history-summary.json`。不将此修复重复计为新完成的计划卡。

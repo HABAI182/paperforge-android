@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
 import cn.paperforge.app.pdf.ImageConversionOptions
+import cn.paperforge.app.pdf.LongImageOptions
 
 private data class Conversion(
     val title: String,
@@ -48,6 +49,7 @@ private val conversions =
         Conversion("图片格式互转", "JPG、PNG、WebP；支持批量打包", "图片", "image-format"),
         Conversion("PDF → JPG", "整页高清导出，按页码输出图片包", "图片", "images-jpg"),
         Conversion("PDF → WebP", "逐页导出 WebP 图片包", "图片", "images-webp"),
+        Conversion("图片拼成长图", "按选择顺序拼接，宽度与间距可调，过长自动分段", "图片", "images-long"),
         Conversion("PDF → 长图", "按页序拼接，超过长度自动连续分段", "图片", "long-image"),
         Conversion("PDF → PNG", "无损图片编码，适合文字与线条", "图片", "images-png"),
         Conversion("PDF → Word 段落", "提取文字为可编辑 DOCX，重新排版", "文字", "docx"),
@@ -71,6 +73,7 @@ fun ConversionScreen(
     onMerge: () -> Unit,
     onText: (Float) -> Unit,
     onImageFormat: (ImageConversionOptions) -> Unit,
+    onLongImages: (LongImageOptions) -> Unit,
     onDesktop: (String, org.json.JSONObject) -> Unit,
     onResult: () -> Unit,
 ) {
@@ -86,6 +89,8 @@ fun ConversionScreen(
     var query by rememberSaveable { mutableStateOf("") }
     var group by rememberSaveable { mutableStateOf("全部") }
     var options by remember { mutableStateOf("") }
+    var longOptions by remember { mutableStateOf(LongImageOptions()) }
+    var longValid by remember { mutableStateOf(true) }
     var format by rememberSaveable { mutableStateOf("jpg") }
     var imageQuality by rememberSaveable { mutableIntStateOf(92) }
     var imageEdge by rememberSaveable { mutableStateOf("4096") }
@@ -193,7 +198,8 @@ fun ConversionScreen(
                         when (entry.mode) {
                             "text-pdf",
                             "image-format",
-                            "office-options" -> options = entry.mode
+                            "office-options",
+                            "images-long" -> options = entry.mode
                             "desktop-import" -> onResult()
                             "image-pdf" -> onImages()
                             "merge" -> onMerge()
@@ -237,6 +243,7 @@ fun ConversionScreen(
                     when (options) {
                         "text-pdf" -> "生成文字 PDF"
                         "office-options" -> "Office 目标格式"
+                        "images-long" -> "图片拼成长图"
                         else -> "图片格式互转"
                     }
                 )
@@ -280,6 +287,9 @@ fun ConversionScreen(
                                 )
                             }
                         }
+                    } else if (options == "images-long") {
+                        Text("按选择顺序拼接，过长自动连续分段。")
+                        LongImageControls(longOptions, { longOptions = it }, { longValid = it })
                     } else {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             listOf("jpg", "png", "webp").forEach { name ->
@@ -330,7 +340,9 @@ fun ConversionScreen(
                 TextButton(
                     enabled =
                         options in setOf("text-pdf", "office-options") ||
-                            (imageEdge.toIntOrNull()?.let { it in 128..8192 } == true &&
+                            options == "images-long" && longValid ||
+                            (options != "images-long" &&
+                                imageEdge.toIntOrNull()?.let { it in 128..8192 } == true &&
                                 (format != "jpg" && keepAlpha ||
                                     runCatching {
                                             android.graphics.Color.parseColor("#$backgroundHex")
@@ -341,6 +353,7 @@ fun ConversionScreen(
                         options = ""
                         if (mode == "office-options") desktopJob = "office-$officeTarget"
                         else if (mode == "text-pdf") onText(fontSize)
+                        else if (mode == "images-long") onLongImages(longOptions)
                         else
                             onImageFormat(
                                 ImageConversionOptions(

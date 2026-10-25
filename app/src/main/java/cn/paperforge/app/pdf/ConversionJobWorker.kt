@@ -60,6 +60,20 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                         )
                         completed = 1
                     }
+                    "LONG_IMAGES" -> {
+                        file = File(repo.exports, "PaperForge-long-${id.toString().take(8)}.zip")
+                        output = file
+                        ImageLongImages.convert(
+                            inputs,
+                            names.toList(),
+                            file,
+                            LongImageOptions.decode(options),
+                        ) { percent ->
+                            DocumentJobs.progress(repo, job, percent, "正在拼接长图")
+                            setProgress(workDataOf("progress" to percent))
+                        }
+                        completed = inputs.size
+                    }
                     "IMAGES" -> {
                         require(inputs.isNotEmpty()) { "没有选择图片" }
                         val settings = ImageConversionOptions.decode(options)

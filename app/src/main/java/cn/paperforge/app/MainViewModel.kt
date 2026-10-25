@@ -1338,7 +1338,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun convertImages(uris: List<Uri>, format: String) =
         convertImages(uris, ImageConversionOptions(format = format))
 
-    fun convertImages(uris: List<Uri>, options: ImageConversionOptions) {
+    fun convertImages(uris: List<Uri>, options: ImageConversionOptions) =
+        queueImageInputs(uris, "IMAGES", options.json())
+
+    fun convertLongImages(uris: List<Uri>, options: LongImageOptions) =
+        queueImageInputs(uris, "LONG_IMAGES", options.json())
+
+    private fun queueImageInputs(uris: List<Uri>, kind: String, options: org.json.JSONObject) {
         if (busy.value || uris.isEmpty()) return
         busy.value = true
         task =
@@ -1354,14 +1360,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                                 JobInput(
                                     org.json
                                         .JSONObject()
-                                        .put("kind", "IMAGES")
+                                        .put("kind", kind)
                                         .put("name", "${inputs.size} 张图片")
                                         .put(
                                             "inputs",
                                             org.json.JSONArray(inputs.map { it.first.path }),
                                         )
                                         .put("names", org.json.JSONArray(inputs.map { it.second }))
-                                        .put("options", options.json().toString())
+                                        .put("options", options.toString())
                                 ),
                             )
                     }

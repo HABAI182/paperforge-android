@@ -156,7 +156,10 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                         ) {
                             report(it)
                         }
-                    "long-image" -> PdfLongImages.convert(input, file, range) { report(it) }
+                    "long-image" ->
+                        PdfLongImages.convert(input, file, range, LongImageOptions.decode(p)) {
+                            report(it)
+                        }
                     "extract-images" -> PdfTools.extractImages(input, file)
                     "searchable" ->
                         PdfSearchable.convert(applicationContext, input, file) { report(it) }

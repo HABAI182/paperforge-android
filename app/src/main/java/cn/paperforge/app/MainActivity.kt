@@ -211,6 +211,22 @@ class MainActivity : ComponentActivity() {
                                 ),
                             )
                     }
+                var longOptionsJson by
+                    androidx.compose.runtime.saveable.rememberSaveable {
+                        mutableStateOf(cn.paperforge.app.pdf.LongImageOptions().json().toString())
+                    }
+                val longImport =
+                    rememberLauncherForActivityResult(
+                        ActivityResultContracts.OpenMultipleDocuments()
+                    ) { uris ->
+                        if (uris.isNotEmpty())
+                            vm.convertLongImages(
+                                uris,
+                                cn.paperforge.app.pdf.LongImageOptions.decode(
+                                    org.json.JSONObject(longOptionsJson)
+                                ),
+                            )
+                    }
                 var mobileTarget by
                     androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("pdf") }
                 val mobileOffice =
@@ -403,6 +419,10 @@ class MainActivity : ComponentActivity() {
                                             "application/octet-stream",
                                         )
                                     )
+                                },
+                                onLongImages = { options ->
+                                    longOptionsJson = options.json().toString()
+                                    longImport.launch(arrayOf("image/*"))
                                 },
                                 onImageFormat = { settings ->
                                     conversionImageOptions = settings.json().toString()

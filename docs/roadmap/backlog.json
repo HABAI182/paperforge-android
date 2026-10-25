@@ -662,7 +662,7 @@
       ],
       "scope": "顺序拼接、宽度间距、过长分段与页码范围",
       "acceptance": "不因超长OOM，页序不乱",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "CVT06",
