@@ -98,6 +98,7 @@ fun PdfToolsDialog(vm: MainViewModel, initialMode: String = "", onDismiss: () ->
                             (group == "全部" || category == group) &&
                                 (query.isBlank() ||
                                     title.contains(query, true) ||
+                                    key.contains(query, true) ||
                                     (query.equals("word", true) && key.startsWith("docx")))
                         }
                         .forEach { (key, title) ->

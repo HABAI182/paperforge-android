@@ -1,0 +1,64 @@
+{
+  "text": {
+    "pages": 7,
+    "firstPagePoints": [
+      0.0,
+      0.0,
+      595.275634765625,
+      419.5275573730469
+    ],
+    "appendedTextFound": true,
+    "kangxiAliasAbsent": true
+  },
+  "images": {
+    "entries": [
+      "image-001.png",
+      "image-002.png",
+      "conversion-report.json"
+    ],
+    "items": [
+      {
+        "entry": "image-001.png",
+        "format": "PNG",
+        "size": [
+          600,
+          300
+        ],
+        "alphaAtOrigin": 0
+      },
+      {
+        "entry": "image-002.png",
+        "format": "PNG",
+        "size": [
+          600,
+          300
+        ],
+        "alphaAtOrigin": 0
+      }
+    ],
+    "report": {
+      "options": {
+        "format": "png",
+        "quality": 90,
+        "edge": 600,
+        "keepAlpha": true,
+        "background": -1,
+        "losslessWebp": false
+      },
+      "items": [
+        {
+          "index": 1,
+          "source": "alpha.png",
+          "status": "completed",
+          "reused": true
+        },
+        {
+          "index": 2,
+          "source": "broken.png",
+          "status": "completed",
+          "reused": false
+        }
+      ]
+    }
+  }
+}

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -14,6 +15,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
+import cn.paperforge.app.pdf.ImageConversionOptions
 
 private data class Conversion(
     val title: String,
@@ -68,17 +70,28 @@ fun ConversionScreen(
     onImages: () -> Unit,
     onMerge: () -> Unit,
     onText: (Float) -> Unit,
-    onImageFormat: (String) -> Unit,
+    onImageFormat: (ImageConversionOptions) -> Unit,
     onDesktop: (String, org.json.JSONObject) -> Unit,
     onResult: () -> Unit,
 ) {
     val busy by vm.busy.collectAsState()
+    val tasks by vm.localTasks.collectAsState()
+    val drafts =
+        tasks.filter {
+            it.type == "CONVERT" &&
+                org.json.JSONObject(it.payload).optJSONObject("input")?.optBoolean("draft") == true
+        }
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     var help by remember { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
     var group by rememberSaveable { mutableStateOf("全部") }
     var options by remember { mutableStateOf("") }
     var format by rememberSaveable { mutableStateOf("jpg") }
+    var imageQuality by rememberSaveable { mutableIntStateOf(92) }
+    var imageEdge by rememberSaveable { mutableStateOf("4096") }
+    var keepAlpha by rememberSaveable { mutableStateOf(true) }
+    var backgroundHex by rememberSaveable { mutableStateOf("FFFFFF") }
+    var lossless by rememberSaveable { mutableStateOf(false) }
     var desktopJob by remember { mutableStateOf("") }
     var desktopOcr by rememberSaveable { mutableStateOf(true) }
     var joinTables by rememberSaveable { mutableStateOf(false) }
@@ -115,6 +128,36 @@ fun ConversionScreen(
                     modifier = Modifier.padding(top = 6.dp),
                 )
             }
+            if (drafts.isNotEmpty())
+                item {
+                    Card(Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(14.dp)) {
+                            Text("继续编辑正文", style = MaterialTheme.typography.titleMedium)
+                            drafts.take(3).forEach { row ->
+                                TextButton(
+                                    onClick = { vm.loadTextConversion(row) },
+                                    enabled = !busy,
+                                ) {
+                                    Text(
+                                        org.json
+                                            .JSONObject(row.payload)
+                                            .getJSONObject("input")
+                                            .optString("name", row.title)
+                                    )
+                                }
+                            }
+                            if (drafts.size > 3)
+                                TextButton(
+                                    onClick = {
+                                        vm.taskFilter.value = "ATTENTION"
+                                        vm.screen.value = "tasks"
+                                    }
+                                ) {
+                                    Text("查看其他待处理任务")
+                                }
+                        }
+                    }
+                }
             item {
                 OutlinedTextField(
                     query,
@@ -139,7 +182,9 @@ fun ConversionScreen(
             val matches =
                 conversions.filter {
                     ((group == "全部" && it.group != "电脑引擎") || it.group == group) &&
-                        (it.title.contains(query, true) || it.detail.contains(query, true))
+                        (it.title.contains(query, true) ||
+                            it.detail.contains(query, true) ||
+                            it.mode.contains(query, true))
                 }
             if (matches.isEmpty()) item { Text("没有匹配的转换方式", Modifier.padding(24.dp)) }
             items(matches, key = { it.mode }) { entry ->
@@ -197,7 +242,10 @@ fun ConversionScreen(
                 )
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(
+                    Modifier.heightIn(max = 460.dp).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
                     if (options == "office-options") {
                         Text("手机本机转换。首次需要安装 Office 手机引擎。请选择与源文件对应的目标类型。")
                         if (officeTarget == "csv")
@@ -242,18 +290,72 @@ fun ConversionScreen(
                                 )
                             }
                         }
-                        Text("多张图片输出 ZIP。保留朝向，长边最大 4096 像素；JPG 透明区域填白，JPG / WebP 质量 92。")
+                        Text("多张图片输出 ZIP，并保留逐项结果；失败后只需重试未完成的图片。")
+                        OutlinedTextField(
+                            imageEdge,
+                            { imageEdge = it },
+                            label = { Text("长边上限 · 128–8192 像素") },
+                            singleLine = true,
+                            isError = imageEdge.toIntOrNull()?.let { it !in 128..8192 } ?: true,
+                        )
+                        if (format != "png" && !(format == "webp" && lossless)) {
+                            Text("编码质量 $imageQuality")
+                            Slider(
+                                imageQuality.toFloat(),
+                                { imageQuality = it.toInt() },
+                                valueRange = 1f..100f,
+                            )
+                        }
+                        if (format != "jpg")
+                            Row {
+                                Checkbox(keepAlpha, { keepAlpha = it })
+                                Text("保留透明背景")
+                            }
+                        if (format == "jpg" || !keepAlpha)
+                            OutlinedTextField(
+                                backgroundHex,
+                                { backgroundHex = it },
+                                label = { Text("背景颜色 · RGB 或 ARGB 十六进制") },
+                                singleLine = true,
+                            )
+                        if (format == "webp" && android.os.Build.VERSION.SDK_INT >= 30)
+                            Row {
+                                Checkbox(lossless, { lossless = it })
+                                Text("无损 WebP")
+                            }
                     }
                 }
             },
             confirmButton = {
                 TextButton(
+                    enabled =
+                        options in setOf("text-pdf", "office-options") ||
+                            (imageEdge.toIntOrNull()?.let { it in 128..8192 } == true &&
+                                (format != "jpg" && keepAlpha ||
+                                    runCatching {
+                                            android.graphics.Color.parseColor("#$backgroundHex")
+                                        }
+                                        .isSuccess)),
                     onClick = {
                         val mode = options
                         options = ""
                         if (mode == "office-options") desktopJob = "office-$officeTarget"
-                        else if (mode == "text-pdf") onText(fontSize) else onImageFormat(format)
-                    }
+                        else if (mode == "text-pdf") onText(fontSize)
+                        else
+                            onImageFormat(
+                                ImageConversionOptions(
+                                    format,
+                                    imageQuality,
+                                    imageEdge.toIntOrNull() ?: 4096,
+                                    keepAlpha,
+                                    runCatching {
+                                            android.graphics.Color.parseColor("#$backgroundHex")
+                                        }
+                                        .getOrDefault(android.graphics.Color.WHITE),
+                                    lossless,
+                                )
+                            )
+                    },
                 ) {
                     Text("选择文件")
                 }

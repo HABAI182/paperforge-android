@@ -1,0 +1,45 @@
+{
+  "feature": "editable text PDF layout and configurable resumable image conversion",
+  "updated": "2026-10-25",
+  "environment": "API35 AOSP x86_64 emulator; synthetic Unicode text and transparent/rotated images; independent MuPDF/Pillow readback",
+  "checks": {
+    "unicodeChunkUnitPassed": true,
+    "imageBatchFlowPassed": true,
+    "textFlowFinalPassed": true,
+    "textFlowFinalSeconds": 3.115
+  },
+  "verified": [
+    "Imported UTF16LE text source remains byte-identical in its private original copy",
+    "Imported body is editable in bounded Unicode-safe chunks; current text snapshot freezes before generation",
+    "A5 landscape/font14/margin18/line1.4 generates seven readable native-text pages, including appended user body",
+    "Basic generated text PDF maps written Unicode correctly after subset-font cmap alias correction; MuPDF finds exact用户追加的结尾正文 withoutKangxi户alias",
+    "Text/font/orientation/margin/line spacing are configurable; edited text can be saved independently",
+    "PNG/JPG/WebP encoding has long-edge sizing, quality, transparency/opaque custom background and API30+ losslessWebP",
+    "PNG batch has one deliberately broken item: good encoded output retained; repaired-input retry reuses good item without changing its timestamp",
+    "Retry creates a new final ZIP so previous partial output remains byte-identical",
+    "Independent Pillow reads both finalPNG images at600x300 with transparent origin",
+    "JPG custom opaque background and200x100 output checked; WebPRIFF/WEBP signature+alpha and JPEGEXIF90→PNG140x80 checked",
+    "Conversion inputs/checkpoint artifacts/results use durable resource references; text PDF retains original/body resources",
+    "Startup job reconciliation now rechecks current state/workID inside transaction and cannot downgrade newer completed state; scan finished-recovery has the same guard"
+  ],
+  "uiVerified": [
+    "Continue draft card opens real body editor",
+    "Change A5/landscape and enterUI_RESUME",
+    "Force-stop app, reopen, continue body: text and A5landscape preset both retained",
+    "Image conversion settings expose size/quality/background/format controls"
+  ],
+  "testNotes": [
+    "Initial two-method run: image flow passed; text flow exposed a real stale startup-recovery update and timed out",
+    "Focused text rerun then exposed a real cmap glyph alias (户→⼾); mapping corrected and focused text passed",
+    "Image flow was not rerun after unrelated text/recovery/UI fixes; no previous scanner/OCR/reader/backup suite rerun"
+  ],
+  "limits": [
+    "Basic text routes import DOCX/HTML paragraphs or Markdown source; full Office layout uses the separate phone engine",
+    "Existing packaged font and NFKC normalization remain; unsupported glyphs/emoji may be substituted while raw original remains retained",
+    "CorrectedUnicode mapper is scoped to standalone single-font text PDFs; otherOCR/native-content routes have separate work",
+    "Only image-batch items have per-item retry/checkpoint here; Office/table and PDF/ZIP intermediate conversion recovery still leaveJOB01/CVT06partial",
+    "Generic task backup remapping reused and reviewed for new resources/payload; a separate whole-library backup rerun was not performed for this group",
+    "No physical-phone or cloud-provider acceptance"
+  ],
+  "releaseCreated": false
+}

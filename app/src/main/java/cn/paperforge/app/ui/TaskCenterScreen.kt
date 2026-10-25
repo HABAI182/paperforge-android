@@ -34,7 +34,7 @@ fun taskStateName(state: LocalTaskState) =
 @Composable
 fun TaskCenterScreen(vm: MainViewModel) {
     val tasks by vm.localTasks.collectAsState()
-    var filter by remember { mutableStateOf("ACTIVE") }
+    val filter by vm.taskFilter.collectAsState()
     var preview by remember { mutableStateOf<LocalTaskRow?>(null) }
     val selected =
         tasks.filter {
@@ -71,7 +71,7 @@ fun TaskCenterScreen(vm: MainViewModel) {
                     ->
                     FilterChip(
                         selected = filter == id,
-                        onClick = { filter = id },
+                        onClick = { vm.taskFilter.value = id },
                         label = { Text(name) },
                     )
                 }
@@ -92,8 +92,15 @@ fun TaskCenterScreen(vm: MainViewModel) {
                 ) {
                     items(selected, key = { it.id }) { row ->
                         val active = row.state in LocalTaskRow.active
+                        val textDraft =
+                            row.type == "CONVERT" &&
+                                org.json
+                                    .JSONObject(row.payload)
+                                    .optJSONObject("input")
+                                    ?.optBoolean("draft") == true
                         val available =
-                            row.documentId != null ||
+                            textDraft ||
+                                row.documentId != null ||
                                 row.resourceEntries().any {
                                     it.id in setOf("result", "save-source") && File(it.path).isFile
                                 }
@@ -116,7 +123,13 @@ fun TaskCenterScreen(vm: MainViewModel) {
                                         style = MaterialTheme.typography.titleMedium,
                                     )
                                     Text(
-                                        taskStateName(row.state),
+                                        if (textDraft) "待编辑"
+                                        else if (
+                                            row.type == "CONVERT" &&
+                                                row.state == LocalTaskState.PARTIAL
+                                        )
+                                            "部分完成"
+                                        else taskStateName(row.state),
                                         style = MaterialTheme.typography.labelMedium,
                                     )
                                 }
@@ -151,7 +164,8 @@ fun TaskCenterScreen(vm: MainViewModel) {
                                         enabled = available,
                                     ) {
                                         Text(
-                                            if (row.type == "CAPTURE") "查看文档"
+                                            if (textDraft) "编辑正文"
+                                            else if (row.type == "CAPTURE") "查看文档"
                                             else if (row.type == "SAVE") "本地结果 / 另存" else "查看结果"
                                         )
                                     }
@@ -163,7 +177,10 @@ fun TaskCenterScreen(vm: MainViewModel) {
                                         row.state != LocalTaskState.SUCCEEDED &&
                                             (available || row.type in DocumentJobs.types)
                                     ) {
-                                        TextButton(onClick = { vm.retryTask(row) }) { Text("重试") }
+                                        if (!textDraft)
+                                            TextButton(onClick = { vm.retryTask(row) }) {
+                                                Text("重试")
+                                            }
                                         if (row.type == "CAPTURE")
                                             TextButton(onClick = { vm.openTask(row, true) }) {
                                                 Text("重拍")
@@ -171,7 +188,9 @@ fun TaskCenterScreen(vm: MainViewModel) {
                                     }
                                 }
                                 if (!active && row.type in DocumentJobs.types)
-                                    TextButton(onClick = { vm.forgetTask(row) }) { Text("移除记录") }
+                                    TextButton(onClick = { vm.forgetTask(row) }) {
+                                        Text(if (textDraft) "删除正文草稿" else "移除记录")
+                                    }
                             }
                         }
                     }

@@ -41,13 +41,15 @@ data class JobHandle(val row: LocalTaskRow, val input: JobInput, val completed: 
 
 /** Room owns intent/checkpoints; WorkManager receives only the stable task identifier. */
 object DocumentJobs {
-    val types = setOf("PDF", "SCAN_EXPORT", "OCR", "SAVE")
+    val types = setOf("PDF", "SCAN_EXPORT", "OCR", "SAVE", "CONVERT")
 
     private fun title(type: String, input: JobInput, source: String) =
         when (type) {
             "SCAN_EXPORT" -> "$source · 导出 PDF"
             "OCR" -> "$source · 全文识别"
             "SAVE" -> "$source · 保存到所选位置"
+            "CONVERT" ->
+                "$source · ${if(input.getString("kind")=="TEXT_PDF") "文字转 PDF" else "图片转换"}"
             else -> "$source · ${modeName(input.getString("mode"))}"
         }
 
@@ -98,6 +100,9 @@ object DocumentJobs {
         }
         resource("source", doc?.pdfPath)
         resource("save-source", input.getString("path"))
+        input.getStringArray("inputs")?.forEachIndexed { index, path ->
+            resource("input-$index", path)
+        }
         input.getStringArray("sources")?.forEachIndexed { index, path ->
             resource("source-$index", path)
         }
@@ -125,6 +130,7 @@ object DocumentJobs {
                     type,
                     input,
                     doc?.title
+                        ?: input.getString("name")
                         ?: input.getString("path")?.let { File(it).nameWithoutExtension }
                         ?: options.optString("title", "独立任务"),
                 ),
@@ -171,6 +177,11 @@ object DocumentJobs {
                         .build()
                 "SAVE" ->
                     OneTimeWorkRequestBuilder<SaveDocumentWorker>()
+                        .setId(id)
+                        .setInputData(data)
+                        .build()
+                "CONVERT" ->
+                    OneTimeWorkRequestBuilder<ConversionJobWorker>()
                         .setId(id)
                         .setInputData(data)
                         .build()
@@ -236,12 +247,18 @@ object DocumentJobs {
             )
         }
 
-    suspend fun complete(repo: Repository, handle: JobHandle, file: File, detail: String = "已完成") {
+    suspend fun complete(
+        repo: Repository,
+        handle: JobHandle,
+        file: File,
+        detail: String = "已完成",
+        state: LocalTaskState = LocalTaskState.SUCCEEDED,
+    ) {
         checkCurrent(repo, handle)
         val row = checkNotNull(repo.dao.task(handle.row.id))
         repo.dao.putTask(
             row.copy(
-                state = LocalTaskState.SUCCEEDED,
+                state = state,
                 progress = 100,
                 detail = detail,
                 error = null,
@@ -326,16 +343,46 @@ object DocumentJobs {
 
     suspend fun recover(repo: Repository) {
         for (row in
-            repo.dao.allTasks().filter { it.type in types && it.state in LocalTaskRow.active }) {
+            repo.dao.allTasks().filter {
+                it.type in types &&
+                    (it.state in LocalTaskRow.active ||
+                        it.state == LocalTaskState.PARTIAL && it.detail == "上次处理已中断，检查点保留")
+            }) {
             val info =
                 row.workId?.let {
                     WorkManager.getInstance(repo.context).getWorkInfoById(UUID.fromString(it)).get()
                 }
-            if (info == null || info.state.isFinished)
+            reconcile(repo, row, info)
+        }
+    }
+
+    internal suspend fun reconcile(repo: Repository, observed: LocalTaskRow, info: WorkInfo?) {
+        if (info != null && !info.state.isFinished) return
+        repo.database.withTransaction {
+            val current = repo.dao.task(observed.id) ?: return@withTransaction
+            if (
+                current.workId != observed.workId ||
+                    (current.state !in LocalTaskRow.active &&
+                        !(current.state == LocalTaskState.PARTIAL &&
+                            current.detail == "上次处理已中断，检查点保留"))
+            )
+                return@withTransaction
+            val result =
+                current.resourceEntries().firstOrNull { it.id == "result" }?.path?.let(::File)
+            if (info?.state == WorkInfo.State.SUCCEEDED && result?.isFile == true) {
+                val partial = info.outputData.getBoolean("partial", false)
                 repo.dao.taskState(
-                    row.id,
+                    current.id,
+                    if (partial) LocalTaskState.PARTIAL else LocalTaskState.SUCCEEDED,
+                    100,
+                    if (partial) "部分完成，可重试失败项" else "已完成",
+                    null,
+                )
+            } else
+                repo.dao.taskState(
+                    current.id,
                     LocalTaskState.PARTIAL,
-                    row.progress,
+                    current.progress,
                     "上次处理已中断，检查点保留",
                     info?.outputData?.getString("error"),
                 )
@@ -359,6 +406,11 @@ object DocumentJobs {
             .distinct()
             .forEach { file ->
                 if (file.path.startsWith(root) && file.path !in retained) file.delete()
+            }
+        val items = File(repo.context.filesDir, "job-items/${removed.id}").canonicalFile
+        if (items.parentFile == File(repo.context.filesDir, "job-items").canonicalFile)
+            items.walkBottomUp().forEach { file ->
+                if (file.isDirectory || file.canonicalPath !in retained) file.delete()
             }
     }
 

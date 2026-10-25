@@ -275,14 +275,19 @@ object CaptureTasks {
                             .get()
                     }
                 if (info != null && info.state.isFinished) {
-                    repo.dao.taskState(
-                        row.id,
-                        if (info.state == WorkInfo.State.CANCELLED) LocalTaskState.CANCELLED
-                        else LocalTaskState.FAILED,
-                        row.progress,
-                        "上次处理已中断，可重试",
-                        info.outputData.getString("error"),
-                    )
+                    repo.database.withTransaction {
+                        val latest = repo.dao.task(row.id) ?: return@withTransaction
+                        if (latest.workId != row.workId || latest.state !in LocalTaskRow.active)
+                            return@withTransaction
+                        repo.dao.taskState(
+                            row.id,
+                            if (info.state == WorkInfo.State.CANCELLED) LocalTaskState.CANCELLED
+                            else LocalTaskState.FAILED,
+                            latest.progress,
+                            "上次处理已中断，可重试",
+                            info.outputData.getString("error"),
+                        )
+                    }
                 } else schedule(repo.context, row)
             }
         }

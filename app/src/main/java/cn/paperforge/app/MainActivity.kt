@@ -189,8 +189,12 @@ class MainActivity : ComponentActivity() {
                     }
                 var conversionFont by
                     androidx.compose.runtime.saveable.rememberSaveable { mutableFloatStateOf(12f) }
-                var conversionFormat by
-                    androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("jpg") }
+                var conversionImageOptions by
+                    androidx.compose.runtime.saveable.rememberSaveable {
+                        mutableStateOf(
+                            cn.paperforge.app.pdf.ImageConversionOptions().json().toString()
+                        )
+                    }
                 val textImport =
                     rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
                         it?.let { uri -> vm.convertText(uri, conversionFont) }
@@ -199,7 +203,13 @@ class MainActivity : ComponentActivity() {
                     rememberLauncherForActivityResult(
                         ActivityResultContracts.OpenMultipleDocuments()
                     ) {
-                        if (it.isNotEmpty()) vm.convertImages(it, conversionFormat)
+                        if (it.isNotEmpty())
+                            vm.convertImages(
+                                it,
+                                cn.paperforge.app.pdf.ImageConversionOptions.decode(
+                                    org.json.JSONObject(conversionImageOptions)
+                                ),
+                            )
                     }
                 var mobileTarget by
                     androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("pdf") }
@@ -351,6 +361,7 @@ class MainActivity : ComponentActivity() {
                         when {
                             screen in listOf("annotations", "pdf-pages", "pdf-diagnostics") ->
                                 "reader"
+                            screen == "text-compose" -> "convert"
                             screen == "storage" -> "settings"
                             screen == "profiles" -> vm.profileReturn.value
                             screen == "ocr-proof" -> "editor"
@@ -366,6 +377,7 @@ class MainActivity : ComponentActivity() {
                         "editor" -> EditorScreen(vm) { images.launch(arrayOf("image/*")) }
                         "reader" -> ReaderScreen(vm, share)
                         "pdf-diagnostics" -> PdfDiagnosticsScreen(vm)
+                        "text-compose" -> TextConversionScreen(vm)
                         "tables" -> TableReviewScreen(vm)
                         "notes" -> StudyNotesScreen(vm)
                         "comparison" -> LibraryComparisonScreen(vm)
@@ -392,8 +404,8 @@ class MainActivity : ComponentActivity() {
                                         )
                                     )
                                 },
-                                onImageFormat = { format ->
-                                    conversionFormat = format
+                                onImageFormat = { settings ->
+                                    conversionImageOptions = settings.json().toString()
                                     formatImport.launch(arrayOf("image/*"))
                                 },
                                 onDesktop = { mode, options ->

@@ -4,6 +4,7 @@ import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.withTransaction
 import androidx.work.*
 import cn.paperforge.app.data.*
 import cn.paperforge.app.model.safeFileName
@@ -307,6 +308,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private var exportId: UUID? = null
     private var exportWatch: Job? = null
     val canBackgroundTask = MutableStateFlow(false)
+    val taskFilter = MutableStateFlow("ACTIVE")
     val localTasks =
         repo.dao
             .observeTasks()
@@ -450,6 +452,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun retryTask(row: LocalTaskRow) {
+        if (
+            row.type == "CONVERT" &&
+                org.json.JSONObject(row.payload).optJSONObject("input")?.optBoolean("draft") == true
+        ) {
+            loadTextConversion(row)
+            return
+        }
         appScope.launch {
             runCatching {
                     if (row.type in DocumentJobs.types) DocumentJobs.retry(repo, row)
@@ -474,6 +483,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun openTask(row: LocalTaskRow, retake: Boolean = false) {
+        if (
+            row.type == "CONVERT" &&
+                org.json.JSONObject(row.payload).optJSONObject("input")?.optBoolean("draft") == true
+        ) {
+            loadTextConversion(row)
+            return
+        }
         viewModelScope.launch {
             if (row.type in DocumentJobs.types) {
                 val file =
@@ -798,26 +814,32 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         if (busy.value) return
         busy.value = true
         progress.value = "正在保存任务"
-        viewModelScope.launch {
-            var queued: UUID? = null
-            try {
-                queued = DocumentJobs.enqueue(repo, type, data)
-                getApplication<Application>()
-                    .getSharedPreferences("session", 0)
-                    .edit()
-                    .putString("export", queued.toString())
-                    .apply()
-            } catch (failure: Exception) {
-                messages.send(failure.message ?: "任务未能创建")
-            } finally {
-                busy.value = false
-                progress.value = ""
+        task =
+            viewModelScope.launch {
+                var queued: UUID? = null
+                try {
+                    queued = DocumentJobs.enqueue(repo, type, data)
+                    getApplication<Application>()
+                        .getSharedPreferences("session", 0)
+                        .edit()
+                        .putString("export", queued.toString())
+                        .apply()
+                } catch (failure: Exception) {
+                    messages.send(failure.message ?: "任务未能创建")
+                } finally {
+                    busy.value = false
+                    progress.value = ""
+                }
+                queued?.let(::watchExport)
             }
-            queued?.let(::watchExport)
-        }
     }
 
     private fun watchExport(id: UUID) {
+        getApplication<Application>()
+            .getSharedPreferences("session", 0)
+            .edit()
+            .putString("export", id.toString())
+            .apply()
         exportId = id
         busy.value = true
         exportWatch?.cancel()
@@ -851,7 +873,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                                         ocr.value = withContext(Dispatchers.IO) { file.readText() }
                                     }
                                     "SAVE" -> messages.send("文件已保存并核对")
-                                    else -> publishOutput(file)
+                                    else -> {
+                                        publishOutput(file)
+                                        if (info.outputData.getBoolean("partial", false))
+                                            messages.send(
+                                                "${info.outputData.getInt("completed",0)} 项完成，${info.outputData.getInt("failed",0)} 项失败；可在任务中心只重试失败项"
+                                            )
+                                    }
                                 }
                                 if (
                                     info.outputData.getString("mode") in
@@ -1120,38 +1148,231 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             messages.send("已导入 ${files.size} 个结果；PDF 已加入文档库")
         }
 
-    fun convertText(uri: Uri, size: Float) =
-        perform("正在生成文字 PDF") {
-            val name = repo.displayName(uri)
-            val file =
+    val textConversion = MutableStateFlow<TextConversionDraft?>(null)
+    private var textConversionSave: Job? = null
+    private val textConversionLock = kotlinx.coroutines.sync.Mutex()
+
+    fun convertText(uri: Uri, size: Float) = convertText(uri, TextPdfOptions(fontSize = size))
+
+    fun convertText(uri: Uri, options: TextPdfOptions) =
+        perform("读取正文与保留原件") {
+            val retained = ConversionInputs.retain(repo, listOf(uri)).single()
+            val text =
+                LocalConversions.readText(
+                    repo.context,
+                    Uri.fromFile(retained.first),
+                    retained.second,
+                )
+            val edited = File(retained.first.parentFile, "${UUID.randomUUID()}.txt")
+            edited.writeText(text, Charsets.UTF_8)
+            val input =
+                org.json
+                    .JSONObject()
+                    .put("kind", "TEXT_PDF")
+                    .put("name", retained.second)
+                    .put("draft", true)
+                    .put("inputs", org.json.JSONArray(listOf(retained.first.path, edited.path)))
+                    .put("names", org.json.JSONArray(listOf(retained.second, "edited.txt")))
+                    .put("edited", edited.path)
+                    .put("options", options.json().toString())
+            val row = DocumentJobs.prepare(repo, "CONVERT", JobInput(input))
+            repo.dao.putTask(row.copy(state = LocalTaskState.PARTIAL, detail = "正文待编辑"))
+            textConversion.value =
+                TextConversionDraft(
+                    row.id,
+                    retained.second,
+                    edited.path,
+                    TextConversionDraft.chunks(text),
+                    options,
+                )
+            screen.value = "text-compose"
+        }
+
+    fun loadTextConversion(row: LocalTaskRow) =
+        perform("打开正文草稿") {
+            textConversionSave?.join()
+            val input = org.json.JSONObject(row.payload).getJSONObject("input")
+            val file = File(input.getString("edited"))
+            textConversion.value =
+                TextConversionDraft(
+                    row.id,
+                    input.optString("name", "正文"),
+                    file.path,
+                    TextConversionDraft.chunks(file.readText()),
+                    TextPdfOptions.decode(org.json.JSONObject(input.optString("options", "{}"))),
+                )
+            screen.value = "text-compose"
+        }
+
+    fun updateTextConversion(
+        index: Int? = null,
+        text: String? = null,
+        options: TextPdfOptions? = null,
+    ) {
+        val old = textConversion.value ?: return
+        val next =
+            old.copy(
+                chunks =
+                    if (index != null && text != null)
+                        old.chunks.mapIndexed { i, value -> if (i == index) text else value }
+                    else old.chunks,
+                options = options ?: old.options,
+                revision = old.revision + 1,
+            )
+        textConversion.value = next
+        textConversionSave?.cancel()
+        textConversionSave =
+            viewModelScope.launch(Dispatchers.IO) {
+                delay(250)
+                textConversionLock.lock()
+                try {
+                    if (
+                        textConversion.value?.revision != next.revision ||
+                            textConversion.value?.taskId != next.taskId
+                    )
+                        return@launch
+                    val atomic = android.util.AtomicFile(File(next.editedPath))
+                    val stream = atomic.startWrite()
+                    try {
+                        next.chunks.forEach {
+                            ensureActive()
+                            stream.write(it.toByteArray(Charsets.UTF_8))
+                        }
+                        atomic.finishWrite(stream)
+                    } catch (failure: Throwable) {
+                        atomic.failWrite(stream)
+                        throw failure
+                    }
+                    repo.database.withTransaction {
+                        val row = repo.dao.task(next.taskId) ?: return@withTransaction
+                        val payload = org.json.JSONObject(row.payload)
+                        payload
+                            .getJSONObject("input")
+                            .put("options", next.options.json().toString())
+                        repo.dao.putTask(
+                            row.copy(
+                                payload = payload.toString(),
+                                updated = System.currentTimeMillis(),
+                            )
+                        )
+                    }
+                } catch (cancel: CancellationException) {
+                    throw cancel
+                } catch (failure: Exception) {
+                    messages.send("正文尚未写入草稿：${failure.message}")
+                } finally {
+                    textConversionLock.unlock()
+                }
+            }
+    }
+
+    fun generateTextConversion() {
+        if (busy.value) return
+        val draft = textConversion.value ?: return
+        busy.value = true
+        task =
+            viewModelScope.launch {
+                var queued: UUID? = null
+                try {
+                    textConversionSave?.join()
+                    withContext(Dispatchers.IO) {
+                        val row = repo.dao.task(draft.taskId) ?: error("正文草稿已移除")
+                        val frozen =
+                            File(File(draft.editedPath).parentFile, "${UUID.randomUUID()}.txt")
+                        java.io.FileOutputStream(frozen).use { stream ->
+                            draft.chunks.forEach { stream.write(it.toByteArray(Charsets.UTF_8)) }
+                            stream.fd.sync()
+                        }
+                        val payload = org.json.JSONObject(row.payload)
+                        val input = payload.getJSONObject("input")
+                        input
+                            .put("draft", false)
+                            .put("edited", frozen.path)
+                            .put("options", draft.options.json().toString())
+                        val originals = input.getJSONArray("inputs")
+                        originals.put(frozen.path)
+                        repo.dao.putTask(
+                            row.copy(
+                                payload = payload.toString(),
+                                resources =
+                                    DocumentResources.encode(
+                                            row.resourceEntries() +
+                                                PageResource(
+                                                    "frozen",
+                                                    "conversion-source",
+                                                    frozen.path,
+                                                )
+                                        )
+                                        .toString(),
+                            )
+                        )
+                        queued = DocumentJobs.retry(repo, row)
+                    }
+                    textConversion.value = null
+                } catch (failure: Exception) {
+                    messages.send(failure.message ?: "转换未能开始")
+                } finally {
+                    busy.value = false
+                }
+                queued?.let(::watchExport)
+            }
+    }
+
+    fun exportEditedText() =
+        perform("保存正文") {
+            textConversionSave?.join()
+            val draft = textConversion.value ?: return@perform
+            val output =
                 File(
                     repo.exports,
-                    "${safeFileName(name.substringBeforeLast('.'))}-${System.currentTimeMillis()}.pdf",
+                    "${safeFileName(draft.name.substringBeforeLast('.'))}-edited-${System.currentTimeMillis()}.txt",
                 )
-            cn.paperforge.app.pdf.LocalConversions.textToPdf(
-                getApplication(),
-                uri,
-                name,
-                file,
-                size,
-            )
-            repo.registerPdf(file, name.substringBeforeLast('.') + " · 文字 PDF")
+            java.io.FileOutputStream(output).use { stream ->
+                draft.chunks.forEach { stream.write(it.toByteArray(Charsets.UTF_8)) }
+                stream.fd.sync()
+            }
             outputLocked.value = false
-            publishOutput(file)
+            publishOutput(output)
         }
 
     fun convertImages(uris: List<Uri>, format: String) =
-        perform("正在转换图片") {
-            require(uris.isNotEmpty()) { "请先选择图片" }
-            val extension = if (uris.size > 1) "zip" else format
-            val file =
-                File(repo.exports, "PaperForge-images-${System.currentTimeMillis()}.$extension")
-            cn.paperforge.app.pdf.LocalConversions.images(getApplication(), uris, format, file) {
-                progress.value = it
+        convertImages(uris, ImageConversionOptions(format = format))
+
+    fun convertImages(uris: List<Uri>, options: ImageConversionOptions) {
+        if (busy.value || uris.isEmpty()) return
+        busy.value = true
+        task =
+            viewModelScope.launch {
+                var queued: UUID? = null
+                try {
+                    withContext(Dispatchers.IO) {
+                        val inputs = ConversionInputs.retain(repo, uris)
+                        queued =
+                            DocumentJobs.enqueue(
+                                repo,
+                                "CONVERT",
+                                JobInput(
+                                    org.json
+                                        .JSONObject()
+                                        .put("kind", "IMAGES")
+                                        .put("name", "${inputs.size} 张图片")
+                                        .put(
+                                            "inputs",
+                                            org.json.JSONArray(inputs.map { it.first.path }),
+                                        )
+                                        .put("names", org.json.JSONArray(inputs.map { it.second }))
+                                        .put("options", options.json().toString())
+                                ),
+                            )
+                    }
+                } catch (failure: Exception) {
+                    messages.send(failure.message ?: "图片未能导入")
+                } finally {
+                    busy.value = false
+                }
+                queued?.let(::watchExport)
             }
-            outputLocked.value = false
-            publishOutput(file)
-        }
+    }
 
     fun previewOutput(file: File) =
         perform("正在打开 PDF") {
@@ -1332,6 +1553,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun backup() =
         perform("正在离线备份") {
             marksSave?.join()
+            textConversionSave?.join()
             assembly.flush()
             val file = File(repo.exports, "PaperForge-backup-${System.currentTimeMillis()}.zip")
             BackupStore.backup(repo, file)

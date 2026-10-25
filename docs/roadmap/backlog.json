@@ -636,7 +636,7 @@
       ],
       "scope": "TXT导入/编辑、中文字体、换行分页与纸张",
       "acceptance": "中文长文本跨页可读，源文本保留",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "CVT04",
@@ -649,7 +649,7 @@
       ],
       "scope": "JPG/PNG/WebP、尺寸质量与透明背景",
       "acceptance": "真实编码与扩展名一致，方向正确",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "CVT05",
