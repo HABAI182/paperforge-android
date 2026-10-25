@@ -933,7 +933,7 @@
       ],
       "scope": "跨文件选页、交错/反序、封面目录与重排",
       "acceptance": "双面扫描能恢复正确奇偶页序",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "PDF02",
@@ -959,7 +959,7 @@
       ],
       "scope": "合并/抽页的目录、字段重名、页标签与附件策略",
       "acceptance": "页面操作后链接和表单目标正确",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "PDF04",
@@ -1252,9 +1252,9 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 38,
-    "planned": 36,
-    "partial": 24
+    "done": 39,
+    "planned": 34,
+    "partial": 25
   },
   "updated": "2026-10-25"
 }

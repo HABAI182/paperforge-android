@@ -149,6 +149,12 @@ class MainActivity : ComponentActivity() {
                         else if (it.isNotEmpty())
                             scope.launch { snackbar.showSnackbar("请选择至少两份 PDF") }
                     }
+                val assemblyImport =
+                    rememberLauncherForActivityResult(
+                        ActivityResultContracts.OpenMultipleDocuments()
+                    ) { uris ->
+                        if (uris.isNotEmpty()) vm.importAssemblySources(uris)
+                    }
                 val save =
                     rememberLauncherForActivityResult(
                         ActivityResultContracts.StartActivityForResult()
@@ -331,15 +337,21 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 BackHandler(screen != "home" && !busy) {
+                    if (screen == "assembly") {
+                        vm.closeAssembly()
+                        return@BackHandler
+                    }
                     if (screen != "profiles") vm.replacement.value = null
+                    if (screen in listOf("reader", "editor")) {
+                        vm.closeDocument()
+                        return@BackHandler
+                    }
                     vm.screen.value =
                         when {
                             screen in listOf("annotations", "pdf-pages") -> "reader"
                             screen == "storage" -> "settings"
                             screen == "profiles" -> vm.profileReturn.value
                             screen == "ocr-proof" -> "editor"
-                            screen in listOf("reader", "editor") && vm.comparisonReturn.value ->
-                                "comparison".also { vm.comparisonReturn.value = false }
                             screen == "comparison" -> "home".also { vm.comparison.cancel() }
                             screen == "pages" ||
                                 screen == "capture" && vm.pages.value.isNotEmpty() -> "editor"
@@ -354,6 +366,10 @@ class MainActivity : ComponentActivity() {
                         "tables" -> TableReviewScreen(vm)
                         "notes" -> StudyNotesScreen(vm)
                         "comparison" -> LibraryComparisonScreen(vm)
+                        "assembly" ->
+                            PdfAssemblyScreen(vm) {
+                                assemblyImport.launch(arrayOf("application/pdf"))
+                            }
                         "convert" ->
                             ConversionScreen(
                                 vm,

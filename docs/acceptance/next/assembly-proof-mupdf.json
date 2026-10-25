@@ -1,0 +1,83 @@
+[
+  {
+    "page": 1,
+    "rotation": 0,
+    "text": "组合验收 00123\n正反面与原生文字\n",
+    "links": []
+  },
+  {
+    "page": 2,
+    "rotation": 0,
+    "text": "目录\n正面\n3\n反面\n4\n",
+    "links": [
+      {
+        "kind": 1,
+        "page": 2,
+        "uri": null
+      },
+      {
+        "kind": 1,
+        "page": 3,
+        "uri": null
+      }
+    ]
+  },
+  {
+    "page": 3,
+    "rotation": 0,
+    "text": "PAGE_1\n",
+    "links": [
+      {
+        "kind": 1,
+        "page": 4,
+        "uri": null
+      },
+      {
+        "kind": 2,
+        "page": null,
+        "uri": "https://example.com/paperforge"
+      }
+    ]
+  },
+  {
+    "page": 4,
+    "rotation": 0,
+    "text": "PAGE_2\n",
+    "links": []
+  },
+  {
+    "page": 5,
+    "rotation": 90,
+    "text": "PAGE_3\n00123\n",
+    "links": []
+  },
+  {
+    "page": 6,
+    "rotation": 0,
+    "text": "PAGE_4\n",
+    "links": []
+  },
+  {
+    "page": 7,
+    "rotation": 0,
+    "text": "",
+    "links": []
+  },
+  {
+    "page": 8,
+    "rotation": 90,
+    "text": "PAGE_1\n",
+    "links": [
+      {
+        "kind": 1,
+        "page": 4,
+        "uri": null
+      },
+      {
+        "kind": 2,
+        "page": null,
+        "uri": "https://example.com/paperforge"
+      }
+    ]
+  }
+]

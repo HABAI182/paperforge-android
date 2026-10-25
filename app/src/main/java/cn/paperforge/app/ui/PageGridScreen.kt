@@ -239,6 +239,12 @@ fun MergeScreen(vm: MainViewModel) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text("调整源文件顺序，合并后可用抽页工具重新排列单页。")
+            OutlinedButton(
+                onClick = { vm.beginAssembly(sources.map { it.id }, fresh = true) },
+                enabled = sources.isNotEmpty(),
+            ) {
+                Text("进入跨文件页面组合")
+            }
             sources.forEachIndexed { index, doc ->
                 Card {
                     Row(

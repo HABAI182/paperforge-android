@@ -801,7 +801,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                     OutlinedButton(
                         onClick = {
                             appearance = false
-                            vm.screen.value = "pdf-pages"
+                            doc?.let { vm.beginAssembly(listOf(it.id)) }
                         }
                     ) {
                         Text("页面编排")
@@ -950,7 +950,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                     TextButton(
                         onClick = {
                             jump = false
-                            vm.screen.value = "pdf-pages"
+                            doc?.let { vm.beginAssembly(listOf(it.id)) }
                         }
                     ) {
                         Text("编排")

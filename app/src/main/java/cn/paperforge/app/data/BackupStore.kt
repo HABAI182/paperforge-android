@@ -96,6 +96,7 @@ object BackupStore {
                 )
                 .put("library", LibraryPreferences(repo.context).export())
                 .put("profiles", SettingsProfiles(repo.context).export())
+                .put("assemblyDraft", cn.paperforge.app.pdf.AssemblyDraft.read(repo.context).json())
                 .put(
                     "outputs",
                     JSONArray().apply {
@@ -453,6 +454,12 @@ object BackupStore {
                         outputRows.forEach { repo.dao.putOutput(it) }
                         taskRows.forEach { repo.dao.putTask(it) }
                         sideChanged = true
+                        metadata.optJSONObject("assemblyDraft")?.let {
+                            cn.paperforge.app.pdf.AssemblyDraft.write(
+                                repo.context,
+                                cn.paperforge.app.pdf.AssemblyPlan.decode(it).remap(ids),
+                            )
+                        }
                         metadata.optJSONObject("profiles")?.let {
                             SettingsProfiles(repo.context).importJson(it.toString())
                         }

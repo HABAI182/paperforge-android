@@ -1,0 +1,52 @@
+{
+  "feature": "native PDF page assembly with duplex ordering, cover/contents and durable draft",
+  "updated": "2026-10-25",
+  "environment": "API35 AOSP x86_64 emulator; synthetic PDFs and existing debug reader fixtures",
+  "focusedTest": {
+    "tests": 1,
+    "passed": true,
+    "seconds": 8.153,
+    "worker": "real WorkManager PdfJobWorker, not a mocked direct exporter"
+  },
+  "verified": [
+    "front pages1,3 and reverse back pages4,2 interleave into1,2,3,4",
+    "8-page result includes cover/contents, selected native pages, a blank page and a rotated duplicate",
+    "native text remains extractable, source crop box and existing/extra rotations retained",
+    "visible form value00123 survives flattening while original source remains byte-identical and editable",
+    "clickable contents and source outline point to output physical pages3 and4",
+    "internal chosen-page link rebound, URI retained, links to unselected targets omitted",
+    "unselected marker absent from output text and decoded output streams",
+    "origin manifest registered as a durable document resource",
+    "draft backup remaps source IDs while retaining content hashes and page order",
+    "MuPDF independently reads8 pages, Chinese cover/contents, PAGE1/2/3/4 order and00123"
+  ],
+  "uiVerified": [
+    "selected two native PDFs from library and applied reversed-back duplex order",
+    "draft survived app reinstall/restart with6 interleaved content pages",
+    "enabled cover and clickable contents through accessible checkbox labels; total8 pages",
+    "moved selected page to physical page8 and undid it",
+    "actual Generate PDF flow completed and opened8-page reader preview",
+    "final return flow from preview checked separately after navigation fix"
+  ],
+  "implementationReview": [
+    "large plans use private JSON manifest files instead of WorkManager10KB input payload;1200-reference JSON size checked without exporting1200 pages",
+    "native page content/resources cloned independently; source parent page trees not copied",
+    "thumbnail pool holds at most2 native sessions with8MiB cache each; no performance benchmark claim",
+    "draft IO debounced and atomic, explicit flush before backup/export, cancellation generation prevents obsolete source loads publishing",
+    "short noncancellable output registration transaction protects published results; same completed assembly job reuses registered output"
+  ],
+  "limits": [
+    "inputs are PDFs; scan projects can be exported to PDF and then added",
+    "forms are explicitly saved as visible appearance, not editable AcroForm/XFA migration",
+    "original outlines/page labels/attachments and complex annotations require the remainingPDF03 work",
+    "new link handling applies to assembly; older merge/extract/organize paths are not yet unified",
+    "exact cancellation-after-publication race and completed-worker rerun were reviewed in code, not separately injected",
+    "draft contents persist; the last30 assembly undo/redo operations are kept in the current app process only",
+    "pending assembly exports are not yet integrated with unified task-center backup/retry; the current draft is backed up"
+  ],
+  "testNotes": [
+    "initial assertion assumed rotated PDFTextStripper text had no inserted whitespace; assertion was normalized, then the focused flow passed and MuPDF confirmed the actual content",
+    "no unrelated OCR/scanner/reader regression suite rerun"
+  ],
+  "releaseCreated": false
+}

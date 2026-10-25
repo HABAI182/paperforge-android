@@ -1,8 +1,10 @@
 package cn.paperforge.app.pdf
 
 import android.content.Context
+import androidx.room.withTransaction
 import androidx.work.*
 import cn.paperforge.app.PaperForgeApp
+import cn.paperforge.app.data.DocumentResources
 import cn.paperforge.app.model.safeFileName
 import java.io.File
 import kotlinx.coroutines.*
@@ -12,6 +14,10 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
     override suspend fun doWork(): Result =
         withContext(Dispatchers.IO) {
             var output: File? = null
+            var published = false
+            var originFile: File? = null
+            var originManifest: File? = null
+            var assemblyManifest: File? = null
             try {
                 val repo = (applicationContext as PaperForgeApp).repository
                 val mode = inputData.getString("mode") ?: error("缺少工具")
@@ -38,12 +44,30 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 val file =
                     File(
                         repo.exports,
-                        "${safeFileName(doc?.title ?: "合并文档")}-$mode-${id.toString().take(8)}.$extension",
+                        "${safeFileName(if(mode=="assemble") p.optString("title","组合文档") else doc?.title ?: "合并文档")}-$mode-${id.toString().take(8)}.$extension",
                     )
                 output = file
+                if (mode == "assemble" && repo.dao.output(file.path) != null && file.isFile)
+                    return@withContext Result.success(
+                        workDataOf(
+                            "path" to file.path,
+                            "mode" to mode,
+                            "outputBytes" to file.length(),
+                        )
+                    )
                 val input = source ?: file
                 val range = p.optString("range")
+                var origin: JSONObject? = null
                 when (mode) {
+                    "assemble" -> {
+                        val manifest = File(p.getString("manifest"))
+                        assemblyManifest = manifest
+                        val plan = AssemblyPlan.decode(JSONObject(manifest.readText()))
+                        origin =
+                            PdfAssembly.write(repo, plan, file) {
+                                setProgress(workDataOf("progress" to it))
+                            }
+                    }
                     "merge" ->
                         PdfEngine.merge(
                             inputData.getStringArray("sources")!!.map { File(it) },
@@ -159,13 +183,37 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 }
                 if (mode in listOf("compress", "optimize"))
                     setProgress(workDataOf("progress" to 100))
-                if (extension == "pdf")
-                    repo.registerPdf(
-                        file,
-                        (doc?.title ?: "合并文档") + " · " + mode,
-                        listed = doc == null,
-                    )
-                repo.recordOutput(file, doc)
+                currentCoroutineContext().ensureActive()
+                withContext(NonCancellable) {
+                    repo.database.withTransaction {
+                        if (extension == "pdf") {
+                            val registered =
+                                repo.registerPdf(
+                                    file,
+                                    if (mode == "assemble") p.optString("title", "组合文档")
+                                    else (doc?.title ?: "合并文档") + " · " + mode,
+                                    listed = doc == null,
+                                )
+                            origin?.let { metadata ->
+                                val provenance =
+                                    File(repo.folder(registered.id), "assembly-origin.json")
+                                originFile = provenance
+                                provenance.writeText(metadata.toString())
+                                DocumentResources.register(
+                                    repo,
+                                    registered.id,
+                                    "assembly-origin",
+                                    provenance,
+                                )
+                                originManifest =
+                                    File(repo.folder(registered.id), "document-resources.json")
+                            }
+                        }
+                        repo.recordOutput(file, doc)
+                    }
+                    published = true
+                }
+                assemblyManifest?.delete()
                 Result.success(
                     workDataOf(
                         "path" to file.path,
@@ -175,10 +223,20 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                     )
                 )
             } catch (e: CancellationException) {
-                output?.delete()
+                if (!published) {
+                    output?.delete()
+                    originFile?.delete()
+                    originManifest?.delete()
+                    originFile?.parentFile?.delete()
+                }
                 throw e
             } catch (e: Exception) {
-                output?.delete()
+                if (!published) {
+                    output?.delete()
+                    originFile?.delete()
+                    originManifest?.delete()
+                    originFile?.parentFile?.delete()
+                }
                 Result.failure(workDataOf("error" to (e.message ?: "处理失败")))
             }
         }

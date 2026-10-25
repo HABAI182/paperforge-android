@@ -9,7 +9,7 @@ import android.util.LruCache
 import java.io.File
 import kotlin.math.ceil
 
-class PdfSession(val file: File) : AutoCloseable {
+class PdfSession(val file: File, cacheBytes: Int = 40 * 1024 * 1024) : AutoCloseable {
     private val sizes = mutableMapOf<Int, Pair<Int, Int>>()
     private val fd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
     private val renderer =
@@ -22,7 +22,7 @@ class PdfSession(val file: File) : AutoCloseable {
     val count = renderer.pageCount
     private var closed = false
     private val cache =
-        object : LruCache<String, Bitmap>(40 * 1024 * 1024) {
+        object : LruCache<String, Bitmap>(cacheBytes) {
             override fun sizeOf(key: String, value: Bitmap) = value.allocationByteCount
         }
 

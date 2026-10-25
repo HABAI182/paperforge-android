@@ -9,9 +9,11 @@ internal class RestoreSideState(private val context: Context) {
         listOf("preferences", "profiles", "reader", "reader-view", "signature", "library")
             .associateWith { context.getSharedPreferences(it, 0).all.toMap() }
     private val notes = StudyNotes.load(context)
+    private val assembly = cn.paperforge.app.pdf.AssemblyDraft.read(context)
 
     fun restore() {
         StudyNotes.replace(context, notes)
+        cn.paperforge.app.pdf.AssemblyDraft.write(context, assembly)
         preferences.forEach { (name, values) ->
             val edit = context.getSharedPreferences(name, 0).edit().clear()
             values.forEach { (key, value) ->

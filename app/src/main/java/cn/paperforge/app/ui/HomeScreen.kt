@@ -337,6 +337,15 @@ fun HomeScreen(
                                 }
                                 DropdownMenu(selectionMenu, { selectionMenu = false }) {
                                     DropdownMenuItem(
+                                        text = { Text("新建页面组合") },
+                                        enabled =
+                                            chosen.isNotEmpty() && chosen.all { it.kind == "pdf" },
+                                        onClick = {
+                                            vm.beginAssembly(chosen.map { it.id }, fresh = true)
+                                            finishSelection()
+                                        },
+                                    )
+                                    DropdownMenuItem(
                                         text = { Text("比较所选文档") },
                                         enabled = chosen.size >= 2,
                                         onClick = {
@@ -536,6 +545,9 @@ fun HomeScreen(
                         },
                         HomeTool("重复与版本", "比较相同原件、相似页面，管理首选版本", Icons.Default.Compare) {
                             vm.beginComparison()
+                        },
+                        HomeTool("页面组合", "跨文件选页、双面交错、封面和目录", Icons.Default.ViewModule) {
+                            vm.beginAssembly()
                         },
                         HomeTool(
                             "学习摘录与笔记",

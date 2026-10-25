@@ -114,7 +114,113 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     val messages = Channel<String>(Channel.BUFFERED)
     val comparison = LibraryComparisonController(repo, viewModelScope, messages)
+    val assembly = PdfAssemblyController(repo, viewModelScope, messages)
+    val assemblyReturn = MutableStateFlow("home")
+
+    fun beginAssembly(ids: List<String> = emptyList(), fresh: Boolean = false) {
+        outputReturn.value = null
+        assemblyReturn.value =
+            if (screen.value in listOf("reader", "pdf-pages")) "reader" else "home"
+        if (
+            fresh || ids.isNotEmpty() && assembly.plan.value.sources.none { it.documentId in ids }
+        ) {
+            assembly.cancelLoading()
+            assembly.change(
+                AssemblyPlan(title = selected.value?.takeIf { it.id in ids }?.title ?: "组合文档")
+            )
+        }
+        screen.value = "assembly"
+        if (ids.isNotEmpty()) assembly.addSources(ids)
+    }
+
+    fun importAssemblySources(uris: List<Uri>) =
+        perform("正在导入组合来源") {
+            val ids = mutableListOf<String>()
+            val failures = mutableListOf<String>()
+            uris.forEach { uri ->
+                try {
+                    ids += repo.importPdf(uri).id
+                } catch (cancel: CancellationException) {
+                    throw cancel
+                } catch (error: Exception) {
+                    failures += error.message ?: "读取失败"
+                }
+            }
+            if (ids.isNotEmpty()) assembly.addSources(ids)
+            if (failures.isNotEmpty())
+                messages.send("已读取 ${ids.size} 份，${failures.size} 份未能读取：${failures.first()}")
+        }
+
+    fun closeAssembly() {
+        assembly.cancelLoading()
+        viewModelScope.launch {
+            runCatching { assembly.flush() }.onFailure { messages.send(it.message ?: "草稿未保存") }
+        }
+        screen.value = assemblyReturn.value
+    }
+
+    fun exportAssembly() {
+        if (!busy.compareAndSet(false, true)) return
+        progress.value = "正在准备页面组合"
+        task =
+            viewModelScope.launch {
+                var queued: UUID? = null
+                var manifest: File? = null
+                try {
+                    withContext(Dispatchers.IO) {
+                        assembly.flush()
+                        val plan = assembly.plan.value
+                        require(plan.pages.isNotEmpty() || plan.cover) { "请先加入页面" }
+                        val directory =
+                            File(repo.context.filesDir, "assembly-jobs").apply { mkdirs() }
+                        val saved =
+                            File(directory, "${UUID.randomUUID()}.json").also { manifest = it }
+                        java.io.FileOutputStream(saved).use { stream ->
+                            stream.write(plan.json().toString().toByteArray(Charsets.UTF_8))
+                            stream.fd.sync()
+                        }
+                        currentCoroutineContext().ensureActive()
+                        withContext(NonCancellable) {
+                            val request =
+                                OneTimeWorkRequestBuilder<PdfJobWorker>()
+                                    .setInputData(
+                                        workDataOf(
+                                            "mode" to "assemble",
+                                            "document" to plan.chapters.firstOrNull()?.documentId,
+                                            "options" to
+                                                org.json
+                                                    .JSONObject()
+                                                    .put("manifest", saved.path)
+                                                    .put("title", plan.title)
+                                                    .toString(),
+                                        )
+                                    )
+                                    .build()
+                            WorkManager.getInstance(getApplication()).enqueue(request)
+                            queued = request.id
+                            getApplication<Application>()
+                                .getSharedPreferences("session", 0)
+                                .edit()
+                                .putString("export", request.id.toString())
+                                .apply()
+                        }
+                    }
+                } catch (cancel: CancellationException) {
+                    queued?.let { WorkManager.getInstance(getApplication()).cancelWorkById(it) }
+                    throw cancel
+                } catch (error: Exception) {
+                    messages.send(error.message ?: "组合任务未能创建")
+                } finally {
+                    if (queued == null) manifest?.delete()
+                    busy.value = false
+                    progress.value = ""
+                }
+                queued?.let(::watchExport)
+            }
+    }
+
     val comparisonReturn = MutableStateFlow(false)
+    val outputReturn = MutableStateFlow<String?>(null)
 
     fun beginComparison(
         ids: List<String>? = null,
@@ -152,8 +258,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun closeDocument() {
-        screen.value = if (comparisonReturn.value) "comparison" else "home"
-        comparisonReturn.value = false
+        val target = outputReturn.value
+        screen.value = target ?: if (comparisonReturn.value) "comparison" else "home"
+        outputReturn.value = null
+        if (target == null) comparisonReturn.value = false
     }
 
     val replacement = MutableStateFlow<String?>(null)
@@ -262,6 +370,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun open(doc: DocumentRow) {
         if (busy.value) return
         comparisonReturn.value = false
+        outputReturn.value = null
         libraryFocus.value = null
         editorPageTarget.value = null
         viewModelScope.launch(Dispatchers.IO) {
@@ -990,6 +1099,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun previewOutput(file: File) =
         perform("正在打开 PDF") {
+            outputReturn.value = screen.value.takeIf { it == "assembly" }
             val doc = repo.registerPdf(file, file.nameWithoutExtension)
             selected.value = doc
             output.value = null
@@ -1154,6 +1264,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun backup() =
         perform("正在离线备份") {
+            assembly.flush()
             val file = File(repo.exports, "PaperForge-backup-${System.currentTimeMillis()}.zip")
             BackupStore.backup(repo, file)
             outputLocked.value = false
@@ -1182,9 +1293,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun restoreBackup(uri: Uri) =
         perform("正在恢复备份") {
+            assembly.cancelLoading()
+            assembly.flush()
             val count = BackupStore.restore(repo, uri)
             canUndoNames.value = LibraryPreferences(repo.context).renameUndo().isNotEmpty()
             comparison.refreshFamilies()
+            assembly.reload()
             messages.send("已恢复 $count 份文档")
         }
 
