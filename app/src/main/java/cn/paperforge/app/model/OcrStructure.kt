@@ -89,6 +89,8 @@ data class OcrCell(
     val corners: List<PointN>,
     val text: String,
     val lineIndices: List<Int> = emptyList(),
+    val corrected: Boolean = false,
+    val textSource: String = "page",
 ) {
     fun json() =
         JSONObject()
@@ -99,6 +101,8 @@ data class OcrCell(
             .put("corners", OcrStructure.points(corners))
             .put("text", text)
             .put("lineIndices", JSONArray(lineIndices))
+            .put("corrected", corrected)
+            .put("textSource", textSource)
 
     companion object {
         fun decode(o: JSONObject) =
@@ -112,6 +116,8 @@ data class OcrCell(
                 o.optJSONArray("lineIndices")
                     ?.let { a -> List(a.length()) { a.getInt(it) } }
                     .orEmpty(),
+                o.optBoolean("corrected"),
+                o.optString("textSource", "page"),
             )
     }
 }

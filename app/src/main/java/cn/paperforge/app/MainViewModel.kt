@@ -481,12 +481,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             row.type == "CONVERT" &&
                 org.json.JSONObject(row.payload).optJSONObject("input")?.optBoolean("draft") == true
         ) {
-            if (
-                org.json.JSONObject(row.payload).getJSONObject("input").optString("kind") ==
-                    "LONG_IMAGES"
-            )
-                longImages.open(row)
-            else loadTextConversion(row)
+            loadConversionDraft(row)
             return
         }
         appScope.launch {
@@ -529,12 +524,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun loadConversionDraft(row: LocalTaskRow) {
-        if (
-            org.json.JSONObject(row.payload).getJSONObject("input").optString("kind") ==
-                "LONG_IMAGES"
-        )
-            longImages.open(row)
-        else loadTextConversion(row)
+        when (org.json.JSONObject(row.payload).getJSONObject("input").optString("kind")) {
+            "LONG_IMAGES" -> longImages.open(row)
+            "TABLE_REVIEW" -> perform("打开表格草稿") { tableWorkspace.open(row) }
+            else -> loadTextConversion(row)
+        }
     }
 
     fun openTask(row: LocalTaskRow, retake: Boolean = false) {
@@ -554,7 +548,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                         ?.let(::File)
                         ?.takeIf { it.isFile }
                 if (file != null) {
-                    if (row.type == "OCR") {
+                    if (
+                        row.type == "CONVERT" &&
+                            org.json
+                                .JSONObject(row.payload)
+                                .getJSONObject("input")
+                                .optString("kind") == "TABLE_ANALYZE"
+                    ) {
+                        tableWorkspace.result(row)
+                    } else if (row.type == "OCR") {
                         ocrPage = null
                         canCorrectOcr.value = false
                         ocrVersions.value = emptyList()
@@ -905,7 +907,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     .getWorkInfoByIdFlow(id)
                     .filterNotNull()
                     .takeWhile { info ->
-                        progress.value = "导出 PDF · ${info.progress.getInt("progress",0)}%"
+                        val detail =
+                            localTasks.value.firstOrNull { it.workId == id.toString() }?.detail
+                                ?: "处理文件"
+                        progress.value = "$detail · ${info.progress.getInt("progress",0)}%"
                         if (info.state.isFinished) {
                             busy.value = false
                             progress.value = ""
@@ -926,6 +931,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                                         ocrVersions.value = emptyList()
                                         canCorrectOcr.value = false
                                         ocr.value = withContext(Dispatchers.IO) { file.readText() }
+                                    }
+                                    "TABLE_REVIEW" -> {
+                                        val row =
+                                            repo.dao.task(info.outputData.getString("taskId") ?: "")
+                                                ?: error("表格记录已移除")
+                                        withContext(Dispatchers.IO) { tableWorkspace.result(row) }
                                     }
                                     "SAVE" -> messages.send("文件已保存并核对")
                                     else -> {
@@ -1104,8 +1115,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 }
         }
 
-    val tableReview = MutableStateFlow<List<PhoneTables.Table>>(emptyList())
-
     fun exportOcrStructure(page: PageRow) =
         perform("正在导出结构数据") {
             val current =
@@ -1124,61 +1133,43 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             publishOutput(file)
         }
 
-    private var tableOutputCsv = false
+    val tableWorkspace =
+        TableWorkspace(
+            repo,
+            viewModelScope,
+            { screen.value = it },
+            ::watchExport,
+            { messages.send(it) },
+        )
 
-    fun phoneTables(uri: Uri, csv: Boolean, options: org.json.JSONObject) =
-        perform("正在手机上识别表格") {
-            val name = repo.displayName(uri)
-            val input =
-                File(
-                    getApplication<Application>().cacheDir,
-                    "table-${UUID.randomUUID()}.${name.substringAfterLast('.', "pdf")}",
-                )
-            try {
-                getApplication<Application>().contentResolver.openInputStream(uri)!!.use { source ->
-                    input.outputStream().use { source.copyTo(it) }
+    fun phoneTables(uri: Uri, csv: Boolean, options: org.json.JSONObject) {
+        if (!busy.compareAndSet(false, true)) return
+        progress.value = "保留表格原件"
+        task =
+            viewModelScope.launch {
+                var queued: UUID? = null
+                try {
+                    queued =
+                        withContext(Dispatchers.IO) {
+                            val retained = ConversionInputs.retain(repo, listOf(uri)).single()
+                            tableWorkspace.analyze(
+                                retained.first,
+                                retained.second,
+                                org.json.JSONObject(options.toString()).put("outputCsv", csv),
+                                notify = false,
+                            )
+                        }
+                } catch (cancel: CancellationException) {
+                    throw cancel
+                } catch (error: Exception) {
+                    messages.send(error.message ?: "表格未能开始识别")
+                } finally {
+                    busy.value = false
+                    progress.value = ""
                 }
-                tableReview.value =
-                    PhoneTables.extract(input, ocrEngine, options) { progress.value = it }
-                tableOutputCsv = csv
-                screen.value = "tables"
-            } finally {
-                input.delete()
-            }
-        }
-
-    fun editTableCell(index: Int, row: Int, column: Int, text: String) {
-        tableReview.value =
-            tableReview.value.mapIndexed { i, table ->
-                if (i != index) table
-                else
-                    table.copy(
-                        rows =
-                            table.rows.mapIndexed { r, values ->
-                                values.mapIndexed { c, value ->
-                                    if (r == row && c == column) text else value
-                                }
-                            },
-                        cells =
-                            table.cells.map {
-                                if (it.row == row && it.column == column) it.copy(text = text)
-                                else it
-                            },
-                    )
+                queued?.let(::watchExport)
             }
     }
-
-    fun exportPhoneTables(csv: Boolean = tableOutputCsv) =
-        perform("正在导出可编辑表格") {
-            val file =
-                File(
-                    repo.exports,
-                    "PaperForge-tables-${System.currentTimeMillis()}.${if (csv) "zip" else "xlsx"}",
-                )
-            PhoneTables.write(tableReview.value, file, csv)
-            outputLocked.value = false
-            publishOutput(file)
-        }
 
     fun officeResult(uri: Uri) =
         perform("正在接收手机 Office 结果") {

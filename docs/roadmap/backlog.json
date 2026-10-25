@@ -560,7 +560,7 @@
       ],
       "scope": "区域行列、单元格合并与原图对照",
       "acceptance": "输出真单元格，先保护编号和金额",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "OCR08",
@@ -715,7 +715,7 @@
       ],
       "scope": "单元格预览、列类型、分隔编码和前导零",
       "acceptance": "Excel粘贴后编号和金额未变",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "CVT10",
@@ -1252,9 +1252,9 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 55,
-    "planned": 22,
-    "partial": 21
+    "done": 57,
+    "planned": 21,
+    "partial": 20
   },
   "updated": "2026-10-26"
 }

@@ -381,6 +381,10 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 BackHandler(screen != "home" && !busy) {
+                    if (screen == "tables") {
+                        vm.tableWorkspace.close()
+                        return@BackHandler
+                    }
                     if (screen == "assembly") {
                         vm.closeAssembly()
                         return@BackHandler

@@ -28,7 +28,13 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                 handle = job
                 if (job.completed)
                     return@withContext Result.success(
-                        workDataOf("path" to job.result!!.path, "mode" to "CONVERT")
+                        workDataOf(
+                            "path" to job.result!!.path,
+                            "mode" to
+                                if (job.input.getString("kind") == "TABLE_ANALYZE") "TABLE_REVIEW"
+                                else "CONVERT",
+                            "taskId" to job.row.id,
+                        )
                     )
                 require(!job.input.getBoolean("draft", false)) { "请先完成草稿编辑" }
                 DocumentJobs.progress(repo, job, job.row.progress, "等待后台资源")
@@ -42,6 +48,24 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                 var completed = 0
                 val file: File
                 when (job.input.getString("kind")) {
+                    "TABLE_ANALYZE" -> {
+                        file =
+                            TableJobs.analyze(
+                                repo,
+                                job,
+                                (applicationContext as PaperForgeApp).ocrEngine,
+                            ) { percent, detail ->
+                                DocumentJobs.progress(repo, job, percent, detail)
+                                setProgress(workDataOf("progress" to percent))
+                            }
+                        output = file
+                        completed = TableData.decode(JSONObject(file.readText())).size
+                    }
+                    "TABLE_EXPORT" -> {
+                        file = TableJobs.export(repo, job)
+                        output = file
+                        completed = 1
+                    }
                     "TEXT_PDF" -> {
                         file =
                             File(
@@ -246,7 +270,7 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                                 )
                             }
                         }
-                        repo.recordOutput(file)
+                        if (job.input.getString("kind") != "TABLE_ANALYZE") repo.recordOutput(file)
                         DocumentJobs.complete(
                             repo,
                             job,
@@ -260,7 +284,10 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                 Result.success(
                     workDataOf(
                         "path" to file.path,
-                        "mode" to "CONVERT",
+                        "mode" to
+                            if (job.input.getString("kind") == "TABLE_ANALYZE") "TABLE_REVIEW"
+                            else "CONVERT",
+                        "taskId" to job.row.id,
                         "partial" to (failed > 0),
                         "completed" to completed,
                         "failed" to failed,

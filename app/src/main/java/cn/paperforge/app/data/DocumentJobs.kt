@@ -49,7 +49,11 @@ object DocumentJobs {
             "OCR" -> "$source · 全文识别"
             "SAVE" -> "$source · 保存到所选位置"
             "CONVERT" ->
-                "$source · ${if(input.getString("kind")=="TEXT_PDF") "文字转 PDF" else "图片转换"}"
+                "$source · ${when(input.getString("kind")) { "TEXT_PDF" -> "文字转 PDF"
+ "TABLE_ANALYZE" -> "识别表格"
+ "TABLE_EXPORT" -> "导出表格"
+ "TABLE_REVIEW" -> "表格草稿"
+ else -> "图片转换" }}"
             else -> "$source · ${modeName(input.getString("mode"))}"
         }
 
@@ -95,7 +99,8 @@ object DocumentJobs {
         val needsOcr =
             type == "OCR" ||
                 type == "SCAN_EXPORT" && input.getBoolean("searchable", false) ||
-                type == "PDF" && input.getString("mode") == "searchable"
+                type == "PDF" && input.getString("mode") == "searchable" ||
+                type == "CONVERT" && input.getString("kind") == "TABLE_ANALYZE"
         if (needsOcr && !input.json.has("ocrRequest")) {
             val app = repo.context.applicationContext as cn.paperforge.app.PaperForgeApp
             val request =

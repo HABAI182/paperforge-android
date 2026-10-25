@@ -1,0 +1,88 @@
+{
+  "checked": "2026-10-26",
+  "cards": [
+    "OCR07",
+    "CVT09"
+  ],
+  "implemented": [
+    "Persistent table drafts retain source and grid/edits/export settings; immutable export snapshots and Room resources survive app restart",
+    "WorkManager analysis/export share background resource budget; per-page checkpoints bind source SHA256, frozen OCR request/options and table algorithm version; repeat result opening reuses its matching draft",
+    "Region selection transforms native/OCR tokens and detected cell boxes back into full source-page coordinates; source panel focuses the real table, source-cell tap opens its original-image crop",
+    "Separator coverage and rectangular unions infer row/column spans; contour fallback retained for grids without usable separator axes",
+    "Paddle line-only OCR recognizes actual cell images (up to400 cells per region) instead of fabricating word geometry; good native PDF cell text retained, image cells still OCR when only header/native text exists elsewhere",
+    "XLSX typed text/number/2decimal columns; invalid numeric input remains text; CSV/TSV delimiter and UTF8BOM/UTF16LE/GB18030, optional constant Excel text wrappers",
+    "Clipboard TSV preserves original values via constant text wrappers; raw grid/coordinates/correction/source/method metadata accompany exports"
+  ],
+  "focusedChecks": [
+    {
+      "tests": "TableWorkspaceFlowTest first three methods after separator fix",
+      "seconds": 15.511,
+      "result": "passed",
+      "coverage": [
+        "native merged grid; actual UI crop rectangle recovers all13 cells and2 merges",
+        "per-page retry reuses same checkpoint paths and SHA",
+        "draft edit/reopen and4 actual WorkManager exports",
+        "Paddle scanned table 00123/120.50 with13 real cell crops and no fabricated words",
+        "native-header-only PDF still recognizes image table"
+      ]
+    },
+    {
+      "test": "gridSeparatorsKeepHorizontalAndVerticalMergedCells",
+      "seconds": 0.174,
+      "result": "passed",
+      "coverage": "4x3 raster grid,10 actual cells, one horizontal and one vertical merge"
+    }
+  ],
+  "independentReadback": {
+    "reader": "openpyxl3.1.5 + Python csv",
+    "XLSX": {
+      "B3": "00042",
+      "B3type": "string",
+      "C3value": 120.5,
+      "C3type": "number",
+      "C3numberFormat": "0.00",
+      "mergedRanges": [
+        "A1:B1",
+        "A5:B5"
+      ]
+    },
+    "textExports": [
+      "semicolon UTF8BOM returns constant text =\"00042\" and raw amount120.50",
+      "tab UTF16LE returns00042 and120.50",
+      "comma GB18030 returns Chinese/tab/quote/newline header and raw values",
+      "structure JSON retains original strings and source SHA"
+    ]
+  },
+  "actualUI": [
+    "Android picker import -> real waiting/progress -> table workbench",
+    "focused source cell tap maps correct row3/column2 and original00123 crop",
+    "whole-page region drag -> new analysis draft with all original5x3 values",
+    "column type/export format/encoding menus accessible",
+    "actual system clipboard editor shows constant text formula TSV for00123 and120.50",
+    "actual XLSX generation shows file/share/save-as result",
+    "edit to00999 -> force-stop -> reopen conversion draft still00999"
+  ],
+  "bugsFixed": [
+    "Initial preview effect captured the state delegate and recycled its newly loaded bitmap; now closes over the owned bitmap value",
+    "Contour leaf filtering lost cells after tiny ROI rounding changes; separator reconstruction retains the complete grid at the actual gesture rectangle",
+    "Initial queued work observer could be reset by generic perform cleanup; queue observation now starts after import cleanup",
+    "Analysis artifacts are task resources rather than ordinary user output records"
+  ],
+  "evidence": {
+    "sourceSha256": "5ba4f1f734babbe54f7098d0d3f4fadea05634af7a90bb7d8454698dc29bb075",
+    "checkpointPagesReused": 2,
+    "spans": {
+      "rows": 4,
+      "columns": 3,
+      "cells": 10,
+      "algorithm": "grid-separators-v2"
+    }
+  },
+  "limits": [
+    "Fixtures are controlled PDFs/scans and vector grids, not a broad photographed-table corpus or physical ARM64 acceptance",
+    "Strong perspective/curvature should be corrected in scanning first; partial/broken separators can still need manual text correction",
+    "CSV/TSV is a data package; text wrapper is an explicit compatibility mode, not a claim of running desktop Excel here",
+    "Joined tables retain cell sourcePage; full-page OCR IR is serialized only for single-page tables",
+    "Phone Office and intermediate PDF/ZIP recovery remain later JOB01 work; no release/tag created"
+  ]
+}
