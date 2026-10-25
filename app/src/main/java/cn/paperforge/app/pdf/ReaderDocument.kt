@@ -3,6 +3,7 @@ package cn.paperforge.app.pdf
 import cn.paperforge.app.model.PointN
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.pdmodel.interactive.action.PDActionGoTo
+import com.tom_roush.pdfbox.pdmodel.interactive.action.PDActionNamed
 import com.tom_roush.pdfbox.pdmodel.interactive.action.PDActionURI
 import com.tom_roush.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink
 import com.tom_roush.pdfbox.pdmodel.interactive.documentnavigation.destination.*
@@ -11,7 +12,12 @@ import com.tom_roush.pdfbox.text.PDFTextStripper
 import com.tom_roush.pdfbox.text.TextPosition
 import java.io.File
 
-data class ReaderOutline(val title: String, val page: Int, val depth: Int)
+data class ReaderOutline(
+    val title: String,
+    val page: Int,
+    val depth: Int,
+    val destination: ReaderDestination = ReaderDestination(page),
+)
 
 data class ReaderLink(
     val page: Int?,
@@ -20,6 +26,7 @@ data class ReaderLink(
     val top: Float,
     val right: Float,
     val bottom: Float,
+    val destination: ReaderDestination? = null,
 )
 
 data class ReaderInfo(
@@ -47,13 +54,24 @@ object ReaderDocument {
                 var item = start
                 while (item != null && result.size < 10000 && visited.add(item.cosObject)) {
                     val entry = item
-                    runCatching { entry.findDestinationPage(doc) }
-                        .getOrNull()
-                        ?.let { target ->
-                            val page = doc.pages.indexOf(target)
-                            if (page >= 0)
-                                result.add(ReaderOutline(entry.title ?: "未命名章节", page, depth))
-                        }
+                    val destination =
+                        runCatching {
+                                readerDestination(
+                                    doc,
+                                    (entry.action as? PDActionGoTo)?.destination
+                                        ?: entry.destination,
+                                )
+                            }
+                            .getOrNull()
+                    if (destination != null)
+                        result.add(
+                            ReaderOutline(
+                                entry.title ?: "未命名章节",
+                                destination.page,
+                                depth,
+                                destination,
+                            )
+                        )
                     visit(entry.firstChild, depth + 1)
                     item = entry.nextSibling
                 }
@@ -69,20 +87,22 @@ object ReaderDocument {
         PDDocument.load(file).use { doc ->
             val page = doc.getPage(index)
             val crop = page.cropBox
-            fun target(destination: PDDestination?): Int? {
-                val actual =
-                    when (destination) {
-                        is PDNamedDestination ->
-                            doc.documentCatalog.findNamedDestinationPage(destination)
-                        is PDPageDestination -> destination
-                        else -> null
-                    } ?: return null
-                return actual.page?.let { doc.pages.indexOf(it) }?.takeIf { it >= 0 }
-                    ?: actual.pageNumber.takeIf { it in 0 until doc.numberOfPages }
-            }
             page.annotations.filterIsInstance<PDAnnotationLink>().mapNotNull { link ->
                 val action = link.action
-                val internal = target((action as? PDActionGoTo)?.destination ?: link.destination)
+                val namedPage =
+                    when ((action as? PDActionNamed)?.n) {
+                        "FirstPage" -> 0
+                        "LastPage" -> doc.numberOfPages - 1
+                        "NextPage" -> (index + 1).coerceAtMost(doc.numberOfPages - 1)
+                        "PrevPage" -> (index - 1).coerceAtLeast(0)
+                        else -> null
+                    }
+                val destination =
+                    readerDestination(
+                        doc,
+                        (action as? PDActionGoTo)?.destination ?: link.destination,
+                    ) ?: namedPage?.let { ReaderDestination(it) }
+                val internal = destination?.page
                 val uri = (action as? PDActionURI)?.uri
                 if (internal == null && uri == null) return@mapNotNull null
                 val r = link.rectangle
@@ -110,6 +130,7 @@ object ReaderDocument {
                     points.minOf { it.y },
                     points.maxOf { it.x },
                     points.maxOf { it.y },
+                    destination,
                 )
             }
         }

@@ -34,7 +34,7 @@ fun ReaderNavigationSheet(
     info: ReaderInfo,
     bookmarks: Set<Int>,
     page: Int,
-    onGoTo: (Int) -> Unit,
+    onGoTo: (ReaderDestination) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var tab by remember { mutableIntStateOf(0) }
@@ -64,7 +64,7 @@ fun ReaderNavigationSheet(
                         itemsIndexed(info.outline) { _, entry ->
                             TextButton(
                                 onClick = {
-                                    onGoTo(entry.page)
+                                    onGoTo(entry.destination)
                                     onDismiss()
                                 },
                                 modifier =
@@ -82,7 +82,7 @@ fun ReaderNavigationSheet(
                         itemsIndexed(bookmarks.sorted()) { _, index ->
                             TextButton(
                                 onClick = {
-                                    onGoTo(index)
+                                    onGoTo(ReaderDestination(index))
                                     onDismiss()
                                 }
                             ) {
@@ -99,7 +99,7 @@ fun ReaderNavigationSheet(
                             TextButton(
                                 onClick = {
                                     if (link.page != null) {
-                                        onGoTo(link.page)
+                                        onGoTo(link.destination ?: ReaderDestination(link.page))
                                         onDismiss()
                                     } else
                                         link.uri?.let { uri ->

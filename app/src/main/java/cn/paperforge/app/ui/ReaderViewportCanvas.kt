@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsPropertyKey
 import androidx.compose.ui.semantics.semantics
@@ -36,6 +37,7 @@ import kotlinx.coroutines.withContext
 internal data class PageTransform(val zoom: Float = 1f, val x: Float = 0f, val y: Float = 0f)
 
 val PdfTileCountKey = SemanticsPropertyKey<Int>("PdfTileCount")
+val PdfViewTransformKey = SemanticsPropertyKey<List<Float>>("PdfViewTransform")
 
 @Composable
 internal fun ReaderPage(
@@ -56,6 +58,9 @@ internal fun ReaderPage(
     fitWidth: Boolean = false,
     initializeAtTop: Boolean = false,
     preserveImageColor: Boolean = true,
+    navigationRequest: ReaderNavigationRequest? = null,
+    visibleHeight: Float = 0f,
+    onNavigated: (ReaderPlacement) -> Unit = {},
 ) {
     val bitmap by
         produceState<Bitmap?>(null, session, index) {
@@ -101,8 +106,24 @@ internal fun ReaderPage(
     val ratio = dimensions.first.toFloat() * viewport.width / (dimensions.second * viewport.height)
     val frame =
         ReadingFrame.fit(rootSize.width.toFloat(), rootSize.height.toFloat(), ratio, fitWidth)
+    val density = LocalDensity.current.density
+    LaunchedEffect(navigationRequest, frame, viewport, visibleHeight) {
+        if (navigationRequest != null && rootSize.width > 0 && visibleHeight > 0) {
+            onNavigated(
+                placeReaderDestination(
+                    navigationRequest,
+                    frame,
+                    viewport,
+                    dimensions.first.toFloat(),
+                    density,
+                    paged,
+                    visibleHeight,
+                )
+            )
+        }
+    }
     LaunchedEffect(frame, viewport, fitWidth) {
-        if (rootSize.width > 0)
+        if (rootSize.width > 0 && navigationRequest == null)
             change(
                 current.copy(
                     x = current.x.coerceIn(-frame.limitX(current.zoom), frame.limitX(current.zoom)),
@@ -177,6 +198,9 @@ internal fun ReaderPage(
     BoxWithConstraints(
         (if (paged) Modifier.fillMaxSize() else Modifier.fillMaxWidth().aspectRatio(ratio))
             .testTag("reader-viewport-$index")
+            .semantics {
+                this[PdfViewTransformKey] = listOf(transform.zoom, transform.x, transform.y)
+            }
             .onSizeChanged { rootSize = it }
             .clipToBounds()
             .pointerInput(session, index) {
@@ -277,7 +301,7 @@ internal fun ReaderPage(
                             tapJob?.cancel()
                             lastTap = 0
                             if (inside) longPress(point)
-                        } else if (eventTime - lastTap < 280) {
+                        } else if (lastTap > 0 && eventTime - lastTap < 280) {
                             tapJob?.cancel()
                             if (current.zoom > 1.01f) change(PageTransform())
                             else {

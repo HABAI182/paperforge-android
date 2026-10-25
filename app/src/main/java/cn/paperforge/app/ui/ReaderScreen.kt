@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
@@ -34,6 +35,7 @@ import cn.paperforge.app.ReaderPreferences
 import cn.paperforge.app.model.PageSpreads
 import cn.paperforge.app.model.PointN
 import cn.paperforge.app.pdf.PdfSearch
+import cn.paperforge.app.pdf.ReaderDestination
 import cn.paperforge.app.pdf.ReaderDocument
 import cn.paperforge.app.pdf.ReaderInfo
 import cn.paperforge.app.pdf.ReaderLink
@@ -69,7 +71,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
         var opened: PdfSession? = null
         try {
             withContext(Dispatchers.IO) { opened = file?.let(::PdfSession) }
-            session = opened
+            withContext(Dispatchers.Main.immediate) { session = opened }
             kotlinx.coroutines.awaitCancellation()
         } catch (cancel: kotlinx.coroutines.CancellationException) {
             throw cancel
@@ -120,7 +122,10 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
     var textPage by remember { mutableStateOf<Int?>(null) }
     var textPoint by remember { mutableStateOf<PointN?>(null) }
     var focusedText by remember { mutableStateOf<Pair<Int, ReaderTextBlock>?>(null) }
-    val navigationBack = remember { mutableStateListOf<ReaderPosition>() }
+    val navigationBack =
+        rememberSaveable(saver = ReaderHistorySaver) { mutableStateListOf<ReaderPosition>() }
+    var navigationRequest by remember { mutableStateOf<ReaderNavigationRequest?>(null) }
+    var readerArea by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     val documentInfo by
         produceState(ReaderInfo(), file) {
@@ -225,6 +230,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
     val readerTarget by vm.readerTarget.collectAsState()
     fun goTo(index: Int) {
         val n = index.coerceIn(0, ((session?.count ?: 1) - 1).coerceAtLeast(0))
+        navigationRequest = null
         activePage = n
         scope.launch {
             if (horizontal) pager.scrollToPage(PageSpreads.groupOf(spreads, n))
@@ -241,14 +247,26 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                 }
         }
     }
-    fun navigate(index: Int) {
+    fun navigate(target: ReaderDestination, originPage: Int = page) {
+        val source = transforms[originPage] ?: PageTransform()
         navigationBack.add(
-            latestPosition.copy(offset = if (horizontal) 0 else list.firstVisibleItemScrollOffset)
+            latestPosition.copy(
+                page = originPage,
+                zoom = source.zoom,
+                panX = source.x,
+                panY = source.y,
+                offset = if (horizontal) 0 else list.firstVisibleItemScrollOffset,
+            )
         )
-        goTo(index)
+        if (navigationBack.size > 64) navigationBack.removeAt(0)
+        goTo(target.page)
+        if (target.fit != "Keep")
+            navigationRequest = ReaderNavigationRequest(target, navigationBack.last())
     }
     fun returnToAnchor() {
         val previous = navigationBack.removeLastOrNull() ?: return
+        navigationRequest = null
+        paperTone = previous.tone
         transforms[previous.page] = PageTransform(previous.zoom, previous.panX, previous.panY)
         horizontal = previous.horizontal
         activePage = previous.page
@@ -266,7 +284,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
             val link =
                 links.firstOrNull { point.x in it.left..it.right && point.y in it.top..it.bottom }
                     ?: return false
-            if (link.page != null) navigate(link.page)
+            if (link.page != null) navigate(link.destination ?: ReaderDestination(link.page), index)
             else
                 link.uri?.let { uri ->
                     runCatching { uriHandler.openUri(uri) }
@@ -327,6 +345,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
             vm.readerTarget.value = null
         }
     }
+    BackHandler(!fullscreen && !search && navigationBack.isNotEmpty()) { returnToAnchor() }
     BackHandler(fullscreen || search) {
         if (search) search = false
         else {
@@ -399,6 +418,9 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                             }
                         ) {
                             Icon(Icons.Default.Search, "搜索文字")
+                        }
+                        IconButton(onClick = { navigation = true }) {
+                            Icon(Icons.Default.FormatListBulleted, "目录与链接")
                         }
                         IconButton(onClick = { appearance = true }) {
                             Icon(Icons.Default.Tune, "阅读设置")
@@ -483,6 +505,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
             Box(
                 Modifier.weight(1f)
                     .fillMaxWidth()
+                    .then(Modifier.onSizeChanged { readerArea = it })
                     .background(
                         if (paperTone == 2) Color(0xFF181C1D)
                         else MaterialTheme.colorScheme.surfaceContainer
@@ -555,6 +578,13 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                                         fitWidth = viewOptions.fitWidth,
                                         initializeAtTop = !transforms.containsKey(index),
                                         preserveImageColor = viewOptions.preserveImageColor,
+                                        navigationRequest =
+                                            navigationRequest?.takeIf { it.target.page == index },
+                                        visibleHeight = readerArea.height.toFloat(),
+                                        onNavigated = { placement ->
+                                            transforms[index] = placement.transform
+                                            navigationRequest = null
+                                        },
                                     )
                                 }
                             }
@@ -614,6 +644,14 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                                 fitWidth = viewOptions.fitWidth,
                                 initializeAtTop = !transforms.containsKey(index),
                                 preserveImageColor = viewOptions.preserveImageColor,
+                                navigationRequest =
+                                    navigationRequest?.takeIf { it.target.page == index },
+                                visibleHeight = readerArea.height.toFloat(),
+                                onNavigated = { placement ->
+                                    transforms[index] = placement.transform
+                                    navigationRequest = null
+                                    scope.launch { list.scrollToItem(index, placement.offset) }
+                                },
                             )
                         }
                     }
@@ -676,7 +714,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
         }
     }
     if (navigation && file != null)
-        ReaderNavigationSheet(file, documentInfo, bookmarks, page, ::navigate) {
+        ReaderNavigationSheet(file, documentInfo, bookmarks, page, { navigate(it) }) {
             navigation = false
         }
     textPage?.let { selectedPage ->

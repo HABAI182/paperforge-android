@@ -215,7 +215,7 @@
       ],
       "scope": "压缩/转换移入面板，保留搜索/目录/分享快捷动作",
       "acceptance": "普通阅读画布显著增加，功能仍可找到",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "R05",
@@ -280,7 +280,7 @@
       ],
       "scope": "内部/外部链接、跳转历史、回原段落",
       "acceptance": "多次链接跳转后能回到原锚点",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "R10",
@@ -1252,9 +1252,9 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 47,
+    "done": 49,
     "planned": 29,
-    "partial": 22
+    "partial": 20
   },
   "updated": "2026-10-25"
 }

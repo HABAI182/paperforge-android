@@ -1,0 +1,34 @@
+{
+  "feature": "precise reader link destinations and bounded return anchors",
+  "updated": "2026-10-25",
+  "focusedChecks": {
+    "nativeDestinationCases": "passed on first execution",
+    "actualCanvasAndContinuousUi": {
+      "passed": true,
+      "seconds": 13.397,
+      "test": "ReaderAnchorsFlowTest#twoCanvasLinksReturnToZoomedAnchorAfterRecreationAndContinuousJumpReturnsScroll"
+    }
+  },
+  "verified": [
+    "Named destinations and outline targets retain XYZ fractional values and null axes rather than only page numbers",
+    "Offset CropBox and90degree rotation swap FitH/V axes correctly;FitR regions and named NextPage parsed",
+    "Actual canvas follows2links, retains target zoom/pan, recreates Activity, then returns2steps to exact original zoom2/pan.12,-.15",
+    "Continuous reading jumps to target paragraph and returns to350px original item offset",
+    "Toolbar directory/link shortcut avoids opening display settings",
+    "64entry return history is saveable; Android Back can pop an anchor",
+    "Source PDF SHA256 unchanged"
+  ],
+  "fixes": [
+    "Place destination at visible top-left using negative viewport-half offset, then clamp to page edges",
+    "Publish opened reader session on Android main thread, avoiding test-clock recompose from IO",
+    "First tap needs an existing previous tap before it can count as a double tap",
+    "Use tapped physical-page transform when saving a facing-page origin"
+  ],
+  "limits": [
+    "Zoom uses the existing1to5range; CropBox bounds limit placement near page edges",
+    "FitB/BH/BV use visible page bounds rather than computing precise painted-content bounds",
+    "JavaScript and remote-file PDF actions are not executed; URI launch remains delegated to Android",
+    "No new physical-phone acceptance claimed; failed exploratory UI runs were followed only by this focused flow, not old suites"
+  ],
+  "releaseCreated": false
+}
