@@ -354,14 +354,15 @@ object BackupStore {
                 val histories =
                     (0 until h.length()).map { i ->
                         val old = h.getJSONObject(i)
-                        val before =
-                            HistoryState.map(old.getJSONObject("before").toString()) {
-                                page(it, ids.getValue(old.getString("documentId")))
+                        fun state(key: String) =
+                            HistoryState.remap(
+                                old.getJSONObject(key).toString(),
+                                { page(it, ids.getValue(old.getString("documentId"))) },
+                            ) { id ->
+                                pageIds.getOrPut(id) { UUID.randomUUID().toString() }
                             }
-                        val after =
-                            HistoryState.map(old.getJSONObject("after").toString()) {
-                                page(it, ids.getValue(old.getString("documentId")))
-                            }
+                        val before = state("before")
+                        val after = state("after")
                         EditHistory(
                             documentId = ids.getValue(old.getString("documentId")),
                             pageId =

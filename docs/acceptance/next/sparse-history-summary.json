@@ -1,0 +1,18 @@
+{
+  "feature": "sparse page-order history and legacy snapshot compatibility",
+  "updated": "2026-10-25",
+  "focusedTest": {"passed": true, "tests": 1, "seconds": 9.348},
+  "verified": [
+    "24 pages with400 OCR lines per recognized page would exceed2MiB as a whole snapshot",
+    "new reorder history stores page IDs rather than repeated OCR layouts; both states together stay below12KB",
+    "undo/redo preserves raw captures added later and first automatic OCR arriving after reorder",
+    "backup remaps order-only page IDs and restored-copy undo leaves source document untouched",
+    "sparse page-delete undo preserves later captures",
+    "readable legacy whole-document snapshots also preserve later pages and OCR for content-unchanged pages"
+  ],
+  "limits": [
+    "existing legacy records already too large for SQLite CursorWindow are not automatically migrated by this change",
+    "the check exercises persistence and history, without running OCR inference, scanning benchmarks or unrelated suites"
+  ],
+  "releaseCreated": false
+}

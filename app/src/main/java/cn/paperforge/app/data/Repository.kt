@@ -317,7 +317,26 @@ class Repository(val context: Context, val database: PaperDatabase) {
                     ocrLayout = layout?.copy(sourceRevision = revision)?.encode(),
                 )
             }
-            if (HistoryState.isDelta(encoded)) {
+            if (HistoryState.order(encoded) != null || HistoryState.isSnapshot(encoded)) {
+                val before = HistoryState.pages(history.beforeJson).associateBy { it.id }
+                val after = HistoryState.pages(history.afterJson).associateBy { it.id }
+                val touched =
+                    (before.keys + after.keys)
+                        .filter { !HistoryState.sameContent(before[it], after[it]) }
+                        .toSet()
+                val current = currentByDoc.getValue(id)
+                touched.forEach { dao.deletePage(it) }
+                val working = current.filterKeys { it !in touched }.toMutableMap()
+                restored
+                    .filter { it.id in touched }
+                    .forEach { page -> working[page.id] = restore(page, current) }
+                val desired =
+                    HistoryState.order(encoded) ?: restored.sortedBy { it.position }.map { it.id }
+                val all =
+                    (desired.mapNotNull { working[it] } +
+                        working.values.filter { it.id !in desired }.sortedBy { it.position })
+                all.forEachIndexed { index, page -> dao.putPage(page.copy(position = index)) }
+            } else if (HistoryState.isDelta(encoded)) {
                 val touched =
                     (HistoryState.pages(history.beforeJson) + HistoryState.pages(history.afterJson))
                         .map { it.id }
@@ -343,10 +362,6 @@ class Repository(val context: Context, val database: PaperDatabase) {
                         dao.putPage(page.copy(position = index))
                     }
                 }
-            } else if (HistoryState.isSnapshot(encoded)) {
-                val current = currentByDoc.getValue(id)
-                current.keys.forEach { dao.deletePage(it) }
-                restored.forEach { p -> dao.putPage(restore(p, current)) }
             } else {
                 val current = currentByDoc.getValue(id)
                 val p = restored.single()
@@ -365,12 +380,20 @@ class Repository(val context: Context, val database: PaperDatabase) {
     ) {
         dao.clearRedo(id)
         val ordered = after.mapIndexed { index, p -> p.copy(position = index) }
+        val previous = before.associateBy { it.id }
+        val next = ordered.associateBy { it.id }
+        val touched =
+            (previous.keys + next.keys)
+                .filter { !HistoryState.sameContent(previous[it], next[it]) }
+                .toSet()
         dao.addHistory(
             EditHistory(
                 documentId = id,
                 pageId = pageId,
-                beforeJson = HistoryState.snapshot(before),
-                afterJson = HistoryState.snapshot(ordered),
+                beforeJson =
+                    HistoryState.ordered(before.filter { it.id in touched }, before.map { it.id }),
+                afterJson =
+                    HistoryState.ordered(ordered.filter { it.id in touched }, ordered.map { it.id }),
             )
         )
         val retained = ordered.map { it.id }.toSet()
@@ -384,7 +407,12 @@ class Repository(val context: Context, val database: PaperDatabase) {
             val before = dao.pages(id)
             require(before.map { it.id }.toSet() == order.map { it.id }.toSet()) { "页面列表已变化，请重新排序" }
             if (before.map { it.id } != order.map { it.id })
-                replacePages(id, before, order, order.firstOrNull()?.id ?: "order")
+                replacePages(
+                    id,
+                    before,
+                    order.map { previous -> before.first { it.id == previous.id } },
+                    order.firstOrNull()?.id ?: "order",
+                )
         }
 
     suspend fun deletePage(page: PageRow) =
