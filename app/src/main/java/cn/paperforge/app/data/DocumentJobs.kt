@@ -92,6 +92,22 @@ object DocumentJobs {
         input: JobInput,
         workId: UUID = UUID.randomUUID(),
     ): LocalTaskRow {
+        val needsOcr =
+            type == "OCR" ||
+                type == "SCAN_EXPORT" && input.getBoolean("searchable", false) ||
+                type == "PDF" && input.getString("mode") == "searchable"
+        if (needsOcr && !input.json.has("ocrRequest")) {
+            val app = repo.context.applicationContext as cn.paperforge.app.PaperForgeApp
+            val request =
+                cn.paperforge.app.ocr.OcrRequest.current(
+                    app.ocrEngine.id,
+                    input.getBoolean(
+                        "chinese",
+                        cn.paperforge.app.UserSettings.string("ocrLanguage", "CHINESE") != "LATIN",
+                    ),
+                )
+            input.json.put("ocrRequest", request.json())
+        }
         val doc = input.getString("document")?.let { repo.dao.document(it) }
         val files = mutableListOf<PageResource>()
         fun resource(id: String, path: String?) {

@@ -1,6 +1,6 @@
 {
   "version": "next-development",
-  "updated": "2026-10-25",
+  "updated": "2026-10-26",
   "defaultExecution": "Android-local",
   "officeRequiresOptionalPhoneEngine": true,
   "computerRequired": false,
@@ -254,14 +254,14 @@
     {
       "id": "OCR05",
       "title": "第二引擎限时原型",
-      "status": "planned",
-      "note": "完整目标保留，未在本版标记完成"
+      "status": "done",
+      "note": "官方 PaddleOCR Android SDK + 固定版 PP-OCRv5 Mobile ONNX 已在 Android 本机接入；中英数字合成页及公开实拍路牌同图比较，路牌 CER 1/36 对 5/36，仅据此开放可选包而保留 ML Kit 默认；逐原生阶段调度与取消边界，真实 ARM64/广泛扫描精度仍待机主验收"
     },
     {
       "id": "OCR06",
       "title": "模型与语言包管理",
-      "status": "planned",
-      "note": "完整目标保留，未在本版标记完成"
+      "status": "done",
+      "note": "手机可导入/选择/查看版本来源/移除独立模型包，模型+字典+预处理由 SHA256 绑定；安装容量独立计入存储，缓存清理不删模型；排队 OCR/可搜索 PDF 固定引擎语言模式，缺包明确失败、重试可按当前配置；取消等待资源与安全移除、两页持久任务及实际UI通过"
     },
     {
       "id": "OCR07",
@@ -595,8 +595,8 @@
     }
   ],
   "counts": {
-    "done": 52,
-    "planned": 25,
+    "done": 54,
+    "planned": 23,
     "partial": 21
   },
   "releaseHold": true,

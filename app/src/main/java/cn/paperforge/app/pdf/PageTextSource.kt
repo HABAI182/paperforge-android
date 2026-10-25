@@ -63,9 +63,7 @@ object PageTextSource {
                 }
             val ocr =
                 try {
-                    withContext(kotlinx.coroutines.NonCancellable) {
-                        engine.recognizeBitmap(bitmap)
-                    }
+                    engine.snapshot().recognizeBitmap(bitmap)
                 } finally {
                     bitmap.recycle()
                 }

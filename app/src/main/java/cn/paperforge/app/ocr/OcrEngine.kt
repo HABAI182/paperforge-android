@@ -19,6 +19,11 @@ import kotlinx.coroutines.tasks.await
 interface OcrEngine {
     val id: String
 
+    fun snapshot(requestedId: String? = null): OcrEngine = this
+
+    fun signature(chinese: Boolean, options: OcrOptions) =
+        OcrRequest.signature(id, chinese, options)
+
     suspend fun layout(
         page: PageRow,
         chinese: Boolean = true,
@@ -159,6 +164,7 @@ class BundledOcrEngine : OcrEngine {
             run.finish(
                 result.copy(
                     sourceRevision = page.revision,
+                    requestSignature = signature(chinese, options),
                     deskewDegrees = if (page.deskewDegrees == 0f) result.deskewDegrees else 0f,
                 )
             )
@@ -171,7 +177,9 @@ class BundledOcrEngine : OcrEngine {
         source: Bitmap,
         chinese: Boolean,
         options: OcrOptions,
-    ): OcrLayout = recognizeBitmap(source, chinese, Run(options))
+    ): OcrLayout =
+        recognizeBitmap(source, chinese, Run(options))
+            .copy(requestSignature = signature(chinese, options))
 
     private suspend fun recognizeBitmap(source: Bitmap, chinese: Boolean, run: Run): OcrLayout {
         var best = run.pass(source, chinese, "original")

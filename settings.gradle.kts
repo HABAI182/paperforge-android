@@ -16,4 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "PaperForge"
 
-include(":app", ":office-engine")
+include(":app", ":office-engine", ":ocr-paddle")

@@ -38,6 +38,8 @@ data class OcrLayout(
     val recognitionMode: String = "legacy",
     val attempts: List<String> = emptyList(),
     val rawRecognition: String? = null,
+    val requestSignature: String = "",
+    val engineMetrics: Map<String, Double> = emptyMap(),
 ) {
     val text
         get() = lines.joinToString("\n") { it.text }
@@ -52,6 +54,8 @@ data class OcrLayout(
             .put("height", height)
             .put("engineId", engineId)
             .put("engineVersion", engineVersion)
+            .put("requestSignature", requestSignature)
+            .put("engineMetrics", JSONObject(engineMetrics))
             .put("sourceRevision", sourceRevision)
             .put("orientationCorrection", orientationCorrection)
             .put("deskewDegrees", deskewDegrees)
@@ -199,6 +203,16 @@ data class OcrLayout(
                 o.optJSONArray("attempts")?.let { a -> List(a.length()) { a.getString(it) } }
                     ?: emptyList(),
                 o.optJSONObject("rawRecognition")?.toString(),
+                o.optString("requestSignature", ""),
+                o.optJSONObject("engineMetrics")?.let { metrics ->
+                    metrics
+                        .keys()
+                        .asSequence()
+                        .mapNotNull { key ->
+                            metrics.optDouble(key).takeIf { it.isFinite() }?.let { key to it }
+                        }
+                        .toMap()
+                } ?: emptyMap(),
             )
         }
     }

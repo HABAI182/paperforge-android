@@ -395,6 +395,7 @@ class MainActivity : ComponentActivity() {
                             screen in listOf("annotations", "pdf-pages", "pdf-diagnostics") ->
                                 "reader"
                             screen == "text-compose" -> "convert"
+                            screen == "ocr-models" -> vm.ocrModelsReturn.value
                             screen == "storage" -> "settings"
                             screen == "profiles" -> vm.profileReturn.value
                             screen == "ocr-proof" -> "editor"
@@ -473,6 +474,7 @@ class MainActivity : ComponentActivity() {
                                 },
                             )
                         "settings" -> SettingsScreen(vm)
+                        "ocr-models" -> OcrModelsScreen(vm)
                         "storage" -> StorageScreen(vm)
                         "tasks" -> TaskCenterScreen(vm)
                         "profiles" -> SettingsProfilesScreen(vm)

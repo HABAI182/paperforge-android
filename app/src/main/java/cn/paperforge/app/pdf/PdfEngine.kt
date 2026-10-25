@@ -27,6 +27,7 @@ object PdfEngine {
         context: Context? = null,
         searchable: Boolean = false,
         resolution: String = "STANDARD",
+        ocrEngine: cn.paperforge.app.ocr.OcrEngine? = null,
         progress: suspend (Int) -> Unit = {},
     ) {
         require(pages.isNotEmpty()) { "请先添加页面" }
@@ -35,9 +36,17 @@ object PdfEngine {
                 val font = if (searchable) PdfTextLayer.font(requireNotNull(context), doc) else null
                 val engine =
                     if (searchable)
-                        (requireNotNull(context).applicationContext
-                                as cn.paperforge.app.PaperForgeApp)
-                            .ocrEngine
+                        ocrEngine
+                            ?: cn.paperforge.app.ocr.OcrRequest.current(
+                                    (requireNotNull(context).applicationContext
+                                            as cn.paperforge.app.PaperForgeApp)
+                                        .ocrEngine
+                                        .id
+                                )
+                                .bind(
+                                    (context.applicationContext as cn.paperforge.app.PaperForgeApp)
+                                        .ocrEngine
+                                )
                     else null
                 pages.forEachIndexed { index, page ->
                     coroutineContext.ensureActive()
@@ -48,8 +57,14 @@ object PdfEngine {
                                 ?.let { runCatching { OcrLayout.decode(it) }.getOrNull() }
                                 ?.takeIf {
                                     it.sourceRevision == page.revision &&
-                                        (it.engineId == engine.id ||
-                                            it.lines.any { line -> line.corrected })
+                                        (it.requestSignature ==
+                                            engine.signature(
+                                                cn.paperforge.app.UserSettings.string(
+                                                    "ocrLanguage",
+                                                    "CHINESE",
+                                                ) != "LATIN",
+                                                cn.paperforge.app.ocr.OcrOptions.current(),
+                                            ) || it.lines.any { line -> line.corrected })
                                 }
                                 ?: engine.layout(
                                     page,

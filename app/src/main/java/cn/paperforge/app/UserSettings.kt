@@ -33,6 +33,8 @@ object UserSettings {
             "brightness" to 0f,
             "contrast" to 1f,
             "ocrLanguage" to "CHINESE",
+            "ocrBackend" to "MLKIT",
+            "ocrPackId" to "",
             "ocrMode" to "BALANCED",
             "ocrVoting" to true,
             "searchable" to true,
@@ -150,6 +152,7 @@ object UserSettings {
                 "filter" to
                     setOf("ORIGINAL", "AUTO", "TEXT", "CLEAN", "GRAY", "BW", "COLOR", "WHITEBOARD"),
                 "ocrLanguage" to setOf("CHINESE", "LATIN"),
+                "ocrBackend" to setOf("MLKIT", "PADDLE"),
                 "ocrMode" to setOf("FAST", "BALANCED", "DETAILED"),
                 "paper" to setOf("Auto", "A4", "A5", "Letter"),
                 "resolution" to setOf("DRAFT", "STANDARD", "HIGH", "CUSTOM"),
@@ -182,6 +185,10 @@ object UserSettings {
                 key in options && value is String && value in options.getValue(key) ->
                     result.put(key, value)
                 key in booleans && value is Boolean -> result.put(key, value)
+                key == "ocrPackId" &&
+                    value is String &&
+                    (value.isEmpty() || value.matches(Regex("[a-z0-9-]{1,64}"))) ->
+                    result.put(key, value)
                 key == "homeTools" && value is String ->
                     result.put(
                         key,

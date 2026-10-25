@@ -10,9 +10,8 @@ import org.opencv.android.OpenCVLoader
 
 class PaperForgeApp : Application() {
     val backgroundScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    val ocrEngine: cn.paperforge.app.ocr.OcrEngine by lazy {
-        cn.paperforge.app.ocr.BundledOcrEngine()
-    }
+    val ocrModels by lazy { cn.paperforge.app.ocr.OcrModelPacks(this) }
+    val ocrEngine by lazy { cn.paperforge.app.ocr.RoutingOcrEngine(this, ocrModels) }
     lateinit var repository: Repository
         private set
 

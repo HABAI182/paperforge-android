@@ -87,6 +87,12 @@ class LibraryStorage(private val repo: Repository) {
                     "文档其他资源",
                     File(repo.context.filesDir, "documents").walkTopDown(),
                 )
+            buckets +=
+                bucket(
+                    "ocr-models",
+                    "离线识别模型包",
+                    File(repo.context.filesDir, "ocr-model-packs").walkTopDown(),
+                )
             val database = repo.context.getDatabasePath("paperforge.db")
             buckets +=
                 bucket(

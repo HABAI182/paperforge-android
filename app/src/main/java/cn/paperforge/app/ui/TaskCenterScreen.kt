@@ -191,7 +191,16 @@ fun TaskCenterScreen(vm: MainViewModel) {
                                     ) {
                                         if (!textDraft)
                                             TextButton(onClick = { vm.retryTask(row) }) {
-                                                Text("重试")
+                                                Text(
+                                                    if (
+                                                        org.json
+                                                            .JSONObject(row.payload)
+                                                            .optJSONObject("input")
+                                                            ?.has("ocrRequest") == true
+                                                    )
+                                                        "按当前识别设置重试"
+                                                    else "重试"
+                                                )
                                             }
                                         if (row.type == "CAPTURE")
                                             TextButton(onClick = { vm.openTask(row, true) }) {

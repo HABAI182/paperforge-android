@@ -1,0 +1,110 @@
+{
+  "checked": "2026-10-26",
+  "cards": [
+    "OCR05",
+    "OCR06"
+  ],
+  "device": "Android 35 AOSP x86_64 emulator; no ARM64 phone acceptance",
+  "source": {
+    "sdk": "https://github.com/PaddlePaddle/PaddleOCR/tree/dab3fe35379033fdcb2d0e9572fac0b36c9a9ebf/deploy/ppocr-android/ppocr-sdk",
+    "photo": "https://github.com/PaddlePaddle/PaddleOCR/blob/dab3fe35379033fdcb2d0e9572fac0b36c9a9ebf/deploy/ppocr-android/ppocr-sdk/src/androidTest/res/raw/android_ocr_benchmark_reference.png",
+    "photoRegion": [
+      0,
+      380,
+      600,
+      230
+    ],
+    "groundTruth": "Manually transcribed four sign lines from the source image; whitespace ignored, NFKC normalized. A photographed sign is not a scanned-page quality corpus."
+  },
+  "samples": [
+    {
+      "sample": "controlled-mixed",
+      "engine": "paddle",
+      "truth": "PaperForge 00123\nInvoice 2026-10-25\nTotal 00077.50\n纸张扫描与文字识别",
+      "recognized": "PaperForge 00123\nInvoice 2026-10-25\nTotal 00077.50\n纸张扫描与文字识别",
+      "wallMs": 649,
+      "nativeHeapBefore": 13536464,
+      "nativeHeapAfter": 343720528,
+      "errors": 0,
+      "referenceCharacters": 54,
+      "cer": 0.0,
+      "engineMetrics": {
+        "detectionMs": 299,
+        "recognitionMs": 91,
+        "pipelineMs": 395,
+        "modelLoadMs": 149
+      }
+    },
+    {
+      "sample": "controlled-mixed",
+      "engine": "bundled",
+      "truth": "PaperForge 00123\nInvoice 2026-10-25\nTotal 00077.50\n纸张扫描与文字识别",
+      "recognized": "PaperForge 00123\nInvoice 2026-10-25\nTotal 00077.50\n纸张扫描与文字识别",
+      "wallMs": 585,
+      "nativeHeapBefore": 343720528,
+      "nativeHeapAfter": 377042464,
+      "errors": 0,
+      "referenceCharacters": 54,
+      "cer": 0.0,
+      "engineMetrics": {}
+    },
+    {
+      "sample": "photographed-sign-crop",
+      "engine": "paddle",
+      "truth": "上海斯格威铂尔曼大酒店\n打浦路15号\n绿洲仕格维花园公寓\n打浦路252935号",
+      "recognized": "上海斯格威铂尔大酒店\n打浦路15号\n绿洲仕格维花园公寓\n打浦路252935号",
+      "wallMs": 145,
+      "nativeHeapBefore": 377042720,
+      "nativeHeapAfter": 394420912,
+      "errors": 1,
+      "referenceCharacters": 36,
+      "cer": 0.027777777777777776,
+      "engineMetrics": {
+        "detectionMs": 27,
+        "recognitionMs": 111,
+        "pipelineMs": 142,
+        "modelLoadMs": 0
+      }
+    },
+    {
+      "sample": "photographed-sign-crop",
+      "engine": "bundled",
+      "truth": "上海斯格威铂尔曼大酒店\n打浦路15号\n绿洲仕格维花园公寓\n打浦路252935号",
+      "recognized": "上海斯格威铂尔ー大酒店\n會打油路15号\n绿洲仕格维花园公寓\n泰打浦路252935号1",
+      "wallMs": 371,
+      "nativeHeapBefore": 394421008,
+      "nativeHeapAfter": 407863584,
+      "errors": 5,
+      "referenceCharacters": 36,
+      "cer": 0.1388888888888889,
+      "engineMetrics": {}
+    }
+  ],
+  "decision": "Keep ML Kit as bundled default. Offer the official PP-OCRv5 Mobile pack as optional because this photo improves, without a general accuracy claim. Model data is outside the APK.",
+  "integration": {
+    "device": "x86_64",
+    "engineId": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1",
+    "frozenJob": {
+      "state": "SUCCEEDED",
+      "pages": 2,
+      "signature": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1|true|FAST|true"
+    },
+    "cancelledWaitingLeaseReleased": true,
+    "modelRemovedAfterLease": true,
+    "missingPinnedModelFailsClearly": true
+  },
+  "focusedCheck": {
+    "test": "PaddleModelPackFlowTest#officialPackRecognitionFrozenJobAndCancelledLeaseRemoval",
+    "seconds": 5.704,
+    "result": "passed",
+    "initialHarnessCorrection": "Prepared QUEUED tasks must be scheduled rather than retried; corrected test harness and cancelled active records in cleanup. Recognition itself passed on the first run."
+  },
+  "limits": [
+    "Only zh/en pack supplied; no unsupported-language selector",
+    "Paddle output has line quads/confidence only, no fabricated per-word boxes",
+    "One detection then recognition batches of one; existing ML Kit multi-pass enhancements do not imply Paddle voting",
+    "Native heap snapshots are before/after observations, not peak RSS or a phone performance benchmark",
+    "Full document backups retain OCR/text/version and chosen settings; optional model weights are separately imported",
+    "No new tag or release"
+  ]
+}

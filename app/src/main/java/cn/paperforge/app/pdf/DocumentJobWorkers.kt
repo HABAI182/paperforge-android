@@ -36,6 +36,13 @@ class OcrDocumentWorker(context: Context, params: WorkerParameters) :
                     repo.dao.document(job.input.getString("document") ?: "") ?: error("来源文档已移除")
                 val pages = repo.dao.pages(doc.id)
                 require(pages.isNotEmpty()) { "没有可识别的页面" }
+                val request =
+                    cn.paperforge.app.ocr.OcrRequest.decode(
+                        job.input.json.optJSONObject("ocrRequest"),
+                        app.ocrEngine.id,
+                        job.input.getBoolean("chinese", true),
+                    )
+                val engine = request.bind(app.ocrEngine)
                 val text = mutableListOf<String>()
                 pages.forEachIndexed { index, page ->
                     ensureActive()
@@ -45,20 +52,10 @@ class OcrDocumentWorker(context: Context, params: WorkerParameters) :
                             ?.let { runCatching { OcrLayout.decode(it) }.getOrNull() }
                             ?.takeIf {
                                 it.sourceRevision == page.revision &&
-                                    (it.engineId == app.ocrEngine.id ||
+                                    (it.requestSignature == request.signature ||
                                         it.lines.any { line -> line.corrected })
                             }
-                    val result =
-                        cached
-                            ?: repo
-                                .cacheOcr(
-                                    page,
-                                    app.ocrEngine.layout(
-                                        page,
-                                        job.input.getBoolean("chinese", true),
-                                    ),
-                                )
-                                .second
+                    val result = cached ?: repo.cacheOcr(page, engine.layout(page)).second
                     text += "第 ${index+1} 页\n${result.text}"
                     DocumentJobs.checkpoint(repo, job, page.id, page.revision)
                     val percent = (index + 1) * 100 / pages.size

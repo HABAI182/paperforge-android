@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "baseline": "0.5.0",
-  "checked": "2026-10-25",
+  "checked": "2026-10-26",
   "estimates": "rough person-day ranges; cards may overlap and are not additive deadlines",
   "tasks": [
     {
@@ -534,7 +534,7 @@
       ],
       "scope": "PPv6/v5mobile与MLKit比较，决定是否接入",
       "acceptance": "有真实收益才发布开关，失败保留旧引擎",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "OCR06",
@@ -547,7 +547,7 @@
       ],
       "scope": "模型/字典/预处理版本绑定，本地导入与容量说明",
       "acceptance": "未安装的语言不假装可识别",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "OCR07",
@@ -1252,9 +1252,9 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 52,
-    "planned": 25,
+    "done": 54,
+    "planned": 23,
     "partial": 21
   },
-  "updated": "2026-10-25"
+  "updated": "2026-10-26"
 }

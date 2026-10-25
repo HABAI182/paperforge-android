@@ -169,7 +169,11 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                         PhoneDocx.convert(
                             input,
                             file,
-                            (applicationContext as PaperForgeApp).ocrEngine,
+                            cn.paperforge.app.ocr.OcrRequest.decode(
+                                    data.json.optJSONObject("ocrRequest"),
+                                    (applicationContext as PaperForgeApp).ocrEngine.id,
+                                )
+                                .bind((applicationContext as PaperForgeApp).ocrEngine),
                         ) {
                             report(it)
                         }

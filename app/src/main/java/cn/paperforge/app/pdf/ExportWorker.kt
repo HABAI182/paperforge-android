@@ -46,8 +46,16 @@ class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 val file =
                     File(repo.exports, "${safeFileName(doc.title)}-${id.toString().take(8)}.pdf")
                 output = file
+                val request =
+                    cn.paperforge.app.ocr.OcrRequest.decode(
+                        data.json.optJSONObject("ocrRequest"),
+                        (applicationContext as PaperForgeApp).ocrEngine.id,
+                    )
+                val engine =
+                    if (data.getBoolean("searchable", false))
+                        request.bind((applicationContext as PaperForgeApp).ocrEngine)
+                    else null
                 if (data.getBoolean("searchable", false)) {
-                    val engine = (applicationContext as PaperForgeApp).ocrEngine
                     val pages = repo.dao.pages(doc.id)
                     pages.forEachIndexed { index, page ->
                         val cached =
@@ -58,17 +66,19 @@ class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                         if (
                             cached == null ||
                                 cached.sourceRevision != page.revision ||
-                                (cached.engineId != engine.id && cached.lines.none { it.corrected })
+                                (cached.requestSignature != request.signature &&
+                                    cached.lines.none { it.corrected })
                         )
                             repo.cacheOcr(
                                 page,
-                                engine.layout(
-                                    page,
-                                    cn.paperforge.app.UserSettings.string(
-                                        "ocrLanguage",
-                                        "CHINESE",
-                                    ) != "LATIN",
-                                ),
+                                checkNotNull(engine)
+                                    .layout(
+                                        page,
+                                        cn.paperforge.app.UserSettings.string(
+                                            "ocrLanguage",
+                                            "CHINESE",
+                                        ) != "LATIN",
+                                    ),
                             )
                         DocumentJobs.checkpoint(repo, job, page.id, page.revision)
                         report((index + 1) * 30 / pages.size, "文字层 ${index+1}/${pages.size} 页")
@@ -82,6 +92,7 @@ class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                     applicationContext,
                     data.getBoolean("searchable", false),
                     data.getString("resolution") ?: "STANDARD",
+                    engine,
                 ) {
                     report(if (data.getBoolean("searchable", false)) 30 + it * 70 / 100 else it)
                 }

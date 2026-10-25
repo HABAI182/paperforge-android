@@ -159,7 +159,7 @@ class SettingsProfiles(context: Context) {
                         "scanAspect",
                     ),
                 "export" to setOf("searchable", "paper", "resolution", "customDpi", "quality"),
-                "ocr" to setOf("ocrLanguage", "ocrMode", "ocrVoting"),
+                "ocr" to setOf("ocrLanguage", "ocrMode", "ocrVoting", "ocrBackend", "ocrPackId"),
                 "appearance" to
                     setOf(
                         "theme",

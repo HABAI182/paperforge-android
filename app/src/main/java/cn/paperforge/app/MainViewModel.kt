@@ -278,6 +278,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val libraryFocus = MutableStateFlow<LibrarySearchHit?>(null)
     val outputSource = MutableStateFlow<String?>(null)
     val profileReturn = MutableStateFlow("settings")
+    val ocrModelsReturn = MutableStateFlow("settings")
+
+    fun openOcrModels() {
+        ocrModelsReturn.value = screen.value
+        screen.value = "ocr-models"
+    }
 
     fun openProfiles(origin: String) {
         profileReturn.value = origin
@@ -485,8 +491,24 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
         appScope.launch {
             runCatching {
-                    if (row.type in DocumentJobs.types) DocumentJobs.retry(repo, row)
-                    else cn.paperforge.app.imaging.CaptureTasks.accept(repo, row.id, retry = true)
+                    if (row.type in DocumentJobs.types) {
+                        val latest = repo.dao.task(row.id) ?: error("任务已移除")
+                        val payload = org.json.JSONObject(latest.payload)
+                        val input = payload.optJSONObject("input")
+                        if (input?.has("ocrRequest") == true) {
+                            input.put(
+                                "ocrRequest",
+                                cn.paperforge.app.ocr.OcrRequest.current(
+                                        (repo.context.applicationContext as PaperForgeApp)
+                                            .ocrEngine
+                                            .id
+                                    )
+                                    .json(),
+                            )
+                            repo.dao.putTask(latest.copy(payload = payload.toString()))
+                        }
+                        DocumentJobs.retry(repo, latest)
+                    } else cn.paperforge.app.imaging.CaptureTasks.accept(repo, row.id, retry = true)
                 }
                 .onFailure { messages.send(it.message ?: "重试未完成") }
         }

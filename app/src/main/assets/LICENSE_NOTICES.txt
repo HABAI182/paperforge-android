@@ -55,3 +55,12 @@ open-source-licensed model weights. APK/model hashes, binary addresses and
 runtime source pin are in assets/scan/provenance.json. No original competitor
 .so or APK shell is bundled or executed. Edge contour fitting is PaperForge's
 implementation; display tracking and dense dewarp core adapt recovered logic.
+
+Next development integrates PaddleOCR Android SDK source, Apache-2.0,
+Copyright (c) 2026 PaddlePaddle Authors. Fixed revision
+dab3fe35379033fdcb2d0e9572fac0b36c9a9ebf, deploy/ppocr-android/ppocr-sdk.
+Original headers retained; local model loading, BGR/RGB config handling and
+cancellable native-stage scheduling adapted. Full license: licenses/PaddleOCR-LICENSE.txt.
+Optional official PP-OCRv5 Mobile ONNX weights and recognition dictionary
+are imported as a separate package; source revisions and SHA256 checksums
+travel in its provenance.json/manifest.json. They are not base-APK assets.
