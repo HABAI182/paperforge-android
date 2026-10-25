@@ -593,6 +593,7 @@ fun HomeScreen(
                                 "encrypt" to "PDF 密码加密",
                                 "forms" to "填写 PDF 表单",
                                 "metadata" to "修改标题与作者",
+                                "diagnostics" to "PDF 属性与诊断",
                                 "extract-images" to "提取嵌入图片",
                                 "txt" to "提取 PDF 文字",
                                 "docx" to "PDF 转 Word 段落",

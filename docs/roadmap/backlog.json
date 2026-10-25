@@ -1020,7 +1020,7 @@
       "dependencies": [],
       "scope": "文字图像字体表单签名概况和工具适用性",
       "acceptance": "诊断不修改文件，不阻塞普通打开",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "PDF09",

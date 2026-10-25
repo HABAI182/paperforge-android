@@ -1226,6 +1226,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
 
+    fun exportPdfDiagnostics(report: PdfDiagnosticsReport) =
+        perform("保存诊断报告") {
+            val file =
+                File(
+                    repo.exports,
+                    "${safeFileName(report.fileName.substringBeforeLast('.'))}-diagnostics-${System.currentTimeMillis()}.json",
+                )
+            file.writeText(report.json().toString(2), Charsets.UTF_8)
+            outputLocked.value = false
+            publishOutput(file, selected.value)
+        }
+
     fun fillForms(values: Map<String, String>) =
         perform("保存表单") {
             val doc = selected.value!!

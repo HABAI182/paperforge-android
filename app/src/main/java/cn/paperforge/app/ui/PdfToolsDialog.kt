@@ -38,6 +38,7 @@ fun PdfToolsDialog(vm: MainViewModel, initialMode: String = "", onDismiss: () ->
             "nup2" to "2 合 1 拼版",
             "nup4" to "4 合 1 拼版",
             "metadata" to "标题与作者",
+            "diagnostics" to "PDF 属性与诊断",
             "encrypt" to "密码加密 / 权限",
             "forms" to "填写 AcroForm 表单",
             "txt" to "导出纯文本 TXT",
@@ -203,6 +204,10 @@ fun PdfToolsDialog(vm: MainViewModel, initialMode: String = "", onDismiss: () ->
                                 }
                             "forms" -> {
                                 vm.forms()
+                                onDismiss()
+                            }
+                            "diagnostics" -> {
+                                vm.screen.value = "pdf-diagnostics"
                                 onDismiss()
                             }
                             else -> {

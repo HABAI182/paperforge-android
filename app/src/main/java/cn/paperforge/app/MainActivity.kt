@@ -349,7 +349,8 @@ class MainActivity : ComponentActivity() {
                     }
                     vm.screen.value =
                         when {
-                            screen in listOf("annotations", "pdf-pages") -> "reader"
+                            screen in listOf("annotations", "pdf-pages", "pdf-diagnostics") ->
+                                "reader"
                             screen == "storage" -> "settings"
                             screen == "profiles" -> vm.profileReturn.value
                             screen == "ocr-proof" -> "editor"
@@ -364,6 +365,7 @@ class MainActivity : ComponentActivity() {
                         "capture" -> CameraScreen(vm) { images.launch(arrayOf("image/*")) }
                         "editor" -> EditorScreen(vm) { images.launch(arrayOf("image/*")) }
                         "reader" -> ReaderScreen(vm, share)
+                        "pdf-diagnostics" -> PdfDiagnosticsScreen(vm)
                         "tables" -> TableReviewScreen(vm)
                         "notes" -> StudyNotesScreen(vm)
                         "comparison" -> LibraryComparisonScreen(vm)

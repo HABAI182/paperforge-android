@@ -1,0 +1,73 @@
+{
+  "format": 1,
+  "fileName": "diagnostics-proof-5873618852600.pdf",
+  "bytes": 8243,
+  "sha256": "aa105ce936f1da767482e3df3ac455b5144c492bfb0f9e5d8eefa8aa67a795ed",
+  "pdfVersion": "1.4",
+  "metadata": {
+    "标题": "Inspection fixture",
+    "作者": "PaperForge"
+  },
+  "permissions": {
+    "打印": true,
+    "复制文字": true,
+    "修改": true,
+    "填写表单": true
+  },
+  "encrypted": false,
+  "pages": [
+    {
+      "page": 1,
+      "widthPoints": 612,
+      "heightPoints": 792,
+      "rotation": 0,
+      "characters": 30,
+      "imageResources": 0,
+      "annotations": 2
+    },
+    {
+      "page": 2,
+      "widthPoints": 612,
+      "heightPoints": 792,
+      "rotation": 0,
+      "characters": 0,
+      "imageResources": 1,
+      "annotations": 0
+    }
+  ],
+  "fonts": [
+    {
+      "name": "AAFOZG+PaperForgeCJK-Regular",
+      "type": "Type0",
+      "embedded": true,
+      "pages": [
+        1
+      ]
+    },
+    {
+      "name": "Helvetica",
+      "type": "Type1",
+      "embedded": false,
+      "pages": [
+        1
+      ]
+    }
+  ],
+  "uniqueImageResources": 1,
+  "fieldTypes": {
+    "Tx": 1,
+    "Sig": 1
+  },
+  "xfa": false,
+  "annotationTypes": {
+    "Widget": 1,
+    "FreeText": 1
+  },
+  "attachments": [
+    "info.txt"
+  ],
+  "signatureRecords": [],
+  "warnings": [],
+  "signatureValidation": "not-performed",
+  "archiveValidation": "not-performed"
+}

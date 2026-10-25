@@ -1,0 +1,29 @@
+{
+  "feature": "read-only PDF properties and diagnostics with exportable report",
+  "updated": "2026-10-25",
+  "focusedTest": {
+    "tests": 1,
+    "passed": true,
+    "seconds": 1.178
+  },
+  "verified": [
+    "Two-page mixed native/image fixture classified per page with character and resource-image counts",
+    "Recursive Form XObject and annotation appearance font/image resources inspected without decoding image pixels",
+    "Embedded CJK annotation font and nonembedded base font both reported",
+    "Text field and empty signature field reported independently; empty signature field does not count as a signed document",
+    "Named embedded attachment and document metadata reported",
+    "Native SHA256 before/after remains identical; diagnostic report has its matching digest",
+    "Report explicitly records that certificate and archival validation were not performed"
+  ],
+  "limits": [
+    "Image statistics refer to resources, including annotation appearances, and exclude inline images",
+    "Character counts are extractable non-whitespace code units, not OCR accuracy measurements",
+    "Signature records and byte ranges are informational; cryptographic and PDF/A validation belong to PDF10/PDF06",
+    "No large-file latency benchmark or physical-phone acceptance"
+  ],
+  "releaseCreated": false,
+  "uiVerified": [
+    "Open diagnostics from existing reader tool list and inspect overview/tool suggestions",
+    "Export report through actual toolbar action"
+  ]
+}
