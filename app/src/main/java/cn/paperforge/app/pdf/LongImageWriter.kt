@@ -26,6 +26,9 @@ internal class LongImageWriter(private val zip: ZipOutputStream, val options: Lo
         source: Int,
         label: String,
         sourceHeight: Int,
+        sourceStart: Int = 0,
+        sourceX: Int = 0,
+        sourceWidth: Int = options.width,
         render: (Bitmap, Rect, Int) -> Unit,
     ) {
         var offset = 0
@@ -39,7 +42,9 @@ internal class LongImageWriter(private val zip: ZipOutputStream, val options: Lo
                 JSONObject()
                     .put("sourceIndex", source)
                     .put("sourceLabel", label)
-                    .put("sourceRow", offset)
+                    .put("sourceRow", offset + sourceStart)
+                    .put("sourceX", sourceX)
+                    .put("sourceWidth", sourceWidth)
                     .put("rows", rows)
                     .put("segment", segment)
                     .put("segmentRow", used)
@@ -98,7 +103,7 @@ internal class LongImageWriter(private val zip: ZipOutputStream, val options: Lo
         segment++
     }
 
-    fun finish(): JSONObject {
+    fun finish(extra: JSONObject? = null): JSONObject {
         flush()
         val report =
             JSONObject()
@@ -108,12 +113,16 @@ internal class LongImageWriter(private val zip: ZipOutputStream, val options: Lo
                 .put("totalLogicalRows", total)
                 .put("segments", segments)
                 .put("sourceMapping", pieces)
+        extra?.keys()?.forEach { report.put(it, extra.get(it)) }
         zip.putNextEntry(ZipEntry("long-image-manifest.json"))
         zip.write(report.toString(2).toByteArray(Charsets.UTF_8))
         zip.closeEntry()
         zip.putNextEntry(ZipEntry("说明.txt"))
         zip.write(
-            "按选择顺序拼接，宽 ${options.width} 像素，间距 ${options.gap} 像素；实际分段高度上限 $height 像素，共 ${segments.length()} 段。分段连续，内容未裁弃。来源定位见 long-image-manifest.json。"
+            (if (extra?.has("stitches") == true)
+                    "按接缝设置去除重复顶行，水平偏移用新增留白保留边缘，分段连续。来源及接缝定位见 long-image-manifest.json。"
+                else
+                    "按选择顺序拼接，宽 ${options.width} 像素，间距 ${options.gap} 像素；实际分段高度上限 $height 像素，共 ${segments.length()} 段。分段连续，内容未裁弃。来源定位见 long-image-manifest.json。")
                 .toByteArray(Charsets.UTF_8)
         )
         zip.closeEntry()

@@ -411,6 +411,7 @@ class MainActivity : ComponentActivity() {
                         "reader" -> ReaderScreen(vm, share)
                         "pdf-diagnostics" -> PdfDiagnosticsScreen(vm)
                         "text-compose" -> TextConversionScreen(vm)
+                        "long-image-compose" -> LongImageComposeScreen(vm.longImages)
                         "tables" -> TableReviewScreen(vm)
                         "notes" -> StudyNotesScreen(vm)
                         "comparison" -> LibraryComparisonScreen(vm)

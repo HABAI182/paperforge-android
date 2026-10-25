@@ -475,7 +475,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             row.type == "CONVERT" &&
                 org.json.JSONObject(row.payload).optJSONObject("input")?.optBoolean("draft") == true
         ) {
-            loadTextConversion(row)
+            if (
+                org.json.JSONObject(row.payload).getJSONObject("input").optString("kind") ==
+                    "LONG_IMAGES"
+            )
+                longImages.open(row)
+            else loadTextConversion(row)
             return
         }
         appScope.launch {
@@ -501,12 +506,21 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    private fun loadConversionDraft(row: LocalTaskRow) {
+        if (
+            org.json.JSONObject(row.payload).getJSONObject("input").optString("kind") ==
+                "LONG_IMAGES"
+        )
+            longImages.open(row)
+        else loadTextConversion(row)
+    }
+
     fun openTask(row: LocalTaskRow, retake: Boolean = false) {
         if (
             row.type == "CONVERT" &&
                 org.json.JSONObject(row.payload).optJSONObject("input")?.optBoolean("draft") == true
         ) {
-            loadTextConversion(row)
+            loadConversionDraft(row)
             return
         }
         viewModelScope.launch {
@@ -1368,8 +1382,74 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun convertImages(uris: List<Uri>, options: ImageConversionOptions) =
         queueImageInputs(uris, "IMAGES", options.json())
 
+    val longImages =
+        LongImageWorkspace(
+            repo,
+            viewModelScope,
+            ::navigateLongImages,
+            ::watchExport,
+            { messages.send(it) },
+        )
+
+    private fun navigateLongImages(target: String) {
+        if (!target.startsWith("document:")) {
+            screen.value = target
+            return
+        }
+        viewModelScope.launch {
+            val doc =
+                withContext(Dispatchers.IO) { repo.dao.document(target.removePrefix("document:")) }
+            if (doc != null && doc.trashedAt == null) {
+                selected.value = doc
+                screen.value = "editor"
+            } else screen.value = "convert"
+        }
+    }
+
+    fun editLongImageTask(row: LocalTaskRow) = perform("打开拼接设置副本") { longImages.copy(row) }
+
     fun convertLongImages(uris: List<Uri>, options: LongImageOptions) =
-        queueImageInputs(uris, "LONG_IMAGES", options.json())
+        perform("保留拼接原图") {
+            if (uris.isNotEmpty()) longImages.create(ConversionInputs.retain(repo, uris), options)
+        }
+
+    fun stitchScanPages() =
+        perform("准备票据页面") {
+            val source = selected.value ?: return@perform
+            val pages = repo.dao.pages(source.id)
+            if (pages.isEmpty()) return@perform
+            val folder =
+                File(repo.context.filesDir, "conversion-inputs/stitch-${UUID.randomUUID()}").apply {
+                    mkdirs()
+                }
+            val inputs =
+                pages.mapIndexed { index, page ->
+                    currentCoroutineContext().ensureActive()
+                    progress.value = "准备第 ${index+1} / ${pages.size} 页"
+                    cn.paperforge.app.data.RuntimeBudget.background.acquire()
+                    try {
+                        val bitmap = cn.paperforge.app.imaging.ScanProcessor.render(page, 2400)
+                        try {
+                            val file = File(folder, "page-${index+1}.png")
+                            file.outputStream().use {
+                                check(
+                                    bitmap.compress(
+                                        android.graphics.Bitmap.CompressFormat.PNG,
+                                        100,
+                                        it,
+                                    )
+                                )
+                            }
+                            file to "${source.title} · 第 ${index+1} 页"
+                        } finally {
+                            bitmap.recycle()
+                        }
+                    } finally {
+                        cn.paperforge.app.data.RuntimeBudget.background.release()
+                    }
+                }
+            longImages.create(inputs, LongImageOptions(gap = 0), "editor", source.id)
+        }
 
     private fun queueImageInputs(uris: List<Uri>, kind: String, options: org.json.JSONObject) {
         if (busy.value || uris.isEmpty()) return

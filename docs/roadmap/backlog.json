@@ -126,7 +126,7 @@
       ],
       "scope": "长图顺序/重叠两模式，手动接缝与分段输出",
       "acceptance": "长票据不压扁，重叠接缝可调整",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "SCN06",
@@ -1252,8 +1252,8 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 51,
-    "planned": 26,
+    "done": 52,
+    "planned": 25,
     "partial": 21
   },
   "updated": "2026-10-25"

@@ -164,11 +164,23 @@ fun TaskCenterScreen(vm: MainViewModel) {
                                         enabled = available,
                                     ) {
                                         Text(
-                                            if (textDraft) "编辑正文"
+                                            if (textDraft) "编辑草稿"
                                             else if (row.type == "CAPTURE") "查看文档"
                                             else if (row.type == "SAVE") "本地结果 / 另存" else "查看结果"
                                         )
                                     }
+                                    if (
+                                        !active &&
+                                            !textDraft &&
+                                            row.type == "CONVERT" &&
+                                            org.json
+                                                .JSONObject(row.payload)
+                                                .getJSONObject("input")
+                                                .optString("kind") == "LONG_IMAGES"
+                                    )
+                                        TextButton(onClick = { vm.editLongImageTask(row) }) {
+                                            Text("调整接缝副本")
+                                        }
                                     if (active)
                                         TextButton(onClick = { vm.cancelLocalTask(row) }) {
                                             Text("停止")
@@ -189,7 +201,7 @@ fun TaskCenterScreen(vm: MainViewModel) {
                                 }
                                 if (!active && row.type in DocumentJobs.types)
                                     TextButton(onClick = { vm.forgetTask(row) }) {
-                                        Text(if (textDraft) "删除正文草稿" else "移除记录")
+                                        Text(if (textDraft) "删除转换草稿" else "移除记录")
                                     }
                             }
                         }

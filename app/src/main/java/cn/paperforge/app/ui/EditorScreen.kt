@@ -541,6 +541,14 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                     TextButton(
                         onClick = {
                             more = false
+                            vm.stitchScanPages()
+                        }
+                    ) {
+                        Text("长票据拼接与接缝调整")
+                    }
+                    TextButton(
+                        onClick = {
+                            more = false
                             vm.images("jpg")
                         }
                     ) {

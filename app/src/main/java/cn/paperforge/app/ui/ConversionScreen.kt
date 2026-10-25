@@ -49,7 +49,7 @@ private val conversions =
         Conversion("图片格式互转", "JPG、PNG、WebP；支持批量打包", "图片", "image-format"),
         Conversion("PDF → JPG", "整页高清导出，按页码输出图片包", "图片", "images-jpg"),
         Conversion("PDF → WebP", "逐页导出 WebP 图片包", "图片", "images-webp"),
-        Conversion("图片拼成长图", "按选择顺序拼接，宽度与间距可调，过长自动分段", "图片", "images-long"),
+        Conversion("图片拼成长图", "顺序或重叠拼接，接缝预览与手调，过长自动分段", "图片", "images-long"),
         Conversion("PDF → 长图", "按页序拼接，超过长度自动连续分段", "图片", "long-image"),
         Conversion("PDF → PNG", "无损图片编码，适合文字与线条", "图片", "images-png"),
         Conversion("PDF → Word 段落", "提取文字为可编辑 DOCX，重新排版", "文字", "docx"),
@@ -137,12 +137,9 @@ fun ConversionScreen(
                 item {
                     Card(Modifier.fillMaxWidth()) {
                         Column(Modifier.padding(14.dp)) {
-                            Text("继续编辑正文", style = MaterialTheme.typography.titleMedium)
+                            Text("继续编辑转换草稿", style = MaterialTheme.typography.titleMedium)
                             drafts.take(3).forEach { row ->
-                                TextButton(
-                                    onClick = { vm.loadTextConversion(row) },
-                                    enabled = !busy,
-                                ) {
+                                TextButton(onClick = { vm.openTask(row) }, enabled = !busy) {
                                     Text(
                                         org.json
                                             .JSONObject(row.payload)
@@ -288,7 +285,7 @@ fun ConversionScreen(
                             }
                         }
                     } else if (options == "images-long") {
-                        Text("按选择顺序拼接，过长自动连续分段。")
+                        Text("选择图片后可调整顺序、自动识别重叠并手动调整接缝。")
                         LongImageControls(longOptions, { longOptions = it }, { longValid = it })
                     } else {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

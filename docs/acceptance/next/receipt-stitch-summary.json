@@ -1,0 +1,32 @@
+{
+  "feature": "sequential and overlapping long receipt/image stitching with manual seams",
+  "updated": "2026-10-25",
+  "focusedChecks": {
+    "passed": true,
+    "seconds": 1.771,
+    "newChecks": 1,
+    "affectedExistingChecks": 1,
+    "note": "Only the shared EXIF/very-tall region-decoder check was rerun after moving that code; no old OCR/PDF suites"
+  },
+  "verified": [
+    "Detected450row overlap and-10px shift between1450/1300row partial receipts; confidence1,separation0.2873476",
+    "Blank match staysUNRESOLVED/0overlap and sequential, allowing manual correction",
+    "Manual seam survives reorder away/back, Room save/reload and actual WorkManager output",
+    "6PNGsegments reconstruct266x2300rows with no overlap separators; source mapping starts second image at450",
+    "Expanded canvas retains both red previous-source edge and blue shifted-source edge; source SHA256 unchanged",
+    "All8EXIForientations and12000pximage finalrows still pass on shared bounded region decoder",
+    "Independent Pillow decodes every segment and confirms total size and both edge colors",
+    "Actual UI opens correct draft type, shows seam preview/overlay, changes ordering and saves20percent overlap across force-stop/reopen",
+    "Actual UI autoalignment restores34.6percent/-3.9percent and generates usableZIP",
+    "Scanning editor enters workspace and returns to the same source document",
+    "Taskcenter opens a new seam-settings copy from completed result without changing prior output"
+  ],
+  "limits": [
+    "Matching is translation after uniform width normalization; strong perspective, curvature or varying crop require scan crop/manual review",
+    "Synthetic receipt fixtures are engineering evidence, not real-phone receipt accuracy acceptance",
+    "Automatic ambiguity rejection is heuristic; an arbitrary repeated-text corpus has not been benchmarked",
+    "Output is segmentedPNG/JPGZIP with manifest; source scan pages remain unchanged",
+    "Visible canvas supports at most8192px expanded width and16million pixels persegment"
+  ],
+  "releaseCreated": false
+}

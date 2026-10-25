@@ -30,7 +30,7 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                     return@withContext Result.success(
                         workDataOf("path" to job.result!!.path, "mode" to "CONVERT")
                     )
-                require(!job.input.getBoolean("draft", false)) { "请先完成正文编辑" }
+                require(!job.input.getBoolean("draft", false)) { "请先完成草稿编辑" }
                 DocumentJobs.progress(repo, job, job.row.progress, "等待后台资源")
                 RuntimeBudget.background.acquire()
                 leased = true
@@ -68,6 +68,7 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                             names.toList(),
                             file,
                             LongImageOptions.decode(options),
+                            LongImageDraft.decode(job.row).orderedSeams(),
                         ) { percent ->
                             DocumentJobs.progress(repo, job, percent, "正在拼接长图")
                             setProgress(workDataOf("progress" to percent))
