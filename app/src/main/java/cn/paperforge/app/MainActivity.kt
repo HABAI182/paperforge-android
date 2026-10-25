@@ -325,6 +325,7 @@ class MainActivity : ComponentActivity() {
                             screen in listOf("annotations", "pdf-pages") -> "reader"
                             screen == "storage" -> "settings"
                             screen == "profiles" -> vm.profileReturn.value
+                            screen == "ocr-proof" -> "editor"
                             screen == "pages" ||
                                 screen == "capture" && vm.pages.value.isNotEmpty() -> "editor"
                             else -> "home"
@@ -390,6 +391,7 @@ class MainActivity : ComponentActivity() {
                         "storage" -> StorageScreen(vm)
                         "tasks" -> TaskCenterScreen(vm)
                         "profiles" -> SettingsProfilesScreen(vm)
+                        "ocr-proof" -> OcrProofreadScreen(vm)
                         "outputs" -> OutputHistoryScreen(vm)
                         "pages" -> PageGridScreen(vm)
                         "pdf-pages" -> PdfPageGridScreen(vm)

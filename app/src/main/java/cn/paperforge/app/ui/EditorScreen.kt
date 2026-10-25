@@ -393,6 +393,14 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                     TextButton(
                         onClick = {
                             more = false
+                            vm.openProofreading(active)
+                        }
+                    ) {
+                        Text("框选识别与同屏校对")
+                    }
+                    TextButton(
+                        onClick = {
+                            more = false
                             vm.recognize(active)
                         }
                     ) {

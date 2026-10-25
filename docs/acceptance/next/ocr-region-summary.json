@@ -1,0 +1,38 @@
+{
+  "feature": "scan page regional OCR and on-image line/word proofreading",
+  "updated": "2026-10-25",
+  "environment": "API35 AOSP x86_64 emulator",
+  "build": "latest app and AndroidTest assembled successfully, final incremental build23s",
+  "focusedNativeTest": {
+    "tests": 1,
+    "seconds": 0.896,
+    "passed": true,
+    "fullPage": [
+      1199,
+      1599
+    ],
+    "actualNativeInput": [
+      1081,
+      401
+    ]
+  },
+  "verified": [
+    "word edit preserves other words and word boxes",
+    "only cropped pixels enter native recognition",
+    "regional coordinate mapping does not rotate the entire page",
+    "merge keeps outside text and manual corrections",
+    "region raw result and edit stored in durable record",
+    "region application can undo",
+    "empty results and partial word selection do not erase existing text",
+    "partial word replacement preserves exact unselected prefix",
+    "actual UI: share fixture, recognize12 lines, select numeric word00123, draw and merge Invoice00123"
+  ],
+  "uiIssueFoundAndFixed": "detectDragGestures onDragStart began after touch slop and could clip the first letter; region selection now records awaitFirstDown. Regional panel height stays fixed while result appears/disappears. Zoom control moved outside the image and outline padded away from glyphs.",
+  "limits": [
+    "English synthetic fixture is not a real-photo accuracy benchmark",
+    "native PDF mixed-region entry remains OCR10 work",
+    "freeform text without line geometry can copy regional results; it is not silently replaced",
+    "screenshots document the interaction; final source also adds result scrolling and outline spacing"
+  ],
+  "releaseCreated": false
+}

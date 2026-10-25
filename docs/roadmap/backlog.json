@@ -508,7 +508,7 @@
       ],
       "scope": "框选区域、原图定位、逐词/逐行校正",
       "acceptance": "只重跑选区，页面其余结果保留",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "OCR04",
@@ -1252,8 +1252,9 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 34,
-    "planned": 40,
+    "done": 35,
+    "planned": 39,
     "partial": 24
-  }
+  },
+  "updated": "2026-10-25"
 }

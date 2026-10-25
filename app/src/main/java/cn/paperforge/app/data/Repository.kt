@@ -206,7 +206,11 @@ class Repository(val context: Context, val database: PaperDatabase) {
             }
         }
 
-    suspend fun correctOcr(page: PageRow, text: String): PageRow =
+    suspend fun correctOcr(
+        page: PageRow,
+        text: String,
+        layoutOverride: cn.paperforge.app.model.OcrLayout? = null,
+    ): PageRow =
         database.withTransaction {
             val current =
                 dao.pages(page.documentId).firstOrNull { it.id == page.id } ?: error("页面不存在")
@@ -214,20 +218,21 @@ class Repository(val context: Context, val database: PaperDatabase) {
             val lines = text.lines()
             val layout = current.ocrLayout?.let { cn.paperforge.app.model.OcrLayout.decode(it) }
             val corrected =
-                layout
-                    ?.takeIf { it.lines.size == lines.size }
-                    ?.copy(
-                        lines =
-                            layout.lines.mapIndexed { i, line ->
-                                if (line.text == lines[i]) line
-                                else
-                                    line.copy(
-                                        text = lines[i],
-                                        elements = emptyList(),
-                                        corrected = true,
-                                    )
-                            }
-                    )
+                layoutOverride?.also { require(it.text == text) { "校正文字与行位置不一致" } }
+                    ?: layout
+                        ?.takeIf { it.lines.size == lines.size }
+                        ?.copy(
+                            lines =
+                                layout.lines.mapIndexed { i, line ->
+                                    if (line.text == lines[i]) line
+                                    else
+                                        line.copy(
+                                            text = lines[i],
+                                            elements = emptyList(),
+                                            corrected = true,
+                                        )
+                                }
+                        )
             val file =
                 OcrRecords.write(this@Repository, current, OcrRecords.corrected(current, text))
             val updated =

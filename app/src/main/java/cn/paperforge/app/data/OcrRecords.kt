@@ -84,9 +84,24 @@ object OcrRecords {
             }
             if (record.has("legacyText"))
                 add(OcrTextVersion("历史文字", record.getString("legacyText")))
+            record.optJSONArray("regions")?.let { regions ->
+                for (i in 0 until regions.length()) {
+                    val local =
+                        OcrLayout.decode(
+                            regions.getJSONObject(i).getJSONObject("result").toString()
+                        )
+                    local.rawRecognition?.let {
+                        add(OcrTextVersion("选区 ${i+1} 原始识别", OcrLayout.decode(it).text))
+                    }
+                }
+            }
             record.optJSONArray("edits")?.let { edits ->
                 for (i in 0 until edits.length()) add(
-                    OcrTextVersion("第 ${i+1} 次校正", edits.getJSONObject(i).getString("text"))
+                    OcrTextVersion(
+                        if (edits.getJSONObject(i).optString("kind") == "region") "局部重识别 ${i+1}"
+                        else "第 ${i+1} 次校正",
+                        edits.getJSONObject(i).getString("text"),
+                    )
                 )
             }
         }

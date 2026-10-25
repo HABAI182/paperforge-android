@@ -45,6 +45,39 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val canCorrectOcr = MutableStateFlow(false)
     private var ocrPage: PageRow? = null
     val ocrVersions = MutableStateFlow<List<OcrTextVersion>>(emptyList())
+    val proofPage = MutableStateFlow<PageRow?>(null)
+    val proofRegion = MutableStateFlow<OcrRegionResult?>(null)
+
+    fun openProofreading(page: PageRow) {
+        proofPage.value = page
+        proofRegion.value = null
+        screen.value = "ocr-proof"
+    }
+
+    fun recognizeRegion(page: PageRow, region: cn.paperforge.app.model.OcrRegion) =
+        perform("正在识别选区") {
+            proofRegion.value =
+                ocrEngine.recognizeRegion(
+                    page,
+                    region,
+                    UserSettings.string("ocrLanguage", "CHINESE") != "LATIN",
+                )
+        }
+
+    fun applyRegion(page: PageRow) =
+        perform("更新选区文字") {
+            val run = proofRegion.value ?: return@perform
+            proofPage.value = repo.applyOcrRegion(page, run)
+            proofRegion.value = null
+            messages.send("已更新选区，其余文字保留")
+        }
+
+    fun correctProofLine(page: PageRow, index: Int, word: Int?, text: String) =
+        perform("保存局部校正") {
+            proofPage.value = repo.correctOcrLine(page, index, word, text)
+            messages.send("校正已保存，原始记录保留")
+        }
+
     val messages = Channel<String>(Channel.BUFFERED)
     val replacement = MutableStateFlow<String?>(null)
     val mergeSources = MutableStateFlow<List<DocumentRow>>(emptyList())

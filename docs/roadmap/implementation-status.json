@@ -1,6 +1,6 @@
 {
   "version": "next-development",
-  "updated": "2026-10-24",
+  "updated": "2026-10-25",
   "defaultExecution": "Android-local",
   "officeRequiresOptionalPhoneEngine": true,
   "computerRequired": false,
@@ -242,8 +242,8 @@
     {
       "id": "OCR03",
       "title": "区域重识别与同屏校对",
-      "status": "planned",
-      "note": "完整目标保留，未在本版标记完成"
+      "status": "done",
+      "note": "扫描页提供矩形区域重识别、整行/词框同屏定位与校正、原图缩放；仅将实际裁出的区域送原生OCR，归一化回原页后只替换完整选中行/词；保留外部文字与手工修订，空结果/截断词不覆盖。区域原始结果进入不可变审计资源与撤销；实际拖动发现并修复触摸阈值起点偏移，区域控件高度固定不挤移图像。原生PDF混合页的区域入口归OCR10继续补"
     },
     {
       "id": "OCR04",
@@ -595,8 +595,8 @@
     }
   ],
   "counts": {
-    "done": 34,
-    "planned": 40,
+    "done": 35,
+    "planned": 39,
     "partial": 24
   },
   "releaseHold": true,
