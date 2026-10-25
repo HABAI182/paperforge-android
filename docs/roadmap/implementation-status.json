@@ -512,8 +512,8 @@
     {
       "id": "JOB03",
       "title": "资源预算与可见任务优先",
-      "status": "planned",
-      "note": "完整目标保留，未在本版标记完成"
+      "status": "partial",
+      "note": "PDF/扫描导出/OCR后台重流水线限1并发，阅读分块不等此槽位；交互OCR在原生pass之间优先于排队后台，取消排队不泄漏资源。定向调度与实际WorkManager等待取消重试通过；单操作内存上限、Office/URI转换预算与真机帧时仍待补。"
     },
     {
       "id": "JOB04",

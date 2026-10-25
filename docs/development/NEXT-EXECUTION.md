@@ -42,6 +42,8 @@
 
 21. 独立只读PDF属性与诊断页、逐页定位、文字/资源/字体/表单/附件/签名记录概况及JSON报告；不阻塞普通阅读。集中检查与原件哈希见 `docs/acceptance/next/pdf-diagnostics-summary.json`。资源图像不含内联图像；证书/PDF-A仍由PDF10/PDF06处理。
 
+22. 后台PDF/扫描导出/OCR重流水线限一条，交互OCR可在原生pass之间优先排队；阅读继续使用独立有界分块缓存。排队取消与重试不泄漏槽位，验证见 `docs/acceptance/next/runtime-budget-summary.json`。这不是单次操作分配上限或真机流畅度验收，JOB03仍部分完成。
+
 ## 后续执行顺序
 
 页序历史补充：重排只记录页面ID，删页/分割仅记录内容差异；新旧可读快照的撤销保留后来新增的扫描页和与操作无关的新OCR。备份对独立页序ID重映射，集中检查见 `docs/acceptance/next/sparse-history-summary.json`。不将此修复重复计为新完成的计划卡。

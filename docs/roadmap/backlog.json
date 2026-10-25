@@ -1083,7 +1083,7 @@
       ],
       "scope": "OCR/渲染/大图限并发、取消过期请求",
       "acceptance": "后台转换不使当前阅读持续卡顿",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "JOB04",

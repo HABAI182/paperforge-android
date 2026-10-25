@@ -15,9 +15,10 @@ import kotlinx.coroutines.withContext
 
 class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result =
-        withContext(Dispatchers.IO) {
+        withContext(Dispatchers.IO + BackgroundWork) {
             val repo = (applicationContext as PaperForgeApp).repository
             var handle: JobHandle? = null
+            var leased = false
             var output: File? = null
             var published = false
             try {
@@ -28,6 +29,10 @@ class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 val data = job.input
                 if (job.completed)
                     return@withContext Result.success(workDataOf("path" to job.result!!.path))
+                DocumentJobs.progress(repo, job, job.row.progress, "等待后台资源")
+                RuntimeBudget.background.acquire()
+                leased = true
+                DocumentJobs.progress(repo, job, job.row.progress)
                 suspend fun report(percent: Int, detail: String = "正在生成 PDF") {
                     DocumentJobs.progress(repo, job, percent, detail)
                     setProgress(workDataOf("progress" to percent))
@@ -99,6 +104,8 @@ class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 if (!published) output?.delete()
                 DocumentJobs.fail(repo, handle, e)
                 Result.failure(workDataOf("error" to (e.message ?: "PDF 导出失败")))
+            } finally {
+                if (leased) RuntimeBudget.background.release()
             }
         }
 }

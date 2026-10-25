@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="cn.paperforge.app.RuntimeBudgetTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-25T07:15:41.040Z" hostname="DESKTOP-DVV8TM5" time="0.235">
+  <properties/>
+  <testcase name="interactiveWorkPassesQueuedBackgroundAndCancellationReleasesItsPlace" classname="cn.paperforge.app.RuntimeBudgetTest" time="0.235"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

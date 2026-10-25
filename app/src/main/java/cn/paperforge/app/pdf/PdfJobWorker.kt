@@ -12,7 +12,7 @@ import org.json.JSONObject
 
 class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result =
-        withContext(Dispatchers.IO) {
+        withContext(Dispatchers.IO + BackgroundWork) {
             var output: File? = null
             var published = false
             var originFile: File? = null
@@ -20,6 +20,7 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
             var assemblyManifest: File? = null
             val repo = (applicationContext as PaperForgeApp).repository
             var handle: JobHandle? = null
+            var leased = false
             try {
                 val job =
                     DocumentJobs.start(repo, "PDF", inputData, id)
@@ -33,6 +34,10 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                             "mode" to (data.getString("mode") ?: "PDF"),
                         )
                     )
+                DocumentJobs.progress(repo, job, job.row.progress, "等待后台资源")
+                RuntimeBudget.background.acquire()
+                leased = true
+                DocumentJobs.progress(repo, job, job.row.progress)
                 suspend fun report(percent: Int) {
                     DocumentJobs.progress(repo, job, percent)
                     setProgress(workDataOf("progress" to percent))
@@ -250,6 +255,8 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                     originFile?.parentFile?.delete()
                 }
                 Result.failure(workDataOf("error" to (e.message ?: "处理失败")))
+            } finally {
+                if (leased) RuntimeBudget.background.release()
             }
         }
 }

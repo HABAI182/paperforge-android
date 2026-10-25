@@ -997,34 +997,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
 
     fun extract(range: String, rotate: Int) =
-        perform("正在处理页面") {
-            val doc = selected.value ?: return@perform
-            val file =
-                File(repo.exports, "${safeFileName(doc.title)}-${System.currentTimeMillis()}.pdf")
-            PdfEngine.extract(File(doc.pdfPath!!), range, file, rotate)
-            selected.value =
-                repo.registerPdf(
-                    file,
-                    doc.title + if (rotate == 0) " · 抽页" else " · 旋转",
-                    listed = false,
-                )
-            publishOutput(file, doc)
-        }
+        queueTool("extract", org.json.JSONObject().put("range", range).put("rotation", rotate))
 
     fun compress(quality: Int) =
-        perform("正在压缩嵌入图片") {
-            val doc = selected.value ?: return@perform
-            val source = File(doc.pdfPath!!)
-            val file = File(repo.exports, "压缩-${System.currentTimeMillis()}.pdf")
-            PdfEngine.compress(source, file, quality) { progress.value = "压缩 · $it%" }
-            val change = 100f * (source.length() - file.length()) / source.length().coerceAtLeast(1)
-            messages.send(
-                "${source.length()/1024} KB → ${file.length()/1024} KB；" +
-                    if (change > 0) "减少 %.1f%%".format(change) else "本次未减小体积"
-            )
-            selected.value = repo.registerPdf(file, doc.title + " · 图片压缩", listed = false)
-            publishOutput(file, doc)
-        }
+        queueTool("compress", org.json.JSONObject().put("quality", quality))
 
     fun extractText() =
         perform("正在提取 PDF 文字") {

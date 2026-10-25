@@ -2,7 +2,9 @@ package cn.paperforge.app.ocr
 
 import android.graphics.Bitmap
 import android.graphics.Matrix
+import cn.paperforge.app.data.BackgroundWork
 import cn.paperforge.app.data.PageRow
+import cn.paperforge.app.data.RuntimeBudget
 import cn.paperforge.app.imaging.ScanConfig
 import cn.paperforge.app.imaging.ScanProcessor
 import cn.paperforge.app.model.*
@@ -12,8 +14,6 @@ import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlin.math.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.tasks.await
 
 interface OcrEngine {
@@ -319,7 +319,7 @@ class BundledOcrEngine : OcrEngine {
     }
 
     private suspend fun pass(source: Bitmap, chinese: Boolean, variant: String): OcrLayout =
-        mutex.withLock {
+        RuntimeBudget.ocr.use(currentCoroutineContext()[BackgroundWork.Key] == null) {
             currentCoroutineContext().ensureActive()
             val bitmap = source.copy(Bitmap.Config.ARGB_8888, false)
             val task =
@@ -567,7 +567,6 @@ class BundledOcrEngine : OcrEngine {
 
     companion object {
         const val ID = "mlkit-bundled-v031"
-        private val mutex = Mutex()
         private val chineseClient by lazy {
             TextRecognition.getClient(ChineseTextRecognizerOptions.Builder().build())
         }

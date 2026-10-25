@@ -13,10 +13,11 @@ import kotlinx.coroutines.*
 class OcrDocumentWorker(context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params) {
     override suspend fun doWork(): Result =
-        withContext(Dispatchers.IO) {
+        withContext(Dispatchers.IO + BackgroundWork) {
             val app = applicationContext as PaperForgeApp
             val repo = app.repository
             var handle: JobHandle? = null
+            var leased = false
             var output: File? = null
             var published = false
             try {
@@ -28,6 +29,9 @@ class OcrDocumentWorker(context: Context, params: WorkerParameters) :
                     return@withContext Result.success(
                         workDataOf("path" to job.result!!.path, "mode" to "OCR")
                     )
+                DocumentJobs.progress(repo, job, job.row.progress, "等待后台资源")
+                RuntimeBudget.background.acquire()
+                leased = true
                 val doc =
                     repo.dao.document(job.input.getString("document") ?: "") ?: error("来源文档已移除")
                 val pages = repo.dao.pages(doc.id)
@@ -90,6 +94,8 @@ class OcrDocumentWorker(context: Context, params: WorkerParameters) :
                 if (!published) output?.delete()
                 DocumentJobs.fail(repo, handle, failure)
                 Result.failure(workDataOf("error" to (failure.message ?: "识别未完成")))
+            } finally {
+                if (leased) RuntimeBudget.background.release()
             }
         }
 }

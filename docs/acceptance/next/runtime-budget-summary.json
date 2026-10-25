@@ -1,0 +1,30 @@
+{
+  "feature": "serialized heavy background pipelines with interactive OCR priority",
+  "updated": "2026-10-25",
+  "verified": [
+    "Only one PDF/OCR/scan-export background pipeline can hold its large page buffers; external file saves stay independent",
+    "Interactive OCR passes run before waiting background passes; a running native pass finishes before switching",
+    "MLKit cancellation retains image input and OCR ownership until native task completes",
+    "Waiting native passes can be cancelled without leaking ownership; reader rendering remains outside the background slot and uses its existing bounded tile cache",
+    "An actual WorkManager PDF task blocked on the background slot can be cancelled, then retried successfully without leaking permits",
+    "Existing extract/compress reader entries now use the same durable/budgeted PDF worker"
+  ],
+  "focusedChecks": [
+    {
+      "test": "RuntimeBudgetTest",
+      "passed": true
+    },
+    {
+      "test": "BackgroundBudgetFlowTest",
+      "passed": true,
+      "seconds": 4.943
+    }
+  ],
+  "limits": [
+    "Concurrency budget does not bound every allocation within a single native/OCR/image operation",
+    "Phone Office service and URI-based basic conversions are not yet inside this budget",
+    "No physical-phone frame-time or memory-pressure benchmark; JOB03 remains partial",
+    "Interactive priority applies between OCR native passes; active native calls are not forcibly interrupted"
+  ],
+  "releaseCreated": false
+}
