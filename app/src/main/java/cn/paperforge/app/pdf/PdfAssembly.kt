@@ -55,6 +55,10 @@ data class AssemblyPlan(
     val subtitle: String = "",
     val cover: Boolean = false,
     val contents: Boolean = false,
+    val formMode: String = "EDITABLE",
+    val keepPageLabels: Boolean = true,
+    val keepAttachments: Boolean = true,
+    val keepOriginalOutlines: Boolean = true,
 ) {
     val chapters
         get() =
@@ -78,6 +82,10 @@ data class AssemblyPlan(
             .put("subtitle", subtitle)
             .put("cover", cover)
             .put("contents", contents)
+            .put("formMode", formMode)
+            .put("keepPageLabels", keepPageLabels)
+            .put("keepAttachments", keepAttachments)
+            .put("keepOriginalOutlines", keepOriginalOutlines)
 
     fun remap(ids: Map<String, String>): AssemblyPlan =
         copy(
@@ -144,6 +152,10 @@ data class AssemblyPlan(
                 j.optString("subtitle"),
                 j.optBoolean("cover"),
                 j.optBoolean("contents"),
+                j.optString("formMode", "APPEARANCE"),
+                j.optBoolean("keepPageLabels", true),
+                j.optBoolean("keepAttachments", true),
+                j.optBoolean("keepOriginalOutlines", true),
             )
         }
     }
@@ -197,31 +209,52 @@ object PdfAssembly {
         output: File,
         progress: suspend (Int) -> Unit = {},
     ): JSONObject {
+        val files =
+            plan.chapters.associate { source ->
+                val document =
+                    repo.dao.document(source.documentId) ?: error("来源“${source.title}”已移除")
+                source.documentId to File(document.pdfPath ?: error("请选择 PDF 来源"))
+            }
+        return writeFiles(repo.context, plan, files, output, progress)
+    }
+
+    suspend fun writeFiles(
+        context: Context?,
+        plan: AssemblyPlan,
+        files: Map<String, File>,
+        output: File,
+        progress: suspend (Int) -> Unit = {},
+    ): JSONObject {
+        require(plan.formMode in listOf("EDITABLE", "APPEARANCE")) { "不支持的表单方式" }
         require(plan.pages.isNotEmpty() || plan.cover) { "请至少加入一页" }
         val temporary = File(output.path + ".part")
         val inputs = mutableMapOf<String, PDDocument>()
         val imported = mutableListOf<Pair<AssemblyPage, PDPage>>()
         var flattened = 0
-        var omittedLinks = 0
+        var semanticReport = JSONObject()
         try {
             for (source in plan.chapters) {
                 currentCoroutineContext().ensureActive()
-                val doc = repo.dao.document(source.documentId) ?: error("来源“${source.title}”已移除")
-                val file = File(doc.pdfPath ?: error("请选择 PDF 来源"))
-                require(sha256(file) == source.sha256) { "来源“${source.title}”已有变化，请刷新来源" }
+                val file = files.getValue(source.documentId)
+                require(source.sha256.isBlank() || sha256(file) == source.sha256) {
+                    "来源“${source.title}”已有变化，请刷新来源"
+                }
                 val input = PDDocument.load(file, MemoryUsageSetting.setupTempFileOnly())
                 inputs[source.documentId] = input
                 input.documentCatalog.acroForm?.let { form ->
-                    flattened += form.fieldTree.count()
-                    form.refreshAppearances()
-                    form.flatten()
+                    require(!form.hasXFA()) { "“${source.title}”含动态表单，请先另存为普通PDF" }
+                    if (plan.formMode == "APPEARANCE") {
+                        flattened += form.fieldTree.count()
+                        form.refreshAppearances()
+                        form.flatten()
+                    } else if (form.needAppearances) form.refreshAppearances()
                 }
             }
             PDDocument(MemoryUsageSetting.setupTempFileOnly()).use { destination ->
                 val cloner = PDFCloneUtility(destination)
                 val font =
                     if (plan.cover || plan.contentsPages > 0)
-                        PdfTextLayer.font(repo.context, destination)
+                        PdfTextLayer.font(requireNotNull(context), destination)
                     else null
                 if (plan.cover) {
                     val page = PDPage(PDRectangle.A4).also(destination::addPage)
@@ -280,75 +313,21 @@ object PdfAssembly {
                     imported += entry to page
                     progress((index + 1) * 85 / plan.pages.size.coerceAtLeast(1))
                 }
-                val targets =
-                    imported
-                        .filter { it.first.sourceId != null }
-                        .groupBy { it.first.sourceId!! to it.first.page }
-                for ((entry, page) in imported) {
-                    if (entry.sourceId == null) continue
-                    val input = inputs.getValue(entry.sourceId)
-                    val original = input.getPage(entry.page)
-                    val annotations = mutableListOf<PDAnnotation>()
-                    for (annotation in original.annotations) {
-                        if (annotation is PDAnnotationWidget) continue
-                        val dictionary = COSDictionary(annotation.cosObject)
-                        listOf(
-                                COSName.P,
-                                COSName.PARENT,
-                                COSName.getPDFName("Popup"),
-                                COSName.getPDFName("IRT"),
-                            )
-                            .forEach(dictionary::removeItem)
-                        val link = annotation as? PDAnnotationLink
-                        val internal =
-                            link != null &&
-                                (link.destination != null || link.action is PDActionGoTo)
-                        var target: PDPage? = null
-                        if (internal) {
-                            val index =
-                                targetIndex(
-                                    input,
-                                    link!!.destination
-                                        ?: (link.action as? PDActionGoTo)?.destination,
-                                )
-                            target =
-                                if (index == entry.page) page
-                                else
-                                    index?.let {
-                                        targets[entry.sourceId to it]?.firstOrNull()?.second
-                                    }
-                            if (target == null) {
-                                omittedLinks++
-                                continue
-                            }
-                            dictionary.removeItem(COSName.A)
-                            dictionary.removeItem(COSName.DEST)
-                        }
-                        val copied =
-                            PDAnnotation.createAnnotation(cloner.cloneForNewDocument(dictionary))
-                        copied.page = page
-                        if (target != null && copied is PDAnnotationLink)
-                            copied.action =
-                                PDActionGoTo().apply {
-                                    this.destination =
-                                        PDPageFitDestination().apply { this.page = target }
-                                }
-                        annotations += copied
-                    }
-                    page.annotations = annotations
-                }
+                val semantics = PdfSemantics(destination, inputs, imported, cloner, plan)
+                semantics.copyAnnotationsAndForms()
                 val outline =
                     PDDocumentOutline().also { destination.documentCatalog.documentOutline = it }
                 for ((index, source) in plan.chapters.withIndex()) {
                     val first = imported.first { it.first.sourceId == source.documentId }.second
                     val pageNumber = destination.pages.indexOf(first) + 1
                     val target = PDPageFitDestination().apply { page = first }
-                    outline.addLast(
+                    val heading =
                         PDOutlineItem().apply {
                             title = source.title
                             setDestination(target)
                         }
-                    )
+                    outline.addLast(heading)
+                    if (plan.keepOriginalOutlines) semantics.copyOutline(source.documentId, heading)
                     if (tocPages.isNotEmpty()) {
                         val toc = tocPages[index / 20]
                         val y = 720f - (index % 20) * 29f
@@ -373,6 +352,7 @@ object PdfAssembly {
                         )
                     }
                 }
+                semanticReport = semantics.finishCatalog()
                 destination.documentInformation.title = plan.title
                 destination.documentInformation.creator = "PaperForge"
                 currentCoroutineContext().ensureActive()
@@ -385,7 +365,8 @@ object PdfAssembly {
                 .put("format", 1)
                 .put("title", plan.title)
                 .put("formsSavedAsAppearance", flattened)
-                .put("omittedLinksToUnselectedPages", omittedLinks)
+                .put("omittedLinksToUnselectedPages", semanticReport.optInt("omittedLinks"))
+                .put("semantics", semanticReport)
                 .put(
                     "sources",
                     JSONArray().apply {

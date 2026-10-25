@@ -959,7 +959,7 @@
       ],
       "scope": "合并/抽页的目录、字段重名、页标签与附件策略",
       "acceptance": "页面操作后链接和表单目标正确",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "PDF04",

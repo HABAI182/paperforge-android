@@ -24,7 +24,7 @@ import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.ensureActive
 
 object PdfTools {
-    fun splitEach(input: File, output: File) {
+    suspend fun splitEach(input: File, output: File) {
         val folder = File(output.parentFile, "split-${UUID.randomUUID()}").apply { mkdirs() }
         try {
             PDDocument.load(input, MemoryUsageSetting.setupTempFileOnly()).use { doc ->

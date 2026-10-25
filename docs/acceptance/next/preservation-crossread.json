@@ -1,0 +1,158 @@
+{
+  "preservation-proof.pdf": {
+    "pages": 6,
+    "widgets": [
+      {
+        "page": 2,
+        "name": "party.amount",
+        "type": "Text",
+        "value": "00123"
+      },
+      {
+        "page": 3,
+        "name": "party_2.note",
+        "type": "Text",
+        "value": "B note"
+      },
+      {
+        "page": 3,
+        "name": "party_2.checked",
+        "type": "CheckBox",
+        "value": "Yes"
+      },
+      {
+        "page": 4,
+        "name": "party.note",
+        "type": "Text",
+        "value": "A note"
+      },
+      {
+        "page": 5,
+        "name": "party_2.amount",
+        "type": "Text",
+        "value": "00999"
+      },
+      {
+        "page": 6,
+        "name": "party_copy2.amount",
+        "type": "Text",
+        "value": "00123"
+      }
+    ],
+    "attachments": [
+      "invoice.xml",
+      "note (2).txt",
+      "note.txt"
+    ],
+    "outlines": [
+      [
+        1,
+        "First",
+        2
+      ],
+      [
+        2,
+        "A chapter one",
+        2
+      ],
+      [
+        2,
+        "A chapter two",
+        4
+      ],
+      [
+        1,
+        "Second",
+        3
+      ],
+      [
+        2,
+        "B chapter one",
+        5
+      ],
+      [
+        2,
+        "B chapter two",
+        3
+      ]
+    ]
+  },
+  "preservation-edited-proof.pdf": {
+    "pages": 6,
+    "widgets": [
+      {
+        "page": 2,
+        "name": "party.amount",
+        "type": "Text",
+        "value": "00456"
+      },
+      {
+        "page": 3,
+        "name": "party_2.note",
+        "type": "Text",
+        "value": "B note"
+      },
+      {
+        "page": 3,
+        "name": "party_2.checked",
+        "type": "CheckBox",
+        "value": "Off"
+      },
+      {
+        "page": 4,
+        "name": "party.note",
+        "type": "Text",
+        "value": "A note"
+      },
+      {
+        "page": 5,
+        "name": "party_2.amount",
+        "type": "Text",
+        "value": "00666"
+      },
+      {
+        "page": 6,
+        "name": "party_copy2.amount",
+        "type": "Text",
+        "value": "00789"
+      }
+    ],
+    "attachments": [
+      "invoice.xml",
+      "note (2).txt",
+      "note.txt"
+    ],
+    "outlines": [
+      [
+        1,
+        "First",
+        2
+      ],
+      [
+        2,
+        "A chapter one",
+        2
+      ],
+      [
+        2,
+        "A chapter two",
+        4
+      ],
+      [
+        1,
+        "Second",
+        3
+      ],
+      [
+        2,
+        "B chapter one",
+        5
+      ],
+      [
+        2,
+        "B chapter two",
+        3
+      ]
+    ]
+  }
+}

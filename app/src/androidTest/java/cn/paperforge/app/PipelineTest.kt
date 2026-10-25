@@ -114,7 +114,7 @@ class PipelineTest {
     }
 
     @Test
-    fun pdfPageToolsPreserveNativeText() {
+    fun pdfPageToolsPreserveNativeText() = runBlocking {
         val source = File(app.cacheDir, "vector.pdf")
         PDDocument().use { pdf ->
             repeat(3) { i ->

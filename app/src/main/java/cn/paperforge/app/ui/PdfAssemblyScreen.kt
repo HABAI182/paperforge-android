@@ -224,7 +224,9 @@ fun PdfAssemblyScreen(vm: MainViewModel, onImport: () -> Unit) {
             }
             if (loading) LinearProgressIndicator(Modifier.fillMaxWidth())
             Text(
-                if (selected.isEmpty()) "长按拖动页序；表单导出后仅保留外观。" else "已选 ${selected.size} 页",
+                if (selected.isEmpty())
+                    (if (plan.formMode == "EDITABLE") "长按拖动页序；保留可编辑表单。" else "长按拖动页序；表单仅保留外观。")
+                else "已选 ${selected.size} 页",
                 Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 style = MaterialTheme.typography.bodySmall,
             )
@@ -683,6 +685,10 @@ private fun AssemblyOptions(
     var subtitle by remember { mutableStateOf(plan.subtitle) }
     var cover by remember { mutableStateOf(plan.cover) }
     var contents by remember { mutableStateOf(plan.contents) }
+    var editable by remember { mutableStateOf(plan.formMode == "EDITABLE") }
+    var labels by remember { mutableStateOf(plan.keepPageLabels) }
+    var attachments by remember { mutableStateOf(plan.keepAttachments) }
+    var outlines by remember { mutableStateOf(plan.keepOriginalOutlines) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("封面与目录") },
@@ -714,7 +720,54 @@ private fun AssemblyOptions(
                     Checkbox(contents, null)
                     Text("添加可点击目录")
                 }
-                Text("目录按来源生成，页码随编排调整。表单导出为当前可见外观。", style = MaterialTheme.typography.bodySmall)
+                Row(
+                    Modifier.fillMaxWidth()
+                        .toggleable(
+                            editable,
+                            role = Role.Checkbox,
+                            onValueChange = { editable = it },
+                        ),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Checkbox(editable, null)
+                    Text("保留可编辑表单")
+                }
+                Text(
+                    if (editable) "同名字段自动编号；复制页可独立填写。" else "表单保存为可见外观，副本不再填写。",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Row(
+                    Modifier.fillMaxWidth()
+                        .toggleable(labels, role = Role.Checkbox, onValueChange = { labels = it }),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Checkbox(labels, null)
+                    Text("保留来源页码标签")
+                }
+                Row(
+                    Modifier.fillMaxWidth()
+                        .toggleable(
+                            outlines,
+                            role = Role.Checkbox,
+                            onValueChange = { outlines = it },
+                        ),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Checkbox(outlines, null)
+                    Text("保留来源原目录")
+                }
+                Row(
+                    Modifier.fillMaxWidth()
+                        .toggleable(
+                            attachments,
+                            role = Role.Checkbox,
+                            onValueChange = { attachments = it },
+                        ),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Checkbox(attachments, null)
+                    Text("保留来源内嵌附件")
+                }
             }
         },
         confirmButton = {
@@ -726,6 +779,10 @@ private fun AssemblyOptions(
                             subtitle = subtitle,
                             cover = cover,
                             contents = contents,
+                            formMode = if (editable) "EDITABLE" else "APPEARANCE",
+                            keepPageLabels = labels,
+                            keepAttachments = attachments,
+                            keepOriginalOutlines = outlines,
                         )
                     )
                 }

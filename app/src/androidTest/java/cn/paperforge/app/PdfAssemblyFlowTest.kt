@@ -137,6 +137,7 @@ class PdfAssemblyFlowTest {
                         subtitle = "正反面与原生文字",
                         cover = true,
                         contents = true,
+                        formMode = "APPEARANCE",
                     )
                 val mixed = initial.interleave(a.documentId, b.documentId, true)
                 assertEquals(

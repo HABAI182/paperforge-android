@@ -10,7 +10,6 @@ import cn.paperforge.app.imaging.ScanProcessor
 import cn.paperforge.app.model.OcrLayout
 import cn.paperforge.app.model.parsePageRange
 import com.tom_roush.pdfbox.io.MemoryUsageSetting
-import com.tom_roush.pdfbox.multipdf.PDFMergerUtility
 import com.tom_roush.pdfbox.pdmodel.*
 import com.tom_roush.pdfbox.pdmodel.common.PDRectangle
 import com.tom_roush.pdfbox.text.PDFTextStripper
@@ -152,50 +151,65 @@ object PdfEngine {
         }
     }
 
-    fun merge(inputs: List<File>, output: File) {
+    suspend fun merge(inputs: List<File>, output: File) {
         require(inputs.size >= 2) { "请选择至少两份 PDF" }
-        atomicSync(output) { tmp ->
-            val merger = PDFMergerUtility()
-            inputs.forEach { merger.addSource(it) }
-            merger.destinationFileName = tmp.path
-            merger.mergeDocuments(MemoryUsageSetting.setupTempFileOnly())
-        }
-    }
-
-    fun extract(input: File, range: String, output: File, rotation: Int = 0) {
-        atomicSync(output) { tmp ->
-            PDDocument.load(input, MemoryUsageSetting.setupTempFileOnly()).use { src ->
-                PDDocument().use { dst ->
-                    parsePageRange(range, src.numberOfPages).forEach { n ->
-                        val original = src.getPage(n)
-                        dst.importPage(original).also {
-                            it.resources = original.resources
-                            it.rotation = (it.rotation + rotation) % 360
-                        }
-                    }
-                    dst.save(tmp)
-                }
+        val sources =
+            inputs.mapIndexed { index, file ->
+                AssemblySource(
+                    index.toString(),
+                    file.nameWithoutExtension,
+                    PDDocument.load(file, MemoryUsageSetting.setupTempFileOnly()).use {
+                        it.numberOfPages
+                    },
+                    "",
+                )
             }
-        }
+        val plan =
+            AssemblyPlan(
+                sources,
+                sources.flatMap { source ->
+                    List(source.count) { AssemblyPage(sourceId = source.documentId, page = it) }
+                },
+                title = output.nameWithoutExtension,
+            )
+        PdfAssembly.writeFiles(
+            null,
+            plan,
+            sources.mapIndexed { index, source -> source.documentId to inputs[index] }.toMap(),
+            output,
+        )
     }
 
-    fun organize(input: File, output: File, order: List<Int>, rotations: Map<Int, Int>) {
+    suspend fun extract(input: File, range: String, output: File, rotation: Int = 0) {
+        val count =
+            PDDocument.load(input, MemoryUsageSetting.setupTempFileOnly()).use { it.numberOfPages }
+        organize(
+            input,
+            output,
+            parsePageRange(range, count),
+            parsePageRange(range, count).associateWith { rotation },
+        )
+    }
+
+    suspend fun organize(input: File, output: File, order: List<Int>, rotations: Map<Int, Int>) {
         require(order.isNotEmpty()) { "至少保留一页" }
-        atomicSync(output) { temp ->
-            PDDocument.load(input, MemoryUsageSetting.setupTempFileOnly()).use { source ->
-                PDDocument().use { destination ->
-                    order.forEach { n ->
-                        require(n in 0 until source.numberOfPages)
-                        val page = source.getPage(n)
-                        destination.importPage(page).also {
-                            it.resources = page.resources
-                            it.rotation = (page.rotation + (rotations[n] ?: 0)) % 360
-                        }
-                    }
-                    destination.save(temp)
-                }
-            }
-        }
+        val count =
+            PDDocument.load(input, MemoryUsageSetting.setupTempFileOnly()).use { it.numberOfPages }
+        require(order.all { it in 0 until count }) { "页码超出范围" }
+        val source = AssemblySource("source", input.nameWithoutExtension, count, "")
+        val plan =
+            AssemblyPlan(
+                listOf(source),
+                order.map {
+                    AssemblyPage(
+                        sourceId = source.documentId,
+                        page = it,
+                        rotation = rotations[it] ?: 0,
+                    )
+                },
+                title = output.nameWithoutExtension,
+            )
+        PdfAssembly.writeFiles(null, plan, mapOf(source.documentId to input), output)
     }
 
     fun text(input: File): String =

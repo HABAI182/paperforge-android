@@ -1,0 +1,35 @@
+{
+  "feature": "native PDF semantics across assembly, merge, extraction and organization",
+  "updated": "2026-10-25",
+  "environment": "API35 AOSP x86_64 emulator; synthetic ordinary AcroForms and native PDFs",
+  "focusedTest": {
+    "tests": 1,
+    "passed": true,
+    "seconds": 1.255
+  },
+  "verified": [
+    "Selected widgets remain editable with rebuilt field hierarchy and owned output-page references",
+    "Cross-source root names are disambiguated; repeated page fields get independent names, values and appearance streams",
+    "Default font resources are namespaced; field formatting scripts with literal getField references follow renamed fields",
+    "Checkbox values and appearance states survive; filling duplicated fields then flattening yields different visible values on each copy",
+    "Original hierarchical outlines and named/explicit link targets retain XYZ/Fit coordinates while unselected targets are pruned",
+    "Logical page labels follow reordered and duplicated pages; generated cover has its own label",
+    "Embedded-file names retain extension on collision; catalog and page associated-file entries are copied when requested",
+    "User may independently drop original outlines, source labels or attachments",
+    "Existing merge/extract/organize APIs now share the same native copier",
+    "Source input SHA256 values unchanged",
+    "MuPDF independently reads six editable fields, correct values, three attachments and remapped outlines; edited duplicate rendered with00789"
+  ],
+  "limits": [
+    "Ordinary AcroForms only; dynamic XFA is reported as unsupported and belongs to PDF10",
+    "Signature widgets preserve visual appearance only; original certificate validity is not claimed",
+    "Calculated JavaScript built from dynamic field-name expressions is not rewritten; literal getField references are handled",
+    "Annotation popup/reply relationships are not retained by page assembly yet",
+    "No physical phone or third-party Android reader acceptance in this check"
+  ],
+  "testNotes": [
+    "Test compile fixed missing import and coroutine helper; JUnit wrapper return type corrected before focused flow passed",
+    "No unrelated scanner/OCR/reader suite rerun"
+  ],
+  "releaseCreated": false
+}
