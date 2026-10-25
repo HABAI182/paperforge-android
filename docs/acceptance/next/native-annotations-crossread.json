@@ -1,0 +1,28 @@
+{
+  "native-annotations-proof.pdf": {
+    "pages": 2,
+    "types": [
+      "Highlight",
+      "Underline",
+      "StrikeOut",
+      "FreeText",
+      "Text",
+      "Stamp",
+      "Ink",
+      "Square",
+      "Highlight"
+    ],
+    "selectableText": [
+      "ORIGINAL SELECTABLE PAGE 1\n中文批注\n已审核\n",
+      "ORIGINAL SELECTABLE PAGE 2\n"
+    ]
+  },
+  "native-annotations-flat-proof.pdf": {
+    "pages": 2,
+    "types": [],
+    "selectableText": [
+      "ORIGINAL SELECTABLE PAGE 1\n修改后的批注\n已审核\n",
+      "ORIGINAL SELECTABLE PAGE 2\n"
+    ]
+  }
+}

@@ -129,6 +129,7 @@ fun ReaderTextSheet(
     onFocus: (ReaderTextBlock) -> Unit,
     onLocate: () -> Unit,
     onDismiss: () -> Unit,
+    onMark: (ReaderTextBlock, String) -> Unit,
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as PaperForgeApp
@@ -208,6 +209,15 @@ fun ReaderTextSheet(
                 }
                 TextButton(onClick = { excerpt = true }, enabled = ordered.isNotEmpty()) {
                     Text("保存摘录")
+                }
+                listOf("高亮" to "highlight", "下划线" to "underline", "删除线" to "strikeout").forEach {
+                    (label, kind) ->
+                    TextButton(
+                        onClick = { ordered.getOrNull(selected)?.let { onMark(it, kind) } },
+                        enabled = ordered.isNotEmpty(),
+                    ) {
+                        Text(label)
+                    }
                 }
                 listOf("按行" to 0, "先左后右" to 1, "先右后左" to 2).forEach { (label, value) ->
                     FilterChip(order == value, { order = value }, label = { Text(label) })

@@ -9,7 +9,6 @@ import com.tom_roush.pdfbox.io.MemoryUsageSetting
 import com.tom_roush.pdfbox.pdmodel.*
 import com.tom_roush.pdfbox.pdmodel.common.PDRectangle
 import com.tom_roush.pdfbox.pdmodel.graphics.image.JPEGFactory
-import com.tom_roush.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState
 import java.io.File
 import kotlin.coroutines.coroutineContext
 import kotlin.math.*
@@ -23,6 +22,7 @@ data class PdfMark(
     val color: Int = Color.RED,
     val width: Float = .004f,
     val text: String = "",
+    val id: String = java.util.UUID.randomUUID().toString(),
 ) {
     fun json() =
         JSONObject()
@@ -31,6 +31,7 @@ data class PdfMark(
             .put("color", color)
             .put("width", width)
             .put("text", text)
+            .put("id", id)
             .put("points", JSONArray(points.map { JSONArray(listOf(it.x, it.y)) }))
 
     companion object {
@@ -50,6 +51,7 @@ data class PdfMark(
                         o.optInt("color", Color.RED),
                         o.optDouble("width", .004).toFloat(),
                         o.optString("text"),
+                        o.optString("id").ifBlank { java.util.UUID.randomUUID().toString() },
                     )
                 }
             }
@@ -58,7 +60,7 @@ data class PdfMark(
 
 object PdfMarks {
     /**
-     * Ordinary marks are flattened into a copy. A redaction rebuilds every page from pixels; no
+     * Ordinary marks support native annotations or a flattened copy. Redaction rebuilds pixels; no
      * original content streams, attachments, hidden text or metadata enter that output.
      */
     suspend fun save(
@@ -66,104 +68,25 @@ object PdfMarks {
         input: File,
         output: File,
         marks: List<PdfMark>,
+        editable: Boolean = false,
         progress: suspend (Int) -> Unit = {},
     ) {
-        require(marks.isNotEmpty()) { "请先添加批注" }
         if (marks.any { it.kind == "redact" }) {
-            raster(input, output, marks, progress)
+            val preview =
+                File(
+                    output.parentFile,
+                    "marks-redaction-preview-${java.util.UUID.randomUUID()}.pdf",
+                )
+            try {
+                PdfNativeMarks.preview(input, preview)
+                raster(preview, output, marks, progress)
+            } finally {
+                preview.delete()
+            }
             return
         }
-        PdfTools.write(input, output) { doc ->
-            val font =
-                if (marks.any { it.kind == "text" }) PdfTextLayer.font(context, doc) else null
-            marks
-                .groupBy { it.page }
-                .forEach { (index, items) ->
-                    require(index in 0 until doc.numberOfPages)
-                    val page = doc.getPage(index)
-                    val box = page.cropBox
-                    PDPageContentStream(
-                            doc,
-                            page,
-                            PDPageContentStream.AppendMode.APPEND,
-                            true,
-                            true,
-                        )
-                        .use { c ->
-                            items.forEach { mark ->
-                                if (mark.points.isEmpty()) return@forEach
-                                val points =
-                                    mark.points.map { p ->
-                                        PdfCoordinates.unrotate(p, page.rotation).let {
-                                            PointF(
-                                                box.lowerLeftX + it.x * box.width,
-                                                box.lowerLeftY + (1 - it.y) * box.height,
-                                            )
-                                        }
-                                    }
-                                c.saveGraphicsState()
-                                c.setStrokingColor(
-                                    Color.red(mark.color),
-                                    Color.green(mark.color),
-                                    Color.blue(mark.color),
-                                )
-                                c.setNonStrokingColor(
-                                    Color.red(mark.color),
-                                    Color.green(mark.color),
-                                    Color.blue(mark.color),
-                                )
-                                c.setLineWidth(mark.width * min(box.width, box.height))
-                                c.setLineCapStyle(1)
-                                c.setLineJoinStyle(1)
-                                when (mark.kind) {
-                                    "rect",
-                                    "highlight" -> {
-                                        val a = points.first()
-                                        val b = points.last()
-                                        if (mark.kind == "highlight")
-                                            c.setGraphicsStateParameters(
-                                                PDExtendedGraphicsState().apply {
-                                                    nonStrokingAlphaConstant = .3f
-                                                }
-                                            )
-                                        c.addRect(
-                                            min(a.x, b.x),
-                                            min(a.y, b.y),
-                                            abs(b.x - a.x),
-                                            abs(b.y - a.y),
-                                        )
-                                        if (mark.kind == "highlight") c.fill() else c.stroke()
-                                    }
-                                    "text" -> {
-                                        val p = points.first()
-                                        c.beginText()
-                                        c.setFont(font!!, max(10f, mark.width * box.width * 5))
-                                        val radians = Math.toRadians(-page.rotation.toDouble())
-                                        c.setTextMatrix(
-                                            com.tom_roush.pdfbox.util.Matrix.getRotateInstance(
-                                                radians,
-                                                p.x,
-                                                p.y,
-                                            )
-                                        )
-                                        c.showText(
-                                            PdfTextLayer.safe(font, mark.text.replace('\n', ' '))
-                                        )
-                                        c.endText()
-                                    }
-                                    else -> {
-                                        c.moveTo(points.first().x, points.first().y)
-                                        points.drop(1).forEach { c.lineTo(it.x, it.y) }
-                                        if (points.size == 1)
-                                            c.lineTo(points.first().x + .1f, points.first().y)
-                                        c.stroke()
-                                    }
-                                }
-                                c.restoreGraphicsState()
-                            }
-                        }
-                }
-        }
+        PdfTools.write(input, output) { doc -> PdfNativeMarks.apply(context, doc, marks, editable) }
+        progress(100)
     }
 
     private suspend fun raster(
@@ -269,9 +192,21 @@ object PdfMarks {
                     paint,
                 )
             }
+            "underline",
+            "strikeout" -> {
+                val y = if (mark.kind == "underline") max(a.y, b.y) else (a.y + b.y) / 2
+                canvas.drawLine(min(a.x, b.x) * w, y * h, max(a.x, b.x) * w, y * h, paint)
+            }
+            "note",
+            "label",
             "text" -> {
                 paint.textSize = max(10f, mark.width * w * 5)
-                canvas.drawText(mark.text, a.x * w, a.y * h, paint)
+                canvas.drawText(
+                    if (mark.kind == "note") "N" else mark.text,
+                    a.x * w,
+                    a.y * h,
+                    paint,
+                )
             }
             else -> {
                 paint.style = Paint.Style.STROKE

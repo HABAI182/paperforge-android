@@ -688,6 +688,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                 doc!!.title,
                 textPoint,
                 onFocus = { focusedText = selectedPage to it },
+                onMark = { block, kind -> vm.addReaderMark(selectedPage, block, kind) },
                 onLocate = { goTo(selectedPage) },
                 onDismiss = {
                     textPage = null

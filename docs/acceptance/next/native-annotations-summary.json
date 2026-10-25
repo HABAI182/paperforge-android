@@ -1,0 +1,37 @@
+{
+  "feature": "standard editable PDF annotations and native flattening",
+  "updated": "2026-10-25",
+  "environment": "API35 x86_64 emulator; two synthetic crop-offset/rotated native pages; independent MuPDF read/edit/render",
+  "focusedTest": {
+    "tests": 1,
+    "passed": true,
+    "seconds": 2.613
+  },
+  "verified": [
+    "Highlight/Underline/StrikeOut have standard QuadPoints, comments, color and appearances",
+    "FreeText with embedded CJK font, Text sticky note, Stamp label, Ink and Square are recognized by MuPDF",
+    "Rotated90-degree page and nonzero crop origin map to correct positions; Chinese annotation orientation corrected after visual inspection",
+    "Editable and flattened exports preserve original selectable text, existing links, crop and rotation",
+    "Drafts carry stable IDs and use AtomicFile; PaperForge annotations can be reloaded, changed or fully removed without duplicating existing marks",
+    "A duplicate annotation imported from duplicated PDF pages gets its own editor ID",
+    "Flattened copy contains added text in page content and removes only newly managed editable annotations",
+    "MuPDF edits a standard underline annotation independently and saves the edited result",
+    "Reader selected text-line geometry can create standard highlight/underline/strikeout draft marks"
+  ],
+  "uiVerified": [
+    "Draw stroke on existing third page",
+    "Open annotation list, edit width/position, apply, undo and redo",
+    "Open export dialog and inspect editable/flattened choices"
+  ],
+  "limits": [
+    "PaperForge reopens its own embedded draft metadata; arbitrary external annotation editing/import is not yet a general editor",
+    "Multiline sticky-note content is retained in Contents; free text and label currently lay out on a single line",
+    "Handwritten Ink signatures provide no certificate signing; PDF10 remains separate",
+    "Original semantic redaction remains PDF04; existing raster redaction explicitly remains raster"
+  ],
+  "testNotes": [
+    "Focused flow rerun only after fixing visible rotated text and blank note appearance; unrelated suites not rerun",
+    "Cross-engine check uses MuPDF locally, not a third-party Android app"
+  ],
+  "releaseCreated": false
+}

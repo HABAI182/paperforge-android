@@ -26,13 +26,31 @@ import kotlin.math.*
 import kotlinx.coroutines.*
 import org.json.JSONArray
 
+private fun markLabel(kind: String) =
+    mapOf(
+        "pen" to "画笔",
+        "signature" to "签名笔迹",
+        "highlight" to "高亮",
+        "underline" to "下划线",
+        "strikeout" to "删除线",
+        "rect" to "矩形",
+        "text" to "文字",
+        "note" to "便签",
+        "label" to "图章",
+        "redact" to "脱敏区域",
+    )[kind] ?: "批注"
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnnotationScreen(vm: MainViewModel) {
     val doc by vm.selected.collectAsState()
     val marks by vm.marks.collectAsState()
     val busy by vm.busy.collectAsState()
-    val file = doc?.pdfPath?.let { File(it) }
+    val preview by vm.marksPreview.collectAsState()
+    val originalCount by vm.managedMarksCount.collectAsState()
+    val undo by vm.canUndoMarks.collectAsState()
+    val redo by vm.canRedoMarks.collectAsState()
+    val file = (preview ?: doc?.pdfPath)?.let { File(it) }
     val session by
         produceState<PdfSession?>(null, file) {
             value = withContext(Dispatchers.IO) { file?.let { PdfSession(it) } }
@@ -54,6 +72,9 @@ fun AnnotationScreen(vm: MainViewModel) {
     var textAt by remember { mutableStateOf<PointN?>(null) }
     var text by remember { mutableStateOf("") }
     var confirm by remember { mutableStateOf(false) }
+    var editable by remember { mutableStateOf(true) }
+    var showList by remember { mutableStateOf(false) }
+    var editing by remember { mutableStateOf<PdfMark?>(null) }
     val prefs = LocalContext.current.getSharedPreferences("signature", 0)
     var signature by remember {
         mutableStateOf(
@@ -75,14 +96,10 @@ fun AnnotationScreen(vm: MainViewModel) {
                     }
                 },
                 actions = {
+                    TextButton(enabled = undo && !busy, onClick = { vm.undoMarks() }) { Text("撤销") }
+                    TextButton(enabled = redo && !busy, onClick = { vm.redoMarks() }) { Text("重做") }
                     TextButton(
-                        enabled = marks.isNotEmpty() && !busy,
-                        onClick = { vm.updateMarks(marks.dropLast(1)) },
-                    ) {
-                        Text("撤销")
-                    }
-                    TextButton(
-                        enabled = marks.isNotEmpty() && !busy,
+                        enabled = (marks.isNotEmpty() || originalCount > 0) && !busy,
                         onClick = { confirm = true },
                     ) {
                         Text("保存副本")
@@ -99,8 +116,12 @@ fun AnnotationScreen(vm: MainViewModel) {
                 listOf(
                         "pen" to "画笔",
                         "highlight" to "高亮框",
+                        "underline" to "下划线",
+                        "strikeout" to "删除线",
                         "rect" to "矩形",
                         "text" to "文字",
+                        "note" to "便签",
+                        "label" to "文字图章",
                         "signature" to "手写签名",
                         "stamp" to "复用签名",
                         "redact" to "安全脱敏",
@@ -146,7 +167,7 @@ fun AnnotationScreen(vm: MainViewModel) {
             }
             Text(
                 if (tool == "redact") "拖框选择遮盖区域；导出将所有页重绘为图片并移除原文字与附件。"
-                else if (tool == "stamp") "拖框放置已保存的签名。" else "批注草稿自动保存；导出为固定图层副本。",
+                else if (tool == "stamp") "拖框放置已保存的签名。" else "批注草稿自动保存；支持可编辑批注或固定导出。",
                 Modifier.padding(horizontal = 16.dp),
                 style = MaterialTheme.typography.bodySmall,
             )
@@ -177,7 +198,7 @@ fun AnnotationScreen(vm: MainViewModel) {
                                         (o.x / size.width).coerceIn(0f, 1f),
                                         (o.y / size.height).coerceIn(0f, 1f),
                                     )
-                                if (tool == "text")
+                                if (tool in setOf("text", "note", "label"))
                                     detectTapGestures {
                                         textAt = point(it)
                                         text = ""
@@ -203,6 +224,10 @@ fun AnnotationScreen(vm: MainViewModel) {
                                                             currentMarks +
                                                                 signature.map { s ->
                                                                     s.copy(
+                                                                        id =
+                                                                            java.util.UUID
+                                                                                .randomUUID()
+                                                                                .toString(),
                                                                         page = page,
                                                                         points =
                                                                             s.points.map {
@@ -267,9 +292,23 @@ fun AnnotationScreen(vm: MainViewModel) {
                                                     )
                                                 else androidx.compose.ui.graphics.drawscope.Fill,
                                         )
+                                    "underline",
+                                    "strikeout" -> {
+                                        val y =
+                                            if (mark.kind == "underline") max(a.y, z.y)
+                                            else (a.y + z.y) / 2
+                                        drawLine(
+                                            ink,
+                                            Offset(min(a.x, z.x) * size.width, y * size.height),
+                                            Offset(max(a.x, z.x) * size.width, y * size.height),
+                                            mark.width * min(size.width, size.height),
+                                        )
+                                    }
+                                    "note",
+                                    "label",
                                     "text" ->
                                         drawContext.canvas.nativeCanvas.drawText(
-                                            mark.text,
+                                            if (mark.kind == "note") "▣" else mark.text,
                                             a.x * size.width,
                                             a.y * size.height,
                                             android.graphics
@@ -309,6 +348,9 @@ fun AnnotationScreen(vm: MainViewModel) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 TextButton(enabled = page > 0, onClick = { page-- }) { Text("上一页") }
+                TextButton(onClick = { showList = true }, enabled = marks.isNotEmpty()) {
+                    Text("批注列表")
+                }
                 TextButton(
                     enabled = marks.any { it.kind == "signature" && it.page == page },
                     onClick = {
@@ -346,7 +388,9 @@ fun AnnotationScreen(vm: MainViewModel) {
     if (textAt != null)
         AlertDialog(
             onDismissRequest = { textAt = null },
-            title = { Text("添加文字") },
+            title = {
+                Text(if (tool == "note") "添加便签" else if (tool == "label") "文字图章" else "添加文字")
+            },
             text = { OutlinedTextField(text, { text = it }, label = { Text("批注文字") }) },
             confirmButton = {
                 TextButton(
@@ -355,7 +399,7 @@ fun AnnotationScreen(vm: MainViewModel) {
                             add(
                                 PdfMark(
                                     page,
-                                    "text",
+                                    tool,
                                     listOf(textAt!!),
                                     color,
                                     width.coerceAtLeast(.005f),
@@ -375,17 +419,25 @@ fun AnnotationScreen(vm: MainViewModel) {
             onDismissRequest = { confirm = false },
             title = { Text("保存批注副本") },
             text = {
-                Text(
-                    if (marks.any { it.kind == "redact" })
-                        "包含安全脱敏：所有页会重新生成图片 PDF，文字、链接、表单及附件不复制到新文件。应用仍保留源文件，请分享新生成的副本。"
-                    else "批注将固定到新 PDF 中；原文件和可编辑草稿保留。手写签名是图像笔迹，不提供数字证书认证。"
-                )
+                Column {
+                    Text(
+                        if (marks.any { it.kind == "redact" })
+                            "包含安全脱敏：所有页会重新生成图片 PDF，文字、链接、表单及附件不复制到新文件。应用仍保留源文件，请分享新生成的副本。"
+                        else "可编辑批注可由其他 PDF 阅读器继续修改；固定导出将新批注写入页面。原文件和草稿保留。手写签名保存为笔迹。"
+                    )
+                    if (marks.none { it.kind == "redact" })
+                        Row {
+                            FilterChip(editable, { editable = true }, label = { Text("可编辑批注") })
+                            Spacer(Modifier.width(8.dp))
+                            FilterChip(!editable, { editable = false }, label = { Text("固定到页面") })
+                        }
+                }
             },
             confirmButton = {
                 TextButton(
                     onClick = {
                         confirm = false
-                        vm.saveMarks()
+                        vm.saveMarks(editable)
                     }
                 ) {
                     Text("生成副本")
@@ -393,4 +445,121 @@ fun AnnotationScreen(vm: MainViewModel) {
             },
             dismissButton = { TextButton(onClick = { confirm = false }) { Text("取消") } },
         )
+    if (showList)
+        ModalBottomSheet(onDismissRequest = { showList = false }) {
+            Column(
+                Modifier.fillMaxHeight(.75f).padding(16.dp).verticalScroll(rememberScrollState())
+            ) {
+                Text("批注 · ${marks.size} 项", style = MaterialTheme.typography.titleLarge)
+                marks.forEach { mark ->
+                    ListItem(
+                        headlineContent = {
+                            Text(mark.text.ifBlank { markLabel(mark.kind) }.take(90))
+                        },
+                        supportingContent = {
+                            Text("第 ${mark.page+1} 页 · ${markLabel(mark.kind)}")
+                        },
+                        trailingContent = {
+                            Row {
+                                TextButton(
+                                    onClick = {
+                                        page = mark.page
+                                        editing = mark
+                                        showList = false
+                                    }
+                                ) {
+                                    Text("编辑")
+                                }
+                                TextButton(
+                                    onClick = {
+                                        vm.updateMarks(marks.filterNot { it.id == mark.id })
+                                    }
+                                ) {
+                                    Text("删除")
+                                }
+                            }
+                        },
+                    )
+                }
+            }
+        }
+    editing?.let { selected ->
+        var value by remember(selected.id) { mutableStateOf(selected.text) }
+        var ink by remember(selected.id) { mutableIntStateOf(selected.color) }
+        var weight by remember(selected.id) { mutableFloatStateOf(selected.width) }
+        var dx by remember(selected.id) { mutableFloatStateOf(0f) }
+        var dy by remember(selected.id) { mutableFloatStateOf(0f) }
+        AlertDialog(
+            onDismissRequest = { editing = null },
+            title = { Text("编辑批注") },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    if (
+                        selected.kind in
+                            setOf("text", "note", "label", "highlight", "underline", "strikeout")
+                    ) {
+                        OutlinedTextField(value, { value = it }, label = { Text("文字 / 注释") })
+                    }
+                    Row {
+                        listOf(
+                                android.graphics.Color.RED,
+                                android.graphics.Color.BLUE,
+                                android.graphics.Color.BLACK,
+                                android.graphics.Color.YELLOW,
+                            )
+                            .forEach { c ->
+                                Box(
+                                    Modifier.padding(6.dp)
+                                        .size(30.dp)
+                                        .background(Color(c))
+                                        .border(
+                                            if (ink == c) 3.dp else 1.dp,
+                                            MaterialTheme.colorScheme.outline,
+                                        )
+                                        .clickable { ink = c }
+                                )
+                            }
+                    }
+                    Text("线宽 / 字号")
+                    Slider(weight, { weight = it }, valueRange = 0.002f..0.014f)
+                    Text("水平移动")
+                    Slider(
+                        dx,
+                        { dx = it },
+                        valueRange =
+                            -selected.points.minOf { it.x }..(1 - selected.points.maxOf { it.x }),
+                    )
+                    Text("垂直移动")
+                    Slider(
+                        dy,
+                        { dy = it },
+                        valueRange =
+                            -selected.points.minOf { it.y }..(1 - selected.points.maxOf { it.y }),
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        vm.updateMarks(
+                            marks.map { mark ->
+                                if (mark.id == selected.id)
+                                    mark.copy(
+                                        text = value,
+                                        color = ink,
+                                        width = weight,
+                                        points = mark.points.map { p -> PointN(p.x + dx, p.y + dy) },
+                                    )
+                                else mark
+                            }
+                        )
+                        editing = null
+                    }
+                ) {
+                    Text("应用")
+                }
+            },
+            dismissButton = { TextButton(onClick = { editing = null }) { Text("取消") } },
+        )
+    }
 }

@@ -446,8 +446,8 @@
     {
       "id": "PDF02",
       "title": "标准批注与导出",
-      "status": "planned",
-      "note": "完整目标保留，未在本版标记完成"
+      "status": "done",
+      "note": "标准Highlight/Underline/StrikeOut/FreeText/Text/Stamp/Ink/Square批注及可编辑/固定导出；阅读文字按行标记、批注列表修改/删除/撤销重做、原生草稿重开与原子保存。旋转/裁切原点、保留原生内容的集中检查及MuPDF独立修改/渲染通过；通用第三方批注导入另有限制。"
     },
     {
       "id": "PDF03",

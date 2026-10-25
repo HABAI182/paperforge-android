@@ -172,6 +172,7 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                                 input,
                                 file,
                                 PdfMark.decode(org.json.JSONArray(data.readText())),
+                                editable = p.optBoolean("editable", true),
                             ) {
                                 setProgress(workDataOf("progress" to it))
                             }

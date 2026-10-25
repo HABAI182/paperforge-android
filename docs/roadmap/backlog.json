@@ -946,7 +946,7 @@
       ],
       "scope": "文本标记便签区域图章，可编辑/扁平导出",
       "acceptance": "另一阅读器看到正确批注，不只是黄矩形",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "PDF03",

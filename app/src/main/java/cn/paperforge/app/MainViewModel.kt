@@ -1304,29 +1304,128 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun markDraft() = File(repo.folder(selected.value!!.id), "annotations.json")
 
+    val marksPreview = MutableStateFlow<String?>(null)
+    val managedMarksCount = MutableStateFlow(0)
+    val canUndoMarks = MutableStateFlow(false)
+    val canRedoMarks = MutableStateFlow(false)
+    private val markUndo = ArrayDeque<List<PdfMark>>()
+    private val markRedo = ArrayDeque<List<PdfMark>>()
+
     fun beginMarks() =
         perform("读取批注草稿") {
+            marksSave?.join()
+            val source = File(requireNotNull(selected.value?.pdfPath))
+            val imported = PdfNativeMarks.read(source)
+            managedMarksCount.value = imported.size
             marks.value =
                 runCatching { PdfMark.decode(org.json.JSONArray(markDraft().readText())) }
-                    .getOrDefault(emptyList())
+                    .getOrDefault(imported)
+            markUndo.clear()
+            markRedo.clear()
+            canUndoMarks.value = false
+            canRedoMarks.value = false
+            val previous = marksPreview.value
+            marksPreview.value =
+                if (imported.isEmpty()) null
+                else
+                    PdfNativeMarks.preview(
+                            source,
+                            File(repo.context.cacheDir, "marks-preview-${UUID.randomUUID()}.pdf"),
+                        )
+                        .path
+            previous?.let { File(it).delete() }
             screen.value = "annotations"
         }
 
     fun updateMarks(value: List<PdfMark>) {
+        if (value == marks.value) return
+        markUndo.addLast(marks.value)
+        if (markUndo.size > 30) markUndo.removeFirst()
+        markRedo.clear()
+        persistMarks(value)
+    }
+
+    fun undoMarks() {
+        if (markUndo.isEmpty()) return
+        markRedo.addLast(marks.value)
+        persistMarks(markUndo.removeLast())
+    }
+
+    fun redoMarks() {
+        if (markRedo.isEmpty()) return
+        markUndo.addLast(marks.value)
+        persistMarks(markRedo.removeLast())
+    }
+
+    private fun persistMarks(value: List<PdfMark>) {
         marks.value = value
+        canUndoMarks.value = markUndo.isNotEmpty()
+        canRedoMarks.value = markRedo.isNotEmpty()
         val file = markDraft()
         marksSave?.cancel()
         marksSave =
             viewModelScope.launch(Dispatchers.IO) {
                 delay(250)
-                file.writeText(org.json.JSONArray(value.map { it.json() }).toString())
+                val atomic = android.util.AtomicFile(file)
+                val stream = atomic.startWrite()
+                try {
+                    stream.write(
+                        org.json
+                            .JSONArray(value.map { it.json() })
+                            .toString()
+                            .toByteArray(Charsets.UTF_8)
+                    )
+                    atomic.finishWrite(stream)
+                } catch (failure: Throwable) {
+                    atomic.failWrite(stream)
+                    throw failure
+                }
             }
     }
 
-    fun saveMarks() {
-        if (busy.value || marks.value.isEmpty()) return
+    fun saveMarks(editable: Boolean = true) {
+        if (busy.value || (marks.value.isEmpty() && managedMarksCount.value == 0)) return
         val file = File(repo.exports, "marks-job-${UUID.randomUUID()}.json")
         file.writeText(org.json.JSONArray(marks.value.map { it.json() }).toString())
-        queueTool("marks", org.json.JSONObject().put("marksFile", file.path))
+        queueTool(
+            "marks",
+            org.json.JSONObject().put("marksFile", file.path).put("editable", editable),
+        )
     }
+
+    fun addReaderMark(page: Int, block: ReaderTextBlock, kind: String) =
+        perform("添加文字标记") {
+            marksSave?.join()
+            val source = File(requireNotNull(selected.value?.pdfPath))
+            val previous =
+                runCatching { PdfMark.decode(org.json.JSONArray(markDraft().readText())) }
+                    .getOrElse { PdfNativeMarks.read(source) }
+            val mark =
+                PdfMark(
+                    page,
+                    kind,
+                    listOf(
+                        cn.paperforge.app.model.PointN(block.left, block.top),
+                        cn.paperforge.app.model.PointN(block.right, block.bottom),
+                    ),
+                    android.graphics.Color.YELLOW,
+                    text = block.text,
+                )
+            android.util.AtomicFile(markDraft()).let { atomic ->
+                val stream = atomic.startWrite()
+                try {
+                    stream.write(
+                        org.json
+                            .JSONArray((previous + mark).map { it.json() })
+                            .toString()
+                            .toByteArray(Charsets.UTF_8)
+                    )
+                    atomic.finishWrite(stream)
+                } catch (failure: Throwable) {
+                    atomic.failWrite(stream)
+                    throw failure
+                }
+            }
+            messages.send("已加入批注草稿，可在“批注”中查看和导出")
+        }
 }
