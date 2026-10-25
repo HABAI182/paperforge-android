@@ -75,6 +75,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val busy = MutableStateFlow(false)
     val progress = MutableStateFlow("")
     val output = MutableStateFlow<File?>(null)
+    val outputNotice = MutableStateFlow<Pair<String, String>?>(null)
     val ocr = MutableStateFlow<String?>(null)
     val ocrReview = MutableStateFlow("")
     val canCorrectOcr = MutableStateFlow(false)
@@ -321,8 +322,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         if (pending != null) runCatching { UUID.fromString(pending) }.onSuccess { watchExport(it) }
     }
 
-    private suspend fun publishOutput(file: File, source: DocumentRow? = null) {
+    private suspend fun publishOutput(
+        file: File,
+        source: DocumentRow? = null,
+        notice: String = "",
+    ) {
         withContext(Dispatchers.IO) { repo.recordOutput(file, source) }
+        outputNotice.value = file.path to notice
         output.value = file
     }
 
@@ -874,7 +880,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                                     }
                                     "SAVE" -> messages.send("文件已保存并核对")
                                     else -> {
-                                        publishOutput(file)
+                                        val target = info.outputData.getLong("targetBytes", 0)
+                                        val notice =
+                                            if (target > 0)
+                                                "目标 $target 字节 · 实际 ${file.length()} 字节 · ${if(info.outputData.getBoolean("targetAchieved",false)) "已达到目标" else "未达到目标，保留可用结果"}"
+                                            else ""
+                                        publishOutput(file, notice = notice)
                                         if (info.outputData.getBoolean("partial", false))
                                             messages.send(
                                                 "${info.outputData.getInt("completed",0)} 项完成，${info.outputData.getInt("failed",0)} 项失败；可在任务中心只重试失败项"
@@ -1029,6 +1040,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun compress(quality: Int) =
         queueTool("compress", org.json.JSONObject().put("quality", quality))
+
+    fun compressTarget(bytes: Long) =
+        queueTool("compress", org.json.JSONObject().put("targetBytes", bytes))
 
     fun extractText() =
         perform("正在提取 PDF 文字") {

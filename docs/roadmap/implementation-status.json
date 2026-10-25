@@ -464,8 +464,8 @@
     {
       "id": "PDF05",
       "title": "目标大小与编码优化",
-      "status": "planned",
-      "note": "完整目标保留，未在本版标记完成"
+      "status": "done",
+      "note": "有界原生图像重编码搜索（最多7次）、自定目标字节与质量档、实际结果/未达标状态和持久报告；保留文字/表单/链接及1-bit图像，含签名记录按字节保留。新WorkManager两流程及独立MuPDF/真实UI通过，不宣称全局最优或任意照片JPEG文字无损。"
     },
     {
       "id": "PDF06",
@@ -595,9 +595,9 @@
     }
   ],
   "counts": {
-    "done": 39,
-    "planned": 34,
-    "partial": 25
+    "done": 47,
+    "planned": 29,
+    "partial": 22
   },
   "releaseHold": true,
   "publishedBaseline": "0.6.0"

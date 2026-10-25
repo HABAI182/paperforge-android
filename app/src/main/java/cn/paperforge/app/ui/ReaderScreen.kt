@@ -873,39 +873,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
             },
             dismissButton = { TextButton(onClick = { rangeDialog = false }) { Text("取消") } },
         )
-    if (compressDialog)
-        AlertDialog(
-            onDismissRequest = { compressDialog = false },
-            title = { Text("压缩嵌入图片") },
-            text = {
-                Text("保留原生文字、矢量、链接和表单，只重编码可安全处理的嵌入图片。透明、特殊色彩和签名文档会保留，无法减小时输出原件副本。生成后显示实际体积。")
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        compressDialog = false
-                        vm.compress(75)
-                    },
-                    enabled = !busy,
-                ) {
-                    Text("均衡画质")
-                }
-            },
-            dismissButton = {
-                Row {
-                    TextButton(
-                        onClick = {
-                            compressDialog = false
-                            vm.compress(45)
-                        },
-                        enabled = !busy,
-                    ) {
-                        Text("小体积")
-                    }
-                    TextButton(onClick = { compressDialog = false }) { Text("取消") }
-                }
-            },
-        )
+    if (compressDialog) PdfCompressionDialog(vm, file) { compressDialog = false }
     if (jump)
         AlertDialog(
             onDismissRequest = { jump = false },

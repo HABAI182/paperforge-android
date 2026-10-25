@@ -983,7 +983,7 @@
       "dependencies": [],
       "scope": "真实灰度/二值编码、画质预览、不可缩小时保原件",
       "acceptance": "不虚报压缩率，不损坏数字笔画",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "PDF06",
@@ -1252,9 +1252,9 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 39,
-    "planned": 34,
-    "partial": 25
+    "done": 47,
+    "planned": 29,
+    "partial": 22
   },
   "updated": "2026-10-25"
 }

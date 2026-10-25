@@ -1,0 +1,25 @@
+{
+  "feature": "native PDF target-size compression",
+  "updated": "2026-10-25",
+  "focusedTests": {
+    "passed": true,
+    "count": 2,
+    "seconds": 5.18
+  },
+  "verified": [
+    "Bounded search: at most 5 quality candidates plus 2 refinements; highest tested fitting quality, otherwise smallest tested result including source",
+    "2403373-byte native PDF becomes 816925 bytes against 1201686-byte target, selected quality95 in3 attempts",
+    "Native selectable text, editable field00077 and URI link preserved, independently reread by MuPDF",
+    "BPC1 digit-image stream stays byte-identical; source SHA256 unchanged",
+    "Signature-record fixture with impossible target stops after1 attempt, copies bytes unchanged, task statePARTIAL",
+    "Stale startup recovery cannot overwrite completed target outcome",
+    "Actual reader tool entry and target-size UI produce a usable unmet-target result with explicit notice",
+    "Compression report is a persistent output document resource"
+  ],
+  "limits": [
+    "No universal JPEG legibility claim from synthetic imagery; generated signed-record fixture does not validate cryptographic signatures",
+    "Quality search is bounded and does not prove global optimality; protected/masked/1-bit image resources are deliberately retained",
+    "No real ARM64 phone performance acceptance"
+  ],
+  "releaseCreated": false
+}

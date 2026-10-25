@@ -370,7 +370,10 @@ object DocumentJobs {
             val result =
                 current.resourceEntries().firstOrNull { it.id == "result" }?.path?.let(::File)
             if (info?.state == WorkInfo.State.SUCCEEDED && result?.isFile == true) {
-                val partial = info.outputData.getBoolean("partial", false)
+                val partial =
+                    info.outputData.getBoolean("partial", false) ||
+                        (info.outputData.getLong("targetBytes", 0) > 0 &&
+                            !info.outputData.getBoolean("targetAchieved", false))
                 repo.dao.taskState(
                     current.id,
                     if (partial) LocalTaskState.PARTIAL else LocalTaskState.SUCCEEDED,

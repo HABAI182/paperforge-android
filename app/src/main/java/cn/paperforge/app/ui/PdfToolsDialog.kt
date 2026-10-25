@@ -24,8 +24,14 @@ fun PdfToolsDialog(vm: MainViewModel, initialMode: String = "", onDismiss: () ->
     var number by remember { mutableStateOf("5") }
     var printAllowed by remember { mutableStateOf(true) }
     var copyAllowed by remember { mutableStateOf(true) }
+    if (mode == "compress") {
+        val doc by vm.selected.collectAsState()
+        PdfCompressionDialog(vm, doc?.pdfPath?.let({ java.io.File(it) }), onDismiss)
+        return
+    }
     val titles =
         linkedMapOf(
+            "compress" to "压缩 PDF · 目标体积",
             "searchable" to "扫描 PDF → 可搜索 PDF",
             "images-jpg" to "PDF 转 JPG 图片包",
             "images-png" to "PDF 转 PNG 图片包",

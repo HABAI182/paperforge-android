@@ -120,6 +120,7 @@ class MainActivity : ComponentActivity() {
                 val backgroundable by vm.canBackgroundTask.collectAsState()
                 val progress by vm.progress.collectAsState()
                 val output by vm.output.collectAsState()
+                val outputNotice by vm.outputNotice.collectAsState()
                 val ocr by vm.ocr.collectAsState()
                 val canCorrectOcr by vm.canCorrectOcr.collectAsState()
                 val locked by vm.outputLocked.collectAsState()
@@ -524,11 +525,15 @@ class MainActivity : ComponentActivity() {
                         }
                 }
                 output?.let { file ->
+                    val fileNotice =
+                        outputNotice?.takeIf { it.first == file.path }?.second.orEmpty()
                     AlertDialog(
                         onDismissRequest = { vm.output.value = null },
                         title = { Text(if (file.extension == "pdf") "PDF 已生成" else "文件已生成") },
                         text = {
-                            Text("${file.name}\n${file.length()/1024} KB\n已保存在应用中，可另存到系统文件夹。")
+                            Text(
+                                "${file.name}\n${file.length()/1024} KB\n${if(fileNotice.isNotBlank()) fileNotice+"\n" else ""}已保存在应用中，可另存到系统文件夹。"
+                            )
                         },
                         confirmButton = {
                             TextButton(

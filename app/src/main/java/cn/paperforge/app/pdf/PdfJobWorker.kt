@@ -72,6 +72,8 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 val input = source ?: file
                 val range = p.optString("range")
                 var origin: JSONObject? = null
+                var originRole = "assembly-origin"
+                var compression: JSONObject? = null
                 when (mode) {
                     "assemble" -> {
                         val manifest = File(p.getString("manifest"))
@@ -178,8 +180,19 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                     "html",
                     "docx",
                     "docx-image" -> PdfTools.exportText(input, file, mode)
-                    "compress" ->
-                        PdfEngine.compress(input, file, p.optInt("quality", 75)) { report(it) }
+                    "compress" -> {
+                        compression =
+                            if (p.optLong("targetBytes", 0) > 0)
+                                PdfSizeTarget.compress(input, file, p.getLong("targetBytes")) {
+                                    report(it)
+                                }
+                            else
+                                PdfImageOptimizer.compress(input, file, p.optInt("quality", 75)) {
+                                    report(it)
+                                }
+                        origin = compression
+                        originRole = "compression-report"
+                    }
                     "flatten" ->
                         PdfEngine.flatten(input, file, p.optInt("quality", 75)) { report(it) }
                     "split-each" -> PdfTools.splitEach(input, file)
@@ -214,13 +227,13 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                                 )
                             origin?.let { metadata ->
                                 val provenance =
-                                    File(repo.folder(registered.id), "assembly-origin.json")
+                                    File(repo.folder(registered.id), "$originRole.json")
                                 originFile = provenance
                                 provenance.writeText(metadata.toString())
                                 DocumentResources.register(
                                     repo,
                                     registered.id,
-                                    "assembly-origin",
+                                    originRole,
                                     provenance,
                                 )
                                 originManifest =
@@ -228,7 +241,18 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                             }
                         }
                         repo.recordOutput(file, doc)
-                        DocumentJobs.complete(repo, job, file)
+                        val unmet =
+                            compression?.optLong("targetBytes", 0)?.let {
+                                it > 0 && compression?.optBoolean("targetAchieved") != true
+                            } == true
+                        DocumentJobs.complete(
+                            repo,
+                            job,
+                            file,
+                            if (unmet) "未达到目标体积，已保留可用结果" else "已完成",
+                            if (unmet) cn.paperforge.app.data.LocalTaskState.PARTIAL
+                            else cn.paperforge.app.data.LocalTaskState.SUCCEEDED,
+                        )
                     }
                     published = true
                 }
@@ -238,6 +262,11 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                         "inputBytes" to (source?.length() ?: 0),
                         "outputBytes" to file.length(),
                         "mode" to mode,
+                        "targetBytes" to (compression?.optLong("targetBytes", 0) ?: 0L),
+                        "targetAchieved" to
+                            (compression?.optBoolean("targetAchieved", true) ?: true),
+                        "selectedQuality" to (compression?.optInt("selectedQuality", -1) ?: -1),
+                        "attempts" to (compression?.optJSONArray("attempts")?.length() ?: 0),
                     )
                 )
             } catch (e: CancellationException) {
