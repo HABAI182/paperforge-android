@@ -125,6 +125,8 @@ suspend fun Repository.applyOcrRegion(page: PageRow, run: OcrRegionResult): Page
                 recognitionMode = run.result.recognitionMode,
                 attempts = run.result.attempts,
                 rawRecognition = null,
+                frame = cn.paperforge.app.model.OcrFrame.bind(current),
+                requestSignature = "",
             )
         val record =
             OcrRecords.read(current)

@@ -28,20 +28,9 @@ data class OcrRegion(val left: Float, val top: Float, val right: Float, val bott
     }
 
     fun mapped(result: OcrLayout, width: Int, height: Int) =
-        result.copy(
-            width = width,
-            height = height,
-            orientationCorrection = 0,
-            deskewDegrees = 0f,
-            rawRecognition = null,
-            lines =
-                result.lines.map { line ->
-                    line.copy(
-                        corners = map(line.corners),
-                        elements = line.elements.map { it.copy(corners = map(it.corners)) },
-                    )
-                },
-        )
+        result
+            .mapped(width, height) { PointN(left + it.x * this.width, top + it.y * this.height) }
+            .copy(orientationCorrection = 0, deskewDegrees = 0f, rawRecognition = null)
 
     companion object {
         fun between(first: PointN, last: PointN) =
@@ -149,7 +138,9 @@ object OcrRegionMerge {
             }
         if (ambiguous) return Result(base, false)
         return Result(
-            cn.paperforge.app.ocr.OcrReadingOrder.arrange(base.copy(lines = retained + pending)),
+            cn.paperforge.app.ocr.OcrReadingOrder.arrange(
+                base.copy(lines = retained + pending, tables = emptyList())
+            ),
             true,
         )
     }

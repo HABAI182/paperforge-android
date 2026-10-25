@@ -83,6 +83,14 @@ fun OcrProofreadScreen(vm: MainViewModel) {
         topBar = {
             TopAppBar(
                 title = { Text("文字校对") },
+                actions = {
+                    TextButton(
+                        onClick = { page?.let(vm::exportOcrStructure) },
+                        enabled = page != null && layout != null && !busy,
+                    ) {
+                        Text("结构数据")
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = { vm.screen.value = "editor" }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回扫描")

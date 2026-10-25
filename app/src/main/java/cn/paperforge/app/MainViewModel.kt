@@ -1105,6 +1105,25 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
 
     val tableReview = MutableStateFlow<List<PhoneTables.Table>>(emptyList())
+
+    fun exportOcrStructure(page: PageRow) =
+        perform("正在导出结构数据") {
+            val current =
+                repo.dao.pages(page.documentId).firstOrNull { it.id == page.id } ?: error("页面已移除")
+            val layout =
+                current.ocrLayout?.let(cn.paperforge.app.model.OcrLayout::decode) ?: error("请先识别本页")
+            require(layout.matches(current)) { "页面已修改，请重新识别" }
+            val file =
+                File(
+                    repo.exports,
+                    "PaperForge-page-${current.position + 1}-${System.currentTimeMillis()}.ocr.json",
+                )
+            file.writeText(cn.paperforge.app.model.OcrStructure.json(layout).toString(2))
+            repo.recordOutput(file, repo.dao.document(current.documentId))
+            outputLocked.value = false
+            publishOutput(file)
+        }
+
     private var tableOutputCsv = false
 
     fun phoneTables(uri: Uri, csv: Boolean, options: org.json.JSONObject) =

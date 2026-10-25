@@ -51,7 +51,7 @@ class OcrDocumentWorker(context: Context, params: WorkerParameters) :
                         page.ocrLayout
                             ?.let { runCatching { OcrLayout.decode(it) }.getOrNull() }
                             ?.takeIf {
-                                it.sourceRevision == page.revision &&
+                                it.matches(page) &&
                                     (it.requestSignature == request.signature ||
                                         it.lines.any { line -> line.corrected })
                             }

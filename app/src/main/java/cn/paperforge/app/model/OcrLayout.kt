@@ -40,6 +40,8 @@ data class OcrLayout(
     val rawRecognition: String? = null,
     val requestSignature: String = "",
     val engineMetrics: Map<String, Double> = emptyMap(),
+    val frame: OcrFrame? = null,
+    val tables: List<OcrTable> = emptyList(),
 ) {
     val text
         get() = lines.joinToString("\n") { it.text }
@@ -49,7 +51,8 @@ data class OcrLayout(
 
     fun encode() =
         JSONObject()
-            .put("schema", 3)
+            .put("schema", 4)
+            .put("ir", OcrStructure.json(this))
             .put("width", width)
             .put("height", height)
             .put("engineId", engineId)
@@ -125,19 +128,40 @@ data class OcrLayout(
                 270 -> PointN(p.y, 1 - p.x)
                 else -> p
             }
-        return copy(
-            width = if (angle % 180 == 0) width else height,
-            height = if (angle % 180 == 0) height else width,
-            orientationCorrection = 0,
+        return mapped(
+                if (angle % 180 == 0) width else height,
+                if (angle % 180 == 0) height else width,
+                ::point,
+            )
+            .copy(orientationCorrection = 0)
+    }
+
+    fun mapped(width: Int, height: Int, transform: (PointN) -> PointN) =
+        copy(
+            width = width,
+            height = height,
+            frame = null,
             lines =
-                lines.map { l ->
-                    l.copy(
-                        corners = l.corners.map(::point),
-                        elements = l.elements.map { e -> e.copy(corners = e.corners.map(::point)) },
+                lines.map { line ->
+                    line.copy(
+                        corners = line.corners.map(transform),
+                        elements =
+                            line.elements.map { it.copy(corners = it.corners.map(transform)) },
+                    )
+                },
+            tables =
+                tables.map { table ->
+                    table.copy(
+                        cells = table.cells.map { it.copy(corners = it.corners.map(transform)) }
                     )
                 },
         )
-    }
+
+    fun withRevision(revision: Int) =
+        copy(sourceRevision = revision, frame = frame?.copy(revision = revision))
+
+    fun matches(page: cn.paperforge.app.data.PageRow) =
+        sourceRevision == page.revision && (frame?.matches(page) != false)
 
     companion object {
         private fun points(p: List<PointN>) =
@@ -213,6 +237,14 @@ data class OcrLayout(
                         }
                         .toMap()
                 } ?: emptyMap(),
+                o.optJSONObject("ir")
+                    ?.optJSONObject("page")
+                    ?.optJSONObject("frame")
+                    ?.let(OcrFrame::decode),
+                o.optJSONObject("ir")
+                    ?.optJSONArray("tables")
+                    ?.let { a -> List(a.length()) { OcrTable.decode(a.getJSONObject(it)) } }
+                    .orEmpty(),
             )
         }
     }

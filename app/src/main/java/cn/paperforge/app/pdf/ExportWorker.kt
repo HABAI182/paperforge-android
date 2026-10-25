@@ -65,7 +65,7 @@ class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                             }
                         if (
                             cached == null ||
-                                cached.sourceRevision != page.revision ||
+                                !cached.matches(page) ||
                                 (cached.requestSignature != request.signature &&
                                     cached.lines.none { it.corrected })
                         )

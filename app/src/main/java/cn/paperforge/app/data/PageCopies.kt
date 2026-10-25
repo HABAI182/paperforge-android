@@ -133,15 +133,12 @@ suspend fun Repository.copyPages(
                             .put("operation", if (move) "move" else "copy")
                             .put("created", System.currentTimeMillis())
                     )
-                    val ocr =
-                        page.ocrLayout?.let(OcrLayout::decode)?.takeIf {
-                            it.sourceRevision == page.revision
-                        }
+                    val ocr = page.ocrLayout?.let(OcrLayout::decode)?.takeIf { it.matches(page) }
                     remapped.copy(
                         id = UUID.randomUUID().toString(),
                         documentId = proposed.id,
                         revision = 0,
-                        ocrLayout = ocr?.copy(sourceRevision = 0)?.encode(),
+                        ocrLayout = ocr?.withRevision(0)?.encode(),
                         processingMetadata = json.toString(),
                     )
                 }

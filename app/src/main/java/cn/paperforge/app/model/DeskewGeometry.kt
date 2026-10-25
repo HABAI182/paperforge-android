@@ -25,17 +25,10 @@ class DeskewGeometry(val width: Int, val height: Int, val degrees: Float) {
 
     fun map(layout: OcrLayout, forward: Boolean): OcrLayout {
         val transform: (PointN) -> PointN = if (forward) ::forward else ::inverse
-        return layout.copy(
-            width = if (forward) outputWidth else width,
-            height = if (forward) outputHeight else height,
-            lines =
-                layout.lines.map { l ->
-                    l.copy(
-                        corners = l.corners.map(transform),
-                        elements =
-                            l.elements.map { e -> e.copy(corners = e.corners.map(transform)) },
-                    )
-                },
+        return layout.mapped(
+            if (forward) outputWidth else width,
+            if (forward) outputHeight else height,
+            transform,
         )
     }
 }

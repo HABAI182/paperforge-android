@@ -56,7 +56,7 @@ object PdfEngine {
                             page.ocrLayout
                                 ?.let { runCatching { OcrLayout.decode(it) }.getOrNull() }
                                 ?.takeIf {
-                                    it.sourceRevision == page.revision &&
+                                    it.matches(page) &&
                                         (it.requestSignature ==
                                             engine.signature(
                                                 cn.paperforge.app.UserSettings.string(

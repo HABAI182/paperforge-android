@@ -1,0 +1,33 @@
+{
+  "checked": "2026-10-26",
+  "cards": [
+    "OCR04"
+  ],
+  "focusedCheck": {
+    "test": "OcrStructureFlowTest#treeFramesCellsTransformsAndHistoryStayOnTheSamePageRevision",
+    "result": "passed",
+    "seconds": 1.149
+  },
+  "implemented": [
+    "OcrLayout schema4 serializes canonical page/block/paragraph/line/word hierarchy, explicit reading-order references and real cell/span geometry; legacy flat views remain for existing consumers",
+    "Every cached scan OCR carries image SHA256, source revision, crop/rotation/deskew/aspect/dewarp descriptor and geometry signature",
+    "All shared rotation/deskew/region transformations include cell geometry, invalidate the old frame and bind the current processed page when persisted",
+    "PDF/scan export and OCR cache checks reject mismatched frames; history/cross-document copies explicitly rebase revisions while preserving geometry and image identity",
+    "Corrected text regenerates the tree, suppresses obsolete word geometry, and invalidates derived tables; regional OCR binds current frame and invalidates whole-page request signature",
+    "Text-proofreading toolbar exports actual IR JSON and records the result"
+  ],
+  "checks": [
+    "90-degree rotation and -2-degree deskew transform text, words and merged cell together",
+    "Same revision with altered rotation or dewarp descriptor is rejected",
+    "Serialization preserves frame, cells, confidence and exact text",
+    "Correction clears stale words/tables; undo restores table and valid new source revision",
+    "Copy to a new page ID with preserved source pixels/geometry and revision0 remains valid",
+    "Schema3 layouts still decode without frame or tables"
+  ],
+  "limits": [
+    "IR block/paragraph grouping describes recognizer layout; no semantic heading classifier claim",
+    "No per-word boxes are synthesized for Paddle line-only recognition",
+    "Actual ruled-table reconstruction and visual source comparison remain OCR07 work",
+    "No new physical-phone or external-reader acceptance in this check; no full old suite rerun"
+  ]
+}

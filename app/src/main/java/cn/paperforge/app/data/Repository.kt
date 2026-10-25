@@ -185,7 +185,12 @@ class Repository(val context: Context, val database: PaperDatabase) {
                             .DeskewGeometry(adjusted.width, adjusted.height, result.deskewDegrees)
                             .map(adjusted, true)
             }
-            adjusted = adjusted.copy(sourceRevision = current.revision, deskewDegrees = 0f)
+            adjusted =
+                adjusted.copy(
+                    sourceRevision = current.revision,
+                    deskewDegrees = 0f,
+                    frame = cn.paperforge.app.model.OcrFrame.bind(current),
+                )
             val file = OcrRecords.write(this@Repository, current, OcrRecords.create(page, adjusted))
             adjusted = adjusted.copy(rawRecognition = null)
             val updated =
@@ -247,7 +252,7 @@ class Repository(val context: Context, val database: PaperDatabase) {
             val updated =
                 current.copy(
                     ocrText = text,
-                    ocrLayout = corrected?.encode(),
+                    ocrLayout = corrected?.copy(tables = emptyList())?.encode(),
                     processingMetadata = PageResources.withOcrRecord(current, file),
                 )
             try {
@@ -306,7 +311,7 @@ class Repository(val context: Context, val database: PaperDatabase) {
                 val layout =
                     p.ocrLayout
                         ?.let { cn.paperforge.app.model.OcrLayout.decode(it) }
-                        ?.takeIf { it.sourceRevision == p.revision }
+                        ?.takeIf { it.matches(p) }
                 return p.copy(
                     revision = revision,
                     ocrText =
@@ -316,7 +321,7 @@ class Repository(val context: Context, val database: PaperDatabase) {
                         )
                             p.ocrText
                         else null,
-                    ocrLayout = layout?.copy(sourceRevision = revision)?.encode(),
+                    ocrLayout = layout?.withRevision(revision)?.encode(),
                 )
             }
             if (HistoryState.order(encoded) != null || HistoryState.isSnapshot(encoded)) {
