@@ -299,7 +299,14 @@ object PdfNativeMarks {
             }
         }
         annotation.appearance = PDAppearanceDictionary().apply { setNormalAppearance(appearance) }
-        if (annotation is PDAnnotationText) annotation.constructAppearances(pdf)
+        if (annotation is PDAnnotationText) {
+            annotation.constructAppearances(pdf)
+            // The bundled note handler replaces the BBox with local icon coordinates but retains
+            // the translation from the previous global BBox. Reset it for the newly local stream.
+            annotation.appearance.normalAppearance.appearanceStream.cosObject.removeItem(
+                COSName.MATRIX
+            )
+        }
         return annotation
     }
 }

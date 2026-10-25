@@ -1070,7 +1070,7 @@
       ],
       "scope": "先完整本地结果，再写提供程序，保留重试来源",
       "acceptance": "目标失败不出现0字节成功项",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "JOB03",

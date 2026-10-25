@@ -68,12 +68,16 @@ object BackupStore {
                         tasks.forEach { row ->
                             put(
                                 row.copy(
+                                        payload =
+                                            if (row.type in DocumentJobs.types)
+                                                DocumentJobs.remapPayload(row.payload, mapping)
+                                            else row.payload,
                                         resources =
                                             DocumentResources.encode(
                                                     row.resourceEntries(),
                                                     mapping::getValue,
                                                 )
-                                                .toString()
+                                                .toString(),
                                     )
                                     .encode()
                             )
@@ -400,22 +404,61 @@ object BackupStore {
                                 .map { old ->
                                     val document = old.documentId?.let(ids::get)
                                     val resources =
-                                        if (document == null) emptyList()
+                                        if (document == null && old.type == "CAPTURE") emptyList()
                                         else
                                             old.resourceEntries().map { resource ->
                                                 val path =
                                                     if (resource.path.startsWith("pending/"))
-                                                        files.getOrPut(resource.path to document) {
+                                                        files.getOrPut(
+                                                            resource.path to (document ?: "")
+                                                        ) {
                                                             File(
-                                                                    repo.folder(document),
+                                                                    repo.folder(document ?: ""),
                                                                     "${UUID.randomUUID()}.jpg",
                                                                 )
                                                                 .path
                                                         }
-                                                    else copy(resource.path, document)
+                                                    else copy(resource.path, document ?: "")
                                                 resource.copy(path = path)
                                             }
+                                    var payload = old.payload
+                                    if (old.type in DocumentJobs.types) {
+                                        val paths =
+                                            old.resourceEntries().zip(resources).associate {
+                                                (before, after) ->
+                                                before.path to after.path
+                                            }
+                                        payload =
+                                            DocumentJobs.remapPayload(
+                                                payload,
+                                                paths + ids + pageIds,
+                                            )
+                                        resources
+                                            .firstOrNull { it.id == "manifest" }
+                                            ?.let { resource ->
+                                                val file = File(resource.path)
+                                                val plan =
+                                                    cn.paperforge.app.pdf.AssemblyPlan.decode(
+                                                        JSONObject(file.readText())
+                                                    )
+                                                val sourceIds = ids.toMutableMap()
+                                                plan.sources.forEach { source ->
+                                                    sourceIds.getOrPut(source.documentId) {
+                                                        UUID.randomUUID().toString()
+                                                    }
+                                                }
+                                                file.writeText(
+                                                    plan.remap(sourceIds).json().toString()
+                                                )
+                                            }
+                                        if (old.type == "SAVE")
+                                            payload =
+                                                JSONObject(payload)
+                                                    .apply { getJSONObject("input").remove("uri") }
+                                                    .toString()
+                                    }
                                     old.copy(
+                                        payload = payload,
                                         id =
                                             taskIds.getOrPut(old.id) {
                                                 UUID.randomUUID().toString()
@@ -436,9 +479,11 @@ object BackupStore {
                                         resources = DocumentResources.encode(resources).toString(),
                                         workId = UUID.randomUUID().toString(),
                                         state =
-                                            if (document == null) LocalTaskState.CANCELLED
+                                            if (document == null && old.type == "CAPTURE")
+                                                LocalTaskState.CANCELLED
                                             else if (old.state in LocalTaskRow.active)
-                                                LocalTaskState.CAPTURING
+                                                if (old.type == "CAPTURE") LocalTaskState.CAPTURING
+                                                else LocalTaskState.PARTIAL
                                             else old.state,
                                         updated = System.currentTimeMillis(),
                                     )

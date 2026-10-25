@@ -77,7 +77,7 @@ fun TaskCenterScreen(vm: MainViewModel) {
                 }
             }
             Text(
-                "扫描照片先保留原图，再在后台识边。离开页面后继续处理。",
+                "扫描、OCR、PDF 导出和外部保存集中管理。已完成的结果和失败检查点会保留。",
                 Modifier.padding(16.dp),
                 style = MaterialTheme.typography.bodySmall,
             )
@@ -92,7 +92,11 @@ fun TaskCenterScreen(vm: MainViewModel) {
                 ) {
                     items(selected, key = { it.id }) { row ->
                         val active = row.state in LocalTaskRow.active
-                        val available = row.documentId != null
+                        val available =
+                            row.documentId != null ||
+                                row.resourceEntries().any {
+                                    it.id in setOf("result", "save-source") && File(it.path).isFile
+                                }
                         Card(Modifier.fillMaxWidth()) {
                             Column(
                                 Modifier.padding(16.dp),
@@ -117,7 +121,8 @@ fun TaskCenterScreen(vm: MainViewModel) {
                                     )
                                 }
                                 Text(
-                                    "第 ${row.position+1} 页 · ${row.detail}",
+                                    (if (row.type == "CAPTURE") "第 ${row.position+1} 页 · "
+                                    else "") + row.detail,
                                     style = MaterialTheme.typography.bodyMedium,
                                 )
                                 row.error?.let {
@@ -128,31 +133,45 @@ fun TaskCenterScreen(vm: MainViewModel) {
                                     )
                                 }
                                 if (row.state == LocalTaskState.RUNNING)
-                                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                                    LinearProgressIndicator(
+                                        progress = { row.progress / 100f },
+                                        modifier = Modifier.fillMaxWidth(),
+                                    )
                                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    TextButton(
-                                        onClick = { preview = row },
-                                        enabled = available && row.resourceEntries().isNotEmpty(),
-                                    ) {
-                                        Text("原图")
-                                    }
+                                    if (row.type == "CAPTURE")
+                                        TextButton(
+                                            onClick = { preview = row },
+                                            enabled =
+                                                available && row.resourceEntries().isNotEmpty(),
+                                        ) {
+                                            Text("原图")
+                                        }
                                     TextButton(
                                         onClick = { vm.openTask(row) },
                                         enabled = available,
                                     ) {
-                                        Text("查看文档")
+                                        Text(
+                                            if (row.type == "CAPTURE") "查看文档"
+                                            else if (row.type == "SAVE") "本地结果 / 另存" else "查看结果"
+                                        )
                                     }
                                     if (active)
                                         TextButton(onClick = { vm.cancelLocalTask(row) }) {
                                             Text("停止")
                                         }
-                                    else if (row.state != LocalTaskState.SUCCEEDED && available) {
+                                    else if (
+                                        row.state != LocalTaskState.SUCCEEDED &&
+                                            (available || row.type in DocumentJobs.types)
+                                    ) {
                                         TextButton(onClick = { vm.retryTask(row) }) { Text("重试") }
-                                        TextButton(onClick = { vm.openTask(row, true) }) {
-                                            Text("重拍")
-                                        }
+                                        if (row.type == "CAPTURE")
+                                            TextButton(onClick = { vm.openTask(row, true) }) {
+                                                Text("重拍")
+                                            }
                                     }
                                 }
+                                if (!active && row.type in DocumentJobs.types)
+                                    TextButton(onClick = { vm.forgetTask(row) }) { Text("移除记录") }
                             }
                         }
                     }

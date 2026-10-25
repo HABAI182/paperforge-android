@@ -9,7 +9,9 @@ import cn.paperforge.app.model.safeFileName
 import java.io.File
 import java.io.FileOutputStream
 import java.util.UUID
+import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 
 class Repository(val context: Context, val database: PaperDatabase) {
@@ -529,7 +531,13 @@ class Repository(val context: Context, val database: PaperDatabase) {
                     dao.putTask(
                         row.copy(
                             documentId = null,
-                            resources = "[]",
+                            resources =
+                                DocumentResources.encode(
+                                        row.resourceEntries().filter {
+                                            it.id == "result" && it.path != doc.pdfPath
+                                        }
+                                    )
+                                    .toString(),
                             state =
                                 if (row.state in LocalTaskRow.active) LocalTaskState.CANCELLED
                                 else row.state,
@@ -577,6 +585,11 @@ class Repository(val context: Context, val database: PaperDatabase) {
             val file = File(path)
             if (
                 dao.pdfReferences(path) == 0 &&
+                    dao.allTasks().none { task ->
+                        task.resourceEntries().any {
+                            File(it.path).canonicalFile == file.canonicalFile
+                        }
+                    } &&
                     (file.canonicalFile.parentFile == exports.canonicalFile ||
                         file.canonicalPath.startsWith(directory.canonicalPath + File.separator))
             ) {
@@ -592,10 +605,32 @@ class Repository(val context: Context, val database: PaperDatabase) {
 
     suspend fun saveOutput(file: File, uri: Uri) =
         withContext(Dispatchers.IO) {
+            require(file.isFile && file.length() > 0) { "本地结果不存在或为空" }
+            val expected = java.security.MessageDigest.getInstance("SHA-256")
             context.contentResolver.openOutputStream(uri, "wt")?.use { output ->
-                file.inputStream().use { it.copyTo(output) }
+                java.security.DigestInputStream(file.inputStream(), expected).use {
+                    it.copyTo(output)
+                }
                 output.flush()
             } ?: error("无法写入所选位置")
+            val actual = java.security.MessageDigest.getInstance("SHA-256")
+            val count =
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    java.security.DigestInputStream(input, actual).use { stream ->
+                        val buffer = ByteArray(64 * 1024)
+                        var bytes = 0L
+                        while (true) {
+                            coroutineContext.ensureActive()
+                            val size = stream.read(buffer)
+                            if (size < 0) break
+                            bytes += size
+                        }
+                        bytes
+                    }
+                } ?: error("无法核对目标文件，本地结果保留，可重试保存")
+            check(count == file.length() && expected.digest().contentEquals(actual.digest())) {
+                "目标文件内容不完整，本地结果保留，可重试保存"
+            }
             dao.outputDestination(file.path, uri.toString())
         }
 

@@ -1,0 +1,43 @@
+{
+  "feature": "durable PDF/export/OCR/save tasks with resumable OCR and verified external output",
+  "updated": "2026-10-25",
+  "environment": "API35 x86_64 emulator; real WorkManager and Room; synthetic PDF/photos plus deliberately truncating ContentProvider",
+  "focusedChecks": [
+    {
+      "test": "workerRetryCheckpointBackupAndVerifiedSave",
+      "passed": true,
+      "seconds": 12.656
+    },
+    {
+      "test": "retainedAssemblyInputSurvivesSourceDeletionAndBackup",
+      "passed": true,
+      "seconds": 24.833
+    }
+  ],
+  "verified": [
+    "Task input/checkpoints/resources persist in Room; WorkManager receives only a small stable task ID",
+    "PDF extraction success/failure updates task center; corrected retry uses a new worker ID and ignores obsolete worker completion",
+    "Completed registered job reuses the existing result",
+    "Interrupted OCR task with missing worker becomes partial; resumed worker reuses completed page cache and recognizes only uncached content",
+    "Page revision checkpoints persist and source audit-resource paths of reused OCR page remain identical",
+    "Unwritable external target leaves local source available; retry to a new target succeeds",
+    "A provider accepting writes but returning truncated data fails SHA256/length verification and does not register its target as saved",
+    "Backup remaps task input paths, source IDs and assembly manifests; queued jobs restore as partial and can retry",
+    "An assembly task retains all input PDFs, including a second source permanently removed from the library; both selected pages survive backup and resumed export",
+    "Removing an inactive job record keeps registered result files and only cleans unreferenced private resources",
+    "Deleting source documents retains completed independent job-result references",
+    "Sticky-note appearance now uses local icon coordinates with identity matrix; independent MuPDF render shows a visible note icon"
+  ],
+  "uiVerified": [
+    "Task center All displays PDF/assembly/OCR states and results",
+    "Actual Retry button changes a pending assembly into completed"
+  ],
+  "limits": [
+    "PDF-to-DOCX/searchable conversion and PDF rendering/export stages do not yet checkpoint partial native PDF or ZIP state; page OCR caches are resumable",
+    "Phone Office engine and URI-based text/image conversion still have separate launch flows; JOB01 remains partial",
+    "Process interruption was represented by a persisted running row with absent worker; no physical-phone OS-kill acceptance",
+    "External provider checks use file URI and an in-process deliberate truncation provider; cloud-drive providers remain device acceptance",
+    "No resource-priority scheduler yet; JOB03 remains planned"
+  ],
+  "releaseCreated": false
+}

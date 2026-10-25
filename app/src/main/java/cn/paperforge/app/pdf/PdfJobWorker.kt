@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.room.withTransaction
 import androidx.work.*
 import cn.paperforge.app.PaperForgeApp
-import cn.paperforge.app.data.DocumentResources
+import cn.paperforge.app.data.*
 import cn.paperforge.app.model.safeFileName
 import java.io.File
 import kotlinx.coroutines.*
@@ -18,12 +18,29 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
             var originFile: File? = null
             var originManifest: File? = null
             var assemblyManifest: File? = null
+            val repo = (applicationContext as PaperForgeApp).repository
+            var handle: JobHandle? = null
             try {
-                val repo = (applicationContext as PaperForgeApp).repository
-                val mode = inputData.getString("mode") ?: error("缺少工具")
-                val doc = repo.dao.document(inputData.getString("document") ?: "")
+                val job =
+                    DocumentJobs.start(repo, "PDF", inputData, id)
+                        ?: return@withContext Result.failure(workDataOf("error" to "任务已停止"))
+                handle = job
+                val data = job.input
+                if (job.completed)
+                    return@withContext Result.success(
+                        workDataOf(
+                            "path" to job.result!!.path,
+                            "mode" to (data.getString("mode") ?: "PDF"),
+                        )
+                    )
+                suspend fun report(percent: Int) {
+                    DocumentJobs.progress(repo, job, percent)
+                    setProgress(workDataOf("progress" to percent))
+                }
+                val mode = data.getString("mode") ?: error("缺少工具")
+                val doc = repo.dao.document(data.getString("document") ?: "")
                 val source = doc?.pdfPath?.let { File(it) }
-                val p = JSONObject(inputData.getString("options") ?: "{}")
+                val p = JSONObject(data.getString("options") ?: "{}")
                 val extension =
                     when (mode) {
                         "images-jpg",
@@ -47,14 +64,6 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                         "${safeFileName(if(mode=="assemble") p.optString("title","组合文档") else doc?.title ?: "合并文档")}-$mode-${id.toString().take(8)}.$extension",
                     )
                 output = file
-                if (mode == "assemble" && repo.dao.output(file.path) != null && file.isFile)
-                    return@withContext Result.success(
-                        workDataOf(
-                            "path" to file.path,
-                            "mode" to mode,
-                            "outputBytes" to file.length(),
-                        )
-                    )
                 val input = source ?: file
                 val range = p.optString("range")
                 var origin: JSONObject? = null
@@ -63,16 +72,29 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                         val manifest = File(p.getString("manifest"))
                         assemblyManifest = manifest
                         val plan = AssemblyPlan.decode(JSONObject(manifest.readText()))
+                        val files =
+                            plan.sources
+                                .mapIndexed { index, source ->
+                                    source.documentId to
+                                        (job.row
+                                            .resourceEntries()
+                                            .firstOrNull { it.id == "assembly-source-$index" }
+                                            ?.path
+                                            ?.let(::File)
+                                            ?: repo.dao
+                                                .document(source.documentId)
+                                                ?.pdfPath
+                                                ?.let(::File)
+                                            ?: error("来源 PDF 已移除"))
+                                }
+                                .toMap()
                         origin =
-                            PdfAssembly.write(repo, plan, file) {
-                                setProgress(workDataOf("progress" to it))
+                            PdfAssembly.writeFiles(applicationContext, plan, files, file) {
+                                report(it)
                             }
                     }
                     "merge" ->
-                        PdfEngine.merge(
-                            inputData.getStringArray("sources")!!.map { File(it) },
-                            file,
-                        )
+                        PdfEngine.merge(data.getStringArray("sources")!!.map { File(it) }, file)
                     "extract" -> PdfEngine.extract(input, range, file, p.optInt("rotation"))
                     "organize" -> {
                         val order = p.getJSONArray("order")
@@ -127,46 +149,35 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                             mode.substringAfter("images-"),
                             p.optInt("edge", 2200),
                         ) {
-                            setProgress(workDataOf("progress" to it))
+                            report(it)
                         }
-                    "long-image" ->
-                        PdfLongImages.convert(input, file, range) {
-                            setProgress(workDataOf("progress" to it))
-                        }
+                    "long-image" -> PdfLongImages.convert(input, file, range) { report(it) }
                     "extract-images" -> PdfTools.extractImages(input, file)
                     "searchable" ->
-                        PdfSearchable.convert(applicationContext, input, file) {
-                            setProgress(workDataOf("progress" to it))
-                        }
+                        PdfSearchable.convert(applicationContext, input, file) { report(it) }
                     "docx-layout" ->
                         PhoneDocx.convert(
                             input,
                             file,
                             (applicationContext as PaperForgeApp).ocrEngine,
                         ) {
-                            setProgress(workDataOf("progress" to it))
+                            report(it)
                         }
                     "pdf-pptx" ->
-                        PhoneSlides.convert(applicationContext, input, file) {
-                            setProgress(workDataOf("progress" to it))
-                        }
+                        PhoneSlides.convert(applicationContext, input, file) { report(it) }
                     "txt",
                     "md",
                     "html",
                     "docx",
                     "docx-image" -> PdfTools.exportText(input, file, mode)
                     "compress" ->
-                        PdfEngine.compress(input, file, p.optInt("quality", 75)) {
-                            setProgress(workDataOf("progress" to it))
-                        }
+                        PdfEngine.compress(input, file, p.optInt("quality", 75)) { report(it) }
                     "flatten" ->
-                        PdfEngine.flatten(input, file, p.optInt("quality", 75)) {
-                            setProgress(workDataOf("progress" to it))
-                        }
+                        PdfEngine.flatten(input, file, p.optInt("quality", 75)) { report(it) }
                     "split-each" -> PdfTools.splitEach(input, file)
                     "marks" -> {
                         val data = File(p.getString("marksFile"))
-                        try {
+                        run {
                             PdfMarks.save(
                                 applicationContext,
                                 input,
@@ -174,19 +185,17 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                                 PdfMark.decode(org.json.JSONArray(data.readText())),
                                 editable = p.optBoolean("editable", true),
                             ) {
-                                setProgress(workDataOf("progress" to it))
+                                report(it)
                             }
-                        } finally {
-                            data.delete()
                         }
                     }
                     else -> error("未知工具")
                 }
-                if (mode in listOf("compress", "optimize"))
-                    setProgress(workDataOf("progress" to 100))
+                if (mode in listOf("compress", "optimize")) report(100)
                 currentCoroutineContext().ensureActive()
                 withContext(NonCancellable) {
                     repo.database.withTransaction {
+                        DocumentJobs.checkCurrent(repo, job)
                         if (extension == "pdf") {
                             val registered =
                                 repo.registerPdf(
@@ -211,10 +220,10 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                             }
                         }
                         repo.recordOutput(file, doc)
+                        DocumentJobs.complete(repo, job, file)
                     }
                     published = true
                 }
-                assemblyManifest?.delete()
                 Result.success(
                     workDataOf(
                         "path" to file.path,
@@ -224,6 +233,7 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                     )
                 )
             } catch (e: CancellationException) {
+                DocumentJobs.fail(repo, handle, e, true)
                 if (!published) {
                     output?.delete()
                     originFile?.delete()
@@ -232,6 +242,7 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 }
                 throw e
             } catch (e: Exception) {
+                DocumentJobs.fail(repo, handle, e)
                 if (!published) {
                     output?.delete()
                     originFile?.delete()

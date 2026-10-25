@@ -117,6 +117,7 @@ class MainActivity : ComponentActivity() {
                 val vm: MainViewModel = viewModel()
                 val screen by vm.screen.collectAsState()
                 val busy by vm.busy.collectAsState()
+                val backgroundable by vm.canBackgroundTask.collectAsState()
                 val progress by vm.progress.collectAsState()
                 val output by vm.output.collectAsState()
                 val ocr by vm.ocr.collectAsState()
@@ -477,7 +478,13 @@ class MainActivity : ComponentActivity() {
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
                                 CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                                Text(progress, style = MaterialTheme.typography.bodyMedium)
+                                Text(
+                                    progress,
+                                    Modifier.weight(1f),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                )
+                                if (backgroundable)
+                                    TextButton(onClick = vm::backgroundJob) { Text("后台") }
                                 TextButton(onClick = vm::cancel) { Text("取消") }
                             }
                         }

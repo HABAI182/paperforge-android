@@ -159,6 +159,8 @@ interface DocumentDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun putTask(row: LocalTaskRow)
 
+    @Query("DELETE FROM local_tasks WHERE id=:id") suspend fun deleteTask(id: String)
+
     @Query(
         "UPDATE local_tasks SET state=:state,progress=:progress,detail=:detail,error=:error,updated=:now WHERE id=:id"
     )

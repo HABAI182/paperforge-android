@@ -47,6 +47,10 @@ class PaperForgeApp : Application() {
                 .onFailure {
                     android.util.Log.e("PaperForgeTasks", "Pending capture recovery failed", it)
                 }
+            runCatching { cn.paperforge.app.data.DocumentJobs.recover(repository) }
+                .onFailure {
+                    android.util.Log.e("PaperForgeTasks", "Document task recovery failed", it)
+                }
         }
     }
 }

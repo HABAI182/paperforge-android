@@ -181,27 +181,26 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                         }
                         currentCoroutineContext().ensureActive()
                         withContext(NonCancellable) {
-                            val request =
-                                OneTimeWorkRequestBuilder<PdfJobWorker>()
-                                    .setInputData(
-                                        workDataOf(
-                                            "mode" to "assemble",
-                                            "document" to plan.chapters.firstOrNull()?.documentId,
-                                            "options" to
-                                                org.json
-                                                    .JSONObject()
-                                                    .put("manifest", saved.path)
-                                                    .put("title", plan.title)
-                                                    .toString(),
-                                        )
-                                    )
-                                    .build()
-                            WorkManager.getInstance(getApplication()).enqueue(request)
-                            queued = request.id
+                            val work =
+                                DocumentJobs.enqueue(
+                                    repo,
+                                    "PDF",
+                                    workDataOf(
+                                        "mode" to "assemble",
+                                        "document" to plan.chapters.firstOrNull()?.documentId,
+                                        "options" to
+                                            org.json
+                                                .JSONObject()
+                                                .put("manifest", saved.path)
+                                                .put("title", plan.title)
+                                                .toString(),
+                                    ),
+                                )
+                            queued = work
                             getApplication<Application>()
                                 .getSharedPreferences("session", 0)
                                 .edit()
-                                .putString("export", request.id.toString())
+                                .putString("export", work.toString())
                                 .apply()
                         }
                     }
@@ -306,6 +305,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private var marksSave: Job? = null
     private var task: Job? = null
     private var exportId: UUID? = null
+    private var exportWatch: Job? = null
+    val canBackgroundTask = MutableStateFlow(false)
     val localTasks =
         repo.dao
             .observeTasks()
@@ -451,18 +452,47 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun retryTask(row: LocalTaskRow) {
         appScope.launch {
             runCatching {
-                    cn.paperforge.app.imaging.CaptureTasks.accept(repo, row.id, retry = true)
+                    if (row.type in DocumentJobs.types) DocumentJobs.retry(repo, row)
+                    else cn.paperforge.app.imaging.CaptureTasks.accept(repo, row.id, retry = true)
                 }
                 .onFailure { messages.send(it.message ?: "重试未完成") }
         }
     }
 
     fun cancelLocalTask(row: LocalTaskRow) {
-        appScope.launch { cn.paperforge.app.imaging.CaptureTasks.cancel(repo, row) }
+        appScope.launch {
+            if (row.type in DocumentJobs.types) DocumentJobs.cancel(repo, row)
+            else cn.paperforge.app.imaging.CaptureTasks.cancel(repo, row)
+        }
+    }
+
+    fun forgetTask(row: LocalTaskRow) {
+        appScope.launch {
+            runCatching { DocumentJobs.forget(repo, row.id) }
+                .onFailure { messages.send(it.message ?: "记录未能移除") }
+        }
     }
 
     fun openTask(row: LocalTaskRow, retake: Boolean = false) {
         viewModelScope.launch {
+            if (row.type in DocumentJobs.types) {
+                val file =
+                    row.resourceEntries()
+                        .firstOrNull { it.id == "result" || it.id == "save-source" }
+                        ?.path
+                        ?.let(::File)
+                        ?.takeIf { it.isFile }
+                if (file != null) {
+                    if (row.type == "OCR") {
+                        ocrPage = null
+                        canCorrectOcr.value = false
+                        ocrVersions.value = emptyList()
+                        ocr.value = withContext(Dispatchers.IO) { file.readText() }
+                    } else if (file.extension == "pdf" && row.type != "SAVE") previewOutput(file)
+                    else output.value = file
+                    return@launch
+                }
+            }
             val doc = row.documentId?.let { repo.dao.document(it) } ?: return@launch
             open(doc)
             val pages = repo.dao.pages(doc.id)
@@ -746,76 +776,137 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     ) {
         val doc = selected.value ?: return
         if (busy.value) return
-        val request =
-            OneTimeWorkRequestBuilder<ExportWorker>()
-                .setInputData(
-                    workDataOf(
-                        "document" to doc.id,
-                        "paper" to paper,
-                        "quality" to quality,
-                        "title" to (title ?: doc.title),
-                        "searchable" to searchable,
-                        "resolution" to
-                            if (resolution == "CUSTOM")
-                                "DPI:${cn.paperforge.app.imaging.ScanConfig.dpi(resolution)}"
-                            else resolution,
-                    )
-                )
-                .build()
-        WorkManager.getInstance(getApplication())
-            .enqueueUniqueWork("export-${doc.id}", ExistingWorkPolicy.KEEP, request)
-        getApplication<Application>()
-            .getSharedPreferences("session", 0)
-            .edit()
-            .putString("export", request.id.toString())
-            .apply()
-        watchExport(request.id)
+        enqueueJob(
+            "SCAN_EXPORT",
+            workDataOf(
+                "document" to doc.id,
+                "paper" to paper,
+                "quality" to quality,
+                "title" to (title ?: doc.title),
+                "searchable" to searchable,
+                "resolution" to
+                    if (resolution == "CUSTOM")
+                        "DPI:${cn.paperforge.app.imaging.ScanConfig.dpi(resolution)}"
+                    else resolution,
+            ),
+        )
+    }
+
+    private fun enqueueJob(type: String, data: Data) = enqueueJob(type, JobInput.from(data))
+
+    private fun enqueueJob(type: String, data: JobInput) {
+        if (busy.value) return
+        busy.value = true
+        progress.value = "正在保存任务"
+        viewModelScope.launch {
+            var queued: UUID? = null
+            try {
+                queued = DocumentJobs.enqueue(repo, type, data)
+                getApplication<Application>()
+                    .getSharedPreferences("session", 0)
+                    .edit()
+                    .putString("export", queued.toString())
+                    .apply()
+            } catch (failure: Exception) {
+                messages.send(failure.message ?: "任务未能创建")
+            } finally {
+                busy.value = false
+                progress.value = ""
+            }
+            queued?.let(::watchExport)
+        }
     }
 
     private fun watchExport(id: UUID) {
         exportId = id
         busy.value = true
-        viewModelScope.launch {
-            WorkManager.getInstance(getApplication())
-                .getWorkInfoByIdFlow(id)
-                .filterNotNull()
-                .takeWhile { info ->
-                    progress.value = "导出 PDF · ${info.progress.getInt("progress",0)}%"
-                    if (info.state.isFinished) {
-                        busy.value = false
-                        progress.value = ""
-                        exportId = null
-                        getApplication<Application>()
-                            .getSharedPreferences("session", 0)
-                            .edit()
-                            .remove("export")
-                            .apply()
-                        if (info.state == WorkInfo.State.SUCCEEDED) {
-                            outputLocked.value = false
-                            publishOutput(File(info.outputData.getString("path")!!))
-                            if (info.outputData.getString("mode") in listOf("compress", "optimize"))
-                                messages.send(
-                                    "${info.outputData.getLong("inputBytes",0)/1024} KB → ${info.outputData.getLong("outputBytes",0)/1024} KB"
+        exportWatch?.cancel()
+        canBackgroundTask.value = true
+        exportWatch =
+            viewModelScope.launch {
+                WorkManager.getInstance(getApplication())
+                    .getWorkInfoByIdFlow(id)
+                    .filterNotNull()
+                    .takeWhile { info ->
+                        progress.value = "导出 PDF · ${info.progress.getInt("progress",0)}%"
+                        if (info.state.isFinished) {
+                            busy.value = false
+                            progress.value = ""
+                            exportId = null
+                            canBackgroundTask.value = false
+                            getApplication<Application>()
+                                .getSharedPreferences("session", 0)
+                                .edit()
+                                .remove("export")
+                                .apply()
+                            if (info.state == WorkInfo.State.SUCCEEDED) {
+                                outputLocked.value = false
+                                val file =
+                                    File(info.outputData.getString("path") ?: error("任务没有本地结果"))
+                                when (info.outputData.getString("mode")) {
+                                    "OCR" -> {
+                                        ocrPage = null
+                                        ocrVersions.value = emptyList()
+                                        canCorrectOcr.value = false
+                                        ocr.value = withContext(Dispatchers.IO) { file.readText() }
+                                    }
+                                    "SAVE" -> messages.send("文件已保存并核对")
+                                    else -> publishOutput(file)
+                                }
+                                if (
+                                    info.outputData.getString("mode") in
+                                        listOf("compress", "optimize")
                                 )
-                        } else messages.send(info.outputData.getString("error") ?: "导出已取消")
+                                    messages.send(
+                                        "${info.outputData.getLong("inputBytes",0)/1024} KB → ${info.outputData.getLong("outputBytes",0)/1024} KB"
+                                    )
+                            } else messages.send(info.outputData.getString("error") ?: "导出已取消")
+                        }
+                        !info.state.isFinished
                     }
-                    !info.state.isFinished
-                }
-                .collect()
-        }
+                    .collect()
+            }
+    }
+
+    fun backgroundJob() {
+        if (!canBackgroundTask.value) return
+        exportWatch?.cancel()
+        exportWatch = null
+        exportId = null
+        canBackgroundTask.value = false
+        busy.value = false
+        progress.value = ""
+        getApplication<Application>()
+            .getSharedPreferences("session", 0)
+            .edit()
+            .remove("export")
+            .apply()
+        screen.value = "tasks"
     }
 
     fun cancel() {
-        exportId?.let { WorkManager.getInstance(getApplication()).cancelWorkById(it) }
+        exportId?.let { id ->
+            WorkManager.getInstance(getApplication()).cancelWorkById(id)
+            appScope.launch {
+                repo.dao
+                    .allTasks()
+                    .firstOrNull { it.workId == id.toString() }
+                    ?.let { DocumentJobs.cancel(repo, it) }
+            }
+        }
         task?.cancel()
     }
 
     fun saveOutput(uri: Uri) {
         val file = output.value ?: return
-        perform("正在保存文件") {
-            repo.saveOutput(file, uri)
-            messages.send("文件已保存")
+        runCatching {
+            repo.context.contentResolver.takePersistableUriPermission(
+                uri,
+                android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                    android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+            )
         }
+        enqueueJob("SAVE", workDataOf("path" to file.path, "uri" to uri.toString()))
     }
 
     fun recognize(
@@ -845,27 +936,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun recognizeAll() =
-        perform("正在识别全部页面") {
-            val all = repo.dao.pages(selected.value!!.id)
-            val text = mutableListOf<String>()
-            all.forEachIndexed { index, page ->
-                progress.value = "离线 OCR · ${index+1}/${all.size}"
-                val (_, result) =
-                    repo.cacheOcr(
-                        page,
-                        ocrEngine.layout(
-                            page,
-                            UserSettings.string("ocrLanguage", "CHINESE") != "LATIN",
-                        ),
-                    )
-                text.add("第 ${index+1} 页\n${result.text}")
-            }
-            ocrPage = null
-            ocrVersions.value = emptyList()
-            canCorrectOcr.value = false
-            ocr.value = text.joinToString("\n\n")
-        }
+    fun recognizeAll() {
+        val doc = selected.value ?: return
+        enqueueJob(
+            "OCR",
+            workDataOf(
+                "document" to doc.id,
+                "chinese" to (UserSettings.string("ocrLanguage", "CHINESE") != "LATIN"),
+            ),
+        )
+    }
 
     fun openOcr(page: PageRow) =
         perform("打开识别结果") {
@@ -1108,21 +1188,20 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun queueTool(mode: String, options: org.json.JSONObject = org.json.JSONObject()) {
         if (busy.value) return
-        val data =
-            workDataOf(
-                "mode" to mode,
-                "document" to selected.value?.id,
-                "options" to options.toString(),
-                "sources" to mergeSources.value.mapNotNull { it.pdfPath }.toTypedArray(),
-            )
-        val request = OneTimeWorkRequestBuilder<PdfJobWorker>().setInputData(data).build()
-        WorkManager.getInstance(getApplication()).enqueue(request)
-        getApplication<Application>()
-            .getSharedPreferences("session", 0)
-            .edit()
-            .putString("export", request.id.toString())
-            .apply()
-        watchExport(request.id)
+        enqueueJob(
+            "PDF",
+            JobInput(
+                org.json
+                    .JSONObject()
+                    .put("mode", mode)
+                    .put("document", selected.value?.id)
+                    .put("options", options.toString())
+                    .put(
+                        "sources",
+                        org.json.JSONArray(mergeSources.value.mapNotNull { it.pdfPath }),
+                    )
+            ),
+        )
     }
 
     fun encrypt(password: String, printing: Boolean, copying: Boolean) =
@@ -1264,6 +1343,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun backup() =
         perform("正在离线备份") {
+            marksSave?.join()
             assembly.flush()
             val file = File(repo.exports, "PaperForge-backup-${System.currentTimeMillis()}.zip")
             BackupStore.backup(repo, file)

@@ -196,7 +196,7 @@ class PdfAssemblyFlowTest {
                 val file = File(completed.outputData.getString("path")!!).also { resultFile = it }
                 assertTrue(file.isFile)
                 file.copyTo(File(app.cacheDir, "assembly-proof.pdf"), overwrite = true)
-                assertFalse(manifest.exists())
+                assertTrue(manifest.exists()) // Durable task retains its retry input.
                 PDDocument.load(file).use { pdf ->
                     assertEquals(8, pdf.numberOfPages)
                     fun text(page: Int) =
