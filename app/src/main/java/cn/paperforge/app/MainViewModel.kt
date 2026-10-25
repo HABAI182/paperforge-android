@@ -122,6 +122,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val annotationPage = MutableStateFlow(0)
     val readerTarget = MutableStateFlow<Pair<String, Int>?>(null)
     val editorTarget = MutableStateFlow<Pair<String, Int>?>(null)
+    val editorPageTarget = MutableStateFlow<Pair<String, String>?>(null)
     val libraryFocus = MutableStateFlow<LibrarySearchHit?>(null)
     val outputSource = MutableStateFlow<String?>(null)
     val profileReturn = MutableStateFlow("settings")
@@ -185,7 +186,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         if (doc.kind == "pdf") {
             readerTarget.value = doc.id to hit.page
             searchPdf(text)
-        } else editorTarget.value = doc.id to hit.page
+        } else if (hit.pageId != null) editorPageTarget.value = doc.id to hit.pageId
+        else editorTarget.value = doc.id to hit.page
     }
 
     private fun perform(label: String, action: suspend () -> Unit) {
@@ -217,6 +219,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun open(doc: DocumentRow) {
         if (busy.value) return
         libraryFocus.value = null
+        editorPageTarget.value = null
         viewModelScope.launch(Dispatchers.IO) {
             repo.dao.opened(doc.id, System.currentTimeMillis())
         }
@@ -309,18 +312,48 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             val doc = row.documentId?.let { repo.dao.document(it) } ?: return@launch
             open(doc)
+            val pages = repo.dao.pages(doc.id)
             val page =
-                repo.dao.pages(doc.id).firstOrNull {
-                    it.id == row.targetPageId || it.id == row.pageId
-                }
+                pages.firstOrNull { it.id == row.pageId }
+                    ?: pages.firstOrNull { it.id == row.targetPageId }
             if (retake) {
                 replacement.value = page?.id
                 screen.value = "capture"
-            } else page?.let { editorTarget.value = doc.id to it.position }
+            } else page?.let { editorPageTarget.value = doc.id to it.id }
         }
     }
 
     fun save(page: PageRow) = perform("正在更新页面") { repo.savePage(page) }
+
+    fun copyPagesTo(ids: Set<String>, targetId: String?, title: String, move: Boolean = false) {
+        val source = selected.value?.id ?: return
+        perform(if (move) "正在移动页面与原件" else "正在复制页面与原件") {
+            val result = repo.copyPages(source, ids, targetId, title, move)
+            selected.value = result.document
+            editorPageTarget.value = result.document.id to result.firstPageId
+            screen.value = "editor"
+            messages.send(
+                "已${if(move) "移动" else "复制"} ${result.pages} 页到“${result.document.title}”"
+            )
+        }
+    }
+
+    fun openPageOrigin(origin: PageOrigin) {
+        viewModelScope.launch {
+            val doc = origin.documentId?.let { repo.dao.document(it) }
+            if (doc == null) {
+                messages.send("来源文档已不在文档库，当前副本仍可使用")
+                return@launch
+            }
+            val page = repo.dao.pages(doc.id).firstOrNull { it.id == origin.pageId }
+            if (page == null) {
+                messages.send("来源页已移除，当前副本仍可使用")
+                return@launch
+            }
+            open(doc)
+            editorPageTarget.value = doc.id to page.id
+        }
+    }
 
     fun dewarpPage(page: PageRow, strength: Float) =
         perform("正在校正曲面") {
@@ -446,12 +479,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun favoriteDocuments(ids: Set<String>, favorite: Boolean) =
         perform("批量收藏") { repo.editDocuments(ids) { it.copy(favorite = favorite) } }
 
-    fun categorizeDocuments(ids: Set<String>, folder: String, tags: String) =
+    fun categorizeDocuments(ids: Set<String>, folder: String?, tags: String?) =
         perform("批量分类") {
             repo.editDocuments(ids) {
                 it.copy(
-                    folder = folder.trim().ifBlank { it.folder },
-                    tags = tags.trim().ifBlank { it.tags },
+                    folder = folder?.let(::libraryFolder) ?: it.folder,
+                    tags = tags?.let(::libraryTags) ?: it.tags,
+                    modified = System.currentTimeMillis(),
                 )
             }
         }
@@ -531,7 +565,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
 
     fun categorize(doc: DocumentRow, folder: String, tags: String) =
-        perform("保存分类") { repo.dao.updateDocument(doc.copy(folder = folder, tags = tags)) }
+        perform("保存分类") {
+            repo.editDocuments(setOf(doc.id)) {
+                it.copy(
+                    folder = libraryFolder(folder),
+                    tags = libraryTags(tags),
+                    modified = System.currentTimeMillis(),
+                )
+            }
+        }
 
     fun favorite(doc: DocumentRow) =
         perform("更新收藏") { repo.dao.updateDocument(doc.copy(favorite = !doc.favorite)) }

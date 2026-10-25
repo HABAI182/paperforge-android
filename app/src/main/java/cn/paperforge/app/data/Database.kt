@@ -222,8 +222,32 @@ interface DocumentDao {
     @Query("SELECT * FROM edit_history WHERE documentId=:id AND applied=0 ORDER BY id ASC LIMIT 1")
     suspend fun redoEntry(id: String): EditHistory?
 
+    @Query("SELECT * FROM edit_history WHERE documentId=:id AND applied=0")
+    suspend fun redoEntries(id: String): List<EditHistory>
+
+    @Query("SELECT * FROM edit_history WHERE pageId=:key ORDER BY id")
+    suspend fun linkedHistory(key: String): List<EditHistory>
+
     @Query("DELETE FROM edit_history WHERE documentId=:id AND applied=0")
-    suspend fun clearRedo(id: String)
+    suspend fun clearRedoRaw(id: String)
+
+    @Transaction
+    suspend fun clearRedo(id: String) {
+        val pending = java.util.ArrayDeque<String>().apply { add(id) }
+        val visited = mutableSetOf<String>()
+        while (pending.isNotEmpty()) {
+            val document = pending.removeFirst()
+            if (!visited.add(document)) continue
+            redoEntries(document)
+                .filter { HistoryState.isTransfer(it.beforeJson) }
+                .forEach { entry ->
+                    linkedHistory(entry.pageId)
+                        .filter { !it.applied }
+                        .forEach { pending.add(it.documentId) }
+                }
+            clearRedoRaw(document)
+        }
+    }
 
     @Query("DELETE FROM edit_history WHERE documentId=:id") suspend fun clearHistory(id: String)
 

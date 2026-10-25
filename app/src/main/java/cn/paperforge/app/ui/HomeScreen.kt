@@ -105,15 +105,16 @@ fun HomeScreen(
     var selectionMenu by remember { mutableStateOf(false) }
     val canUndoNames by vm.canUndoNames.collectAsState()
     val inTrash = showTrash && tab == 1
+    val folderPath = libraryFolder(folder)
     val filtered =
         (if (inTrash) trash else docs)
             .filter {
                 (tab == 0 || inTrash || !favoritesOnly || it.favorite) &&
                     (tab == 0 ||
                         inTrash ||
-                        folder.isEmpty() ||
-                        it.folder == folder ||
-                        it.folder.startsWith("$folder/")) &&
+                        folderPath.isEmpty() ||
+                        libraryFolder(it.folder) == folderPath ||
+                        libraryFolder(it.folder).startsWith("$folderPath/")) &&
                     (tab == 0 ||
                         inTrash ||
                         tagQuery.isBlank() ||
@@ -664,12 +665,12 @@ fun HomeScreen(
                         }
                     }
                     item {
-                        OutlinedTextField(
+                        FolderField(
                             value = folder,
                             onValueChange = { folder = it },
-                            label = { Text("按文件夹筛选，留空显示全部") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth(),
+                            paths = docs.map { it.folder },
+                            label = "按文件夹筛选，含下级",
+                            rootLabel = "全部文档",
                         )
                         OutlinedTextField(
                             tagQuery,
@@ -905,30 +906,48 @@ fun HomeScreen(
     if (bulkCategory.isNotEmpty()) {
         var targetFolder by remember { mutableStateOf("") }
         var targetTags by remember { mutableStateOf("") }
+        var changeFolder by remember { mutableStateOf(false) }
+        var changeTags by remember { mutableStateOf(false) }
         AlertDialog(
             onDismissRequest = { bulkCategory = emptyList() },
             title = { Text("分类 ${bulkCategory.size} 份文档") },
             text = {
                 Column {
-                    OutlinedTextField(
-                        targetFolder,
-                        { targetFolder = it },
-                        label = { Text("文件夹，留空不改") },
-                    )
-                    OutlinedTextField(
-                        targetTags,
-                        { targetTags = it },
-                        label = { Text("标签，逗号分隔；留空不改") },
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(changeFolder, { changeFolder = it })
+                        Text("修改文件夹")
+                    }
+                    if (changeFolder)
+                        FolderField(
+                            targetFolder,
+                            { targetFolder = it },
+                            docs.map { it.folder },
+                            label = "目标文件夹，留空移至未分类",
+                        )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(changeTags, { changeTags = it })
+                        Text("修改标签")
+                    }
+                    if (changeTags)
+                        OutlinedTextField(
+                            targetTags,
+                            { targetTags = it },
+                            label = { Text("标签，逗号分隔；留空清除") },
+                        )
                 }
             },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        vm.categorizeDocuments(bulkCategory.toSet(), targetFolder, targetTags)
+                        vm.categorizeDocuments(
+                            bulkCategory.toSet(),
+                            targetFolder.takeIf { changeFolder },
+                            targetTags.takeIf { changeTags },
+                        )
                         bulkCategory = emptyList()
                         finishSelection()
-                    }
+                    },
+                    enabled = changeFolder || changeTags,
                 ) {
                     Text("保存")
                 }
@@ -983,7 +1002,7 @@ fun HomeScreen(
             title = { Text("文件夹与标签") },
             text = {
                 Column {
-                    OutlinedTextField(f, { f = it }, label = { Text("文件夹") })
+                    FolderField(f, { f = it }, docs.map { it.folder })
                     OutlinedTextField(tags, { tags = it }, label = { Text("标签，逗号分隔") })
                 }
             },

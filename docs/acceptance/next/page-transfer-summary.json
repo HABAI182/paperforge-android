@@ -1,0 +1,52 @@
+{
+  "feature": "scan page copy/move, linked history, provenance, hierarchical library folders",
+  "updated": "2026-10-25",
+  "environment": "API35 AOSP x86_64 emulator; synthetic test documents and existing debug fixture only",
+  "focusedChecks": {
+    "PageTransferFlowTest": {
+      "passed": true,
+      "log": "page-transfer-android.log",
+      "seconds": 16.383
+    },
+    "backupTransactionRollback": {
+      "passed": true,
+      "source": "DewarpResourceTest#failureAfterDatabaseWritesRollsBackDocumentsReaderSettingsAndFiles; initial focused run"
+    },
+    "ui": [
+      "opened copy and move actions from selected pages",
+      "created an independent copy retaining OCR text",
+      "categorized it as Study/Invoices",
+      "navigated Study then Invoices and applied library filtering"
+    ]
+  },
+  "verified": [
+    "JPEG remains byte-identical and decodable; shared input paths copied once per operation",
+    "page resource graph and immutable OCR raw/automatic/user records copied into destination ownership",
+    "OCR geometry revision rebased without recognizing again or recompressing pixels",
+    "source document/page identifiers, physical ordinal despite position gaps, hash and operation recorded",
+    "copy delta undo preserves later raw captures and redo restores correct order",
+    "move undo/redo updates both documents atomically, preserving later raw captures in either one",
+    "later edits on linked document must be undone before transfer, avoiding overwritten edits",
+    "forking after an undone transfer invalidates both linked redo branches, including later partner edits",
+    "backup remaps source IDs and linked history, with undo affecting restored documents only",
+    "permanently deleted source does not invalidate copied pixels or OCR, and surviving history can still be backed up/restored",
+    "history-referenced retired directories retained until final reference disappears; final cleanup verified",
+    "failed pre-publication restore rolls back documents, resources, reader and setting side state"
+  ],
+  "implementationReview": [
+    "curve files use the same PageResources remapping as other page resources; no new native curve run",
+    "pending capture positions and imported image append position coordinated at commit",
+    "short noncancellable final publication and committed flag prevent file cleanup after Room commit; exact cancellation race not injected"
+  ],
+  "limits": [
+    "cross-document transfer targets scan projects; native PDF assembly belongs to PDF01",
+    "folders are virtual library paths derived from assigned documents, not empty Android filesystem folders",
+    "move undo requires both linked documents to remain available; deleted sources retain a historical title/hash, not a recreated source page",
+    "native resource checks do not establish OCR accuracy or real camera quality"
+  ],
+  "testNotes": [
+    "initial transfer fixture selected two same-title restored clones on its second restore; the clone was given a unique name, then the focused business flow was rerun",
+    "no full test suite, release, tag or shutdown"
+  ],
+  "releaseCreated": false
+}

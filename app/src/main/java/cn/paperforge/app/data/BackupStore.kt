@@ -210,6 +210,7 @@ object BackupStore {
         val created = mutableListOf<File>()
         val sideState = RestoreSideState(repo.context)
         var sideChanged = false
+        var published = false
         try {
             ZipFile(archive).use { zip ->
                 val metadata =
@@ -239,6 +240,7 @@ object BackupStore {
                 val documents =
                     (0 until d.length()).map { DocumentCodec.document(d.getJSONObject(it)) }
                 val ids = documents.associate { it.id to UUID.randomUUID().toString() }
+                val historicalDocumentIds = mutableMapOf<String, String>()
                 val pageIds = mutableMapOf<String, String>()
                 val taskIds = mutableMapOf<String, String>()
                 val files = mutableMapOf<Pair<String, String>, String>()
@@ -276,12 +278,35 @@ object BackupStore {
                             }
                         target.path
                     }
-                fun page(old: PageRow): PageRow {
-                    val docId = ids[old.documentId] ?: error("备份页面缺少所属文档")
-                    val remapped = PageResources.remap(old) { path -> copy(path, docId) }
+                fun page(old: PageRow, historyOwner: String? = null): PageRow {
+                    val docId =
+                        ids[old.documentId]
+                            ?: if (historyOwner != null)
+                                historicalDocumentIds.getOrPut(old.documentId) {
+                                    UUID.randomUUID().toString()
+                                }
+                            else error("备份页面缺少所属文档")
+                    val resourceOwner = ids[old.documentId] ?: checkNotNull(historyOwner)
+                    val remapped = PageResources.remap(old) { path -> copy(path, resourceOwner) }
                     val processing =
                         JSONObject(remapped.processingMetadata)
                             .apply {
+                                optJSONArray("pageOrigins")?.let { origins ->
+                                    for (i in 0 until origins.length()) {
+                                        val origin = origins.getJSONObject(i)
+                                        val document = origin.optString("documentId")
+                                        val sourcePage = origin.optString("pageId")
+                                        origin.put("documentId", ids[document] ?: JSONObject.NULL)
+                                        origin.put(
+                                            "pageId",
+                                            if (sourcePage.isNotBlank() && sourcePage != "null")
+                                                pageIds.getOrPut(sourcePage) {
+                                                    UUID.randomUUID().toString()
+                                                }
+                                            else JSONObject.NULL,
+                                        )
+                                    }
+                                }
                                 optString("captureJob")
                                     .takeIf { it.isNotBlank() }
                                     ?.let { id ->
@@ -330,8 +355,13 @@ object BackupStore {
                     (0 until h.length()).map { i ->
                         val old = h.getJSONObject(i)
                         val before =
-                            HistoryState.map(old.getJSONObject("before").toString(), ::page)
-                        val after = HistoryState.map(old.getJSONObject("after").toString(), ::page)
+                            HistoryState.map(old.getJSONObject("before").toString()) {
+                                page(it, ids.getValue(old.getString("documentId")))
+                            }
+                        val after =
+                            HistoryState.map(old.getJSONObject("after").toString()) {
+                                page(it, ids.getValue(old.getString("documentId")))
+                            }
                         EditHistory(
                             documentId = ids.getValue(old.getString("documentId")),
                             pageId =
@@ -413,52 +443,66 @@ object BackupStore {
                                 }
                         }
                         .orEmpty()
-                repo.database.withTransaction {
-                    restored.forEach { repo.dao.putDocument(it) }
-                    pages.forEach { repo.dao.putPage(it) }
-                    histories.forEach { repo.dao.addHistory(it) }
-                    outputRows.forEach { repo.dao.putOutput(it) }
-                    taskRows.forEach { repo.dao.putTask(it) }
-                    sideChanged = true
-                    metadata.optJSONObject("profiles")?.let {
-                        SettingsProfiles(repo.context).importJson(it.toString())
+                coroutineContext.ensureActive()
+                kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
+                    repo.database.withTransaction {
+                        restored.forEach { repo.dao.putDocument(it) }
+                        pages.forEach { repo.dao.putPage(it) }
+                        histories.forEach { repo.dao.addHistory(it) }
+                        outputRows.forEach { repo.dao.putOutput(it) }
+                        taskRows.forEach { repo.dao.putTask(it) }
+                        sideChanged = true
+                        metadata.optJSONObject("profiles")?.let {
+                            SettingsProfiles(repo.context).importJson(it.toString())
+                        }
+                        metadata.optJSONObject("library")?.let {
+                            LibraryPreferences(repo.context).restore(it, ids)
+                        }
+                        val signatures = repo.context.getSharedPreferences("signature", 0)
+                        if (!signatures.contains("strokes") && metadata.has("signature"))
+                            signatures
+                                .edit()
+                                .putString("strokes", metadata.getString("signature"))
+                                .apply()
+                        metadata.optJSONObject("reader")?.let {
+                            cn.paperforge.app.ReaderPreferences(repo.context).restore(it, ids)
+                        }
+                        metadata.optJSONArray("studyNotes")?.let {
+                            cn.paperforge.app.reader.StudyNotes.restore(repo.context, it, ids)
+                        }
+                        metadata.optJSONObject("preferences")?.let {
+                            cn.paperforge.app.UserSettings.importJson(it.toString())
+                        }
                     }
-                    metadata.optJSONObject("library")?.let {
-                        LibraryPreferences(repo.context).restore(it, ids)
-                    }
-                    val signatures = repo.context.getSharedPreferences("signature", 0)
-                    if (!signatures.contains("strokes") && metadata.has("signature"))
-                        signatures
-                            .edit()
-                            .putString("strokes", metadata.getString("signature"))
-                            .apply()
-                    metadata.optJSONObject("reader")?.let {
-                        cn.paperforge.app.ReaderPreferences(repo.context).restore(it, ids)
-                    }
-                    metadata.optJSONArray("studyNotes")?.let {
-                        cn.paperforge.app.reader.StudyNotes.restore(repo.context, it, ids)
-                    }
-                    metadata.optJSONObject("preferences")?.let {
-                        cn.paperforge.app.UserSettings.importJson(it.toString())
-                    }
+                    published = true
                 }
                 restored
                     .filter { it.kind == "pdf" }
-                    .forEach { LibraryIndexer.enqueue(repo.context, it.id) }
+                    .forEach {
+                        runCatching { LibraryIndexer.enqueue(repo.context, it.id) }
+                            .onFailure { error ->
+                                android.util.Log.w(
+                                    "BackupStore",
+                                    "Restored PDF indexing will retry",
+                                    error,
+                                )
+                            }
+                    }
                 (repo.context.applicationContext as? cn.paperforge.app.PaperForgeApp)
                     ?.backgroundScope
                     ?.launch { cn.paperforge.app.imaging.CaptureTasks.recover(repo) }
                 return restored.size
             }
         } catch (e: Exception) {
-            kotlinx.coroutines.withContext(
-                kotlinx.coroutines.NonCancellable + kotlinx.coroutines.Dispatchers.IO
-            ) {
-                if (sideChanged)
-                    runCatching { sideState.restore() }.onFailure { e.addSuppressed(it) }
-                created.forEach { it.delete() }
-                created.mapNotNull { it.parentFile }.distinct().forEach { it.delete() }
-            }
+            if (!published)
+                kotlinx.coroutines.withContext(
+                    kotlinx.coroutines.NonCancellable + kotlinx.coroutines.Dispatchers.IO
+                ) {
+                    if (sideChanged)
+                        runCatching { sideState.restore() }.onFailure { e.addSuppressed(it) }
+                    created.forEach { it.delete() }
+                    created.mapNotNull { it.parentFile }.distinct().forEach { it.delete() }
+                }
             throw e
         } finally {
             archive.delete()

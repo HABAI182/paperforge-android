@@ -42,12 +42,13 @@ class Repository(val context: Context, val database: PaperDatabase) {
                 PageRow(
                     UUID.randomUUID().toString(),
                     id,
-                    dao.pages(id).size,
+                    0,
                     file.absolutePath,
                     filter = cn.paperforge.app.UserSettings.string("filter", "AUTO"),
                     brightness = cn.paperforge.app.UserSettings.number("brightness", 0f),
                     contrast = cn.paperforge.app.UserSettings.number("contrast", 1f),
                     enhanceStrength = cn.paperforge.app.UserSettings.number("enhanceStrength", 1f),
+                    outputAspect = cn.paperforge.app.UserSettings.number("scanAspect", 0f),
                     corners = (detection.quad ?: cn.paperforge.app.model.Quad.Full).encode(),
                     detectionConfidence = detection.confidence,
                     detectionMethod = detection.method,
@@ -55,10 +56,16 @@ class Repository(val context: Context, val database: PaperDatabase) {
                         cn.paperforge.app.imaging.CaptureMetadata.encode(reference, detection),
                 )
             database.withTransaction {
-                dao.putPage(page)
+                val position =
+                    maxOf(
+                        dao.pages(id).maxOfOrNull { it.position } ?: -1,
+                        dao.reservedCapturePosition(id) ?: -1,
+                    ) + 1
+                val inserted = page.copy(position = position)
+                dao.putPage(inserted)
                 dao.touch(id, System.currentTimeMillis())
+                inserted
             }
-            page
         }
 
     suspend fun importImages(id: String, uris: List<Uri>) =
@@ -266,8 +273,33 @@ class Repository(val context: Context, val database: PaperDatabase) {
                 (if (redo) dao.redoEntry(id) else dao.undoEntry(id)) ?: return@withTransaction
             val encoded = if (redo) history.afterJson else history.beforeJson
             val restored = HistoryState.pages(encoded)
-            val current = dao.pages(id).associateBy { it.id }
-            fun restore(p: PageRow): PageRow {
+            val linked =
+                if (HistoryState.isTransfer(encoded)) dao.linkedHistory(history.pageId)
+                else listOf(history)
+            val affected =
+                if (HistoryState.isTransfer(encoded))
+                    (HistoryState.pages(history.beforeJson) + HistoryState.pages(history.afterJson))
+                        .map { it.documentId }
+                        .toSet()
+                else setOf(id)
+            if (HistoryState.isTransfer(encoded)) {
+                require(linked.map { it.documentId }.toSet() == affected) {
+                    "关联文档已删除，无法撤销这次移动；页面仍可复制或移入新文档"
+                }
+                for (entry in linked) {
+                    val doc = dao.document(entry.documentId)
+                    require(doc != null && doc.trashedAt == null) { "关联文档已移入回收站，请恢复后撤销移动" }
+                    val top =
+                        if (redo) dao.redoEntry(entry.documentId)
+                        else dao.undoEntry(entry.documentId)
+                    require(entry.applied == history.applied && top?.id == entry.id) {
+                        "“${doc.title}”有后续编辑，请先撤销该文档的后续编辑"
+                    }
+                }
+            }
+            val currentByDoc =
+                affected.associateWith { docId -> dao.pages(docId).associateBy { it.id } }
+            fun restore(p: PageRow, current: Map<String, PageRow>): PageRow {
                 val revision = (current[p.id]?.revision ?: p.revision) + 1
                 val layout =
                     p.ocrLayout
@@ -285,15 +317,44 @@ class Repository(val context: Context, val database: PaperDatabase) {
                     ocrLayout = layout?.copy(sourceRevision = revision)?.encode(),
                 )
             }
-            if (HistoryState.isSnapshot(encoded)) {
+            if (HistoryState.isDelta(encoded)) {
+                val touched =
+                    (HistoryState.pages(history.beforeJson) + HistoryState.pages(history.afterJson))
+                        .map { it.id }
+                        .toSet()
+                touched.forEach { dao.deletePage(it) }
+                for (docId in affected) {
+                    val current = currentByDoc.getValue(docId)
+                    val ordered =
+                        current.values
+                            .filter { it.id !in touched }
+                            .sortedBy { it.position }
+                            .toMutableList()
+                    restored
+                        .filter { it.documentId == docId }
+                        .sortedBy { it.position }
+                        .forEach { page ->
+                            ordered.add(
+                                page.position.coerceIn(0, ordered.size),
+                                restore(page, current),
+                            )
+                        }
+                    ordered.forEachIndexed { index, page ->
+                        dao.putPage(page.copy(position = index))
+                    }
+                }
+            } else if (HistoryState.isSnapshot(encoded)) {
+                val current = currentByDoc.getValue(id)
                 current.keys.forEach { dao.deletePage(it) }
-                restored.forEach { p -> dao.putPage(restore(p)) }
+                restored.forEach { p -> dao.putPage(restore(p, current)) }
             } else {
+                val current = currentByDoc.getValue(id)
                 val p = restored.single()
-                dao.putPage(restore(p))
+                require(current.containsKey(p.id)) { "该页已移除，请先撤销对应的删页或移动操作" }
+                dao.putPage(restore(p, current).copy(position = current.getValue(p.id).position))
             }
-            dao.updateHistory(history.copy(applied = redo))
-            dao.touch(id, System.currentTimeMillis())
+            linked.forEach { dao.updateHistory(it.copy(applied = redo)) }
+            affected.forEach { dao.touch(it, System.currentTimeMillis()) }
         }
 
     private suspend fun replacePages(
@@ -423,8 +484,18 @@ class Repository(val context: Context, val database: PaperDatabase) {
     }
 
     suspend fun deleteDocument(doc: DocumentRow) {
-        val work =
+        val (work, historicalDirectories) =
             database.withTransaction {
+                val historicalDirectories =
+                    dao.allHistory()
+                        .filter { it.documentId == doc.id }
+                        .flatMap { entry ->
+                            (HistoryState.pages(entry.beforeJson) +
+                                    HistoryState.pages(entry.afterJson))
+                                .flatMap { PageResources.paths(it) }
+                        }
+                        .mapNotNull { File(it).parentFile }
+                        .distinct()
                 val tasks = dao.tasksForDocument(doc.id)
                 tasks.forEach { row ->
                     dao.putTask(
@@ -441,7 +512,7 @@ class Repository(val context: Context, val database: PaperDatabase) {
                 }
                 dao.deleteDocument(doc.id)
                 dao.clearHistory(doc.id)
-                tasks.mapNotNull { it.workId }
+                tasks.mapNotNull { it.workId } to historicalDirectories
             }
         work.forEach {
             androidx.work.WorkManager.getInstance(context).cancelWorkById(UUID.fromString(it))
@@ -449,7 +520,31 @@ class Repository(val context: Context, val database: PaperDatabase) {
         // Only our UUID-named private directory is removed; external documents are never deleted.
         val directory = File(root, doc.id)
         require(directory.canonicalFile.parentFile == root.canonicalFile)
-        directory.deleteRecursively()
+        val remainingDocuments = dao.allDocuments()
+        val retained =
+            (dao.allPages().flatMap { PageResources.paths(it) } +
+                    dao.allHistory().flatMap { entry ->
+                        (HistoryState.pages(entry.beforeJson) + HistoryState.pages(entry.afterJson))
+                            .flatMap { PageResources.paths(it) }
+                    } +
+                    dao.allTasks().flatMap { it.resourceEntries() }.map { it.path } +
+                    remainingDocuments.flatMap {
+                        listOfNotNull(it.pdfPath) +
+                            DocumentResources.entries(this, it.id).map { r -> r.path }
+                    } +
+                    dao.allOutputs().map { it.path })
+                .map { File(it).canonicalPath }
+                .toSet()
+        val liveIds = remainingDocuments.map { it.id }.toSet()
+        (historicalDirectories + directory)
+            .map { it.canonicalFile }
+            .distinct()
+            .filter { it.parentFile == root.canonicalFile && it.name !in liveIds }
+            .forEach { obsolete ->
+                obsolete.walkBottomUp().forEach { file ->
+                    if (file.isDirectory || file.canonicalPath !in retained) file.delete()
+                }
+            }
         doc.pdfPath?.let { path ->
             val file = File(path)
             if (

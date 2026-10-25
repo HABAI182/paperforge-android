@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
 import cn.paperforge.app.UserSettings
 import cn.paperforge.app.data.PageRow
+import cn.paperforge.app.data.origins
 import cn.paperforge.app.imaging.ScanProcessor
 import cn.paperforge.app.model.*
 import java.io.File
@@ -58,6 +59,22 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
     val pager = rememberPagerState(pageCount = { pages.size })
     val active = pages.getOrNull(pager.currentPage)
     val target by vm.editorTarget.collectAsState()
+    val pageTarget by vm.editorPageTarget.collectAsState()
+    LaunchedEffect(pageTarget, pages, doc?.id) {
+        val anchor = pageTarget
+        if (
+            anchor != null &&
+                anchor.first == doc?.id &&
+                pages.isNotEmpty() &&
+                pages.all { it.documentId == anchor.first }
+        ) {
+            val index = pages.indexOfFirst { it.id == anchor.second }
+            if (index >= 0) {
+                pager.scrollToPage(index)
+                vm.editorPageTarget.value = null
+            }
+        }
+    }
     val focus by vm.libraryFocus.collectAsState()
     val query by vm.query.collectAsState()
     LaunchedEffect(target, pages, doc?.id) {
@@ -101,6 +118,7 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
     var bookSplit by remember { mutableStateOf(false) }
     var dewarp by remember { mutableStateOf(false) }
     var trace by remember { mutableStateOf(false) }
+    var origins by remember { mutableStateOf(false) }
     ScanEditorLayout(
         pages,
         pager,
@@ -166,6 +184,7 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
             },
         )
     if (trace && active != null) DewarpTraceDialog(active) { trace = false }
+    if (origins && active != null) PageOriginsDialog(vm, active) { origins = false }
     if (dewarp && active != null) {
         val page = active
         var strength by remember { mutableFloatStateOf(UserSettings.number("dewarpStrength", 1f)) }
@@ -390,6 +409,15 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
                     OcrOptionsControl()
+                    if (active.origins().isNotEmpty())
+                        TextButton(
+                            onClick = {
+                                more = false
+                                origins = true
+                            }
+                        ) {
+                            Text("页面来源与原件关系")
+                        }
                     TextButton(
                         onClick = {
                             more = false

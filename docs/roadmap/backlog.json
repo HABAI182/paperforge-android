@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "baseline": "0.5.0",
-  "checked": "2026-10-24",
+  "checked": "2026-10-25",
   "estimates": "rough person-day ranges; cards may overlap and are not additive deadlines",
   "tasks": [
     {
@@ -907,7 +907,7 @@
       ],
       "scope": "多级文件夹/标签、复制移动页、保留原件关系",
       "acceptance": "移动后内容与OCR可读，来源不丢",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "LIB09",
@@ -1252,8 +1252,8 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 36,
-    "planned": 38,
+    "done": 37,
+    "planned": 37,
     "partial": 24
   },
   "updated": "2026-10-25"

@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.DriveFileMove
+import androidx.compose.material.icons.filled.FileCopy
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,6 +32,9 @@ fun PageGridScreen(vm: MainViewModel) {
     val busy by vm.busy.collectAsState()
     var order by remember(pages) { mutableStateOf(pages) }
     var selected by remember { mutableStateOf(setOf<String>()) }
+    var copying by remember { mutableStateOf(false) }
+    var moving by remember { mutableStateOf(false) }
+    val document by vm.selected.collectAsState()
     var dragged by remember { mutableStateOf<String?>(null) }
     var pointer by remember { mutableStateOf(Offset.Zero) }
     val grid = rememberLazyGridState()
@@ -38,7 +43,32 @@ fun PageGridScreen(vm: MainViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("页面管理 · ${pages.size} 页") },
+                title = {
+                    Text(
+                        if (selected.isEmpty()) "页面管理 · ${pages.size} 页"
+                        else "已选 ${selected.size} / ${pages.size} 页"
+                    )
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            moving = false
+                            copying = true
+                        },
+                        enabled = selected.isNotEmpty() && !busy,
+                    ) {
+                        Icon(Icons.Default.FileCopy, "复制到其他文档")
+                    }
+                    IconButton(
+                        onClick = {
+                            moving = true
+                            copying = true
+                        },
+                        enabled = selected.isNotEmpty() && !busy,
+                    ) {
+                        Icon(Icons.Default.DriveFileMove, "移动到其他文档")
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = { vm.screen.value = "editor" }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回")
@@ -173,6 +203,19 @@ fun PageGridScreen(vm: MainViewModel) {
             }
         }
     }
+    if (copying)
+        CopyPagesDialog(
+            vm,
+            document?.id,
+            document?.title.orEmpty(),
+            selected.size,
+            moving,
+            onDismiss = { copying = false },
+            onChoose = { target, title ->
+                copying = false
+                vm.copyPagesTo(selected, target, title, moving)
+            },
+        )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
