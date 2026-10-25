@@ -104,6 +104,9 @@ fun HomeScreen(
     var bulkCategory by remember { mutableStateOf(emptyList<String>()) }
     var selectionMenu by remember { mutableStateOf(false) }
     val canUndoNames by vm.canUndoNames.collectAsState()
+    val families by vm.comparison.families.collectAsState()
+    val familyByDocument = families.flatMap { group -> group.members.map { it to group } }.toMap()
+    var groupSelection by remember { mutableStateOf<List<String>?>(null) }
     val inTrash = showTrash && tab == 1
     val folderPath = libraryFolder(folder)
     val filtered =
@@ -334,6 +337,22 @@ fun HomeScreen(
                                 }
                                 DropdownMenu(selectionMenu, { selectionMenu = false }) {
                                     DropdownMenuItem(
+                                        text = { Text("比较所选文档") },
+                                        enabled = chosen.size >= 2,
+                                        onClick = {
+                                            vm.beginComparison(chosen.map { it.id })
+                                            finishSelection()
+                                        },
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("归为同一版本组") },
+                                        enabled = chosen.size >= 2,
+                                        onClick = {
+                                            groupSelection = chosen.map { it.id }
+                                            finishSelection()
+                                        },
+                                    )
+                                    DropdownMenuItem(
                                         text = { Text("批量命名") },
                                         onClick = {
                                             vm.beginBatchRename(chosen.map { it.id })
@@ -515,6 +534,9 @@ fun HomeScreen(
                             vm.outputSource.value = null
                             vm.screen.value = "outputs"
                         },
+                        HomeTool("重复与版本", "比较相同原件、相似页面，管理首选版本", Icons.Default.Compare) {
+                            vm.beginComparison()
+                        },
                         HomeTool(
                             "学习摘录与笔记",
                             "来源页定位、Markdown、Word、Anki TSV",
@@ -593,10 +615,7 @@ fun HomeScreen(
                         if (!selecting) TextButton(onClick = { selecting = true }) { Text("多选") }
                         if (tab == 0) TextButton(onClick = { tab = 1 }) { Text("全部文档") }
                         else
-                            Text(
-                                "${if(inTrash) trash.size else docs.size} 份",
-                                style = MaterialTheme.typography.labelMedium,
-                            )
+                            Text("${filtered.size} 份", style = MaterialTheme.typography.labelMedium)
                     }
                 }
                 if (tab == 1 && !inTrash) {
@@ -795,6 +814,20 @@ fun HomeScreen(
                                             .joinToString(" · "),
                                         style = MaterialTheme.typography.labelSmall,
                                     )
+                                familyByDocument[doc.id]?.let { group ->
+                                    TextButton(
+                                        onClick = {
+                                            vm.beginComparison(versions = true, familyId = group.id)
+                                        },
+                                        contentPadding = PaddingValues(0.dp),
+                                    ) {
+                                        Text(
+                                            "${if(group.preferred==doc.id) "首选版本 · " else "版本组 · "}${group.name}",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            maxLines = 1,
+                                        )
+                                    }
+                                }
                                 if (!selecting && search.isNotBlank() && !inTrash) {
                                     val matches = hitsByDocument[doc.id].orEmpty()
                                     matches.take(2).forEach { hit ->
@@ -882,6 +915,17 @@ fun HomeScreen(
                 }
             }
             item { Spacer(Modifier.height(12.dp)) }
+        }
+    }
+    groupSelection?.let { ids ->
+        FamilyNameDialog(
+            "建立版本分组",
+            docs.firstOrNull { it.id == ids.firstOrNull() }?.title ?: "文档版本",
+            { groupSelection = null },
+        ) { name ->
+            vm.beginComparison(ids, versions = true)
+            vm.comparison.group(name, ids)
+            groupSelection = null
         }
     }
     if (bulkDelete.isNotEmpty())

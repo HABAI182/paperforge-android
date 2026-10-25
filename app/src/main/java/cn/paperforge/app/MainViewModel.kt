@@ -113,6 +113,49 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
 
     val messages = Channel<String>(Channel.BUFFERED)
+    val comparison = LibraryComparisonController(repo, viewModelScope, messages)
+    val comparisonReturn = MutableStateFlow(false)
+
+    fun beginComparison(
+        ids: List<String>? = null,
+        versions: Boolean = false,
+        familyId: String? = null,
+    ) {
+        comparison.configure(ids?.toSet(), versions, familyId)
+        screen.value = "comparison"
+    }
+
+    fun openComparisonPage(ref: ComparePage) {
+        if (busy.value) return
+        viewModelScope.launch {
+            val doc = repo.dao.document(ref.documentId)?.takeIf { it.trashedAt == null }
+            if (doc == null) {
+                messages.send("文档已移除，请刷新比较结果")
+                return@launch
+            }
+            val target =
+                if (doc.kind == "scan")
+                    repo.dao.pages(doc.id).let { pages ->
+                        if (ref.pageId == null) pages.firstOrNull()
+                        else pages.firstOrNull { it.id == ref.pageId }
+                    }
+                else null
+            if (doc.kind == "scan" && ref.pageId != null && target == null) {
+                messages.send("页面已变化，请刷新比较结果")
+                return@launch
+            }
+            open(doc)
+            comparisonReturn.value = true
+            if (doc.kind == "pdf") readerTarget.value = doc.id to ref.index
+            else if (target != null) editorPageTarget.value = doc.id to target.id
+        }
+    }
+
+    fun closeDocument() {
+        screen.value = if (comparisonReturn.value) "comparison" else "home"
+        comparisonReturn.value = false
+    }
+
     val replacement = MutableStateFlow<String?>(null)
     val mergeSources = MutableStateFlow<List<DocumentRow>>(emptyList())
     val passwordRequest = MutableStateFlow<Uri?>(null)
@@ -218,6 +261,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun open(doc: DocumentRow) {
         if (busy.value) return
+        comparisonReturn.value = false
         libraryFocus.value = null
         editorPageTarget.value = null
         viewModelScope.launch(Dispatchers.IO) {
@@ -1140,6 +1184,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         perform("正在恢复备份") {
             val count = BackupStore.restore(repo, uri)
             canUndoNames.value = LibraryPreferences(repo.context).renameUndo().isNotEmpty()
+            comparison.refreshFamilies()
             messages.send("已恢复 $count 份文档")
         }
 

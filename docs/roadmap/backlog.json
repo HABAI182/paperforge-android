@@ -920,7 +920,7 @@
       ],
       "scope": "内容哈希与相似页提示，用户决定保留",
       "acceptance": "相似文件不被无提示自动删除",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "PDF01",
@@ -1252,8 +1252,8 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 37,
-    "planned": 37,
+    "done": 38,
+    "planned": 36,
     "partial": 24
   },
   "updated": "2026-10-25"

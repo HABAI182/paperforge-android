@@ -338,6 +338,9 @@ class MainActivity : ComponentActivity() {
                             screen == "storage" -> "settings"
                             screen == "profiles" -> vm.profileReturn.value
                             screen == "ocr-proof" -> "editor"
+                            screen in listOf("reader", "editor") && vm.comparisonReturn.value ->
+                                "comparison".also { vm.comparisonReturn.value = false }
+                            screen == "comparison" -> "home".also { vm.comparison.cancel() }
                             screen == "pages" ||
                                 screen == "capture" && vm.pages.value.isNotEmpty() -> "editor"
                             else -> "home"
@@ -350,6 +353,7 @@ class MainActivity : ComponentActivity() {
                         "reader" -> ReaderScreen(vm, share)
                         "tables" -> TableReviewScreen(vm)
                         "notes" -> StudyNotesScreen(vm)
+                        "comparison" -> LibraryComparisonScreen(vm)
                         "convert" ->
                             ConversionScreen(
                                 vm,

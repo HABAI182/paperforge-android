@@ -126,7 +126,7 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
         busy,
         onAction = { action ->
             when (action) {
-                "back" -> vm.screen.value = "home"
+                "back" -> vm.closeDocument()
                 "tasks" -> vm.screen.value = "tasks"
                 "capture" -> vm.screen.value = "capture"
                 "import" -> onImport()

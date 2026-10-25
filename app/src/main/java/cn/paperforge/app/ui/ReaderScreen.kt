@@ -385,7 +385,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                                 if (fullscreen) {
                                     fullscreen = false
                                     controls = true
-                                } else vm.screen.value = "home"
+                                } else vm.closeDocument()
                             }
                         ) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回")

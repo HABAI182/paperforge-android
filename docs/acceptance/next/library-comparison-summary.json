@@ -1,0 +1,43 @@
+{
+  "feature": "on-demand original/content comparison and independent document version groups",
+  "updated": "2026-10-25",
+  "environment": "API35 AOSP x86_64 emulator; existing debug sample library and synthetic fixtures",
+  "focusedTest": {
+    "passed": true,
+    "tests": 1,
+    "seconds": 5.739,
+    "log": "library-comparison-android.log"
+  },
+  "verified": [
+    "same-byte copies with equal current scan processing/text are grouped; identical PDF files are grouped",
+    "lossless re-encoding of a JPEG decodes to a visual candidate rather than an exact-byte match",
+    "different crops using the same raw original are reported as same-original candidates, not identical working content",
+    "different flat white/grey pages produce no visual near-match",
+    "missing original is reported; comparison preserves document IDs, contents and trash state",
+    "grouping overlapping selections preserves all members; preferred member can be changed",
+    "full backup/restore creates an independent group with remapped document IDs and preferred member",
+    "removing a restored member leaves original group intact; dissolving group preserves documents"
+  ],
+  "uiVerified": [
+    "tool entry, start/progress/finish and comparison overview",
+    "28 debug documents produced5 exact groups and225 candidate page pairs; final UI folds these into11 document-pair cards",
+    "selected second matching page from82 matches in a card and viewed both previews",
+    "opened original document and returned to comparison through the editor back action",
+    "created version group and set the other member as preferred"
+  ],
+  "implementation": [
+    "streamed SHA256 file reads with cancellation; repeated source paths hashed once per run",
+    "visual block averages9x8, horizontal luminance-difference bits, Hamming-distance BK-tree, aspect/mean/contrast gates",
+    "identical whole documents represented once in visual comparison; at most300 candidate page pairs per run",
+    "dedicated comparison controller retains state across reader/editor navigation, supports cancel and generation-safe progress",
+    "no continuous background duplicate monitoring or automatic deletion"
+  ],
+  "limits": [
+    "visual similarity is a candidate heuristic; no semantic duplicate guarantee or measured precision/recall",
+    "PDF equality checks file bytes, not canonical object/text equivalence",
+    "comparison results are transient and need refresh after edits; version groups are persistent and backed up",
+    "reaching the300-candidate limit stops visual comparison; original hash phase has already completed",
+    "real camera quality and OCR accuracy were not evaluated by this resource/organization test"
+  ],
+  "releaseCreated": false
+}
