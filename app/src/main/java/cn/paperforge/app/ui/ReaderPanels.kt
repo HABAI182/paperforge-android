@@ -142,7 +142,11 @@ fun ReaderTextSheet(
     var selected by remember { mutableIntStateOf(0) }
     var excerpt by remember { mutableStateOf(false) }
     var notice by remember { mutableStateOf("") }
-    var speed by remember { mutableFloatStateOf(1f) }
+    var speed by remember {
+        mutableFloatStateOf(cn.paperforge.app.UserSettings.number("speechSpeed", 1f))
+    }
+    var voicePicker by remember { mutableStateOf(false) }
+    var voiceQuery by remember { mutableStateOf("") }
     val blocks by
         produceState(emptyList<ReaderTextBlock>(), file, page, recognize, initialBlocks) {
             loading = true
@@ -187,11 +191,23 @@ fun ReaderTextSheet(
         ordered.getOrNull(selected)?.let(onFocus)
         if (selected > 0) list.scrollToItem(selected)
     }
+    LaunchedEffect(speechState.offset, speechState.playing) {
+        if (speechState.playing && ordered.isNotEmpty()) {
+            val index =
+                starts.indexOfLast { it <= speechState.offset }.coerceIn(0, ordered.lastIndex)
+            if (index != selected) {
+                selected = index
+                onFocus(ordered[index])
+                list.animateScrollToItem(index)
+            }
+        }
+    }
     ModalBottomSheet(
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         onDismissRequest = {
             speech.pause()
             onDismiss()
-        }
+        },
     ) {
         Column(
             Modifier.fillMaxHeight(.9f).padding(horizontal = 16.dp),
@@ -239,6 +255,15 @@ fun ReaderTextSheet(
             ) {
                 Column(Modifier.padding(10.dp)) {
                     Text(speechState.message, style = MaterialTheme.typography.labelMedium)
+                    if (speechState.ready)
+                        TextButton(onClick = { voicePicker = true }) {
+                            Text(
+                                "声音：" +
+                                    (speechState.voiceLabels[speechState.selectedVoice]
+                                        ?: speechState.selectedVoice),
+                                maxLines = 1,
+                            )
+                        }
                     Row(Modifier.horizontalScroll(rememberScrollState())) {
                         TextButton(
                             onClick = {
@@ -259,6 +284,21 @@ fun ReaderTextSheet(
                         ) {
                             Text("从选段开始")
                         }
+                        listOf("上一段" to -1, "下一段" to 1).forEach { (label, delta) ->
+                            TextButton(
+                                onClick = {
+                                    val index = (selected + delta).coerceIn(0, ordered.lastIndex)
+                                    selected = index
+                                    onFocus(ordered[index])
+                                    scope.launch { list.animateScrollToItem(index) }
+                                    if (speechState.playing) speech.play(text, starts[index])
+                                },
+                                enabled =
+                                    ordered.isNotEmpty() && selected + delta in ordered.indices,
+                            ) {
+                                Text(label)
+                            }
+                        }
                         TextButton(
                             onClick = {
                                 runCatching {
@@ -276,10 +316,8 @@ fun ReaderTextSheet(
                         Text("语速 %.1f×".format(speed), style = MaterialTheme.typography.labelMedium)
                         Slider(
                             speed,
-                            {
-                                speed = it
-                                speech.speed(it)
-                            },
+                            { speed = it },
+                            onValueChangeFinished = { speech.speed(speed) },
                             valueRange = 0.5f..2f,
                             modifier = Modifier.weight(1f),
                         )
@@ -328,6 +366,41 @@ fun ReaderTextSheet(
             }
         }
     }
+    if (voicePicker)
+        ModalBottomSheet(
+            onDismissRequest = { voicePicker = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        ) {
+            Column(Modifier.fillMaxHeight(.8f).padding(horizontal = 16.dp)) {
+                Text("已安装的离线声音", style = MaterialTheme.typography.titleLarge)
+                OutlinedTextField(
+                    voiceQuery,
+                    { voiceQuery = it },
+                    label = { Text("搜索语言或声音") },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                LazyColumn(Modifier.weight(1f)) {
+                    itemsIndexed(
+                        speechState.voices.filter {
+                            (speechState.voiceLabels[it] ?: it).contains(voiceQuery, true)
+                        }
+                    ) { _, name ->
+                        TextButton(
+                            onClick = {
+                                speech.voice(name)
+                                voicePicker = false
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                (if (name == speechState.selectedVoice) "✓ " else "") +
+                                    (speechState.voiceLabels[name] ?: name)
+                            )
+                        }
+                    }
+                }
+            }
+        }
     if (excerpt) {
         var quote by remember { mutableStateOf(ordered.getOrNull(selected)?.text ?: "") }
         var note by remember { mutableStateOf("") }

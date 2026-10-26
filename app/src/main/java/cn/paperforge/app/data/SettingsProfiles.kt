@@ -183,6 +183,8 @@ class SettingsProfiles(context: Context) {
                         "gridColumns",
                         "edgeTurn",
                         "readerSelectionOrder",
+                        "speechVoice",
+                        "speechSpeed",
                     ),
                 "home" to setOf("recentCount", "homeTools", "homeCollection", "pinnedTools"),
             )

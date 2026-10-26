@@ -345,7 +345,7 @@
       ],
       "scope": "安装声音探测、段落导航、暂停语速与高亮",
       "acceptance": "选择处开始朗读，退出不继续误播",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "R15",

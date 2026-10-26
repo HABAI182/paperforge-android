@@ -1,0 +1,53 @@
+{
+  "checked": "2026-10-26",
+  "cards": ["R14"],
+  "implemented": [
+    "Installed offline system voices can be searched by language/name; voice and speed are included in settings profiles",
+    "Previous/next paragraph, selected paragraph start, automatic paragraph focus and actual playback highlighting",
+    "Main-thread callback publication with generation/utterance checks, pause/resume and lifecycle/close stop",
+    "Locale-independent bounded sentence/line chunks preserve decimal points inside numbers",
+    "Real word-range callbacks are used when available; other engines explicitly highlight and resume the actual utterance segment",
+    "Text/voice sheets open expanded; speed applies after slider adjustment"
+  ],
+  "focusedCheck": {
+    "test": "OfflineSpeechFlowTest.actualOfflineEngineSegmentProgressPauseResumeStopAndPcmOutput",
+    "seconds": 2.74,
+    "result": "passed",
+    "engine": "com.reecedunn.espeak",
+    "installedOfflineVoices": 133,
+    "selectedEnglish": "en-029",
+    "firstRange": [0, 54],
+    "secondRange": [54, 113],
+    "preciseRange": false,
+    "pausedOffset": 54,
+    "resumeOffset": 54,
+    "closedStopsPlayback": true,
+    "resolvedIssue": "Device-locale sentence iteration combined English sentences; punctuation/newline segmentation fixes actual pause/highlight granularity",
+    "scope": "Only the new engine flow was rerun after that fix; expanded-sheet UI and fixture preference flush subsequently compiled and checked through actual UI"
+  },
+  "independentWaveReadback": [
+    {"file": "offline-speech-en.wav", "voice": "en-gb-x-gbcwmd", "sampleRate": 22050, "channels": 1, "sampleWidth": 2, "frames": 78605, "seconds": 3.565, "fileBytes": 157254, "audioCallbackBytes": 157210, "peak": 32060, "rms": 3532.99},
+    {"file": "offline-speech-zh.wav", "voice": "cmn", "sampleRate": 22050, "channels": 1, "sampleWidth": 2, "frames": 55356, "seconds": 2.51, "fileBytes": 110756, "audioCallbackBytes": 110712, "peak": 32757, "rms": 3637.72}
+  ],
+  "actualUI": [
+    "Reading settings opens the expanded text sheet for a retained PDF",
+    "Voice search cmn filters to Mandarin; chosen voice appears in reading controls",
+    "Next paragraph selects the expected source text",
+    "Selected paragraph start shows actual segment-following message and highlighted 00123/200.50 line"
+  ],
+  "engineProvenance": {
+    "name": "eSpeak NG Android", "package": "com.reecedunn.espeak", "version": "1.52.0", "versionCode": 22,
+    "distribution": "https://f-droid.org/packages/com.reecedunn.espeak/",
+    "apk": "https://f-droid.org/repo/com.reecedunn.espeak_22.apk",
+    "source": "https://github.com/espeak-ng/espeak-ng", "license": "GPL-3.0-or-later",
+    "sha256": "0a7822fec54d7f7ae759ffedc9afeaa77f809587b171fb2101998787821ec790",
+    "signerSha256": "acdee0a53d94886b9824ad748ceae1d7c8d3e15e1de694dc684dfaae62231ea7",
+    "apkSignatureVerified": true, "bundledInPaperForge": false
+  },
+  "limits": [
+    "API35 x86_64 emulator with its audio device disabled: actual PCM synthesis and callbacks are proven, not physical loudspeaker listening quality",
+    "This engine provides no word-range callback; actual segment-following is validated, other engines were not simulated with invented word timing",
+    "No all-OEM, all-language or expressive neural voice quality claim",
+    "No version/tag/release change; remaining roadmap work stays open"
+  ]
+}

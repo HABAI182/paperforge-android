@@ -52,6 +52,8 @@ object UserSettings {
             "homeCollection" to "RECENT",
             "edgeTurn" to true,
             "readerSelectionOrder" to "0",
+            "speechVoice" to "",
+            "speechSpeed" to 1f,
             "recentCount" to 6f,
             "homeTools" to "images,pdf,ocr,merge,compress,tools",
             "pinnedTools" to "",
@@ -156,6 +158,7 @@ object UserSettings {
                 "customDpi" to 72f..600f,
                 "quality" to 40f..100f,
                 "fontScale" to 0.85f..1.3f,
+                "speechSpeed" to .5f..2f,
                 "recentCount" to 4f..20f,
                 "outlineWeight" to 1f..8f,
                 "outlineSwitchFrames" to 1f..6f,
@@ -207,6 +210,7 @@ object UserSettings {
                     (value.isEmpty() || value.matches(Regex("[a-z0-9-]{1,64}"))) ->
                     result.put(key, value)
                 key == "exportNaming" && value is String -> result.put(key, value)
+                key == "speechVoice" && value is String -> result.put(key, value.take(200))
                 key in setOf("workflowRecipes", "autoExportRules") && value is String ->
                     runCatching { org.json.JSONArray(value) }
                         .getOrNull()
