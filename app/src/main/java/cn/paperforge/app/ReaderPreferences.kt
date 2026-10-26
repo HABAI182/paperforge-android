@@ -14,9 +14,49 @@ data class ReaderPosition(
     val tone: Int = 0,
 )
 
+data class ReflowPosition(
+    val page: Int = 0,
+    val index: Int = 0,
+    val offset: Int = 0,
+    val fontSize: Float = 20f,
+    val lineSpacing: Float = 1.6f,
+    val columns: Int = 0,
+) {
+    fun json() =
+        JSONObject()
+            .put("page", page)
+            .put("index", index)
+            .put("offset", offset)
+            .put("fontSize", fontSize)
+            .put("lineSpacing", lineSpacing)
+            .put("columns", columns)
+
+    companion object {
+        fun decode(o: JSONObject) =
+            ReflowPosition(
+                o.optInt("page", 0).coerceAtLeast(0),
+                o.optInt("index", 0).coerceAtLeast(0),
+                o.optInt("offset", 0).coerceAtLeast(0),
+                o.optDouble("fontSize", 20.0).toFloat().coerceIn(14f, 36f),
+                o.optDouble("lineSpacing", 1.6).toFloat().coerceIn(1.2f, 2f),
+                o.optInt("columns", 0).coerceIn(0, 2),
+            )
+    }
+}
+
 class ReaderPreferences(context: Context) {
     private val prefs = context.getSharedPreferences("reader", Context.MODE_PRIVATE)
     private val viewPrefs = context.getSharedPreferences("reader-view", Context.MODE_PRIVATE)
+
+    fun reflow(id: String) =
+        runCatching {
+                ReflowPosition.decode(JSONObject(prefs.getString("reflow:$id", "{}") ?: "{}"))
+            }
+            .getOrDefault(ReflowPosition())
+
+    fun reflow(id: String, state: ReflowPosition) {
+        prefs.edit().putString("reflow:$id", state.json().toString()).apply()
+    }
 
     fun hasPosition(id: String) = prefs.contains(id)
 
@@ -67,7 +107,8 @@ class ReaderPreferences(context: Context) {
                     JSONObject()
                         .put("position", JSONObject(prefs.getString(id, "{}") ?: "{}"))
                         .put("bookmarks", org.json.JSONArray(bookmarks(id).sorted()))
-                        .put("view", view(id).encode()),
+                        .put("view", view(id).encode())
+                        .put("reflow", reflow(id).json()),
                 )
             }
         }
@@ -77,6 +118,7 @@ class ReaderPreferences(context: Context) {
         ids.forEach { (old, new) ->
             data.optJSONObject(old)?.let { state ->
                 state.optJSONObject("position")?.let { edit.putString(new, it.toString()) }
+                state.optJSONObject("reflow")?.let { reflow(new, ReflowPosition.decode(it)) }
                 state.optJSONObject("view")?.let {
                     view(new, cn.paperforge.app.reader.ReaderViewOptions.decode(it))
                 }

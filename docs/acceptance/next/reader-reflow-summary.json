@@ -1,0 +1,252 @@
+{
+  "checked": "2026-10-26",
+  "cards": [
+    "R13"
+  ],
+  "implemented": [
+    "Original-canvas reader opens a fullscreen on-demand single-page reflow view",
+    "Native text / local OCR paragraphs rewrap at document-specific font size and line spacing; explicit column order",
+    "Embedded image placements retain actual rendered color pixels and expand to available reading width",
+    "Ruled-table structure retains real merged cells and text values, measured cell heights, horizontal scroll and original appearance toggle",
+    "Every paragraph, image, table and full-page reference retains normalized source bounds and a FitR / original-page jump",
+    "Original jump participates in the existing reading-anchor return history",
+    "Reading page/item/offset/font/spacing/order persist per document and are included in reader backup ID remapping; closing syncs the source page",
+    "Rebuildable cache includes PDF SHA, page, engine/options, order and implementation version; unchanged PDF remains the source of truth"
+  ],
+  "focusedCheck": {
+    "test": "ReaderReflowFlowTest.paragraphsPictureMergedTableAndSourceJumpRetainReadingSettings",
+    "seconds": 8.258,
+    "result": "passed",
+    "coverage": [
+      "Actual native two-line paragraph, embedded two-color photo and 3x2 ruled table with a merged header",
+      "UI opens from reader, changes font to 24, shows real cells and image, scrolls and jumps from table to source",
+      "Source table center remains visible; return restores original 1.7 reading zoom",
+      "Reopen retains font and progress; reader backup ID mapping retains equal settings",
+      "Original PDF SHA remains unchanged"
+    ],
+    "testScope": "Only this new flow was run; fixture color overload and an incorrect zoom-direction expectation were corrected without repeating older suites"
+  },
+  "proof": {
+    "model": {
+      "version": "paragraph-figures-ruled-v1",
+      "page": 0,
+      "sourceSha256": "9eb985c6fb0359a881e9ebef1804a82366fb3207b754de69ad054c5272608399",
+      "ocr": false,
+      "items": [
+        {
+          "kind": "paragraph",
+          "region": [
+            0.08,
+            0.075805716,
+            0.5963359,
+            0.11
+          ],
+          "text": "This paragraph begins on the first line and continues with code 00123 and total 200.50.",
+          "source": "native"
+        },
+        {
+          "kind": "image",
+          "region": [
+            0.08,
+            0.3642857,
+            0.44,
+            0.49285716
+          ],
+          "text": "",
+          "source": "native",
+          "image": "figure-0.png"
+        },
+        {
+          "kind": "table",
+          "region": [
+            0.079684764,
+            0.57125,
+            0.91943955,
+            0.785625
+          ],
+          "text": "",
+          "source": "native",
+          "image": "table-0.png",
+          "table": {
+            "page": 1,
+            "sourcePages": [
+              1
+            ],
+            "method": "有线表",
+            "algorithm": "grid-separators-v2",
+            "rows": [
+              [
+                "DATA",
+                ""
+              ],
+              [
+                "00123",
+                "200.50"
+              ],
+              [
+                "00077",
+                "90.00"
+              ]
+            ],
+            "cells": [
+              {
+                "row": 0,
+                "column": 0,
+                "rowEnd": 0,
+                "columnEnd": 1,
+                "text": "DATA",
+                "corrected": false,
+                "textSource": "page",
+                "box": [
+                  0.079684764,
+                  0.57125,
+                  0.91943955,
+                  0.6425
+                ]
+              },
+              {
+                "row": 1,
+                "column": 0,
+                "rowEnd": 1,
+                "columnEnd": 0,
+                "text": "00123",
+                "corrected": false,
+                "textSource": "page",
+                "box": [
+                  0.079684764,
+                  0.6425,
+                  0.49912435,
+                  0.71375
+                ]
+              },
+              {
+                "row": 1,
+                "column": 1,
+                "rowEnd": 1,
+                "columnEnd": 1,
+                "text": "200.50",
+                "corrected": false,
+                "textSource": "page",
+                "box": [
+                  0.49912435,
+                  0.6425,
+                  0.91943955,
+                  0.71375
+                ]
+              },
+              {
+                "row": 2,
+                "column": 0,
+                "rowEnd": 2,
+                "columnEnd": 0,
+                "text": "00077",
+                "corrected": false,
+                "textSource": "page",
+                "box": [
+                  0.079684764,
+                  0.71375,
+                  0.49912435,
+                  0.785625
+                ]
+              },
+              {
+                "row": 2,
+                "column": 1,
+                "rowEnd": 2,
+                "columnEnd": 1,
+                "text": "90.00",
+                "corrected": false,
+                "textSource": "page",
+                "box": [
+                  0.49912435,
+                  0.71375,
+                  0.91943955,
+                  0.785625
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "kind": "reference",
+          "region": [
+            0,
+            0,
+            1,
+            1
+          ],
+          "text": "",
+          "source": "native",
+          "image": "reference.png"
+        }
+      ]
+    },
+    "position": {
+      "page": 0,
+      "index": 1,
+      "offset": 129,
+      "fontSize": 24,
+      "lineSpacing": 1.6,
+      "columns": 0
+    },
+    "backupPositionMatches": true,
+    "sourceJumpAndReturn": true,
+    "originalUnchanged": true
+  },
+  "independentReadback": {
+    "sourceSha256": "9eb985c6fb0359a881e9ebef1804a82366fb3207b754de69ad054c5272608399",
+    "pages": 1,
+    "nativeText": "This paragraph begins on the first line\nand continues with code 00123 and total 200.50.\nDATA\n00123\n200.50\n00077\n90.00\n",
+    "photoSize": [
+      411,
+      206
+    ],
+    "leftRGB": [
+      20,
+      110,
+      180
+    ],
+    "rightRGB": [
+      235,
+      170,
+      40
+    ],
+    "tableRows": [
+      [
+        "DATA",
+        ""
+      ],
+      [
+        "00123",
+        "200.50"
+      ],
+      [
+        "00077",
+        "90.00"
+      ]
+    ],
+    "mergedHeader": {
+      "row": 0,
+      "column": 0,
+      "rowEnd": 0,
+      "columnEnd": 1,
+      "text": "DATA",
+      "corrected": false,
+      "textSource": "page",
+      "box": [
+        0.079684764,
+        0.57125,
+        0.91943955,
+        0.6425
+      ]
+    },
+    "sourceAnchors": 4
+  },
+  "limits": [
+    "Single-column reading first, with explicit left/right column order; no universal semantic layout recovery claim",
+    "Only detected ruling lines promote geometry into a structured table; free-layout tables, formulas and scanned illustrations retain the original-page fallback",
+    "OCR text follows current local engine quality; no artificial character boxes or edit of source text layer",
+    "Controlled x86_64 emulator; no OEM or physical-device reading acceptance claimed",
+    "No version/tag/release change; remaining roadmap work stays open"
+  ]
+}

@@ -65,7 +65,14 @@ object PageTextSource {
                 }
             val ocr =
                 try {
-                    if (region == null) engine.snapshot().recognizeBitmap(bitmap)
+                    if (region == null)
+                        engine
+                            .snapshot()
+                            .recognizeBitmap(
+                                bitmap,
+                                cn.paperforge.app.UserSettings.string("ocrLanguage", "CHINESE") !=
+                                    "LATIN",
+                            )
                     else {
                         require(region.valid()) { "请圈选更大的文字区域" }
                         val x = (region.left * bitmap.width).toInt().coerceIn(0, bitmap.width - 1)
@@ -90,7 +97,15 @@ object PageTextSource {
                                     (y + h).toFloat() / bitmap.height,
                                 )
                             actual.mapped(
-                                engine.snapshot().recognizeBitmap(crop),
+                                engine
+                                    .snapshot()
+                                    .recognizeBitmap(
+                                        crop,
+                                        cn.paperforge.app.UserSettings.string(
+                                            "ocrLanguage",
+                                            "CHINESE",
+                                        ) != "LATIN",
+                                    ),
                                 bitmap.width,
                                 bitmap.height,
                             )

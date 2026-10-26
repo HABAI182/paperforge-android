@@ -332,7 +332,7 @@
       ],
       "scope": "单栏先行，段落/图片/表格保留源锚点",
       "acceptance": "复杂页可回原布局，不阻塞普通阅读",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "R14",

@@ -120,6 +120,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
     }
     var navigation by remember { mutableStateOf(false) }
     var textPage by remember { mutableStateOf<Int?>(null) }
+    var reflow by rememberSaveable { mutableStateOf(false) }
     var textPoint by remember { mutableStateOf<PointN?>(null) }
     var textInitial by remember { mutableStateOf<List<ReaderTextBlock>?>(null) }
     var selection by remember { mutableStateOf<cn.paperforge.app.pdf.ReaderTextSelection?>(null) }
@@ -538,6 +539,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                             thumbnails = true
                         }
                         ToolAction(Icons.Default.Draw, "批注", !busy) { vm.beginMarks() }
+                        ToolAction(Icons.Default.Article, "重排", session != null) { reflow = true }
                         ToolAction(Icons.Default.SwapHoriz, "转换", !busy) {
                             toolMode = ""
                             tools = true
@@ -899,6 +901,22 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
             }
         }
     }
+    if (reflow && file != null && doc != null && session != null)
+        ReaderReflowDialog(
+            file,
+            doc!!.id,
+            doc!!.title,
+            page,
+            session!!.count,
+            onOriginal = { target ->
+                reflow = false
+                navigate(target)
+            },
+            onDismiss = { last ->
+                reflow = false
+                if (last != page) goTo(last)
+            },
+        )
     if (navigation && file != null)
         ReaderNavigationSheet(file, documentInfo, bookmarks, page, { navigate(it) }) {
             navigation = false
