@@ -95,6 +95,8 @@ class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                             data.getString("paper"),
                             data.getString("resolution"),
                             data.getInt("quality", 90),
+                            data.getBoolean("searchable", false),
+                            if (data.getBoolean("searchable", false)) PdfTextLayer.VERSION else "",
                         )
                         .joinToString("|")
                 val cached =

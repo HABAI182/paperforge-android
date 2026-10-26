@@ -586,7 +586,7 @@
       ],
       "scope": "字体/ToUnicode/方向与变换一致",
       "acceptance": "外部阅读器复制顺序和框位置正确",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "OCR10",
@@ -1252,9 +1252,9 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 70,
+    "done": 71,
     "partial": 15,
-    "planned": 13
+    "planned": 12
   },
-  "updated": "2026-10-26"
+  "updated": "2026-10-27"
 }

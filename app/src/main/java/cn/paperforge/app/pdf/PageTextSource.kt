@@ -26,7 +26,7 @@ object PageTextSource {
             val key =
                 MessageDigest.getInstance("SHA-256")
                     .digest(
-                        "selection-v2:${file.canonicalPath}:${file.length()}:${file.lastModified()}:$page"
+                        "selection-v3:${PdfGlyphGeometry.VERSION}:${file.canonicalPath}:${file.length()}:${file.lastModified()}:$page"
                             .toByteArray()
                     )
                     .joinToString("") { "%02x".format(it.toInt() and 255) }

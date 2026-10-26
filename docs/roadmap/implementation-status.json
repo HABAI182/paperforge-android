@@ -1,6 +1,6 @@
 {
   "version": "next-development",
-  "updated": "2026-10-26",
+  "updated": "2026-10-27",
   "defaultExecution": "Android-local",
   "officeRequiresOptionalPhoneEngine": true,
   "computerRequired": false,
@@ -177,7 +177,7 @@
       "id": "UI01",
       "title": "统一视觉变量",
       "status": "partial",
-      "note": "明暗语义色、Typography、Shapes、动态配色与纯黑完成；全应用状态/动效和大字号覆盖仍待继续"
+      "note": "明暗语义色、Typography、Shapes、动态配色与纯黑完成；全应用状态/动效和大字号覆盖仍待继续；系统栏现同步应用明暗设置与相机深色表面，修复深色背景黑图标"
     },
     {
       "id": "UI02",
@@ -278,8 +278,8 @@
     {
       "id": "OCR09",
       "title": "搜索与选择几何核对",
-      "status": "planned",
-      "note": "完整目标保留，未在本版标记完成"
+      "status": "done",
+      "note": "新增OCR字体按实际Unicode修复复制映射，保留全角/圈号；按完整字体度量及裁切文字矩阵统一搜索/选择/覆盖。水平、旋转文字、混合原生与非零裁切/90度页面四组独立MuPDF框一致，原件/原生字体/可见像素不变。见 ocr-pdf-geometry-summary.json"
     },
     {
       "id": "OCR10",
@@ -595,9 +595,9 @@
     }
   ],
   "counts": {
-    "done": 70,
+    "done": 71,
     "partial": 15,
-    "planned": 13
+    "planned": 12
   },
   "releaseHold": true,
   "publishedBaseline": "0.6.0"

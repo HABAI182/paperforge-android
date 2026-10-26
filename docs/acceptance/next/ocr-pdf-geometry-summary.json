@@ -1,0 +1,41 @@
+{
+  "checked": "2026-10-27",
+  "cards": ["OCR09"],
+  "implemented": [
+    "Added OCR fonts record written CID-to-Unicode mapping and are repaired after font subsetting; existing native font maps remain unchanged",
+    "NFC preserves fullwidth numbers and circled symbols; ActualText records each emitted OCR string",
+    "Text-layer baseline and full font ascent/descent fit the supplied horizontal or rotated OCR polygon",
+    "Search, original-page selection and native coverage share cropped-page text-rendering-matrix coordinates, with complete font height",
+    "Reader/reflow/comparison caches and affected export/recipe/format stages include the new geometry or writer version"
+  ],
+  "focusedCheck": {
+    "test": "OcrPdfGeometryFlowTest.scanAndMixedRotatedPdfKeepUnicodeSearchAndOriginalFonts",
+    "result": "passed",
+    "seconds": 2.089,
+    "scope": "One concentrated new flow; repeated only after independent readback exposed reduced selection height and after fixture alignment was improved",
+    "cases": ["horizontal Chinese with fullwidth digits and circled number", "90-degree text on a page", "mixed raster/native page with 90-degree page rotation and nonzero crop origin", "original CJK font preservation"],
+    "raw": "ocr-pdf-geometry-proof.json"
+  },
+  "independentReadback": {
+    "engine": "PyMuPDF / MuPDF",
+    "report": "ocr-pdf-independent-readback.json",
+    "exactCopiedText": ["用户 第二页 ００１２３ ①", "旋转 页 00123", "原生文字甲乙", "第二页 00123"],
+    "searchBoxComparisonCases": 4,
+    "maxNormalizedCoordinateDifference": 0.00000007,
+    "mixedSourceVisiblePixelsUnchanged": true,
+    "originalNativeToUnicodeBytesUnchanged": true,
+    "originalFileShaUnchanged": true
+  },
+  "relatedUI": {
+    "change": "System status/navigation appearance follows the chosen app theme; always-dark camera surface also requests dark-surface system bars",
+    "evidence": "system-bars-camera.png",
+    "scope": "System-bar contrast only; this screenshot does not establish camera quality or complete UI08"
+  },
+  "references": ["https://pdfbox.apache.org/docs/2.0.13/javadocs/org/apache/pdfbox/text/TextPosition.html", "https://github.com/apache/pdfbox/blob/2.0.27/pdfbox/src/main/java/org/apache/pdfbox/text/LegacyPDFStreamEngine.java"],
+  "limits": [
+    "Known corrected OCR geometry isolates writing and coordinates from recognition quality; no new OCR accuracy benchmark is claimed",
+    "Three fixture pages cover the listed fonts and transforms; complex scripts and vertical writing layout remain separate OCR08 work",
+    "No universal external-reader or Type3/variable-font guarantee",
+    "No tag or release created"
+  ]
+}

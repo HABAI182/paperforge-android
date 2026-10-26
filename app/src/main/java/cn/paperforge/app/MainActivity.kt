@@ -90,7 +90,9 @@ class MainActivity : ComponentActivity() {
         incoming = if (savedInstanceState == null) intent else null
         securitySettingsChanged()
         setContent {
-            PaperForgeTheme {
+            val vm: MainViewModel = viewModel()
+            val screen by vm.screen.collectAsState()
+            PaperForgeTheme(forceDarkSystemBars = screen == "capture" && !appLocked) {
                 if (appLocked) {
                     Surface(Modifier.fillMaxSize()) {
                         Column(
@@ -120,8 +122,6 @@ class MainActivity : ComponentActivity() {
                     }
                     return@PaperForgeTheme
                 }
-                val vm: MainViewModel = viewModel()
-                val screen by vm.screen.collectAsState()
                 val busy by vm.busy.collectAsState()
                 val backgroundable by vm.canBackgroundTask.collectAsState()
                 val progress by vm.progress.collectAsState()

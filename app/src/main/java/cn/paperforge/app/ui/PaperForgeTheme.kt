@@ -1,5 +1,8 @@
 package cn.paperforge.app.ui
 
+import androidx.activity.SystemBarStyle
+import androidx.activity.compose.LocalActivity
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -16,7 +19,7 @@ import androidx.compose.ui.unit.sp
 import cn.paperforge.app.UserSettings
 
 @Composable
-fun PaperForgeTheme(content: @Composable () -> Unit) {
+fun PaperForgeTheme(forceDarkSystemBars: Boolean = false, content: @Composable () -> Unit) {
     val revision by UserSettings.revision.collectAsState()
     val theme = remember(revision) { UserSettings.string("theme", "SYSTEM") }
     val dark =
@@ -33,6 +36,21 @@ fun PaperForgeTheme(content: @Composable () -> Unit) {
             "ORANGE" -> Color(0xFFA54B15)
             else -> Color(0xFF176B54)
         }
+    val activity = LocalActivity.current as? androidx.activity.ComponentActivity
+    val darkBars = dark || forceDarkSystemBars
+    SideEffect {
+        activity?.enableEdgeToEdge(
+            statusBarStyle =
+                SystemBarStyle.auto(
+                    android.graphics.Color.TRANSPARENT,
+                    android.graphics.Color.TRANSPARENT,
+                ) {
+                    darkBars
+                },
+            navigationBarStyle =
+                SystemBarStyle.auto(0xE6FFFFFF.toInt(), 0x801B1B1B.toInt()) { darkBars },
+        )
+    }
     val colors =
         if (dark)
             darkColorScheme(

@@ -21,6 +21,7 @@ object PdfSearchable {
     ) {
         val temporary = File(output.path + ".part")
         try {
+            val mapping = PdfTextLayer.Mapping()
             PDDocument.load(input, MemoryUsageSetting.setupTempFileOnly()).use { doc ->
                 val font = PdfTextLayer.font(context, doc)
                 ParcelFileDescriptor.open(input, ParcelFileDescriptor.MODE_READ_ONLY).use { fd ->
@@ -76,6 +77,7 @@ object PdfSearchable {
                                             box.lowerLeftY,
                                             box.width,
                                             box.height,
+                                            mapping,
                                         )
                                     } finally {
                                         bitmap.recycle()
@@ -87,6 +89,7 @@ object PdfSearchable {
                 }
                 doc.save(temporary)
             }
+            mapping.finish(temporary)
             PDDocument.load(temporary).use { require(it.numberOfPages > 0) }
             check(temporary.renameTo(output))
         } finally {

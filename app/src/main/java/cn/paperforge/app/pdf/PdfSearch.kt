@@ -1,7 +1,6 @@
 package cn.paperforge.app.pdf
 
 import cn.paperforge.app.model.CjkSearch
-import cn.paperforge.app.model.PointN
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.text.PDFTextStripper
 import com.tom_roush.pdfbox.text.TextPosition
@@ -46,20 +45,9 @@ object PdfSearch {
                                 mapping.subList(at, (at + target.length).coerceAtMost(mapping.size))
                             val page = doc.getPage(currentPageNo - 1)
                             val box = page.cropBox
-                            fun display(p: PointN) =
-                                when ((page.rotation % 360 + 360) % 360) {
-                                    90 -> PointN(1 - p.y, p.x)
-                                    180 -> PointN(1 - p.x, 1 - p.y)
-                                    270 -> PointN(p.y, 1 - p.x)
-                                    else -> p
-                                }
                             val points =
                                 selected.flatMap { p ->
-                                    val x = p.xDirAdj / box.width
-                                    val y = p.yDirAdj / box.height
-                                    val w = p.widthDirAdj / box.width
-                                    val h = p.heightDir / box.height
-                                    listOf(display(PointN(x, y - h)), display(PointN(x + w, y)))
+                                    PdfGlyphGeometry.displayed(p, box, page.rotation)
                                 }
                             result.add(
                                 Hit(

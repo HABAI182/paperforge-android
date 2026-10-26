@@ -90,7 +90,7 @@ object FormatJobs {
         val title = job.input.getString("name")?.substringBeforeLast('.') ?: "PaperForge"
         val images = options.optString("target", "PDF") == "IMAGES"
         val outputKey =
-            "layout-output-${version(signature + if (images) "images" else "pdf-unicode-v2")}"
+            "layout-output-${version(signature + if (images) "images" else PdfTextLayer.VERSION)}"
         val outputFolder = File(repo.exports, "${job.row.id}/$outputKey").apply { mkdirs() }
         val output = File(outputFolder, safeFileName("$title.${if(images)"zip" else "pdf"}"))
         val previous =

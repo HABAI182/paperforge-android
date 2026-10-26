@@ -175,23 +175,8 @@ object ReaderDocument {
                                     }
                                     .trim()
                             if (line.isNotEmpty()) {
-                                fun bounds(p: TextPosition): List<PointN> =
-                                    listOf(
-                                        display(
-                                            PointN(
-                                                p.xDirAdj / box.width,
-                                                (p.yDirAdj - p.heightDir) / box.height,
-                                            ),
-                                            page.rotation,
-                                        ),
-                                        display(
-                                            PointN(
-                                                (p.xDirAdj + p.widthDirAdj) / box.width,
-                                                p.yDirAdj / box.height,
-                                            ),
-                                            page.rotation,
-                                        ),
-                                    )
+                                fun bounds(p: TextPosition) =
+                                    PdfGlyphGeometry.displayed(p, box, page.rotation)
                                 val points = group.flatMap(::bounds)
                                 var cursor = 0
                                 val units =

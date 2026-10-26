@@ -33,6 +33,7 @@ object PdfEngine {
     ) {
         require(pages.isNotEmpty()) { "请先添加页面" }
         atomic(output) { temp ->
+            val mapping = PdfTextLayer.Mapping()
             PDDocument(MemoryUsageSetting.setupTempFileOnly()).use { doc ->
                 val font = if (searchable) PdfTextLayer.font(requireNotNull(context), doc) else null
                 val engine =
@@ -164,7 +165,7 @@ object PdfEngine {
                             )
                             .use { it.drawImage(image, x, y, w, h) }
                         if (font != null && layout != null)
-                            PdfTextLayer.append(doc, pdfPage, font, layout!!, x, y, w, h)
+                            PdfTextLayer.append(doc, pdfPage, font, layout!!, x, y, w, h, mapping)
                     } finally {
                         bitmap.recycle()
                     }
@@ -174,6 +175,7 @@ object PdfEngine {
                 doc.documentInformation.creator = "PaperForge 纸匠"
                 doc.save(temp)
             }
+            mapping.finish(temp)
         }
     }
 

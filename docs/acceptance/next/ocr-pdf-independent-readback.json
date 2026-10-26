@@ -1,0 +1,224 @@
+{
+  "scan-searchable.pdf": {
+    "pages": [
+      {
+        "text": "用户 第二页 ００１２３ ①\n",
+        "rotation": 0,
+        "crop": [
+          0.0,
+          0.0,
+          261.49090576171875,
+          359.6727294921875
+        ],
+        "spans": [
+          {
+            "text": "用户 第二页 ００１２３ ①",
+            "box": [
+              31.378910064697266,
+              89.9181900024414,
+              230.11209106445312,
+              111.4985580444336
+            ]
+          }
+        ]
+      },
+      {
+        "text": "旋转 页 00123\n",
+        "rotation": 0,
+        "crop": [
+          0.0,
+          0.0,
+          261.49090576171875,
+          359.6727294921875
+        ],
+        "spans": [
+          {
+            "text": "旋转 页 00123",
+            "box": [
+              167.3541717529297,
+              71.9345703125,
+              183.04364013671875,
+              269.7546081542969
+            ]
+          }
+        ]
+      }
+    ],
+    "fonts": [
+      [
+        22,
+        "ttf",
+        "Type0",
+        "AAGLZQ+PaperForgeCJK-Regular",
+        "F1",
+        "Identity-H"
+      ]
+    ]
+  },
+  "mixed-original.pdf": {
+    "pages": [
+      {
+        "text": "原生文字甲乙\n",
+        "rotation": 90,
+        "crop": [
+          30.0,
+          60.0,
+          430.0,
+          660.0
+        ],
+        "spans": [
+          {
+            "text": "原生文字甲乙",
+            "box": [
+              40.0,
+              49.12000274658203,
+              148.0,
+              75.18399810791016
+            ]
+          }
+        ]
+      }
+    ],
+    "fonts": [
+      [
+        9,
+        "ttf",
+        "Type0",
+        "AAYLJG+PaperForgeCJK-Regular",
+        "F1",
+        "Identity-H"
+      ]
+    ],
+    "nativeSearchDisplayedBox": [
+      524.8159790039062,
+      40.0,
+      550.8800048828125,
+      112.0
+    ]
+  },
+  "mixed-searchable.pdf": {
+    "pages": [
+      {
+        "text": "原生文字甲乙\n第二页 00123\n",
+        "rotation": 90,
+        "crop": [
+          30.0,
+          60.0,
+          430.0,
+          660.0
+        ],
+        "spans": [
+          {
+            "text": "原生文字甲乙",
+            "box": [
+              40.0,
+              49.12000274658203,
+              148.0,
+              75.18399810791016
+            ]
+          },
+          {
+            "text": "第二页 00123",
+            "box": [
+              140.0,
+              119.99998474121094,
+              172.0,
+              510.0
+            ]
+          }
+        ]
+      }
+    ],
+    "fonts": [
+      [
+        12,
+        "ttf",
+        "Type0",
+        "AAYLJG+PaperForgeCJK-Regular",
+        "F1",
+        "Identity-H"
+      ],
+      [
+        13,
+        "ttf",
+        "Type0",
+        "AABFRE+PaperForgeCJK-Regular",
+        "F2",
+        "Identity-H"
+      ]
+    ],
+    "nativeSearchDisplayedBox": [
+      524.8159790039062,
+      40.0,
+      550.8800048828125,
+      112.0
+    ]
+  },
+  "mixedVisiblePixelsUnchanged": true,
+  "independentSearchGeometryComparison": [
+    {
+      "case": "horizontal",
+      "mupdfDisplayedBox": [
+        0.47473628511014837,
+        0.2500000212120461,
+        0.8003018952833705,
+        0.310000033090792
+      ],
+      "appSearchBox": [
+        0.47473627,
+        0.25,
+        0.8003019,
+        0.31
+      ],
+      "maxNormalizedError": 3.309079199542708e-08
+    },
+    {
+      "case": "vertical",
+      "mupdfDisplayedBox": [
+        0.6399999696564196,
+        0.5047405953423777,
+        0.7000000233412157,
+        0.7500001696963691
+      ],
+      "appSearchBox": [
+        0.64,
+        0.5047406,
+        0.70000005,
+        0.7500001
+      ],
+      "maxNormalizedError": 6.96963691204644e-08
+    },
+    {
+      "case": "mixed",
+      "mupdfDisplayedBox": [
+        0.4993248494466146,
+        0.35,
+        0.8,
+        0.43
+      ],
+      "appSearchBox": [
+        0.49932486,
+        0.35,
+        0.8,
+        0.43
+      ],
+      "maxNormalizedError": 1.0553385387801484e-08
+    },
+    {
+      "case": "native",
+      "mupdfDisplayedBox": [
+        0.8746932983398438,
+        0.1,
+        0.9181333414713542,
+        0.28
+      ],
+      "appSearchBox": [
+        0.8746933,
+        0.1,
+        0.9181333,
+        0.28
+      ],
+      "maxNormalizedError": 4.1471354128574944e-08
+    }
+  ]
+}
