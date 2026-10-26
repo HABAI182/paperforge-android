@@ -18,3 +18,8 @@ app/src/main/assets/licenses/** -whitespace
 
 # Keep upstream license formatting intact.
 office-engine/src/main/assets/licenses/* -whitespace
+
+# Preserve verbatim licensed format parser snapshots and generated license notices.
+format-engine/vendor/** -whitespace
+format-engine/src/main/assets/layout/licenses.txt -whitespace
+format-engine/src/main/assets/layout/adapters.js* -whitespace

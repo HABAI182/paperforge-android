@@ -1,0 +1,77 @@
+Bundled license information:
+
+jszip/dist/jszip.min.js:
+  /*!
+  
+  JSZip v3.10.1 - A JavaScript class for generating and reading zip files
+  <http://stuartk.com/jszip>
+  
+  (c) 2009-2016 Stuart Knightley <stuart [at] stuartk.com>
+  Dual licenced under the MIT license or GPLv3. See https://raw.github.com/Stuk/jszip/main/LICENSE.markdown.
+  
+  JSZip uses the library pako released under the MIT license :
+  https://github.com/nodeca/pako/blob/main/LICENSE
+  */
+
+js-md5/src/md5.js:
+  /**
+   * [js-md5]{@link https://github.com/emn178/js-md5}
+   *
+   * @namespace md5
+   * @version 0.7.3
+   * @author Chen, Yi-Cyuan [emn178@gmail.com]
+   * @copyright Chen, Yi-Cyuan 2014-2017
+   * @license MIT
+   */
+
+js-sha1/src/sha1.js:
+  /*
+   * [js-sha1]{@link https://github.com/emn178/js-sha1}
+   *
+   * @version 0.6.0
+   * @author Chen, Yi-Cyuan [emn178@gmail.com]
+   * @copyright Chen, Yi-Cyuan 2014-2017
+   * @license MIT
+   */
+
+jsrsasign/lib/jsrsasign.js:
+  /*!
+  Copyright (c) 2011, Yahoo! Inc. All rights reserved.
+  Code licensed under the BSD License:
+  http://developer.yahoo.com/yui/license.html
+  version: 2.9.0
+  */
+  /*! CryptoJS v3.1.2 core-fix.js
+   * code.google.com/p/crypto-js
+   * (c) 2009-2013 by Jeff Mott. All rights reserved.
+   * code.google.com/p/crypto-js/wiki/License
+   * THIS IS FIX of 'core.js' to fix Hmac issue.
+   * https://code.google.com/p/crypto-js/issues/detail?id=84
+   * https://crypto-js.googlecode.com/svn-history/r667/branches/3.x/src/core.js
+   */
+  /*! (c) Tom Wu | http://www-cs-students.stanford.edu/~tjw/jsbn/
+   */
+  /*! (c) Stefan Thomas | https://github.com/bitcoinjs/bitcoinjs-lib
+   */
+  /*! Mike Samuel (c) 2009 | code.google.com/p/json-sans-eval
+   */
+
+pngjs/browser.js:
+  /*!
+   * The buffer module from node.js, for the browser.
+   *
+   * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
+   * @license  MIT
+   */
+  /*!
+   * The buffer module from node.js, for the browser.
+   *
+   * @author   Feross Aboukhadijeh <https://feross.org>
+   * @license  MIT
+   */
+  /*!
+   * Determine if an object is a Buffer
+   *
+   * @author   Feross Aboukhadijeh <https://feross.org>
+   * @license  MIT
+   */

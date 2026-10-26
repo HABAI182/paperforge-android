@@ -1309,6 +1309,48 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }
     }
 
+    val formatTarget = MutableStateFlow("PDF")
+    val formatDpi = MutableStateFlow(200)
+
+    fun convertLayout(uri: Uri, options: org.json.JSONObject) {
+        if (!busy.compareAndSet(false, true)) return
+        progress.value = "保留版式原件"
+        task =
+            viewModelScope.launch {
+                var queued: UUID? = null
+                try {
+                    queued =
+                        withContext(Dispatchers.IO) {
+                            val retained = ConversionInputs.retain(repo, listOf(uri)).single()
+                            DocumentJobs.enqueue(
+                                repo,
+                                "CONVERT",
+                                JobInput(
+                                    org.json
+                                        .JSONObject()
+                                        .put("kind", "LAYOUT")
+                                        .put("name", retained.second)
+                                        .put(
+                                            "inputs",
+                                            org.json.JSONArray(listOf(retained.first.path)),
+                                        )
+                                        .put("names", org.json.JSONArray(listOf(retained.second)))
+                                        .put("options", options.toString())
+                                ),
+                            )
+                        }
+                } catch (cancel: CancellationException) {
+                    throw cancel
+                } catch (error: Exception) {
+                    messages.send(error.message ?: "版式转换未能开始")
+                } finally {
+                    busy.value = false
+                    progress.value = ""
+                }
+                queued?.let(::watchExport)
+            }
+    }
+
     fun officeResult(uri: Uri) =
         perform("正在接收手机 Office 结果") {
             val name = repo.displayName(uri)
@@ -2111,7 +2153,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun previewOutput(file: File) =
         perform("正在打开 PDF") {
-            outputReturn.value = screen.value.takeIf { it == "assembly" || it == "workflows" }
+            outputReturn.value =
+                screen.value.takeIf {
+                    it in
+                        setOf(
+                            "assembly",
+                            "workflows",
+                            "format-conversion",
+                            "convert",
+                            "jobs",
+                            "auto-export",
+                        )
+                }
             val doc = repo.registerPdf(file, file.nameWithoutExtension)
             selected.value = doc
             output.value = null

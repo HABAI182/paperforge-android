@@ -76,6 +76,12 @@ fun ConversionScreen(
             "pdf-diff" -> vm.screen.value = "pdf-diff"
             "workflows" -> vm.screen.value = "workflows"
             "auto-export" -> vm.screen.value = "auto-export"
+            "ofd-pdf",
+            "djvu-pdf",
+            "layout-images" -> {
+                vm.formatTarget.value = if (entry.mode == "layout-images") "IMAGES" else "PDF"
+                vm.screen.value = "format-conversion"
+            }
             "md-html",
             "epub-html" -> onMarkup("HTML", org.json.JSONObject())
             "html-md",
@@ -144,7 +150,19 @@ fun ConversionScreen(
                     Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    listOf("全部", "常用", "手机引擎", "手机表格", "电子书", "生成 PDF", "图片", "文字", "整理", "电脑引擎")
+                    listOf(
+                            "全部",
+                            "常用",
+                            "手机引擎",
+                            "手机表格",
+                            "版式文档",
+                            "电子书",
+                            "生成 PDF",
+                            "图片",
+                            "文字",
+                            "整理",
+                            "电脑引擎",
+                        )
                         .forEach { name ->
                             FilterChip(group == name, { group = name }, label = { Text(name) })
                         }

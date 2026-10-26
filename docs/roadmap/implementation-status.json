@@ -374,8 +374,8 @@
     {
       "id": "CVT15",
       "title": "OFD与DjVu等版式适配",
-      "status": "planned",
-      "note": "完整目标保留，未在本版标记完成"
+      "status": "done",
+      "note": "独立手机格式引擎本地转换 OFD/DjVu 到 PDF/PNG 页包，嵌入字体、物理纸张和原始文字区域；原件/逐页缓存/版本结果保留。实际五页签章 OFD、旋转 DjVu、中文复制及返回设置验收见 layout-conversion-summary.json；不声称迁移证书或全对象重建"
     },
     {
       "id": "CVT16",
@@ -595,9 +595,9 @@
     }
   ],
   "counts": {
-    "done": 65,
-    "planned": 15,
-    "partial": 18
+    "done": 69,
+    "planned": 14,
+    "partial": 15
   },
   "releaseHold": true,
   "publishedBaseline": "0.6.0"

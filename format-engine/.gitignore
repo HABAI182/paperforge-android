@@ -1,0 +1,7 @@
+node_modules/
+build/
+vendor/ofdjs/src/assets/
+vendor/ofdjs/src/components/
+vendor/ofdjs/src/styles/
+vendor/ofdjs/src/App.vue
+vendor/ofdjs/src/main.js

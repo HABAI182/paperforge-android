@@ -1,0 +1,48 @@
+{
+  "sourceUrl": "https://github.com/DLTech21/ofd.js/blob/c426b690dfca3d602f105476639f794479fed1b3/public/999.ofd",
+  "sourceSha256": "a2b9080ae35184135160c48ce45fb609c35d5ecfdb538ebc16132c48a2186a80",
+  "adapter": "ofd026-djvu054-embedded-fonts-v3",
+  "dpi": 200,
+  "pages": [
+    {
+      "widthPt": 595.2755737304688,
+      "heightPt": 396.85040283203125,
+      "sourceTextRegions": 80,
+      "redVisiblePixelCountAt100Dpi": 6204
+    },
+    {
+      "widthPt": 595.2755737304688,
+      "heightPt": 841.8897705078125,
+      "sourceTextRegions": 161,
+      "redVisiblePixelCountAt100Dpi": 0
+    },
+    {
+      "widthPt": 595.2755737304688,
+      "heightPt": 841.8897705078125,
+      "sourceTextRegions": 161,
+      "redVisiblePixelCountAt100Dpi": 0
+    },
+    {
+      "widthPt": 595.2755737304688,
+      "heightPt": 841.8897705078125,
+      "sourceTextRegions": 161,
+      "redVisiblePixelCountAt100Dpi": 0
+    },
+    {
+      "widthPt": 595.2755737304688,
+      "heightPt": 841.8897705078125,
+      "sourceTextRegions": 144,
+      "redVisiblePixelCountAt100Dpi": 0
+    }
+  ],
+  "fontWarnings": [
+    "Font not embedded; system matching: 楷体",
+    "Font not embedded; system matching: 宋体",
+    "Font not embedded; system matching: Courier New",
+    "Font not embedded; system matching: 黑体"
+  ],
+  "sourceSignatureXmlCount": 1,
+  "sourceSealAnnotations": 1,
+  "outputSignatureFieldCount": 0,
+  "evidenceScope": "Real public signed OFD processed through SAF and actual UI; output copied locally for nonidentifying geometry/color metrics. Source text, invoice image and raw public sample are not redistributed. Visible red marks are appearance evidence, not certificate verification."
+}

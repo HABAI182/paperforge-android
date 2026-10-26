@@ -1,0 +1,10 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <permission android:name="cn.paperforge.formats.permission.CONVERT" android:protectionLevel="signature" />
+    <uses-permission android:name="cn.paperforge.formats.permission.CONVERT" />
+    <application android:name=".FormatApp" android:label="PaperForge 格式引擎" android:allowBackup="false" android:supportsRtl="true" android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        <activity android:name=".MainActivity" android:exported="true">
+            <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
+        </activity>
+        <service android:name=".FormatService" android:exported="true" android:process=":worker" android:permission="cn.paperforge.formats.permission.CONVERT" />
+    </application>
+</manifest>

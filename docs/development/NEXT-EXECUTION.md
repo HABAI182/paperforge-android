@@ -86,6 +86,8 @@
 
 43. 系统离线朗读支持搜索声音、保存语速、选段与段落导航；按真实词回调或实际播放句段高亮，支持暂停续读与退出停止。修复中文系统的英文分句，实际 eSpeak 服务、中英文 PCM/WAV 及界面选声/跟读见 `docs/acceptance/next/offline-speech-summary.json`；引擎只作为模拟器独立软件安装。
 
+44. 独立手机格式引擎支持 OFD / DjVu 到 PDF / PNG 页包，嵌入字体、物理纸张、旋转、页序和可用的原始文字坐标；任务保留原件、逐页缓存、版本化结果及备份重映射。修复上游预览缩放上限、中文复制映射和预览返回位置，合成样本及真实五页签章 OFD 的有限实证见 `docs/acceptance/next/layout-conversion-summary.json`。印章外观与证书验证明确区分，不发布外部票据原文或图像。
+
 ## 后续执行顺序
 
 页序历史补充：重排只记录页面ID，删页/分割仅记录内容差异；新旧可读快照的撤销保留后来新增的扫描页和与操作无关的新OCR。备份对独立页序ID重映射，集中检查见 `docs/acceptance/next/sparse-history-summary.json`。不将此修复重复计为新完成的计划卡。

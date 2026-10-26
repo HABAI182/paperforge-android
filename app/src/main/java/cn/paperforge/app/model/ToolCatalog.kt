@@ -66,6 +66,9 @@ object ToolCatalog {
                     "电子书",
                     "epub-create",
                 ),
+                ToolCapability("OFD → PDF", "嵌入字体、页序、图片与印章外观；原件保留", "版式文档", "ofd-pdf"),
+                ToolCapability("DjVu → PDF", "多页与旋转方向，保留可用的原始文字坐标", "版式文档", "djvu-pdf"),
+                ToolCapability("OFD / DjVu → PNG 页包", "逐页无损图片、纸张尺寸和版面报告", "版式文档", "layout-images"),
                 ToolCapability(
                     "文字 / DOCX → PDF",
                     "TXT、Markdown、HTML、DOCX 正文，中文分页排版",
@@ -95,6 +98,17 @@ object ToolCatalog {
             )
             .map { entry ->
                 when (entry.mode) {
+                    "ofd-pdf",
+                    "djvu-pdf",
+                    "layout-images" ->
+                        entry.copy(
+                            input = "OFD、DjVu / DJV 原文件",
+                            output = "PDF 或 PNG 页面包；存在原始文字坐标时保留文字层",
+                            parameters = "150 / 200 / 300 DPI、输出类型、原件保留、转换报告",
+                            boundary = "固定版面副本，需要独立手机格式引擎；复杂字体回退见报告。签章仅复制外观，原件证书与签名不迁移或验签。",
+                            engine = "可选手机格式引擎 · 离线",
+                            aliases = "ofd djvu djv 版式 电子发票 票据 图片 印章 convert",
+                        )
                     "auto-export" ->
                         entry.copy(
                             input = "文档库中的扫描文档和 PDF；按标签、文件夹或子文件夹匹配",

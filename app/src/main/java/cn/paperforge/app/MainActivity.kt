@@ -417,6 +417,7 @@ class MainActivity : ComponentActivity() {
                         "comparison" -> LibraryComparisonScreen(vm)
                         "workflows" -> WorkflowScreen(vm)
                         "auto-export" -> AutoExportScreen(vm)
+                        "format-conversion" -> FormatConversionScreen(vm)
                         "pdf-diff" ->
                             PdfDiffScreen(vm) { diffImport.launch(arrayOf("application/pdf")) }
                         "assembly" ->

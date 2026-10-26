@@ -61,6 +61,15 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                         // Stage resources belong to this durable task even if publication stops.
                         completed = 1
                     }
+                    "LAYOUT" -> {
+                        file =
+                            FormatJobs.convert(repo, job) { percent, detail ->
+                                DocumentJobs.progress(repo, job, percent, detail)
+                                setProgress(workDataOf("progress" to percent))
+                            }
+                        output = file
+                        completed = 1
+                    }
                     "OFFICE" -> {
                         file =
                             OfficeJobs.convert(repo, job) { percent, detail ->
@@ -332,7 +341,9 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                             val registered =
                                 repo.registerPdf(
                                     file,
-                                    "${title.substringBeforeLast('.')} · ${if(job.input.getString("kind") == "OFFICE") "PDF" else "文字 PDF"}",
+                                    "${title.substringBeforeLast('.')} · ${when(job.input.getString("kind")) { "OFFICE" -> "PDF"
+ "LAYOUT" -> "版面 PDF"
+ else -> "文字 PDF" }}",
                                 )
                             inputs.forEach { input ->
                                 DocumentResources.register(

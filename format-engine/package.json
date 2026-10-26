@@ -1,0 +1,25 @@
+{
+  "name": "paperforge-format-adapters",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs"
+  },
+  "dependencies": {
+    "@lapo/asn1js": "1.2.1",
+    "core-js": "3.6.5",
+    "js-md5": "0.7.3",
+    "js-sha1": "0.6.0",
+    "jsrsasign": "9.1.9",
+    "jszip": "3.10.1",
+    "jszip-utils": "0.1.0",
+    "ofd-xml-parser": "0.0.6",
+    "pngjs": "5.0.0",
+    "sm-crypto": "0.2.1",
+    "web-streams-polyfill": "2.1.1"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12"
+  }
+}

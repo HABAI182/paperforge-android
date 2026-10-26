@@ -1,0 +1,38 @@
+{
+  "checked": "2026-10-26",
+  "cards": ["CVT15"],
+  "implemented": [
+    "Independent signature-protected phone APK uses bundled ofd.js 0.2.6 and DjVu.js 0.5.4; no network permission",
+    "All OFD document roots/pages, embedded fonts through unique FontFace aliases, per-page physical boxes and original SVG text regions",
+    "DjVu per-page DPI, rotated image data and available original text zones",
+    "PDF with raster appearance and invisible original text, or PNG page ZIP with geometry and report; original retained",
+    "Durable CONVERT task, isolated worker cancellation, atomic per-page cache, completed stage/result reuse and backup-remapped paths",
+    "Conversion search and capabilities, PDF/PNG target and DPI controls, recent results, font report and preview returning to preserved settings"
+  ],
+  "focusedChecks": [
+    {"test": "FormatEngineFlowTest.optionalEngineRendersEmbeddedCjkOfdAndRotatedDjvuPages", "seconds": 2.722, "result": "passed"},
+    {"test": "FormatEngineFlowTest.queuedTargetsRetainOriginalTextAndReusePageArchive", "seconds": 3.259, "result": "passed", "scope": "Final changed flow only; prior repetitions followed actual bundler/geometry/Unicode fixes"}
+  ],
+  "resolvedIssues": [
+    "Upstream OFD parse returns a document array and uses a different render function signature than the example documentation",
+    "Remove ten-pixel preview padding, decimal scale rounding and 127-DPI ceiling which left content smaller than its physical page",
+    "Browser bundle explicitly resolves old ASN.1 static dependencies",
+    "Canonical CID-to-Unicode rewrite preserves 页 rather than a compatibility radical on independent PDF extraction",
+    "Preview returns to format conversion with the previously chosen 300 DPI; user-facing report describes unembedded fonts"
+  ],
+  "syntheticReadback": "layout-readback.json",
+  "realPublicSampleMetrics": "layout-public-sample-metrics.json",
+  "actualUI": [
+    "SAF imports public upstream 999.ofd; actual worker completes five pages and reader opens at 1/5",
+    "Report shows four nonembedded font families and source SHA256",
+    "Recent result opens reader; back returns to format screen with PDF and 300 DPI still checked"
+  ],
+  "licenses": "../../../format-engine/UPSTREAM.md",
+  "limits": [
+    "Visible raster copy at chosen DPI, not fully editable source objects; source text added only where available",
+    "Real sample has a signature XML and visible red marks; output has no signature field and no certificate verification is claimed",
+    "Public invoice source, content and screenshots remain local; only nonidentifying metrics are published",
+    "API35 x86_64 emulator and installed WebView tested; no physical ARM/OEM or universal font/formula fidelity claim",
+    "No tag or release created"
+  ]
+}

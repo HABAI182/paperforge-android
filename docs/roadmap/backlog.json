@@ -793,7 +793,7 @@
       ],
       "scope": "独立引擎、保留源文件、版面与字体核对",
       "acceptance": "印章外观和证书有效性不混淆",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "CVT16",
@@ -1252,9 +1252,9 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 65,
-    "planned": 15,
-    "partial": 18
+    "done": 69,
+    "planned": 14,
+    "partial": 15
   },
   "updated": "2026-10-26"
 }

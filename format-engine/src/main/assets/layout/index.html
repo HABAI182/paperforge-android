@@ -1,0 +1,70 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>html,body{margin:0;padding:0;background:white;overflow:hidden}#page{position:relative;overflow:hidden;background:white}</style>
+<script src="adapters.js"></script></head><body><div id="page"></div>
+<script>
+(() => {
+  const root = document.getElementById('page');
+  let source, doc, type, ofdPages=[];
+  const send = value => NativeLayout.response(JSON.stringify(value));
+  const fail = error => { console.error(error?.stack || String(error)); send({kind:'error',detail:error?.message || String(error)}); };
+  const physical = (page,document) => {
+    const data = page[Object.keys(page)[0]].json;
+    const area = data['ofd:Area'] || document.document['ofd:CommonData']['ofd:PageArea'];
+    return (area['ofd:PhysicalBox'] || area['ofd:ApplicationBox'] || area['ofd:ContentBox']).trim().split(/\s+/).map(Number);
+  };
+  window.PFLayout = {
+    async open(extension) {
+      try {
+        type = extension;
+        source = await (await fetch('/source')).arrayBuffer();
+        if(type === 'ofd') {
+          const documents = await new Promise((resolve,reject) => PFLayoutModules.OFD.parseOfdDocument({ofd:source,success:resolve,fail:reject}));
+          ofdPages=documents.flatMap(document=>document.pages.map(page=>({document,page})));
+        }
+        else doc = new PFLayoutModules.DjVu.Document(source);
+        send({kind:'opened',pages:type === 'ofd' ? ofdPages.length : doc.getPagesQuantity()});
+      } catch(error) { fail(error); }
+    },
+    async page(index,dpi) {
+      try {
+        root.replaceChildren();
+        let width,height,widthPt,heightPt,zones=[];
+        if(type === 'ofd') {
+          const selected=ofdPages[index], box=physical(selected.page,selected.document);
+          widthPt=box[2]*72/25.4; heightPt=box[3]*72/25.4;
+          width=box[2]*dpi/25.4; height=box[3]*dpi/25.4;
+          const page=PFLayoutModules.OFD.renderOfd(width,{...selected.document,pages:[selected.page]})[0];
+          page.style.margin='0';
+          if(box[0] || box[1]) {
+            for(const child of [...page.children]) {
+              child.style.translate=`${-box[0]*dpi/25.4}px ${-box[1]*dpi/25.4}px`;
+            }
+          }
+          root.append(page);
+        } else {
+          const page=await doc.getPage(index+1), pixels=page.getImageData(), sourceDpi=page.getDpi();
+          widthPt=pixels.width*72/sourceDpi; heightPt=pixels.height*72/sourceDpi;
+          width=pixels.width*dpi/sourceDpi; height=pixels.height*dpi/sourceDpi;
+          const canvas=document.createElement('canvas');canvas.width=pixels.width;canvas.height=pixels.height;
+          canvas.getContext('2d').putImageData(pixels,0,0);
+          canvas.style.width=width+'px';canvas.style.height=height+'px';root.append(canvas);
+          zones=(page.getNormalizedTextZones() || []).map(z=>({text:z.text,left:z.x/pixels.width,top:z.y/pixels.height,right:(z.x+z.width)/pixels.width,bottom:(z.y+z.height)/pixels.height}));
+          page.reset();
+        }
+        root.style.width=width+'px';root.style.height=height+'px';
+        await document.fonts.ready;
+        await Promise.all([...root.querySelectorAll('img')].map(image=>image.decode().catch(()=>{})));
+        // Force layout before handing the native renderer its exact page extent.
+        const origin=root.getBoundingClientRect();
+        if(type==='ofd') zones=[...root.querySelectorAll('svg text')].map(text=>{
+          const box=text.getBoundingClientRect();
+          return {text:text.textContent,left:(box.left-origin.left)/width,top:(box.top-origin.top)/height,right:(box.right-origin.left)/width,bottom:(box.bottom-origin.top)/height};
+        }).filter(zone=>zone.text && zone.right>zone.left && zone.bottom>zone.top);
+        send({kind:'page',page:index,width:Math.ceil(width),height:Math.ceil(height),widthPt,heightPt,zones,warnings:globalThis.PFLayoutWarnings || []});
+      } catch(error) { fail(error); }
+    }
+  };
+  send({kind:'ready'});
+})();
+</script></body></html>
