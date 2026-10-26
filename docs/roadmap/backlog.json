@@ -26,7 +26,7 @@
       "dependencies": [],
       "scope": "核对取景、分析图、照片EXIF和裁切坐标，定位已发生的切角/错位",
       "acceptance": "一组横竖与旋转照片最终裁切对应实际纸边",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "CORE03",
@@ -1252,9 +1252,9 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 69,
-    "planned": 14,
-    "partial": 15
+    "done": 70,
+    "partial": 15,
+    "planned": 13
   },
   "updated": "2026-10-26"
 }

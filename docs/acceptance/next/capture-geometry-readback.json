@@ -1,0 +1,86 @@
+[
+  {
+    "rotation": 0,
+    "exif": 6,
+    "sourceSha256": "c15a9e1a6a086bb3d2ea814275ead9b6ed5cae75aeb9b4bd7fc9904f1b98545a",
+    "method": "auto-neural-edge+refined;fresh-after-stale",
+    "maxNormalizedCornerError": 0.0027768344,
+    "markerPixels": [
+      1519,
+      2453,
+      1437,
+      1368
+    ],
+    "renderWidth": 508,
+    "renderHeight": 743,
+    "independentPillowMarkerPixels": [
+      1519,
+      2453,
+      1437,
+      1368
+    ]
+  },
+  {
+    "rotation": 1,
+    "exif": 1,
+    "sourceSha256": "54e4f1bbf491fc8cd5f5083975c99b5509bd58d819270dbb54ac9c68a4d02b7a",
+    "method": "auto-neural-edge+refined;fresh-after-stale",
+    "maxNormalizedCornerError": 0.0029518527,
+    "markerPixels": [
+      1481,
+      2328,
+      1402,
+      1368
+    ],
+    "renderWidth": 744,
+    "renderHeight": 508,
+    "independentPillowMarkerPixels": [
+      1481,
+      2328,
+      1402,
+      1368
+    ]
+  },
+  {
+    "rotation": 2,
+    "exif": 8,
+    "sourceSha256": "fc2b11013fa36559f6647e961554ec7d5d1e9d20068c586555c7ce917385daa7",
+    "method": "auto-neural-edge+refined;fresh-after-stale",
+    "maxNormalizedCornerError": 0.0026134911,
+    "markerPixels": [
+      1517,
+      2466,
+      1405,
+      1402
+    ],
+    "renderWidth": 508,
+    "renderHeight": 743,
+    "independentPillowMarkerPixels": [
+      1517,
+      2466,
+      1405,
+      1402
+    ]
+  },
+  {
+    "rotation": 3,
+    "exif": 3,
+    "sourceSha256": "5e46e9bdd957a1724ff110d35ffc3c8065b10d004100bc1439e4622ec72f7a6f",
+    "method": "auto-neural-edge+refined;fresh-after-stale",
+    "maxNormalizedCornerError": 0.0029669448,
+    "markerPixels": [
+      1455,
+      2439,
+      1439,
+      1408
+    ],
+    "renderWidth": 743,
+    "renderHeight": 508,
+    "independentPillowMarkerPixels": [
+      1455,
+      2439,
+      1439,
+      1408
+    ]
+  }
+]

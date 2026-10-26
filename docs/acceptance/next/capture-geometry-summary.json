@@ -1,0 +1,40 @@
+{
+  "checked": "2026-10-26",
+  "cards": ["CORE02"],
+  "changes": [
+    "Display listener tracks 180-degree changes as well as portrait/landscape changes",
+    "Preview, ImageAnalysis and ImageCapture explicitly share target display rotation",
+    "Viewport size/rotation changes rebuild the same UseCaseGroup and clear old capture/corner/focus state",
+    "Landscape controls move to a side column; profile and timer remain available through camera settings",
+    "Long profile/title text is bounded; portrait timer control no longer wraps into the viewfinder"
+  ],
+  "actualCameraFlow": {
+    "source": "Own synthetic paper with four different corner colors, fed through emulator imagefile camera",
+    "environment": "API35 AOSP x86_64 emulator; actual CameraX analysis/preview/JPEG save callbacks",
+    "displayRotations": [0, 1, 2, 3],
+    "jpegExifOrientations": [6, 1, 8, 3],
+    "savedPageCount": 4,
+    "referenceDecision": "All four saved captures had stale analysis references; actual photo redetection was used, not claimed as fresh-candidate reuse",
+    "uiEvidence": ["capture-geometry-ui-0.png", "capture-geometry-ui-1.png"],
+    "landscapeViewfinder": "Side controls replace the previous narrow strip caused by top and bottom controls"
+  },
+  "focusedCheck": {
+    "test": "CaptureGeometryFlowTest.cameraJpegsKeepFourMarkersAcrossRotationCropAndRender",
+    "seconds": 4.464,
+    "result": "passed",
+    "scope": "One concentrated check using the four actual saved camera JPEGs; no old suites rerun",
+    "expectedBounds": "Independently extracted from connected white paper pixels with Pillow/OpenCV, separate from app detection",
+    "maxNormalizedCornerError": 0.002967,
+    "fourCornerMarkersRetained": true,
+    "originalShaUnchanged": true,
+    "readback": "capture-geometry-readback.json",
+    "independentVerification": "Pillow counted the same four retained color regions in actual app-rendered PNGs"
+  },
+  "reference": "https://developer.android.com/media/camera/camerax/transform-output",
+  "limits": [
+    "This verifies camera pipeline geometry and EXIF handling on an emulator, not physical lens correction or handheld capture quality",
+    "Static synthetic camera input does not establish finger occlusion, real motion, glare or ARM timing quality",
+    "CORE03/CORE04 physical movement and rearm acceptance remain separately open",
+    "No tag or release created"
+  ]
+}
