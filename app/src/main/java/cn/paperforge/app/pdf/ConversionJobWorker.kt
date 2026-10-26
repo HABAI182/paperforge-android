@@ -52,6 +52,15 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                 var completed = 0
                 val file: File
                 when (job.input.getString("kind")) {
+                    "OFFICE" -> {
+                        file =
+                            OfficeJobs.convert(repo, job) { percent, detail ->
+                                DocumentJobs.progress(repo, job, percent, detail)
+                                setProgress(workDataOf("progress" to percent))
+                            }
+                        output = file
+                        completed = 1
+                    }
                     "PDF_DIFF" -> {
                         file = File(repo.exports, "PaperForge-comparison-${job.row.workId}.zip")
                         output = file
@@ -312,7 +321,10 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                         DocumentJobs.checkCurrent(repo, job)
                         if (file.extension == "pdf") {
                             val registered =
-                                repo.registerPdf(file, "${title.substringBeforeLast('.')} · 文字 PDF")
+                                repo.registerPdf(
+                                    file,
+                                    "${title.substringBeforeLast('.')} · ${if(job.input.getString("kind") == "OFFICE") "PDF" else "文字 PDF"}",
+                                )
                             inputs.forEach { input ->
                                 DocumentResources.register(
                                     repo,

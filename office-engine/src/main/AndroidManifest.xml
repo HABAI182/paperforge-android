@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <permission android:name="cn.paperforge.office.permission.CONVERT" android:protectionLevel="signature" />
     <queries><package android:name="cn.paperforge.app"/></queries>
     <application android:label="纸匠 Office 手机引擎" android:icon="@drawable/ic_launcher" android:allowBackup="false" android:fullBackupContent="false" android:dataExtractionRules="@xml/data_extraction_rules" android:extractNativeLibs="true" android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        <service android:name=".OfficeJobService" android:process=":worker" android:exported="true" android:permission="cn.paperforge.office.permission.CONVERT" />
         <activity android:name=".OfficeActivity" android:exported="true" android:configChanges="orientation|screenSize|keyboardHidden">
             <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
             <intent-filter><action android:name="cn.paperforge.office.CONVERT"/><category android:name="android.intent.category.DEFAULT"/><data android:mimeType="*/*"/></intent-filter>

@@ -9,7 +9,7 @@
 
 package org.libreoffice.kit;
 
-import android.app.Activity;
+import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.res.AssetManager;
 import android.util.Log;
@@ -49,22 +49,22 @@ public final class LibreOfficeKit
 
     // This init() method should be called from the upper Java level of
     // LO-based apps.
-    public static synchronized void init(Activity activity)
+    public static synchronized void init(Context context)
     {
         if (initializeDone) {
             return;
         }
 
-        mgr = activity.getResources().getAssets();
+        mgr = context.getResources().getAssets();
 
-        ApplicationInfo applicationInfo = activity.getApplicationInfo();
+        ApplicationInfo applicationInfo = context.getApplicationInfo();
         String dataDir = applicationInfo.dataDir;
         Log.i(LOGTAG, String.format("Initializing LibreOfficeKit, dataDir=%s\n", dataDir));
 
         redirectStdio(true);
 
-        String cacheDir = activity.getApplication().getCacheDir().getAbsolutePath();
-        String apkFile = activity.getApplication().getPackageResourcePath();
+        String cacheDir = context.getApplicationContext().getCacheDir().getAbsolutePath();
+        String apkFile = context.getApplicationContext().getPackageResourcePath();
 
         if (!initializeNative(dataDir, cacheDir, apkFile, mgr)) {
             Log.e(LOGTAG, "Initialize native failed!");

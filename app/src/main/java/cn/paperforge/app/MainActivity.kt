@@ -265,44 +265,10 @@ class MainActivity : ComponentActivity() {
                     }
                 var mobileTarget by
                     androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("pdf") }
-                val mobileOffice =
-                    rememberLauncherForActivityResult(
-                        ActivityResultContracts.StartActivityForResult()
-                    ) { result ->
-                        if (result.resultCode == RESULT_OK) result.data?.data?.let(vm::officeResult)
-                        else result.data?.getStringExtra("error")?.let { vm.messages.trySend(it) }
-                    }
                 val mobileOfficeInput =
                     rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri
                         ->
-                        uri?.let { inputUri ->
-                            val request =
-                                Intent("cn.paperforge.office.CONVERT")
-                                    .setComponent(
-                                        android.content.ComponentName(
-                                            "cn.paperforge.office",
-                                            "cn.paperforge.office.OfficeActivity",
-                                        )
-                                    )
-                                    .setDataAndType(
-                                        inputUri,
-                                        contentResolver.getType(inputUri)
-                                            ?: "application/octet-stream",
-                                    )
-                                    .putExtra("format", mobileTarget)
-                                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                    .apply {
-                                        clipData =
-                                            android.content.ClipData.newRawUri(
-                                                "Office 原件副本",
-                                                inputUri,
-                                            )
-                                    }
-                            runCatching { mobileOffice.launch(request) }
-                                .onFailure {
-                                    vm.messages.trySend("请先从项目发布页安装「Office 手机引擎」；整个流程在手机本机运行")
-                                }
-                        }
+                        uri?.let { vm.phoneOffice(it, mobileTarget) }
                     }
                 var mobileTableCsv by
                     androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }

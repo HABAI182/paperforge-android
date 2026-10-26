@@ -1257,6 +1257,48 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }
     }
 
+    fun phoneOffice(uri: Uri, format: String) {
+        if (!busy.compareAndSet(false, true)) return
+        progress.value = "保留 Office 原件"
+        task =
+            viewModelScope.launch {
+                var queued: UUID? = null
+                try {
+                    queued =
+                        withContext(Dispatchers.IO) {
+                            val retained = ConversionInputs.retain(repo, listOf(uri)).single()
+                            DocumentJobs.enqueue(
+                                repo,
+                                "CONVERT",
+                                JobInput(
+                                    org.json
+                                        .JSONObject()
+                                        .put("kind", "OFFICE")
+                                        .put("name", retained.second)
+                                        .put(
+                                            "inputs",
+                                            org.json.JSONArray(listOf(retained.first.path)),
+                                        )
+                                        .put("names", org.json.JSONArray(listOf(retained.second)))
+                                        .put(
+                                            "options",
+                                            org.json.JSONObject().put("format", format).toString(),
+                                        )
+                                ),
+                            )
+                        }
+                } catch (cancel: CancellationException) {
+                    throw cancel
+                } catch (error: Exception) {
+                    messages.send(error.message ?: "Office 转换未能开始")
+                } finally {
+                    busy.value = false
+                    progress.value = ""
+                }
+                queued?.let(::watchExport)
+            }
+    }
+
     fun officeResult(uri: Uri) =
         perform("正在接收手机 Office 结果") {
             val name = repo.displayName(uri)

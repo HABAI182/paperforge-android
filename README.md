@@ -21,6 +21,8 @@
 
 本节改动处于开发阶段，待完整计划收尾后统一发布。现有 Office 引擎仍可在手机离线运行。
 
+Office 手机转换现接入持久任务中心：保留原件后在独立引擎进程排版，支持后台继续、取消、失败重试与完成结果复用。主应用和 Office 引擎需要安装同一签名渠道的新构建。
+
 [版本记录](CHANGELOG.md) · [98 项计划实际状态](docs/roadmap/implementation-status.json) · [本轮范围和验证](docs/quality/SCAN-EXPERIENCE-0.6.1.md)
 
 ## 从这里开始

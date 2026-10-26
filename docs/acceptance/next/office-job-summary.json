@@ -1,0 +1,56 @@
+{
+  "checked": "2026-10-26",
+  "cards": [
+    "JOB01",
+    "JOB03"
+  ],
+  "cardStatus": "partial; this completes the Phone Office queue slice, not all intermediate-stage or device-budget work",
+  "implemented": [
+    "Office source URI retained before enqueue; frozen format and named CONVERT/OFFICE task in existing WorkManager center",
+    "Signature-permission optional engine service in a separate process, using Binder file descriptors and protocol 1",
+    "Common single-threaded LOK conversion for legacy Activity and new service; Context JNI initialization and locked runtime install",
+    "Binding owned by Worker, existing background resource semaphore shared with heavy PDF/OCR/table tasks",
+    "Cancel/disconnect ends isolated native process; idle engine process exits; original and local result belong to core app",
+    "Atomic copied output validated by actual PDF/Office structure before checkpoint and publication",
+    "Input-SHA/format/protocol checkpoint reuses completed stage; external SAVE retry does not reformat Office input",
+    "Existing task retry/reopen, output history, PDF library and resource/backup mapping reused"
+  ],
+  "focusedCheck": {
+    "test": "OfficeJobFlowTest.backgroundOfficePdfRetainsOriginalAndReusesCompletedStage",
+    "result": "passed",
+    "seconds": 1.745,
+    "coverage": [
+      "Real DOCX -> two-page native PDF without engine Activity",
+      "CJK title, 00123 identifier and 200.50 table amount",
+      "Source SHA unchanged, completed task and output registration",
+      "Completed stage reused without entering engine/progress callback"
+    ]
+  },
+  "independentReadback": {
+    "pages": 2,
+    "bytes": 79489,
+    "sha256": "3749dff273e1d540bd4b7db1b736aaf90c1c280be88a3e91a57c2d7a1eac5fa8",
+    "text": [
+      "PaperForge · \n \n页眉Header\n \n离线转换/ Footer\n \n纸匠Office 排版验收\n中文、English\n \n、编号00123；保留段落、图片、分页与合并单元格。\n合并表头\n金额\n地区\n编号\n金额\n华东\n00123\n120.50\n华北\n00456\n80.00\n合计\n200.50\n",
+      "PaperForge · \n \n页眉Header\n \n离线转换/ Footer\n \n第二页/ Page Two\n用于检查显式分页及页眉页脚。\n"
+    ],
+    "sourceSha256": "412d7fe8679edb32dcfebae97b8128f865cf2f6e5e094f8ec932ecca3db6ec9a",
+    "imagesOnFirstPage": 1,
+    "workerProcessAfterIdle": "exited",
+    "stageReuse": true
+  },
+  "actualUI": [
+    "Task center shows named Office conversion completed",
+    "View result reopens registered two-page PDF reader"
+  ],
+  "build": "Main, AndroidTest and optional Office engine APKs assembled; both application packages installed for the real service check",
+  "limits": [
+    "Controlled x86_64 emulator, no ARM or OEM acceptance claimed",
+    "Native saveAs cannot checkpoint its internal layout pass; interruption before completed output can rerun that pass",
+    "Cancellation/process-death mechanisms implemented but not subjected to a repeated fault matrix",
+    "Peak native-memory limits and physical-device frame timings remain JOB03 work",
+    "Other complex PDF/ZIP stages remain JOB01 work",
+    "Office optional package must be updated with core from the same signing channel",
+    "No version/tag/release change"
+  ]
+}
