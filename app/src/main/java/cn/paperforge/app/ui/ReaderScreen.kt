@@ -121,6 +121,69 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
     var navigation by remember { mutableStateOf(false) }
     var textPage by remember { mutableStateOf<Int?>(null) }
     var textPoint by remember { mutableStateOf<PointN?>(null) }
+    var textInitial by remember { mutableStateOf<List<ReaderTextBlock>?>(null) }
+    var selection by remember { mutableStateOf<cn.paperforge.app.pdf.ReaderTextSelection?>(null) }
+    var selectionLoading by remember { mutableStateOf(false) }
+    var selectionRequestPage by remember { mutableStateOf<Int?>(null) }
+    var selectionJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+    var selectionOrder by remember {
+        mutableIntStateOf(
+            cn.paperforge.app.UserSettings.string("readerSelectionOrder", "0").toIntOrNull() ?: 0
+        )
+    }
+    var regionPage by remember { mutableStateOf<Int?>(null) }
+    var regionDraft by remember { mutableStateOf<cn.paperforge.app.model.OcrRegion?>(null) }
+    fun startRegion(index: Int) {
+        selection = null
+        regionDraft = null
+        regionPage = index
+    }
+    fun selectText(index: Int, point: PointN?, region: cn.paperforge.app.model.OcrRegion? = null) {
+        if (file == null) return
+        selectionRequestPage = index
+        activePage = index
+        selectionJob?.cancel()
+        selection = null
+        selectionLoading = true
+        selectionJob =
+            scope.launch {
+                try {
+                    val app = context.applicationContext as cn.paperforge.app.PaperForgeApp
+                    val blocks =
+                        cn.paperforge.app.pdf.PageTextSource.load(
+                            context,
+                            file,
+                            index,
+                            app.ocrEngine,
+                            recognize = region != null,
+                            region = region,
+                        )
+                    val model =
+                        cn.paperforge.app.pdf.ReaderSelectionPage(index, blocks, selectionOrder)
+                    selection =
+                        if (region != null && model.units.isNotEmpty())
+                            cn.paperforge.app.pdf.ReaderTextSelection(
+                                model,
+                                0,
+                                model.units.lastIndex,
+                            )
+                        else point?.let(model::select)
+                    if (selection == null) {
+                        textPage = index
+                        textPoint = point
+                        textInitial = blocks.takeIf { it.isNotEmpty() }
+                    }
+                } catch (cancel: kotlinx.coroutines.CancellationException) {
+                    throw cancel
+                } catch (error: Exception) {
+                    vm.messages.send(error.message ?: "文字读取未完成")
+                } finally {
+                    selectionLoading = false
+                    regionDraft = null
+                }
+            }
+        interaction++
+    }
     var focusedText by remember { mutableStateOf<Pair<Int, ReaderTextBlock>?>(null) }
     val navigationBack =
         rememberSaveable(saver = ReaderHistorySaver) { mutableStateListOf<ReaderPosition>() }
@@ -232,6 +295,11 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
     fun goTo(index: Int) {
         val n = index.coerceIn(0, ((session?.count ?: 1) - 1).coerceAtLeast(0))
         navigationRequest = null
+        selectionJob?.cancel()
+        selectionRequestPage = null
+        selection = null
+        regionPage = null
+        regionDraft = null
         activePage = n
         scope.launch {
             if (horizontal) pager.scrollToPage(PageSpreads.groupOf(spreads, n))
@@ -359,6 +427,21 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
         else {
             fullscreen = false
             controls = true
+        }
+    }
+    BackHandler(selection != null || regionPage != null || selectionLoading) {
+        selectionJob?.cancel()
+        selection = null
+        regionPage = null
+        regionDraft = null
+    }
+    DisposableEffect(file) { onDispose { selectionJob?.cancel() } }
+    LaunchedEffect(page) {
+        if (selectionRequestPage != page) selectionJob?.cancel()
+        if (selection?.model?.page != page) selection = null
+        if (regionPage != page) {
+            regionPage = null
+            regionDraft = null
         }
     }
     LaunchedEffect(session) {
@@ -527,7 +610,9 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                         pager,
                         userScrollEnabled =
                             spreads.getOrNull(pager.currentPage).orEmpty().all {
-                                (transforms[it]?.zoom ?: 1f) <= 1.01f
+                                (transforms[it]?.zoom ?: 1f) <= 1.01f &&
+                                    selection == null &&
+                                    regionPage == null
                             },
                         reverseLayout = viewOptions.rightToLeft,
                         modifier = Modifier.fillMaxSize(),
@@ -572,11 +657,28 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                                             controls = !controls
                                             interaction++
                                         },
-                                        onLongPress = { p ->
-                                            activePage = index
-                                            textPage = index
-                                            textPoint = p
-                                            interaction++
+                                        onLongPress = { p -> selectText(index, p) },
+                                        selection = selection?.takeIf { it.model.page == index },
+                                        onSelectionMove = { start, p ->
+                                            selection = selection?.move(start, p)
+                                        },
+                                        regionPicking = regionPage == index,
+                                        regionDraft =
+                                            regionDraft.takeIf {
+                                                regionPage == index ||
+                                                    (selectionLoading &&
+                                                        selectionRequestPage == index)
+                                            },
+                                        onRegionSelection = { region, complete ->
+                                            regionDraft = region
+                                            if (complete) {
+                                                regionPage = null
+                                                if (region.valid()) selectText(index, null, region)
+                                                else {
+                                                    regionDraft = null
+                                                    scope.launch { vm.messages.send("请圈选更大的文字区域") }
+                                                }
+                                            }
                                         },
                                         onLinkTap = { p -> activateLink(index, p) },
                                         edgeTurning = edgeTurning,
@@ -604,7 +706,8 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(12.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
-                        userScrollEnabled = transform.zoom <= 1.01f,
+                        userScrollEnabled =
+                            transform.zoom <= 1.01f && selection == null && regionPage == null,
                     ) {
                         items(s.count, key = { it }) { index ->
                             ReaderPage(
@@ -638,11 +741,27 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                                     controls = !controls
                                     interaction++
                                 },
-                                onLongPress = { p ->
-                                    activePage = index
-                                    textPage = index
-                                    textPoint = p
-                                    interaction++
+                                onLongPress = { p -> selectText(index, p) },
+                                selection = selection?.takeIf { it.model.page == index },
+                                onSelectionMove = { start, p ->
+                                    selection = selection?.move(start, p)
+                                },
+                                regionPicking = regionPage == index,
+                                regionDraft =
+                                    regionDraft.takeIf {
+                                        regionPage == index ||
+                                            (selectionLoading && selectionRequestPage == index)
+                                    },
+                                onRegionSelection = { region, complete ->
+                                    regionDraft = region
+                                    if (complete) {
+                                        regionPage = null
+                                        if (region.valid()) selectText(index, null, region)
+                                        else {
+                                            regionDraft = null
+                                            scope.launch { vm.messages.send("请圈选更大的文字区域") }
+                                        }
+                                    }
                                 },
                                 onLinkTap = { p -> activateLink(index, p) },
                                 edgeTurning = edgeTurning,
@@ -688,7 +807,66 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                     ) {
                         Text("返回阅读处")
                     }
-                if (s != null)
+                if (selectionLoading)
+                    LinearProgressIndicator(Modifier.align(Alignment.TopCenter).fillMaxWidth())
+                if (regionPage != null)
+                    Surface(
+                        Modifier.align(Alignment.TopCenter).padding(12.dp),
+                        shape = MaterialTheme.shapes.medium,
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("拖动圈选要识别的区域", Modifier.padding(start = 12.dp))
+                            TextButton(
+                                onClick = {
+                                    regionPage = null
+                                    regionDraft = null
+                                }
+                            ) {
+                                Text("取消圈选")
+                            }
+                        }
+                    }
+                selection?.let { current ->
+                    ReaderSelectionBar(
+                        current,
+                        onChange = { next ->
+                            selection = next
+                            selectionOrder = next.model.order
+                            cn.paperforge.app.UserSettings.set(
+                                "readerSelectionOrder",
+                                selectionOrder.toString(),
+                            )
+                        },
+                        onCopy = {
+                            (context.getSystemService(android.content.Context.CLIPBOARD_SERVICE)
+                                    as android.content.ClipboardManager)
+                                .setPrimaryClip(
+                                    android.content.ClipData.newPlainText(
+                                        "PaperForge",
+                                        current.text,
+                                    )
+                                )
+                            scope.launch { vm.messages.send("已复制选中文字") }
+                        },
+                        onMark = { kind ->
+                            vm.addReaderMarks(current.model.page, current.blocks, kind)
+                        },
+                        onText = {
+                            textPage = current.model.page
+                            textPoint = current.startPoint
+                            textInitial = current.model.lines
+                            selection = null
+                        },
+                        onRegion = { startRegion(current.model.page) },
+                        onClose = { selection = null },
+                        modifier =
+                            Modifier.align(Alignment.BottomCenter)
+                                .padding(8.dp)
+                                .widthIn(max = 640.dp)
+                                .fillMaxWidth(),
+                    )
+                }
+                if (s != null && selection == null && regionPage == null)
                     Surface(
                         modifier = Modifier.align(Alignment.BottomCenter).padding(12.dp),
                         shape = MaterialTheme.shapes.large,
@@ -733,12 +911,19 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                 doc!!.id,
                 doc!!.title,
                 textPoint,
+                initialBlocks = textInitial,
+                onRegion = {
+                    textPage = null
+                    textInitial = null
+                    startRegion(selectedPage)
+                },
                 onFocus = { focusedText = selectedPage to it },
                 onMark = { block, kind -> vm.addReaderMark(selectedPage, block, kind) },
                 onLocate = { goTo(selectedPage) },
                 onDismiss = {
                     textPage = null
                     textPoint = null
+                    textInitial = null
                 },
             )
     }
@@ -807,6 +992,14 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                             }
                         ) {
                             Text("文字与朗读")
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                appearance = false
+                                startRegion(page)
+                            }
+                        ) {
+                            Text("区域识字")
                         }
                     }
                     Text(

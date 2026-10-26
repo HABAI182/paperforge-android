@@ -41,6 +41,7 @@ data class ReaderTextBlock(
     val right: Float,
     val bottom: Float,
     val source: String = "native",
+    val units: List<ReaderTextUnit> = emptyList(),
 )
 
 /** Read-only PDF navigation and text geometry. No rasterization for native text. */
@@ -174,24 +175,41 @@ object ReaderDocument {
                                     }
                                     .trim()
                             if (line.isNotEmpty()) {
-                                val points =
-                                    group.flatMap { p ->
-                                        listOf(
-                                            display(
-                                                PointN(
-                                                    p.xDirAdj / box.width,
-                                                    (p.yDirAdj - p.heightDir) / box.height,
-                                                ),
-                                                page.rotation,
+                                fun bounds(p: TextPosition): List<PointN> =
+                                    listOf(
+                                        display(
+                                            PointN(
+                                                p.xDirAdj / box.width,
+                                                (p.yDirAdj - p.heightDir) / box.height,
                                             ),
-                                            display(
-                                                PointN(
-                                                    (p.xDirAdj + p.widthDirAdj) / box.width,
-                                                    p.yDirAdj / box.height,
-                                                ),
-                                                page.rotation,
+                                            page.rotation,
+                                        ),
+                                        display(
+                                            PointN(
+                                                (p.xDirAdj + p.widthDirAdj) / box.width,
+                                                p.yDirAdj / box.height,
                                             ),
-                                        )
+                                            page.rotation,
+                                        ),
+                                    )
+                                val points = group.flatMap(::bounds)
+                                var cursor = 0
+                                val units =
+                                    group.mapNotNull { p ->
+                                        val start = line.indexOf(p.unicode, cursor)
+                                        if (p.unicode.isNullOrEmpty() || start < 0) null
+                                        else {
+                                            cursor = start + p.unicode.length
+                                            val corners = bounds(p)
+                                            ReaderTextUnit(
+                                                start,
+                                                cursor,
+                                                corners.minOf { it.x }.coerceIn(0f, 1f),
+                                                corners.minOf { it.y }.coerceIn(0f, 1f),
+                                                corners.maxOf { it.x }.coerceIn(0f, 1f),
+                                                corners.maxOf { it.y }.coerceIn(0f, 1f),
+                                            )
+                                        }
                                     }
                                 blocks.add(
                                     ReaderTextBlock(
@@ -200,6 +218,7 @@ object ReaderDocument {
                                         points.minOf { it.y }.coerceIn(0f, 1f),
                                         points.maxOf { it.x }.coerceIn(0f, 1f),
                                         points.maxOf { it.y }.coerceIn(0f, 1f),
+                                        units = units,
                                     )
                                 )
                             }

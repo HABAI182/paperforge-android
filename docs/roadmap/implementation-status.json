@@ -122,8 +122,8 @@
     {
       "id": "R07",
       "title": "原生文字选择与OCR选择",
-      "status": "partial",
-      "note": "长按原页进入可选文字，原生/OCR坐标高亮及段落复制；原页拖动字符手柄和复杂多栏几何仍补充"
+      "status": "done",
+      "note": "原页字符/词簇手柄选择、复制、多栏顺序、逐行标准标记与圈选离线OCR；真实手势/剪贴板/旋转裁切坐标及独立高亮PDF复读通过，见 reader-selection-summary.json；OCR无词框时按整行选择"
     },
     {
       "id": "R08",

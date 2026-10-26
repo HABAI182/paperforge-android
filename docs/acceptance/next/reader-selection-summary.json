@@ -1,0 +1,137 @@
+{
+  "checked": "2026-10-26",
+  "cards": [
+    "R07"
+  ],
+  "implemented": [
+    "Native text-position units retain exact line offsets, Unicode glyph clusters and normalized displayed-page geometry",
+    "Long press selects a word on the original canvas, with two drag handles; pinch zoom and viewport crop share the reading transform",
+    "Selected text copy, line/page expansion and explicit row/left-first/right-first column order; choice included in profiles",
+    "Highlight/underline/strikeout become separate per-line standard annotation drafts in one atomic update",
+    "Original-page region drag crops the rendered PDF for local OCR and maps actual returned line/word geometry back to the source; existing original PDF is untouched",
+    "OCR engines with no word geometry retain whole-line selection; ligatures are indivisible units; cached text records now include exact available units"
+  ],
+  "focusedCheck": {
+    "test": "ReaderSelectionFlowTest.nativeHandlesColumnCopyLineMarksAndRegionalOcrStayOnSource",
+    "seconds": 19.477,
+    "result": "passed",
+    "coverage": [
+      "Actual Compose long press, end-handle expansion, start-handle adjustment and Android clipboard value 00123",
+      "Four-line dual-column select/order and actual four-mark draft; rotation/crop glyph coordinates",
+      "Actual on-page region gesture and local OCR contains 00123 and excludes text OUTSIDE 999",
+      "Source SHA stays unchanged; no old suites repeated"
+    ],
+    "resolvedIssue": "Initial handle touch slop lost movement and missed final characters; immediate handle drag fixes the affected functional rerun"
+  },
+  "proof": {
+    "sourceSha256": "0d058023045404a9f540bd0dce18036341b0152c7e88a7a6726c3ff28fa3ecc6",
+    "originalUnchanged": true,
+    "copied": "00123",
+    "columns": "ALPHA 00123\nBETA 200.50\nRIGHT 111\nRIGHT 222",
+    "marks": [
+      {
+        "page": 0,
+        "kind": "highlight",
+        "color": -256,
+        "width": 0.004,
+        "text": "ALPHA 00123",
+        "id": "8971e00a-872b-4a10-81ab-785237cfa07c",
+        "points": [
+          [
+            0.1,
+            0.11792
+          ],
+          [
+            0.35347995,
+            0.13333334
+          ]
+        ]
+      },
+      {
+        "page": 0,
+        "kind": "highlight",
+        "color": -256,
+        "width": 0.004,
+        "text": "BETA 200.50",
+        "id": "1bc02834-b091-4968-9321-fde67ececc6c",
+        "points": [
+          [
+            0.1,
+            0.17625333
+          ],
+          [
+            0.33791995,
+            0.19166666
+          ]
+        ]
+      },
+      {
+        "page": 0,
+        "kind": "highlight",
+        "color": -256,
+        "width": 0.004,
+        "text": "RIGHT 111",
+        "id": "d776cc96-4b3b-4915-9029-6e8360a7b1cf",
+        "points": [
+          [
+            0.5875,
+            0.11792
+          ],
+          [
+            0.78977996,
+            0.13333334
+          ]
+        ]
+      },
+      {
+        "page": 0,
+        "kind": "highlight",
+        "color": -256,
+        "width": 0.004,
+        "text": "RIGHT 222",
+        "id": "8f82ad73-15f9-478b-b5c7-18b594d06c99",
+        "points": [
+          [
+            0.5875,
+            0.17625333
+          ],
+          [
+            0.78977996,
+            0.19166666
+          ]
+        ]
+      }
+    ],
+    "regionalOcr": "SCAN 00123",
+    "rotated": {
+      "text": "ROTATED 00123",
+      "firstLeft": 0.8666667,
+      "firstTop": 0.1
+    }
+  },
+  "independentReadback": {
+    "pages": 3,
+    "annotations": 4,
+    "types": [
+      "Highlight",
+      "Highlight",
+      "Highlight",
+      "Highlight"
+    ],
+    "text": "ALPHA 00123\nBETA 200.50\nRIGHT 111\nRIGHT 222\n",
+    "sourceTextUnchanged": true,
+    "rotatedPageSize": [
+      0.0,
+      0.0,
+      600.0,
+      400.0
+    ]
+  },
+  "limits": [
+    "Selection is within one physical page; navigate after finishing selection",
+    "OCR word precision follows real engine output, with explicit whole-line fallback",
+    "Simple declared columns; complex mixed-direction/article reading order remains user selected",
+    "Controlled x86_64 emulator, no physical-device gesture or handwriting accuracy claim",
+    "No version/tag/release change; other roadmap work remains open"
+  ]
+}

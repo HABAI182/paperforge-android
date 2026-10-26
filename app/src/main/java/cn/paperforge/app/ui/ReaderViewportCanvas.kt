@@ -61,6 +61,11 @@ internal fun ReaderPage(
     navigationRequest: ReaderNavigationRequest? = null,
     visibleHeight: Float = 0f,
     onNavigated: (ReaderPlacement) -> Unit = {},
+    selection: cn.paperforge.app.pdf.ReaderTextSelection? = null,
+    onSelectionMove: (Boolean, PointN) -> Unit = { _, _ -> },
+    regionPicking: Boolean = false,
+    regionDraft: OcrRegion? = null,
+    onRegionSelection: (OcrRegion, Boolean) -> Unit = { _, _ -> },
 ) {
     val bitmap by
         produceState<Bitmap?>(null, session, index) {
@@ -69,6 +74,9 @@ internal fun ReaderPage(
                     runCatching { session.render(index, 1600) }.getOrNull()
                 }
         }
+    val picking by rememberUpdatedState(regionPicking)
+    val pick by rememberUpdatedState(onRegionSelection)
+    val currentSelection by rememberUpdatedState(selection)
     val current by rememberUpdatedState(transform)
     val currentViewport by rememberUpdatedState(viewport)
     val widthFit by rememberUpdatedState(fitWidth)
@@ -217,6 +225,38 @@ internal fun ReaderPage(
                             widthFit,
                         )
                     val initial = current
+                    if (picking) {
+                        down.consume()
+                        fun source(offset: Offset) =
+                            view.source(
+                                geometry.point(
+                                    offset.x,
+                                    offset.y,
+                                    initial.zoom,
+                                    initial.x,
+                                    initial.y,
+                                )
+                            )
+                        val start = source(down.position)
+                        do {
+                            val event = awaitPointerEvent()
+                            val end = source(event.changes.first().position)
+                            val region = OcrRegion.between(start, end)
+                            val complete = event.changes.none { it.pressed }
+                            event.changes.forEach { it.consume() }
+                            pick(region, complete)
+                        } while (!complete)
+                        return@awaitEachGesture
+                    }
+                    val selected = currentSelection
+                    if (
+                        selected != null &&
+                            listOf(selected.startPoint, selected.endPoint).any {
+                                val tip = selectionTip(it, geometry, view, initial)
+                                (tip - down.position).getDistance() < 32.dp.toPx()
+                            }
+                    )
+                        return@awaitEachGesture
                     var gesture = initial
                     var eventTime = down.uptimeMillis
                     var moved = false
@@ -430,6 +470,28 @@ internal fun ReaderPage(
                     }
                 }
                 Canvas(Modifier.fillMaxSize()) {
+                    regionDraft?.let { region ->
+                        val p = viewport.view(PointN(region.left, region.top))
+                        drawRect(
+                            Color(0x6644B8D6),
+                            Offset(p.x * size.width, p.y * size.height),
+                            Size(
+                                region.width / viewport.width * size.width,
+                                region.height / viewport.height * size.height,
+                            ),
+                        )
+                    }
+                    selection?.blocks?.forEach { block ->
+                        val p = viewport.view(PointN(block.left, block.top))
+                        drawRect(
+                            Color(0x663F8CFF),
+                            Offset(p.x * size.width, p.y * size.height),
+                            Size(
+                                (block.right - block.left) / viewport.width * size.width,
+                                (block.bottom - block.top) / viewport.height * size.height,
+                            ),
+                        )
+                    }
                     hits.forEach { hit ->
                         val p = viewport.view(PointN(hit.left, hit.top))
                         drawRect(
@@ -442,6 +504,11 @@ internal fun ReaderPage(
                         )
                     }
                 }
+            }
+        }
+        selection?.let { selected ->
+            Box(Modifier.fillMaxSize()) {
+                ReaderSelectionHandles(selected, frame, viewport, transform, onSelectionMove)
             }
         }
     }

@@ -20,19 +20,21 @@ object PageTextSource {
         page: Int,
         engine: OcrEngine,
         recognize: Boolean = false,
+        region: cn.paperforge.app.model.OcrRegion? = null,
     ): List<ReaderTextBlock> =
         withContext(Dispatchers.IO) {
             val key =
                 MessageDigest.getInstance("SHA-256")
                     .digest(
-                        "${file.canonicalPath}:${file.length()}:${file.lastModified()}:$page"
+                        "selection-v2:${file.canonicalPath}:${file.length()}:${file.lastModified()}:$page"
                             .toByteArray()
                     )
                     .joinToString("") { "%02x".format(it.toInt() and 255) }
             val target = File(context.cacheDir, "reader-text/$key.json")
             if (!recognize && target.exists()) return@withContext decode(target.readText())
             val native =
-                ReaderDocument.text(file, page).filter { block ->
+                (if (region == null) ReaderDocument.text(file, page) else emptyList()).filter {
+                    block ->
                     block.text.count {
                         it == '\uFFFD' || Character.getType(it) == Character.PRIVATE_USE.toInt()
                     } <= block.text.length / 5
@@ -63,7 +65,39 @@ object PageTextSource {
                 }
             val ocr =
                 try {
-                    engine.snapshot().recognizeBitmap(bitmap)
+                    if (region == null) engine.snapshot().recognizeBitmap(bitmap)
+                    else {
+                        require(region.valid()) { "请圈选更大的文字区域" }
+                        val x = (region.left * bitmap.width).toInt().coerceIn(0, bitmap.width - 1)
+                        val y = (region.top * bitmap.height).toInt().coerceIn(0, bitmap.height - 1)
+                        val w =
+                            ((region.right * bitmap.width).toInt() - x).coerceIn(
+                                1,
+                                bitmap.width - x,
+                            )
+                        val h =
+                            ((region.bottom * bitmap.height).toInt() - y).coerceIn(
+                                1,
+                                bitmap.height - y,
+                            )
+                        val crop = Bitmap.createBitmap(bitmap, x, y, w, h)
+                        try {
+                            val actual =
+                                cn.paperforge.app.model.OcrRegion(
+                                    x.toFloat() / bitmap.width,
+                                    y.toFloat() / bitmap.height,
+                                    (x + w).toFloat() / bitmap.width,
+                                    (y + h).toFloat() / bitmap.height,
+                                )
+                            actual.mapped(
+                                engine.snapshot().recognizeBitmap(crop),
+                                bitmap.width,
+                                bitmap.height,
+                            )
+                        } finally {
+                            if (crop !== bitmap) crop.recycle()
+                        }
+                    }
                 } finally {
                     bitmap.recycle()
                 }
@@ -79,16 +113,47 @@ object PageTextSource {
                                 line.corners.maxOf { it.x },
                                 line.corners.maxOf { it.y },
                                 "ocr",
+                                ocrUnits(line),
                             )
                     }
                     .filter { block -> native.none { known -> overlaps(known, block) } }
             val result = ReaderDocument.order(native + extra, 0)
+            if (region != null) return@withContext result
             target.parentFile?.mkdirs()
             val temp = File(target.path + ".part")
             temp.writeText(encode(result))
             check(temp.renameTo(target))
             result
         }
+
+    internal fun ocrUnits(line: cn.paperforge.app.model.OcrLine): List<ReaderTextUnit> {
+        var cursor = 0
+        val result =
+            line.elements.mapNotNull { element ->
+                val start = line.text.indexOf(element.text, cursor)
+                if (start < 0 || element.text.isEmpty() || element.corners.isEmpty()) null
+                else {
+                    cursor = start + element.text.length
+                    ReaderTextUnit(
+                        start,
+                        cursor,
+                        element.corners.minOf { it.x },
+                        element.corners.minOf { it.y },
+                        element.corners.maxOf { it.x },
+                        element.corners.maxOf { it.y },
+                    )
+                }
+            }
+        // Incomplete word geometry is not a character map. Preserve the actual whole line instead.
+        return result
+            .takeIf { units ->
+                line.text.indices.all { offset ->
+                    line.text[offset].isWhitespace() ||
+                        units.any { offset in it.start until it.end }
+                }
+            }
+            .orEmpty()
+    }
 
     private fun overlaps(a: ReaderTextBlock, b: ReaderTextBlock): Boolean {
         val intersection =
@@ -112,6 +177,25 @@ object PageTextSource {
                             .put("r", it.right)
                             .put("b", it.bottom)
                             .put("source", it.source)
+                            .put(
+                                "units",
+                                JSONArray().apply {
+                                    it.units.forEach { u ->
+                                        put(
+                                            JSONArray(
+                                                listOf(
+                                                    u.start,
+                                                    u.end,
+                                                    u.left,
+                                                    u.top,
+                                                    u.right,
+                                                    u.bottom,
+                                                )
+                                            )
+                                        )
+                                    }
+                                },
+                            )
                     )
                 }
             }
@@ -128,6 +212,22 @@ object PageTextSource {
                         it.getDouble("r").toFloat(),
                         it.getDouble("b").toFloat(),
                         it.optString("source", "ocr"),
+                        it.optJSONArray("units")
+                            ?.let { a ->
+                                (0 until a.length()).map { i ->
+                                    a.getJSONArray(i).let { u ->
+                                        ReaderTextUnit(
+                                            u.getInt(0),
+                                            u.getInt(1),
+                                            u.getDouble(2).toFloat(),
+                                            u.getDouble(3).toFloat(),
+                                            u.getDouble(4).toFloat(),
+                                            u.getDouble(5).toFloat(),
+                                        )
+                                    }
+                                }
+                            }
+                            .orEmpty(),
                     )
                 }
             }

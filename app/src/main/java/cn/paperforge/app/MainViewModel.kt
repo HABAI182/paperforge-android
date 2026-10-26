@@ -2419,29 +2419,34 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun addReaderMark(page: Int, block: ReaderTextBlock, kind: String) =
+        addReaderMarks(page, listOf(block), kind)
+
+    fun addReaderMarks(page: Int, blocks: List<ReaderTextBlock>, kind: String) =
         perform("添加文字标记") {
             marksSave?.join()
             val source = File(requireNotNull(selected.value?.pdfPath))
             val previous =
                 runCatching { PdfMark.decode(org.json.JSONArray(markDraft().readText())) }
                     .getOrElse { PdfNativeMarks.read(source) }
-            val mark =
-                PdfMark(
-                    page,
-                    kind,
-                    listOf(
-                        cn.paperforge.app.model.PointN(block.left, block.top),
-                        cn.paperforge.app.model.PointN(block.right, block.bottom),
-                    ),
-                    android.graphics.Color.YELLOW,
-                    text = block.text,
-                )
+            val additions =
+                blocks.map { block ->
+                    PdfMark(
+                        page,
+                        kind,
+                        listOf(
+                            cn.paperforge.app.model.PointN(block.left, block.top),
+                            cn.paperforge.app.model.PointN(block.right, block.bottom),
+                        ),
+                        android.graphics.Color.YELLOW,
+                        text = block.text,
+                    )
+                }
             android.util.AtomicFile(markDraft()).let { atomic ->
                 val stream = atomic.startWrite()
                 try {
                     stream.write(
                         org.json
-                            .JSONArray((previous + mark).map { it.json() })
+                            .JSONArray((previous + additions).map { it.json() })
                             .toString()
                             .toByteArray(Charsets.UTF_8)
                     )

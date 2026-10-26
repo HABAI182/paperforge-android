@@ -254,7 +254,7 @@
       ],
       "scope": "文字提取和坐标覆盖，复制/高亮/区域识字",
       "acceptance": "选择框对齐，多栏复制顺序可读",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "R08",

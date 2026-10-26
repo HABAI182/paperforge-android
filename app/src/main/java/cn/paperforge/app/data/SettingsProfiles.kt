@@ -182,6 +182,7 @@ class SettingsProfiles(context: Context) {
                         "documentLayout",
                         "gridColumns",
                         "edgeTurn",
+                        "readerSelectionOrder",
                     ),
                 "home" to setOf("recentCount", "homeTools", "homeCollection", "pinnedTools"),
             )

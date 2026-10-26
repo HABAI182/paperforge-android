@@ -51,6 +51,7 @@ object UserSettings {
             "gridColumns" to "AUTO",
             "homeCollection" to "RECENT",
             "edgeTurn" to true,
+            "readerSelectionOrder" to "0",
             "recentCount" to 6f,
             "homeTools" to "images,pdf,ocr,merge,compress,tools",
             "pinnedTools" to "",
@@ -175,6 +176,7 @@ object UserSettings {
                 "accent" to setOf("GREEN", "BLUE", "PURPLE", "ORANGE"),
                 "documentLayout" to setOf("LIST", "COVERS"),
                 "gridColumns" to setOf("AUTO", "2", "3", "4"),
+                "readerSelectionOrder" to setOf("0", "1", "2"),
                 "homeCollection" to setOf("RECENT", "FAVORITES", "INBOX", "NO_OCR", "NEEDS_EXPORT"),
             )
         val booleans =

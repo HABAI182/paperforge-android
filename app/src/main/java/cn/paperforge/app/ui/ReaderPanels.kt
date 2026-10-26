@@ -130,6 +130,8 @@ fun ReaderTextSheet(
     onLocate: () -> Unit,
     onDismiss: () -> Unit,
     onMark: (ReaderTextBlock, String) -> Unit,
+    initialBlocks: List<ReaderTextBlock>? = null,
+    onRegion: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as PaperForgeApp
@@ -142,10 +144,13 @@ fun ReaderTextSheet(
     var notice by remember { mutableStateOf("") }
     var speed by remember { mutableFloatStateOf(1f) }
     val blocks by
-        produceState(emptyList<ReaderTextBlock>(), file, page, recognize) {
+        produceState(emptyList<ReaderTextBlock>(), file, page, recognize, initialBlocks) {
             loading = true
             error = null
-            runCatching { PageTextSource.load(context, file, page, app.ocrEngine, recognize > 0) }
+            runCatching {
+                    if (recognize == 0 && initialBlocks != null) initialBlocks
+                    else PageTextSource.load(context, file, page, app.ocrEngine, recognize > 0)
+                }
                 .onSuccess { value = it }
                 .onFailure {
                     if (it is kotlinx.coroutines.CancellationException) throw it
@@ -199,6 +204,8 @@ fun ReaderTextSheet(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 TextButton(onClick = { recognize++ }, enabled = !loading) { Text("补识别此页") }
+                if (onRegion != null)
+                    TextButton(onClick = onRegion, enabled = !loading) { Text("区域识字") }
                 TextButton(
                     onClick = {
                         onLocate()
