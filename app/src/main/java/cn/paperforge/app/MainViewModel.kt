@@ -1237,6 +1237,27 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     val textConversion = MutableStateFlow<TextConversionDraft?>(null)
     val markupReview = MutableStateFlow<MarkupReview?>(null)
+    private val markupPdfDocuments = mutableMapOf<String, String>()
+
+    fun openMarkupPdf(file: File, page: Int) =
+        perform("打开原 PDF") {
+            val previous =
+                markupPdfDocuments[file.path]
+                    ?.let { repo.dao.document(it) }
+                    ?.takeIf { it.trashedAt == null }
+            val document =
+                previous
+                    ?: repo.importPdf(Uri.fromFile(file)).also {
+                        markupPdfDocuments[file.path] = it.id
+                    }
+            repo.dao.opened(document.id, System.currentTimeMillis())
+            selected.value = document
+            searchHits.value = emptyList()
+            comparisonReturn.value = false
+            outputReturn.value = "markup-review"
+            readerTarget.value = document.id to page.coerceAtLeast(0)
+            screen.value = "reader"
+        }
 
     private fun openMarkupResult(row: LocalTaskRow) {
         val input = org.json.JSONObject(row.payload).getJSONObject("input")
@@ -1258,7 +1279,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun convertMarkup(uri: Uri, target: String) {
+    fun convertMarkup(
+        uri: Uri,
+        target: String,
+        settings: org.json.JSONObject = org.json.JSONObject(),
+    ) {
         if (!busy.compareAndSet(false, true)) return
         progress.value = "保留文档原件"
         task =
@@ -1284,7 +1309,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                                         .put(
                                             "options",
                                             org.json
-                                                .JSONObject()
+                                                .JSONObject(settings.toString())
                                                 .put("target", target)
                                                 .put(
                                                     "print",

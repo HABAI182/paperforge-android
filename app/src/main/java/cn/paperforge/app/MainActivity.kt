@@ -198,10 +198,14 @@ class MainActivity : ComponentActivity() {
                     androidx.compose.runtime.saveable.rememberSaveable { mutableFloatStateOf(12f) }
                 var markupTarget by
                     androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("HTML") }
+                var markupOptions by
+                    androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("{}") }
                 val markupImport =
                     rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri
                         ->
-                        uri?.let { vm.convertMarkup(it, markupTarget) }
+                        uri?.let {
+                            vm.convertMarkup(it, markupTarget, org.json.JSONObject(markupOptions))
+                        }
                     }
                 var conversionImageOptions by
                     androidx.compose.runtime.saveable.rememberSaveable {
@@ -450,13 +454,16 @@ class MainActivity : ComponentActivity() {
                                         )
                                     )
                                 },
-                                onMarkup = { target ->
+                                onMarkup = { target, options ->
                                     markupTarget = target
+                                    markupOptions = options.toString()
                                     markupImport.launch(
                                         arrayOf(
                                             "text/*",
                                             "application/zip",
                                             "application/xhtml+xml",
+                                            "application/epub+zip",
+                                            "application/pdf",
                                             "application/octet-stream",
                                         )
                                     )
@@ -810,6 +817,7 @@ private fun mime(file: File) =
     when (file.extension.lowercase()) {
         "pdf" -> "application/pdf"
         "zip" -> "application/zip"
+        "epub" -> "application/epub+zip"
         "jpg",
         "jpeg" -> "image/jpeg"
         "png" -> "image/png"

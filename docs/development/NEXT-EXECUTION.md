@@ -66,6 +66,8 @@
 
 33. Markdown/HTML结构互转、资源ZIP、原件/实际结果预览和系统打印PDF；保留图片字节、脚注、代码及表格编号，合并表格/样式明确回退。修复Android路径别名与打印文件名，集中检查和真实保存后的独立PDF复读见 `docs/acceptance/next/markup-conversion-summary.json`。转换搜索置顶，草稿摘要折叠。
 
+34. EPUB按spine读取章节，EPUB3目录/EPUB2 NCX、封面/脚注内链与静态结构文本互转；标题分章生成标准EPUB3。PDF原生文字/扫描OCR重排、原页和原PDF回源，实际5页系统PDF、原页2/2跳转与独立EPUBCheck见 `docs/acceptance/next/epub-conversion-summary.json`。复杂版式可看原页；系统打印的内部点击目录限制已记录。
+
 ## 后续执行顺序
 
 页序历史补充：重排只记录页面ID，删页/分割仅记录内容差异；新旧可读快照的撤销保留后来新增的扫描页和与操作无关的新OCR。备份对独立页序ID重映射，集中检查见 `docs/acceptance/next/sparse-history-summary.json`。不将此修复重复计为新完成的计划卡。

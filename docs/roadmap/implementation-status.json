@@ -368,8 +368,8 @@
     {
       "id": "CVT14",
       "title": "EPUB与结构文本转换",
-      "status": "planned",
-      "note": "完整目标保留，未在本版标记完成"
+      "status": "done",
+      "note": "读取OCF/OPF spine真实顺序、EPUB3嵌套目录/EPUB2 NCX、封面、非主线脚注与跨章同名ID；HTML/MD/TXT资源包和系统PDF。TXT/MD/HTML/资源包按标题生成EPUB3，作者/语言/封面；PDF原生文字优先、扫描页固定配置OCR、栏顺序可选，每页原图和原PDF保留并可定位打开/返回。实际队列/目录脚注/五页PDF与EPUBCheck5.4.0通过；复杂样式共享/固定版面会重排，系统打印PDF未保留内部点击目录，已声明。"
     },
     {
       "id": "CVT15",
@@ -595,8 +595,8 @@
     }
   ],
   "counts": {
-    "done": 58,
-    "planned": 20,
+    "done": 59,
+    "planned": 19,
     "partial": 20
   },
   "releaseHold": true,

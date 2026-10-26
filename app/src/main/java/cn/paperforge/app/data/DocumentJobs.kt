@@ -101,7 +101,11 @@ object DocumentJobs {
             type == "OCR" ||
                 type == "SCAN_EXPORT" && input.getBoolean("searchable", false) ||
                 type == "PDF" && input.getString("mode") == "searchable" ||
-                type == "CONVERT" && input.getString("kind") == "TABLE_ANALYZE"
+                type == "CONVERT" &&
+                    (input.getString("kind") == "TABLE_ANALYZE" ||
+                        input.getString("kind") == "MARKUP" &&
+                            JSONObject(input.getString("options") ?: "{}").optString("target") ==
+                                "EPUB")
         if (needsOcr && !input.json.has("ocrRequest")) {
             val app = repo.context.applicationContext as cn.paperforge.app.PaperForgeApp
             val request =

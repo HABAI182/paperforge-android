@@ -46,6 +46,15 @@ private val conversions =
         Conversion("PDF → PowerPoint · 整页外观", "手机本地生成，一页一张图片幻灯片", "文字", "pdf-pptx"),
         Conversion("Markdown → HTML 资源包", "标题、列表、链接、表格、脚注与图片；附打印样式", "文字", "md-html"),
         Conversion("HTML → Markdown 资源包", "有限语法转换；合并表格和复杂样式保留 HTML", "文字", "html-md"),
+        Conversion("EPUB → HTML / PDF", "按章节顺序合并，目录、封面、脚注；预览后系统另存 PDF", "电子书", "epub-html"),
+        Conversion("EPUB → Markdown", "目录与脚注内链、图片资源包", "电子书", "epub-md"),
+        Conversion("EPUB → TXT", "按章节顺序导出纯文字资源包", "电子书", "epub-txt"),
+        Conversion(
+            "文档 → EPUB 电子书",
+            "TXT / MD / HTML / 资源包 / PDF；标题分章、目录与原页对照",
+            "电子书",
+            "epub-create",
+        ),
         Conversion("文字 / DOCX → PDF", "TXT、Markdown、HTML、DOCX 正文，中文分页排版", "生成 PDF", "text-pdf"),
         Conversion("图片 → PDF", "多图排序、裁边、滤镜和纸张尺寸", "生成 PDF", "image-pdf"),
         Conversion("图片格式互转", "JPG、PNG、WebP；支持批量打包", "图片", "image-format"),
@@ -74,7 +83,7 @@ fun ConversionScreen(
     onImages: () -> Unit,
     onMerge: () -> Unit,
     onText: (Float) -> Unit,
-    onMarkup: (String) -> Unit,
+    onMarkup: (String, org.json.JSONObject) -> Unit,
     onImageFormat: (ImageConversionOptions) -> Unit,
     onLongImages: (LongImageOptions) -> Unit,
     onDesktop: (String, org.json.JSONObject) -> Unit,
@@ -106,6 +115,11 @@ fun ConversionScreen(
     var tableStrategy by rememberSaveable { mutableStateOf("auto") }
     var officeTarget by rememberSaveable { mutableStateOf("docx") }
     var fontSize by rememberSaveable { mutableFloatStateOf(12f) }
+    var bookTitle by rememberSaveable { mutableStateOf("") }
+    var bookAuthor by rememberSaveable { mutableStateOf("") }
+    var bookLanguage by rememberSaveable { mutableStateOf("zh") }
+    var bookCover by rememberSaveable { mutableStateOf(true) }
+    var bookColumns by rememberSaveable { mutableIntStateOf(0) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -143,10 +157,10 @@ fun ConversionScreen(
                     Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    listOf("全部", "手机引擎", "手机表格", "生成 PDF", "图片", "文字", "整理", "电脑引擎").forEach { name
-                        ->
-                        FilterChip(group == name, { group = name }, label = { Text(name) })
-                    }
+                    listOf("全部", "手机引擎", "手机表格", "电子书", "生成 PDF", "图片", "文字", "整理", "电脑引擎")
+                        .forEach { name ->
+                            FilterChip(group == name, { group = name }, label = { Text(name) })
+                        }
                 }
             }
             if (drafts.isNotEmpty() && query.isBlank())
@@ -196,8 +210,12 @@ fun ConversionScreen(
                 OutlinedCard(
                     onClick = {
                         when (entry.mode) {
-                            "md-html" -> onMarkup("HTML")
-                            "html-md" -> onMarkup("MD")
+                            "md-html",
+                            "epub-html" -> onMarkup("HTML", org.json.JSONObject())
+                            "html-md",
+                            "epub-md" -> onMarkup("MD", org.json.JSONObject())
+                            "epub-txt" -> onMarkup("TXT", org.json.JSONObject())
+                            "epub-create" -> options = entry.mode
                             "text-pdf",
                             "image-format",
                             "office-options",
@@ -246,6 +264,7 @@ fun ConversionScreen(
                         "text-pdf" -> "生成文字 PDF"
                         "office-options" -> "Office 目标格式"
                         "images-long" -> "图片拼成长图"
+                        "epub-create" -> "生成 EPUB 电子书"
                         else -> "图片格式互转"
                     }
                 )
@@ -255,7 +274,44 @@ fun ConversionScreen(
                     Modifier.heightIn(max = 460.dp).verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    if (options == "office-options") {
+                    if (options == "epub-create") {
+                        OutlinedTextField(
+                            bookTitle,
+                            { bookTitle = it },
+                            label = { Text("书名（留空沿用文档标题）") },
+                            singleLine = true,
+                        )
+                        OutlinedTextField(
+                            bookAuthor,
+                            { bookAuthor = it },
+                            label = { Text("作者（可留空）") },
+                            singleLine = true,
+                        )
+                        OutlinedTextField(
+                            bookLanguage,
+                            { bookLanguage = it },
+                            label = { Text("语言，例如 zh / en") },
+                            singleLine = true,
+                        )
+                        Row {
+                            Checkbox(bookCover, { bookCover = it })
+                            Text("首张图片用作封面")
+                        }
+                        Text("PDF 重排顺序；文字可编辑，复杂表格/公式保留原页对照：")
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            listOf("单栏", "双栏左起", "双栏右起").forEachIndexed { i, label ->
+                                FilterChip(
+                                    bookColumns == i,
+                                    { bookColumns = i },
+                                    label = { Text(label) },
+                                )
+                            }
+                        }
+                        Text(
+                            "MD / HTML 按主标题分章；资源可打成 ZIP 后导入。扫描 PDF 使用离线 OCR。",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    } else if (options == "office-options") {
                         Text("手机本机转换。首次需要安装 Office 手机引擎。请选择与源文件对应的目标类型。")
                         if (officeTarget == "csv")
                             Text(
@@ -353,7 +409,18 @@ fun ConversionScreen(
                     onClick = {
                         val mode = options
                         options = ""
-                        if (mode == "office-options") desktopJob = "office-$officeTarget"
+                        if (mode == "epub-create")
+                            onMarkup(
+                                "EPUB",
+                                org.json
+                                    .JSONObject()
+                                    .put("title", bookTitle)
+                                    .put("author", bookAuthor)
+                                    .put("language", bookLanguage.ifBlank { "und" })
+                                    .put("cover", bookCover)
+                                    .put("columns", bookColumns),
+                            )
+                        else if (mode == "office-options") desktopJob = "office-$officeTarget"
                         else if (mode == "text-pdf") onText(fontSize)
                         else if (mode == "images-long") onLongImages(longOptions)
                         else

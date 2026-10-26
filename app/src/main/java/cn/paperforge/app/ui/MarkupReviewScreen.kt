@@ -52,6 +52,37 @@ fun MarkupReviewScreen(vm: MainViewModel) {
                 withContext(Dispatchers.IO) {
                     runCatching {
                         val outcome = MarkupDocuments.open(context, File(model.result))
+                        val options =
+                            TextPdfOptions.decode(
+                                outcome.report?.optJSONObject("print") ?: org.json.JSONObject()
+                            )
+                        if (tab == 0 && File(model.source).extension.equals("pdf", true)) {
+                            val original = File(model.source)
+                            val pdfPages =
+                                outcome.report
+                                    ?.optJSONObject("sourceDetails")
+                                    ?.optJSONArray("pages")
+                            val html = buildString {
+                                append("<h1>PDF 原件逐页对照</h1>")
+                                if (pdfPages != null)
+                                    for (i in 0 until pdfPages.length()) {
+                                        val image =
+                                            File(
+                                                outcome.root,
+                                                "EPUB/resources/${pdfPages.getJSONObject(i).getString("reference")}",
+                                            )
+                                        append(
+                                            "<h2>第 ${i + 1} 页</h2><img src=\"${Uri.fromFile(image)}\" alt=\"原页\">"
+                                        )
+                                    }
+                            }
+                            return@runCatching MarkupPage(
+                                MarkupDocuments.styledHtml(html, false, model.name, options),
+                                "原件：${model.name}\n${original.length()} 字节\nSHA256：${PdfAssembly.sha256(original)}\n原 PDF 和每页对照图随 EPUB 保留。",
+                                outcome,
+                                options,
+                            )
+                        }
                         val source =
                             if (tab == 1) outcome
                             else
@@ -67,12 +98,15 @@ fun MarkupReviewScreen(vm: MainViewModel) {
                                 source.main.name,
                                 preserveMarkup = true,
                             )
-                        val options =
-                            TextPdfOptions.decode(
-                                outcome.report?.optJSONObject("print") ?: org.json.JSONObject()
-                            )
                         MarkupPage(
                             if (MarkupDocuments.isHtml(source.main.name)) body
+                            else if (source.main.extension.equals("txt", true))
+                                MarkupDocuments.styledHtml(
+                                    "<pre>${org.jsoup.nodes.Entities.escape(body)}</pre>",
+                                    false,
+                                    model.name,
+                                    options,
+                                )
                             else MarkupDocuments.styledHtml(body, true, model.name, options),
                             body,
                             source,
@@ -275,15 +309,18 @@ fun MarkupReviewScreen(vm: MainViewModel) {
                 else
                     key(active.source.main.path, tab) {
                         val view = remember {
-                            createMarkupWebView(context, active.source).apply {
-                                loadDataWithBaseURL(
-                                    Uri.fromFile(active.source.main).toString(),
-                                    active.html,
-                                    "text/html",
-                                    "UTF-8",
-                                    null,
-                                )
-                            }
+                            createMarkupWebView(context, active.source) { file, page ->
+                                    vm.openMarkupPdf(file, page)
+                                }
+                                .apply {
+                                    loadDataWithBaseURL(
+                                        Uri.fromFile(active.source.main).toString(),
+                                        active.html,
+                                        "text/html",
+                                        "UTF-8",
+                                        null,
+                                    )
+                                }
                         }
                         DisposableEffect(view) {
                             onDispose {
@@ -306,7 +343,11 @@ fun MarkupReviewScreen(vm: MainViewModel) {
     }
 }
 
-private fun createMarkupWebView(context: Context, source: MarkupSource) =
+private fun createMarkupWebView(
+    context: Context,
+    source: MarkupSource,
+    onPdf: ((File, Int) -> Unit)? = null,
+) =
     WebView(context).apply {
         settings.javaScriptEnabled = false
         settings.allowFileAccess = true
@@ -314,12 +355,13 @@ private fun createMarkupWebView(context: Context, source: MarkupSource) =
         settings.blockNetworkLoads = true
         settings.builtInZoomControls = true
         settings.displayZoomControls = false
-        webViewClient = DocumentWebClient(context, source)
+        webViewClient = DocumentWebClient(context, source, onPdf)
     }
 
 private open class DocumentWebClient(
     private val context: Context,
     private val source: MarkupSource,
+    private val onPdf: ((File, Int) -> Unit)? = null,
 ) : WebViewClient() {
     override fun shouldInterceptRequest(
         view: WebView,
@@ -341,6 +383,25 @@ private open class DocumentWebClient(
     }
 
     override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+        if (
+            request.url.scheme == "file" &&
+                request.url.path?.endsWith(".pdf", true) == true &&
+                onPdf != null
+        ) {
+            val file = File(request.url.path!!).canonicalFile
+            if (
+                source.root?.let { file.path.startsWith(it.canonicalPath + File.separator) } ==
+                    true && file.isFile
+            ) {
+                val page =
+                    Uri.decode(request.url.encodedFragment ?: "")
+                        .substringAfter("page=", "1")
+                        .substringBefore('&')
+                        .toIntOrNull() ?: 1
+                onPdf.invoke(file, page - 1)
+            }
+            return true
+        }
         if (request.url.scheme in setOf("https", "http", "mailto")) {
             runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, request.url)) }
             return true

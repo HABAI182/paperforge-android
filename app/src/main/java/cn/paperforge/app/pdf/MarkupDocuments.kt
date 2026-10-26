@@ -57,54 +57,18 @@ object MarkupDocuments {
         mainPath: String? = null,
     ): MarkupSource =
         withContext(Dispatchers.IO) {
+            if (source.extension.equals("epub", true))
+                return@withContext EpubDocuments.open(context, source)
             val hash = PdfAssembly.sha256(source)
             if (!source.extension.equals("zip", true))
                 return@withContext MarkupSource(source, null, source.name, hash, null)
-            val base = File(context.cacheDir, "markup-resources").canonicalFile.apply { mkdirs() }
-            val directory = File(base, hash)
-            val marker = File(base, "$hash.ready")
-            var metadata: JSONObject? = null
-            ZipFile(source).use { zip ->
-                metadata =
+            val directory = unpack(context, source)
+            val metadata =
+                ZipFile(source).use { zip ->
                     zip.comment
                         ?.let { runCatching { JSONObject(it) }.getOrNull() }
                         ?.takeIf { it.optString("format") == "paperforge-markup" }
-                if (!marker.isFile || !directory.isDirectory) {
-                    check(directory.canonicalFile.parentFile == base.canonicalFile)
-                    directory.deleteRecursively()
-                    directory.mkdirs()
-                    var bytes = 0L
-                    var count = 0
-                    for (entry in zip.entries()) {
-                        ensureActive()
-                        count++
-                        require(count <= 5000) { "资源包文件过多" }
-                        val target = File(directory, entry.name).canonicalFile
-                        require(target.path.startsWith(directory.canonicalPath + File.separator)) {
-                            "资源包路径不合适"
-                        }
-                        if (entry.isDirectory) {
-                            target.mkdirs()
-                            continue
-                        }
-                        target.parentFile?.mkdirs()
-                        zip.getInputStream(entry).use { input ->
-                            target.outputStream().use { output ->
-                                val buffer = ByteArray(65536)
-                                while (true) {
-                                    ensureActive()
-                                    val n = input.read(buffer)
-                                    if (n < 0) break
-                                    bytes += n
-                                    require(bytes <= 400L * 1024 * 1024) { "资源包过大" }
-                                    output.write(buffer, 0, n)
-                                }
-                            }
-                        }
-                    }
-                    marker.writeText(hash)
                 }
-            }
             val main =
                 (mainPath ?: metadata?.optString("main"))
                     ?.takeIf { it.isNotBlank() }
@@ -158,6 +122,52 @@ object MarkupDocuments {
                 hash,
                 report,
             )
+        }
+
+    suspend fun unpack(context: Context, source: File): File =
+        withContext(Dispatchers.IO) {
+            val hash = PdfAssembly.sha256(source)
+            val base = File(context.cacheDir, "markup-resources").canonicalFile.apply { mkdirs() }
+            val directory = File(base, hash)
+            val marker = File(base, "$hash.ready")
+            ZipFile(source).use { zip ->
+                if (!marker.isFile || !directory.isDirectory) {
+                    check(directory.canonicalFile.parentFile == base.canonicalFile)
+                    directory.deleteRecursively()
+                    directory.mkdirs()
+                    var bytes = 0L
+                    var count = 0
+                    for (entry in zip.entries()) {
+                        ensureActive()
+                        count++
+                        require(count <= 5000) { "资源包文件过多" }
+                        val target = File(directory, entry.name).canonicalFile
+                        require(target.path.startsWith(directory.canonicalPath + File.separator)) {
+                            "资源包路径不合适"
+                        }
+                        if (entry.isDirectory) {
+                            target.mkdirs()
+                            continue
+                        }
+                        target.parentFile?.mkdirs()
+                        zip.getInputStream(entry).use { input ->
+                            target.outputStream().use { output ->
+                                val buffer = ByteArray(65536)
+                                while (true) {
+                                    ensureActive()
+                                    val n = input.read(buffer)
+                                    if (n < 0) break
+                                    bytes += n
+                                    require(bytes <= 400L * 1024 * 1024) { "资源包过大" }
+                                    output.write(buffer, 0, n)
+                                }
+                            }
+                        }
+                    }
+                    marker.writeText(hash)
+                }
+            }
+            directory
         }
 
     private val markdown = MarkdownRenderer.builder().build()
@@ -415,7 +425,7 @@ object MarkupDocuments {
         target: String,
         options: TextPdfOptions,
     ): JSONObject {
-        require(target in setOf("HTML", "MD"))
+        require(target in setOf("HTML", "MD", "TXT"))
         val source = open(context, sourceFile, preferred = if (target == "HTML") "MD" else "HTML")
         require(
             isHtml(source.main.name) ||
@@ -431,15 +441,25 @@ object MarkupDocuments {
                 preserveMarkup = true,
             )
         val warnings = linkedSetOf<String>()
+        source.report?.optJSONArray("warnings")?.let { list ->
+            for (i in 0 until list.length()) warnings += list.getString(i)
+        }
         val sourceHtml = isHtml(source.main.name)
         val converted =
-            if (target == "HTML") styledHtml(body, !sourceHtml, name, options, warnings)
+            if (target == "TXT") {
+                val plain = Jsoup.parse(if (sourceHtml) body else markdownToHtml(body))
+                plain.select("script,style").remove()
+                plain.select("br").after("\n")
+                plain.select("p,div,section,h1,h2,h3,h4,h5,h6,li,tr,pre,blockquote").after("\n\n")
+                plain.select("th,td").forEach { it.appendText("\t") }
+                plain.body().wholeText().replace(Regex("\n{3,}"), "\n\n").trim() + "\n"
+            } else if (target == "HTML") styledHtml(body, !sourceHtml, name, options, warnings)
             else if (sourceHtml) htmlToMarkdown(body, warnings) else body
         val stem =
             if (source.root == null)
                 cn.paperforge.app.model.safeFileName(name.substringBeforeLast('.'))
             else source.relative.substringBeforeLast('.')
-        val extension = if (target == "HTML") "html" else "md"
+        val extension = target.lowercase()
         var main = "$stem.$extension"
         if (source.root != null && main != source.relative && File(source.root, main).exists()) {
             var index = 1
@@ -492,6 +512,7 @@ object MarkupDocuments {
                 .put("sourceMain", source.relative)
                 .put("main", main)
                 .put("target", target)
+                .put("sourceDetails", source.report)
                 .put("warnings", JSONArray(warnings))
                 .put("print", options.json())
                 .put(

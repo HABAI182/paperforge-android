@@ -1,0 +1,80 @@
+{
+  "checked": "2026-10-26",
+  "cards": [
+    "CVT14"
+  ],
+  "engine": "epub-ocf-spine-v1",
+  "sources": [
+    "https://www.w3.org/TR/2026/REC-epub-33-20260113/",
+    "https://github.com/w3c/epubcheck/releases/tag/v5.4.0"
+  ],
+  "implemented": [
+    "OCF container/OPF manifest and primary spine order, EPUB3 nested navigation and EPUB2 NCX; original relative resources",
+    "Per-document anchor prefixes preserve duplicate chapter IDs, cross-chapter footnotes and backlinks; auxiliary notes remain addressable",
+    "EPUB to HTML/Markdown/TXT ZIPs and actual mobile preview/system PDF printing",
+    "TXT/MD/HTML/ZIP to EPUB3 XHTML chapters, first stored mimetype/no BOM, container/OPF/spine/nav, title/author/language and optional first-image cover",
+    "Reachable images/styles/nested CSS/font dependencies packaged, source hashes and asset hashes in report",
+    "PDF native text first, frozen offline OCR for image-only pages, selectable single/left/right-column reading order; editable paragraphs with per-page original reference images and unchanged original PDF",
+    "PDF attachment has explicit EPUB content fallback and non-linear spine membership; reader can open its exact original page and return to result"
+  ],
+  "focusedChecks": [
+    {
+      "test": "EpubConversionsFlowTest (2 new methods)",
+      "seconds": 4.818,
+      "result": "passed",
+      "coverage": [
+        "ZIP filename order deliberately disagrees with spine",
+        "EPUB3 nested TOC and EPUB2 NCX",
+        "duplicate heading IDs and auxiliary footnote backlinks",
+        "three actual WorkManager text conversions and unchanged image bytes/source SHA",
+        "actual Markdown->EPUB chapters/cover/footnotes",
+        "native PDF + scanned PDF page -> EPUB editable text with fixed OCR request and original bytes"
+      ]
+    },
+    {
+      "test": "affected EPUB creation method after attachment spine fix",
+      "seconds": 4.064,
+      "result": "passed"
+    }
+  ],
+  "independentFormat": {
+    "validator": "W3C EPUBCheck 5.4.0",
+    "createdMarkdownBook": {
+      "fatals": 0,
+      "errors": 0,
+      "warnings": 0
+    },
+    "createdPdfBook": {
+      "fatals": 0,
+      "errors": 0,
+      "warnings": 0
+    },
+    "findingFixed": "Directly linked foreign PDF requires an explicit readable fallback and non-linear spine membership; now declared, original PDF bytes retained"
+  },
+  "actualUI": [
+    "Electronic books category and creation settings (title/author/language/cover/column order)",
+    "Android Downloads picker EPUB -> real completed task -> rendered output",
+    "Long chapter: nested TOC note tap jumps past 30 paragraphs to auxiliary footnote; backlink returns to its source marker",
+    "Actual Save as PDF creates PaperForge-book-long.pdf with 5 pages; independent readback sees FIRST00123 then SECOND00077.50 then note",
+    "Native/scanned reflow result both expose editable text and expandable original-page image",
+    "Original PDF page2 link opens built-in reader at2/2; back returns to conversion result (fixed an initial navigation busy-guard issue)"
+  ],
+  "printedPdf": {
+    "pages": 5,
+    "chapterTextOrder": [
+      "FIRST 00123",
+      "SECOND 00077.50",
+      "脚注原文"
+    ],
+    "imageOccurrences": 1,
+    "internalLinks": 0
+  },
+  "limits": [
+    "Static content only; no scripted/multimedia execution or remote asset download",
+    "Merged preview shares chapter CSS; complex selectors and fixed-layout EPUB may differ from original layout",
+    "PDF paragraphs use declared column order; complex tables/formulas/images have explicit original-page/PDF fallback, not fabricated editable structure",
+    "Android system-printed PDF preserves visible contents and order, but this observed output has no clickable internal GoTo links; original EPUB/HTML/MD links remain",
+    "Controlled emulator fixtures; no physical ARM64 or broad book corpus acceptance",
+    "No release/tag/version change"
+  ]
+}

@@ -780,7 +780,7 @@
       ],
       "scope": "章节spine、目录、封面与脚注链接",
       "acceptance": "按阅读顺序，PDF复杂布局可回退",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "CVT15",

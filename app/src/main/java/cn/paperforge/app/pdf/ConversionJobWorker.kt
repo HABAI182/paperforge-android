@@ -52,17 +52,42 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                 val file: File
                 when (job.input.getString("kind")) {
                     "MARKUP" -> {
-                        file = File(repo.exports, "PaperForge-markup-${job.row.workId}.zip")
+                        val epub = options.optString("target") == "EPUB"
+                        file =
+                            File(
+                                repo.exports,
+                                "PaperForge-markup-${job.row.workId}.${if (epub) "epub" else "zip"}",
+                            )
                         output = file
                         DocumentJobs.progress(repo, job, 10, "正在转换文档结构与资源")
-                        MarkupDocuments.convert(
-                            applicationContext,
-                            inputs.single(),
-                            title,
-                            file,
-                            options.optString("target", "HTML"),
-                            TextPdfOptions.decode(options.optJSONObject("print") ?: JSONObject()),
-                        )
+                        if (epub) {
+                            val router = (applicationContext as PaperForgeApp).ocrEngine
+                            EpubDocuments.write(
+                                applicationContext,
+                                inputs.single(),
+                                title,
+                                file,
+                                options,
+                                cn.paperforge.app.ocr.OcrRequest.decode(
+                                        job.input.json.optJSONObject("ocrRequest"),
+                                        router.id,
+                                    )
+                                    .bind(router),
+                            ) { percent, detail ->
+                                DocumentJobs.progress(repo, job, percent, detail)
+                                setProgress(workDataOf("progress" to percent))
+                            }
+                        } else
+                            MarkupDocuments.convert(
+                                applicationContext,
+                                inputs.single(),
+                                title,
+                                file,
+                                options.optString("target", "HTML"),
+                                TextPdfOptions.decode(
+                                    options.optJSONObject("print") ?: JSONObject()
+                                ),
+                            )
                         completed = 1
                     }
                     "TABLE_ANALYZE" -> {
