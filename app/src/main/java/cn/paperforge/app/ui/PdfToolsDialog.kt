@@ -1,5 +1,6 @@
 package cn.paperforge.app.ui
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -9,6 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
+import cn.paperforge.app.UserSettings
+import cn.paperforge.app.model.ToolCatalog
 import org.json.JSONObject
 
 @Composable
@@ -29,36 +32,9 @@ fun PdfToolsDialog(vm: MainViewModel, initialMode: String = "", onDismiss: () ->
         PdfCompressionDialog(vm, doc?.pdfPath?.let({ java.io.File(it) }), onDismiss)
         return
     }
-    val titles =
-        linkedMapOf(
-            "compress" to "压缩 PDF · 目标体积",
-            "searchable" to "扫描 PDF → 可搜索 PDF",
-            "images-jpg" to "PDF 转 JPG 图片包",
-            "images-png" to "PDF 转 PNG 图片包",
-            "images-webp" to "PDF 转 WebP 图片包",
-            "long-image" to "PDF 转连续长图（自动分段）",
-            "split-each" to "每页拆成独立 PDF",
-            "extract-images" to "提取嵌入图片（PNG）",
-            "watermark" to "添加中文水印",
-            "number" to "添加页码",
-            "crop" to "裁切页面边缘",
-            "blank" to "插入 A4 空白页",
-            "nup2" to "2 合 1 拼版",
-            "nup4" to "4 合 1 拼版",
-            "metadata" to "标题与作者",
-            "diagnostics" to "PDF 属性与诊断",
-            "encrypt" to "密码加密 / 权限",
-            "forms" to "填写 AcroForm 表单",
-            "txt" to "导出纯文本 TXT",
-            "md" to "导出 Markdown 文本",
-            "html" to "导出 HTML 文本",
-            "docx" to "导出可编辑段落 DOCX",
-            "docx-layout" to "手机结构重建 DOCX",
-            "pdf-pptx" to "PDF 转 PPTX 整页图片",
-            "docx-image" to "原页参考图 + 文字 DOCX",
-            "optimize" to "图片优化与资源去重",
-            "flatten" to "扁平化为图像 PDF（有损）",
-        )
+    val settingsVersion by UserSettings.revision.collectAsState()
+    val pinned = remember(settingsVersion) { UserSettings.pinnedTools() }
+    val titles = ToolCatalog.pdfTitles
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (mode.isEmpty()) "PDF 工具箱" else titles[mode] ?: "PDF 工具") },
@@ -76,8 +52,11 @@ fun PdfToolsDialog(vm: MainViewModel, initialMode: String = "", onDismiss: () ->
                         label = { Text("搜索工具，如水印、Word、页码") },
                         singleLine = true,
                     )
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        listOf("全部", "转换", "页面", "其他").forEach { name ->
+                    Row(
+                        Modifier.horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        listOf("全部", "常用", "转换", "页面", "其他").forEach { name ->
                             FilterChip(group == name, { group = name }, label = { Text(name) })
                         }
                     }
@@ -103,21 +82,25 @@ fun PdfToolsDialog(vm: MainViewModel, initialMode: String = "", onDismiss: () ->
                             val category =
                                 if (key in conversion) "转换"
                                 else if (key in pageTools) "页面" else "其他"
-                            (group == "全部" || category == group) &&
-                                (query.isBlank() ||
-                                    title.contains(query, true) ||
-                                    key.contains(query, true) ||
-                                    (query.equals("word", true) && key.startsWith("docx")))
+                            (group == "全部" ||
+                                category == group ||
+                                (group == "常用" && "tool:$key" in pinned)) &&
+                                ToolCatalog.pdfMatches(key, title, query)
                         }
                         .forEach { (key, title) ->
-                            OutlinedButton(
-                                onClick = {
-                                    mode = key
-                                    number = if (key == "blank") "1" else "5"
-                                },
-                                modifier = Modifier.fillMaxWidth(),
+                            Row(
+                                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                             ) {
-                                Text(title)
+                                OutlinedButton(
+                                    onClick = {
+                                        mode = key
+                                        number = if (key == "blank") "1" else "5"
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                ) {
+                                    Text(title)
+                                }
+                                ToolPinButton("tool:$key", title, "tool:$key" in pinned)
                             }
                         }
                 } else {

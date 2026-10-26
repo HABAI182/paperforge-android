@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
 import cn.paperforge.app.UserSettings
 import cn.paperforge.app.data.*
+import cn.paperforge.app.model.ToolCatalog
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -67,6 +68,10 @@ fun HomeScreen(
     var tab by rememberSaveable { mutableIntStateOf(vm.homeTab.value) }
     LaunchedEffect(tab) { vm.homeTab.value = tab }
     var toolQuery by rememberSaveable { mutableStateOf("") }
+    var toolGroup by rememberSaveable { mutableStateOf("全部") }
+    val pinnedTools = remember(settingsVersion) { UserSettings.pinnedTools() }
+    var toolCapability by remember { mutableStateOf<cn.paperforge.app.model.ToolCapability?>(null) }
+    toolCapability?.let { ToolCapabilityDialog(it) { toolCapability = null } }
     val search by vm.query.collectAsState()
     val facts by vm.libraryFacts.collectAsState()
     val allHits by vm.librarySearchHits.collectAsState()
@@ -646,21 +651,56 @@ fun HomeScreen(
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                     )
-                    Text("搜索名称，直接选择文件开始。", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("搜索功能或格式，星标固定常用工具。", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 item {
                     OutlinedTextField(
                         toolQuery,
                         { toolQuery = it },
-                        label = { Text("搜索工具，如水印、压缩、备份") },
+                        label = { Text("搜索工具，如 Word、OCR、图片") },
                         leadingIcon = { Icon(Icons.Default.Search, null) },
                         singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
+                        trailingIcon = {
+                            if (toolQuery.isNotEmpty())
+                                IconButton(onClick = { toolQuery = "" }) {
+                                    Icon(Icons.Default.Close, "清空搜索")
+                                }
+                        },
+                        modifier = Modifier.fillMaxWidth().testTag("tool-search"),
                     )
+                }
+                item {
+                    Row(
+                        Modifier.horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        listOf(
+                                "全部",
+                                "常用",
+                                "文档",
+                                "页面",
+                                "文字",
+                                "图片",
+                                "电子书",
+                                "手机引擎",
+                                "手机表格",
+                                "生成 PDF",
+                                "整理",
+                                "存储",
+                            )
+                            .forEach { name ->
+                                FilterChip(
+                                    toolGroup == name,
+                                    { toolGroup = name },
+                                    label = { Text(name) },
+                                )
+                            }
+                    }
                 }
                 val toolEntries =
                     listOfNotNull(
                         HomeTool(
+                            "action:rename-batch",
                             "批量命名",
                             "多选重命名，日期、序号、自定义字段，重名自动编号",
                             Icons.Default.DriveFileRenameOutline,
@@ -668,87 +708,201 @@ fun HomeScreen(
                             vm.beginBatchRename(emptyList())
                         },
                         if (canUndoNames)
-                            HomeTool("撤销批量命名", "保留之后手工修改的名称", Icons.Default.Undo) {
+                            HomeTool(
+                                "action:rename-undo",
+                                "撤销批量命名",
+                                "保留之后手工修改的名称",
+                                Icons.Default.Undo,
+                            ) {
                                 vm.undoBatchNames()
                             }
                         else null,
-                        HomeTool("任务中心", "查看扫描处理进度、失败页与原图，单独重试", Icons.Default.PendingActions) {
+                        HomeTool(
+                            "action:tasks",
+                            "任务中心",
+                            "查看扫描处理进度、失败页与原图，单独重试",
+                            Icons.Default.PendingActions,
+                        ) {
                             vm.screen.value = "tasks"
                         },
-                        HomeTool("导出记录", "找回生成结果、来源与保存位置", Icons.Default.History) {
+                        HomeTool(
+                            "action:outputs",
+                            "导出记录",
+                            "找回生成结果、来源与保存位置",
+                            Icons.Default.History,
+                        ) {
                             vm.outputSource.value = null
                             vm.screen.value = "outputs"
                         },
-                        HomeTool("重复与版本", "比较相同原件、相似页面，管理首选版本", Icons.Default.Compare) {
+                        HomeTool(
+                            "action:compare",
+                            "重复与版本",
+                            "比较相同原件、相似页面，管理首选版本",
+                            Icons.Default.Compare,
+                        ) {
                             vm.beginComparison()
                         },
-                        HomeTool("页面组合", "跨文件选页、双面交错、封面和目录", Icons.Default.ViewModule) {
+                        HomeTool(
+                            "action:assembly",
+                            "页面组合",
+                            "跨文件选页、双面交错、封面和目录",
+                            Icons.Default.ViewModule,
+                        ) {
                             vm.beginAssembly()
                         },
                         HomeTool(
+                            "action:notes",
                             "学习摘录与笔记",
                             "来源页定位、Markdown、Word、Anki TSV",
                             Icons.Default.AutoStories,
                         ) {
                             vm.screen.value = "notes"
                         },
-                        HomeTool("转换中心", "PDF、图片、文字、Office 与表格", Icons.Default.SwapHoriz) {
+                        HomeTool(
+                            "action:convert",
+                            "转换中心",
+                            "PDF、图片、文字、Office 与表格",
+                            Icons.Default.SwapHoriz,
+                        ) {
                             vm.screen.value = "convert"
                         },
-                        HomeTool("合并 PDF", "选择多份文件并调整顺序", Icons.Default.Merge, onMerge),
-                        HomeTool("图片转 PDF", "排序、裁边、滤镜和纸张尺寸", Icons.Default.Collections, onImages),
-                        HomeTool("离线 OCR 图片识字", "导入图片，识别中英文", Icons.Default.Translate, onOcrImages),
-                        HomeTool("抽页 / 拆分 / 旋转", "输入页码创建新副本", Icons.Default.ContentCut) {
+                        HomeTool(
+                            "tool:merge",
+                            "合并 PDF",
+                            "选择多份文件并调整顺序",
+                            Icons.Default.Merge,
+                            action = onMerge,
+                        ),
+                        HomeTool(
+                            "tool:image-pdf",
+                            "图片转 PDF",
+                            "排序、裁边、滤镜和纸张尺寸",
+                            Icons.Default.Collections,
+                            action = onImages,
+                        ),
+                        HomeTool(
+                            "action:ocr-images",
+                            "离线 OCR 图片识字",
+                            "导入图片，识别中英文",
+                            Icons.Default.Translate,
+                            action = onOcrImages,
+                        ),
+                        HomeTool(
+                            "tool:range",
+                            "抽页 / 拆分 / 旋转",
+                            "输入页码创建新副本",
+                            Icons.Default.ContentCut,
+                        ) {
                             onPdfTool("range")
                         },
-                        HomeTool("压缩 PDF", "保留文字、链接和表单", Icons.Default.Compress) {
+                        HomeTool("tool:compress", "压缩 PDF", "保留文字、链接和表单", Icons.Default.Compress) {
                             onPdfTool("compress")
                         },
-                        HomeTool("PDF 批注与手写签名", "画笔、荧光笔、形状和文字", Icons.Default.Draw) {
+                        HomeTool(
+                            "tool:annotate",
+                            "PDF 批注与手写签名",
+                            "画笔、荧光笔、形状和文字",
+                            Icons.Default.Draw,
+                        ) {
                             onPdfTool("annotate")
                         },
-                        HomeTool("离线备份", "原图、PDF、OCR、分类与编辑历史", Icons.Default.Backup, vm::backup),
                         HomeTool(
+                            "action:backup",
+                            "离线备份",
+                            "原图、PDF、OCR、分类与编辑历史",
+                            Icons.Default.Backup,
+                            action = vm::backup,
+                        ),
+                        HomeTool(
+                            "action:restore",
                             "恢复备份",
                             "选择纸匠 ZIP 并保留现有文档",
                             Icons.Default.Restore,
-                            onRestoreBackup,
+                            action = onRestoreBackup,
                         ),
-                        HomeTool("存储空间与缓存", "查看原件、历史、导出与可清理容量", Icons.Default.Storage) {
+                        HomeTool(
+                            "action:storage",
+                            "存储空间与缓存",
+                            "查看原件、历史、导出与可清理容量",
+                            Icons.Default.Storage,
+                        ) {
                             vm.screen.value = "storage"
                         },
                     ) +
-                        listOf(
-                                "searchable" to "扫描 PDF 转可搜索 PDF",
-                                "watermark" to "添加中文水印",
-                                "number" to "添加页码",
-                                "crop" to "裁切 PDF 页面边缘",
-                                "blank" to "插入空白页",
-                                "nup2" to "2 合 1 拼版",
-                                "nup4" to "4 合 1 拼版",
-                                "encrypt" to "PDF 密码加密",
-                                "forms" to "填写 PDF 表单",
-                                "metadata" to "修改标题与作者",
-                                "diagnostics" to "PDF 属性与诊断",
-                                "extract-images" to "提取嵌入图片",
-                                "txt" to "提取 PDF 文字",
-                                "docx" to "PDF 转 Word 段落",
-                                "images-jpg" to "PDF 转 JPG 图片包",
-                                "images-png" to "PDF 转 PNG 图片包",
-                            )
+                        ToolCatalog.conversions
+                            .filter { it.group != "电脑引擎" }
+                            .map { entry ->
+                                HomeTool(
+                                    entry.id,
+                                    entry.title,
+                                    entry.detail,
+                                    Icons.Default.SwapHoriz,
+                                    entry.group,
+                                ) {
+                                    vm.openConversion(entry.mode)
+                                }
+                            } +
+                        ToolCatalog.pdfTitles
+                            .filterKeys { mode -> ToolCatalog.conversion(mode) == null }
                             .map { (mode, title) ->
-                                HomeTool(title, "选择 PDF 后设置参数", Icons.Default.PictureAsPdf) {
+                                HomeTool(
+                                    "tool:$mode",
+                                    title,
+                                    "选择 PDF 后设置参数",
+                                    Icons.Default.PictureAsPdf,
+                                    "页面",
+                                ) {
                                     onPdfTool(mode)
                                 }
                             }
                 val found =
-                    toolEntries.filter {
-                        it.title.contains(toolQuery, true) ||
-                            it.description.contains(toolQuery, true)
+                    toolEntries
+                        .distinctBy { it.id }
+                        .filter { tool ->
+                            (toolGroup == "全部" ||
+                                tool.group == toolGroup ||
+                                (toolGroup == "常用" && tool.id in pinnedTools)) &&
+                                (if (tool.id.startsWith("tool:"))
+                                    ToolCatalog.pdfMatches(
+                                        tool.id.removePrefix("tool:"),
+                                        tool.title,
+                                        toolQuery,
+                                    ) ||
+                                        ToolCatalog.matches(toolQuery, tool.title, tool.description)
+                                else
+                                    ToolCatalog.matches(
+                                        toolQuery,
+                                        tool.title,
+                                        tool.description,
+                                        tool.id,
+                                        tool.aliases,
+                                    ))
+                        }
+                val sorted =
+                    if (toolGroup == "全部" && toolQuery.isBlank())
+                        found.sortedBy { it.id !in pinnedTools }
+                    else found
+                if (sorted.isEmpty())
+                    item {
+                        Text(
+                            if (toolGroup == "常用") "点击工具旁的星标，将常用操作固定在这里。" else "没有找到匹配的工具",
+                            Modifier.padding(24.dp),
+                        )
                     }
-                if (found.isEmpty()) item { Text("没有找到匹配的工具", Modifier.padding(24.dp)) }
-                items(found, key = { it.title }) { tool ->
-                    ToolCard(tool.title, tool.description, tool.icon, !busy, tool.action)
+                items(sorted, key = { it.id }) { tool ->
+                    val capability =
+                        if (tool.id.startsWith("tool:"))
+                            ToolCatalog.conversion(tool.id.removePrefix("tool:"))
+                        else null
+                    ToolCard(
+                        tool.title,
+                        tool.description,
+                        tool.icon,
+                        !busy,
+                        tool.action,
+                        pin = { ToolPinButton(tool.id, tool.title, tool.id in pinnedTools) },
+                        info = capability?.let { { toolCapability = it } },
+                    )
                 }
             } else {
                 item {
@@ -1289,6 +1443,8 @@ private fun ToolCard(
     icon: ImageVector,
     enabled: Boolean,
     onClick: () -> Unit,
+    pin: @Composable () -> Unit,
+    info: (() -> Unit)? = null,
 ) {
     Card(
         onClick = onClick,
@@ -1310,14 +1466,34 @@ private fun ToolCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            Icon(Icons.Default.ChevronRight, null)
+            Column {
+                pin()
+                info?.let { IconButton(onClick = it) { Icon(Icons.Default.Info, "${title}的能力说明") } }
+            }
         }
     }
 }
 
 private data class HomeTool(
+    val id: String,
     val title: String,
     val description: String,
     val icon: ImageVector,
+    val group: String =
+        ToolCatalog.conversion(id.removePrefix("tool:"))?.group
+            ?: if (id in setOf("action:backup", "action:restore", "action:storage")) "存储"
+            else if (id == "action:ocr-images") "图片"
+            else if (id.startsWith("tool:")) "页面" else "文档",
     val action: () -> Unit,
-)
+) {
+    val aliases
+        get() =
+            when (id) {
+                "action:ocr-images" -> "文字识别 识字 OCR 图片 照片"
+                "action:backup",
+                "action:restore" -> "backup restore 导入 导出 备份 恢复"
+                "action:notes" -> "笔记 摘录 word markdown anki"
+                "action:rename-batch" -> "重命名 rename 批量"
+                else -> ""
+            }
+}

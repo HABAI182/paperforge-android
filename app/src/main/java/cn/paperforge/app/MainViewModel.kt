@@ -21,6 +21,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val ocrEngine = (app as PaperForgeApp).ocrEngine
     val query = MutableStateFlow("")
     val homeTab = MutableStateFlow(0)
+    val conversionEntry = MutableStateFlow("")
+
+    fun openConversion(mode: String) {
+        conversionEntry.value = mode
+        screen.value = "convert"
+    }
+
     val renameSelection = MutableStateFlow<List<String>>(emptyList())
     val canUndoNames = MutableStateFlow(LibraryPreferences(repo.context).renameUndo().isNotEmpty())
     val renameNotice = MutableStateFlow<Pair<String, Int>?>(null)

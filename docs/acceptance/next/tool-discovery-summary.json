@@ -1,0 +1,35 @@
+{
+  "checked": "2026-10-26",
+  "cards": [
+    "UI03",
+    "CVT01"
+  ],
+  "implemented": [
+    "One 31-route executable conversion catalog, shared with home discovery and PDF mode aliases",
+    "Each conversion exposes real accepted inputs, output formats, parameters, engine prerequisites and mode limitations",
+    "Chinese/English aliases, case-insensitive and multi-token search; category chips and clear-search actions",
+    "Stable favorite identifiers shared across home/conversion/PDF dialogs; favorites persist, export/import with preferences and surface before other home tools",
+    "Home conversion result invokes the same conversion dispatch/options as the conversion center, rather than a placeholder screen"
+  ],
+  "focusedCheck": {
+    "test": "ToolDiscoveryFlowTest.aliasesPinsAndHomeConversionOpenTheRealOperation",
+    "result": "passed",
+    "seconds": 14.562,
+    "coverage": [
+      "Word -> actual PDF structure DOCX result with capability dialog",
+      "OCR -> image OCR tool",
+      "图片 -> image-format conversion",
+      "Pin EPUB creation, settings export/import, activity recreation",
+      "Home favorites -> actual EPUB generation options -> conversion favorites -> unpin empty state"
+    ]
+  },
+  "visual": [
+    "Emulator native home tools and Word result",
+    "Actual Office capability dialog with input/output/engine/parameters and clear installation/layout limits"
+  ],
+  "limits": [
+    "No change to conversion engines in this group; each engine retains its recorded format/quality limits",
+    "Emulator interaction, not physical-device acceptance",
+    "No repeated old test suites and no release/tag/version change"
+  ]
+}

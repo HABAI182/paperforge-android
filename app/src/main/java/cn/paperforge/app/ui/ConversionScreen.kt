@@ -13,67 +13,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
+import cn.paperforge.app.UserSettings
+import cn.paperforge.app.model.ToolCapability
+import cn.paperforge.app.model.ToolCatalog
 import cn.paperforge.app.pdf.ImageConversionOptions
 import cn.paperforge.app.pdf.LongImageOptions
-
-private data class Conversion(
-    val title: String,
-    val detail: String,
-    val group: String,
-    val mode: String,
-)
-
-private val conversions =
-    listOf(
-        Conversion("电脑助手结果导入", "接收 Office、表格和版面转换的结果包", "电脑引擎", "desktop-import"),
-        Conversion(
-            "Office → PDF · 保留排版",
-            "Word、Excel、PowerPoint、ODF；手机本机排版引擎",
-            "手机引擎",
-            "office-pdf",
-        ),
-        Conversion(
-            "Office 格式互转",
-            "DOCX / ODT / RTF、XLSX / ODS / CSV、PPTX / ODP",
-            "手机引擎",
-            "office-options",
-        ),
-        Conversion("PDF → Word · 结构重建", "手机本地重建文字、表格与嵌入图片；扫描页离线 OCR", "文字", "docx-layout"),
-        Conversion("PDF / 图片 → Excel 表格", "有线 / 无线表、合并单元格、离线 OCR，导出 XLSX", "手机表格", "tables-xlsx"),
-        Conversion("PDF / 图片 → CSV 表格包", "每张表独立 CSV，附结构与来源信息", "手机表格", "tables-csv"),
-        Conversion("PDF → PowerPoint · 整页外观", "手机本地生成，一页一张图片幻灯片", "文字", "pdf-pptx"),
-        Conversion("Markdown → HTML 资源包", "标题、列表、链接、表格、脚注与图片；附打印样式", "文字", "md-html"),
-        Conversion("HTML → Markdown 资源包", "有限语法转换；合并表格和复杂样式保留 HTML", "文字", "html-md"),
-        Conversion("EPUB → HTML / PDF", "按章节顺序合并，目录、封面、脚注；预览后系统另存 PDF", "电子书", "epub-html"),
-        Conversion("EPUB → Markdown", "目录与脚注内链、图片资源包", "电子书", "epub-md"),
-        Conversion("EPUB → TXT", "按章节顺序导出纯文字资源包", "电子书", "epub-txt"),
-        Conversion(
-            "文档 → EPUB 电子书",
-            "TXT / MD / HTML / 资源包 / PDF；标题分章、目录与原页对照",
-            "电子书",
-            "epub-create",
-        ),
-        Conversion("文字 / DOCX → PDF", "TXT、Markdown、HTML、DOCX 正文，中文分页排版", "生成 PDF", "text-pdf"),
-        Conversion("图片 → PDF", "多图排序、裁边、滤镜和纸张尺寸", "生成 PDF", "image-pdf"),
-        Conversion("图片格式互转", "JPG、PNG、WebP；支持批量打包", "图片", "image-format"),
-        Conversion("PDF → JPG", "整页高清导出，按页码输出图片包", "图片", "images-jpg"),
-        Conversion("PDF → WebP", "逐页导出 WebP 图片包", "图片", "images-webp"),
-        Conversion("图片拼成长图", "顺序或重叠拼接，接缝预览与手调，过长自动分段", "图片", "images-long"),
-        Conversion("PDF → 长图", "按页序拼接，超过长度自动连续分段", "图片", "long-image"),
-        Conversion("PDF → PNG", "无损图片编码，适合文字与线条", "图片", "images-png"),
-        Conversion("PDF → Word 段落", "提取文字为可编辑 DOCX，重新排版", "文字", "docx"),
-        Conversion("PDF → 图文 Word", "每页参考图加可编辑文字段落", "文字", "docx-image"),
-        Conversion("PDF → TXT", "导出已有文字层", "文字", "txt"),
-        Conversion("PDF → Markdown", "按段落导出文本，不重建复杂版式", "文字", "md"),
-        Conversion("PDF → HTML", "生成可在浏览器打开的文字文档", "文字", "html"),
-        Conversion("扫描 PDF → 可搜索 PDF", "离线 OCR，保留原页并添加透明文字层", "生成 PDF", "searchable"),
-        Conversion("提取 PDF 内图片", "提取嵌入图像，输出 PNG 图片包", "图片", "extract-images"),
-        Conversion("PDF 每页独立拆分", "一页一份 PDF，打包保存", "整理", "split-each"),
-        Conversion("合并 PDF", "选择多份 PDF，调整顺序后合并", "整理", "merge"),
-        Conversion("压缩 PDF", "优化嵌入图片并保留文字和链接", "整理", "compress"),
-    )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,6 +37,10 @@ fun ConversionScreen(
     onResult: () -> Unit,
 ) {
     val busy by vm.busy.collectAsState()
+    val settingsVersion by UserSettings.revision.collectAsState()
+    val pinned = remember(settingsVersion) { UserSettings.pinnedTools() }
+    val requested by vm.conversionEntry.collectAsState()
+    var capability by remember { mutableStateOf<ToolCapability?>(null) }
     val tasks by vm.localTasks.collectAsState()
     val drafts =
         tasks.filter {
@@ -120,6 +71,33 @@ fun ConversionScreen(
     var bookLanguage by rememberSaveable { mutableStateOf("zh") }
     var bookCover by rememberSaveable { mutableStateOf(true) }
     var bookColumns by rememberSaveable { mutableIntStateOf(0) }
+    fun launch(entry: ToolCapability) {
+        when (entry.mode) {
+            "md-html",
+            "epub-html" -> onMarkup("HTML", org.json.JSONObject())
+            "html-md",
+            "epub-md" -> onMarkup("MD", org.json.JSONObject())
+            "epub-txt" -> onMarkup("TXT", org.json.JSONObject())
+            "epub-create" -> options = entry.mode
+            "text-pdf",
+            "image-format",
+            "office-options",
+            "images-long" -> options = entry.mode
+            "desktop-import" -> onResult()
+            "image-pdf" -> onImages()
+            "merge" -> onMerge()
+            else ->
+                if (entry.group in setOf("电脑引擎", "手机引擎", "手机表格")) desktopJob = entry.mode
+                else onPdf(entry.mode)
+        }
+    }
+    LaunchedEffect(requested) {
+        if (requested.isNotEmpty()) {
+            vm.conversionEntry.value = ""
+            ToolCatalog.conversion(requested)?.let { launch(it) }
+        }
+    }
+    capability?.let { ToolCapabilityDialog(it) { capability = null } }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -138,7 +116,7 @@ fun ConversionScreen(
         }
     ) { padding ->
         LazyColumn(
-            Modifier.fillMaxSize().padding(padding),
+            Modifier.fillMaxSize().padding(padding).testTag("conversion-list"),
             contentPadding = PaddingValues(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -149,7 +127,13 @@ fun ConversionScreen(
                     label = { Text("搜索格式或功能") },
                     singleLine = true,
                     leadingIcon = { Icon(Icons.Default.Search, null) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().testTag("conversion-search"),
+                    trailingIcon = {
+                        if (query.isNotEmpty())
+                            IconButton(onClick = { query = "" }) {
+                                Icon(Icons.Default.Close, "清空搜索")
+                            }
+                    },
                 )
             }
             item {
@@ -157,7 +141,7 @@ fun ConversionScreen(
                     Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    listOf("全部", "手机引擎", "手机表格", "电子书", "生成 PDF", "图片", "文字", "整理", "电脑引擎")
+                    listOf("全部", "常用", "手机引擎", "手机表格", "电子书", "生成 PDF", "图片", "文字", "整理", "电脑引擎")
                         .forEach { name ->
                             FilterChip(group == name, { group = name }, label = { Text(name) })
                         }
@@ -199,42 +183,35 @@ fun ConversionScreen(
                     }
                 }
             val matches =
-                conversions.filter {
-                    ((group == "全部" && it.group != "电脑引擎") || it.group == group) &&
-                        (it.title.contains(query, true) ||
-                            it.detail.contains(query, true) ||
-                            it.mode.contains(query, true))
+                ToolCatalog.conversions.filter {
+                    ((group == "全部" && it.group != "电脑引擎") ||
+                        it.group == group ||
+                        (group == "常用" && it.id in pinned)) && it.matches(query)
                 }
-            if (matches.isEmpty()) item { Text("没有匹配的转换方式", Modifier.padding(24.dp)) }
+            if (matches.isEmpty())
+                item {
+                    Text(
+                        if (group == "常用") "点击工具旁的星标，固定常用转换。" else "没有匹配的转换方式",
+                        Modifier.padding(24.dp),
+                    )
+                }
             items(matches, key = { it.mode }) { entry ->
                 OutlinedCard(
-                    onClick = {
-                        when (entry.mode) {
-                            "md-html",
-                            "epub-html" -> onMarkup("HTML", org.json.JSONObject())
-                            "html-md",
-                            "epub-md" -> onMarkup("MD", org.json.JSONObject())
-                            "epub-txt" -> onMarkup("TXT", org.json.JSONObject())
-                            "epub-create" -> options = entry.mode
-                            "text-pdf",
-                            "image-format",
-                            "office-options",
-                            "images-long" -> options = entry.mode
-                            "desktop-import" -> onResult()
-                            "image-pdf" -> onImages()
-                            "merge" -> onMerge()
-                            else ->
-                                if (entry.group in setOf("电脑引擎", "手机引擎", "手机表格"))
-                                    desktopJob = entry.mode
-                                else onPdf(entry.mode)
-                        }
-                    },
+                    onClick = { launch(entry) },
                     enabled = !busy,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     ListItem(
                         headlineContent = { Text(entry.title) },
                         supportingContent = { Text(entry.detail) },
+                        trailingContent = {
+                            Column {
+                                ToolPinButton(entry.id, entry.title, entry.id in pinned)
+                                IconButton(onClick = { capability = entry }) {
+                                    Icon(Icons.Default.Info, "${entry.title}的能力说明")
+                                }
+                            }
+                        },
                         leadingContent = {
                             Icon(
                                 if (entry.group == "图片") Icons.Default.Image

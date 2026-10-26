@@ -395,7 +395,7 @@
       ],
       "scope": "分类、别名、收藏/常用动作，现有入口保留",
       "acceptance": "搜索Word/OCR/图片均命中实际工具",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "UI04",
@@ -610,7 +610,7 @@
       "dependencies": [],
       "scope": "输入目标模式引擎能力、参数与输出说明",
       "acceptance": "未支持路线不出现可执行假按钮",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "CVT02",
@@ -1252,9 +1252,9 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 57,
-    "planned": 21,
-    "partial": 20
+    "done": 61,
+    "planned": 19,
+    "partial": 18
   },
   "updated": "2026-10-26"
 }

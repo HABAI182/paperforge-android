@@ -53,6 +53,7 @@ object UserSettings {
             "edgeTurn" to true,
             "recentCount" to 6f,
             "homeTools" to "images,pdf,ocr,merge,compress,tools",
+            "pinnedTools" to "",
         )
     lateinit var prefs: SharedPreferences
         private set
@@ -93,6 +94,14 @@ object UserSettings {
     fun set(key: String, value: Float) {
         prefs.edit().putFloat(key, value).apply()
         changed()
+    }
+
+    fun pinnedTools() = string("pinnedTools", "").split(',').filter { it.isNotBlank() }.toSet()
+
+    fun toggleTool(id: String) {
+        val pins = pinnedTools().toMutableSet()
+        if (!pins.remove(id)) pins.add(id)
+        set("pinnedTools", pins.joinToString(","))
     }
 
     fun reset() {
@@ -189,6 +198,15 @@ object UserSettings {
                     value is String &&
                     (value.isEmpty() || value.matches(Regex("[a-z0-9-]{1,64}"))) ->
                     result.put(key, value)
+                key == "pinnedTools" && value is String ->
+                    result.put(
+                        key,
+                        value
+                            .split(',')
+                            .filter { it.matches(Regex("[a-z0-9:-]+")) }
+                            .distinct()
+                            .joinToString(","),
+                    )
                 key == "homeTools" && value is String ->
                     result.put(
                         key,

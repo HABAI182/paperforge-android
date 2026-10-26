@@ -53,7 +53,7 @@ object DocumentJobs {
  "TABLE_ANALYZE" -> "识别表格"
  "TABLE_EXPORT" -> "导出表格"
  "TABLE_REVIEW" -> "表格草稿"
-                            "MARKUP" -> "Markdown / HTML 转换"
+                            "MARKUP" -> if (JSONObject(input.getString("options") ?: "{}").optString("target") == "EPUB") "生成 EPUB 电子书" else "文档结构转换"
  else -> "图片转换" }}"
             else -> "$source · ${modeName(input.getString("mode"))}"
         }
