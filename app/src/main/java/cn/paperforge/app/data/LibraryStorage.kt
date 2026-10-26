@@ -22,7 +22,12 @@ data class StorageReport(val buckets: List<StorageBucket>, val protectedPaths: S
 
 /** Only explicitly regenerable folders can be cleaned, with live/history references excluded. */
 class LibraryStorage(private val repo: Repository) {
-    private val caches = linkedMapOf("document-covers" to "文档缩略图", "reader-text" to "阅读补识别缓存")
+    private val caches =
+        linkedMapOf(
+            "document-covers" to "文档缩略图",
+            "reader-text" to "阅读补识别缓存",
+            "markup-resources" to "文档转换预览资源",
+        )
 
     suspend fun report(): StorageReport =
         withContext(Dispatchers.IO) {

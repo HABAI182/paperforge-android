@@ -553,6 +553,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                             org.json
                                 .JSONObject(row.payload)
                                 .getJSONObject("input")
+                                .optString("kind") == "MARKUP"
+                    ) {
+                        openMarkupResult(row)
+                    } else if (
+                        row.type == "CONVERT" &&
+                            org.json
+                                .JSONObject(row.payload)
+                                .getJSONObject("input")
                                 .optString("kind") == "TABLE_ANALYZE"
                     ) {
                         tableWorkspace.result(row)
@@ -938,6 +946,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                                                 ?: error("表格记录已移除")
                                         withContext(Dispatchers.IO) { tableWorkspace.result(row) }
                                     }
+                                    "MARKUP" -> {
+                                        val row =
+                                            repo.dao.task(info.outputData.getString("taskId") ?: "")
+                                                ?: error("转换记录已移除")
+                                        openMarkupResult(row)
+                                    }
                                     "SAVE" -> messages.send("文件已保存并核对")
                                     else -> {
                                         val target = info.outputData.getLong("targetBytes", 0)
@@ -1222,6 +1236,81 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
 
     val textConversion = MutableStateFlow<TextConversionDraft?>(null)
+    val markupReview = MutableStateFlow<MarkupReview?>(null)
+
+    private fun openMarkupResult(row: LocalTaskRow) {
+        val input = org.json.JSONObject(row.payload).getJSONObject("input")
+        markupReview.value =
+            MarkupReview(
+                input.getJSONArray("inputs").getString(0),
+                row.resourceEntries().first { it.id == "result" }.path,
+                input.optString("name", "文档"),
+            )
+        screen.value = "markup-review"
+    }
+
+    fun showMarkupOutput() {
+        markupReview.value?.let {
+            outputNotice.value = null
+            outputLocked.value = false
+            outputSource.value = null
+            output.value = File(it.result)
+        }
+    }
+
+    fun convertMarkup(uri: Uri, target: String) {
+        if (!busy.compareAndSet(false, true)) return
+        progress.value = "保留文档原件"
+        task =
+            viewModelScope.launch {
+                var queued: UUID? = null
+                try {
+                    queued =
+                        withContext(Dispatchers.IO) {
+                            val retained = ConversionInputs.retain(repo, listOf(uri)).single()
+                            DocumentJobs.enqueue(
+                                repo,
+                                "CONVERT",
+                                JobInput(
+                                    org.json
+                                        .JSONObject()
+                                        .put("kind", "MARKUP")
+                                        .put("name", retained.second)
+                                        .put(
+                                            "inputs",
+                                            org.json.JSONArray(listOf(retained.first.path)),
+                                        )
+                                        .put("names", org.json.JSONArray(listOf(retained.second)))
+                                        .put(
+                                            "options",
+                                            org.json
+                                                .JSONObject()
+                                                .put("target", target)
+                                                .put(
+                                                    "print",
+                                                    TextPdfOptions(
+                                                            paper =
+                                                                UserSettings.string("paper", "A4")
+                                                        )
+                                                        .json(),
+                                                )
+                                                .toString(),
+                                        )
+                                ),
+                            )
+                        }
+                } catch (cancel: CancellationException) {
+                    throw cancel
+                } catch (error: Exception) {
+                    messages.send(error.message ?: "文档未能开始转换")
+                } finally {
+                    busy.value = false
+                    progress.value = ""
+                }
+                queued?.let(::watchExport)
+            }
+    }
+
     private var textConversionSave: Job? = null
     private val textConversionLock = kotlinx.coroutines.sync.Mutex()
 

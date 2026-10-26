@@ -31,8 +31,11 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                         workDataOf(
                             "path" to job.result!!.path,
                             "mode" to
-                                if (job.input.getString("kind") == "TABLE_ANALYZE") "TABLE_REVIEW"
-                                else "CONVERT",
+                                when (job.input.getString("kind")) {
+                                    "TABLE_ANALYZE" -> "TABLE_REVIEW"
+                                    "MARKUP" -> "MARKUP"
+                                    else -> "CONVERT"
+                                },
                             "taskId" to job.row.id,
                         )
                     )
@@ -48,6 +51,20 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                 var completed = 0
                 val file: File
                 when (job.input.getString("kind")) {
+                    "MARKUP" -> {
+                        file = File(repo.exports, "PaperForge-markup-${job.row.workId}.zip")
+                        output = file
+                        DocumentJobs.progress(repo, job, 10, "正在转换文档结构与资源")
+                        MarkupDocuments.convert(
+                            applicationContext,
+                            inputs.single(),
+                            title,
+                            file,
+                            options.optString("target", "HTML"),
+                            TextPdfOptions.decode(options.optJSONObject("print") ?: JSONObject()),
+                        )
+                        completed = 1
+                    }
                     "TABLE_ANALYZE" -> {
                         file =
                             TableJobs.analyze(
@@ -285,8 +302,11 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                     workDataOf(
                         "path" to file.path,
                         "mode" to
-                            if (job.input.getString("kind") == "TABLE_ANALYZE") "TABLE_REVIEW"
-                            else "CONVERT",
+                            when (job.input.getString("kind")) {
+                                "TABLE_ANALYZE" -> "TABLE_REVIEW"
+                                "MARKUP" -> "MARKUP"
+                                else -> "CONVERT"
+                            },
                         "taskId" to job.row.id,
                         "partial" to (failed > 0),
                         "completed" to completed,

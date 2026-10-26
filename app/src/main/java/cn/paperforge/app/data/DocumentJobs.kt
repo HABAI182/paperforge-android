@@ -53,6 +53,7 @@ object DocumentJobs {
  "TABLE_ANALYZE" -> "识别表格"
  "TABLE_EXPORT" -> "导出表格"
  "TABLE_REVIEW" -> "表格草稿"
+                            "MARKUP" -> "Markdown / HTML 转换"
  else -> "图片转换" }}"
             else -> "$source · ${modeName(input.getString("mode"))}"
         }

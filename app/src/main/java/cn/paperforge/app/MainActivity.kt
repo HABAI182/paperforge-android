@@ -196,6 +196,13 @@ class MainActivity : ComponentActivity() {
                     }
                 var conversionFont by
                     androidx.compose.runtime.saveable.rememberSaveable { mutableFloatStateOf(12f) }
+                var markupTarget by
+                    androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("HTML") }
+                val markupImport =
+                    rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri
+                        ->
+                        uri?.let { vm.convertMarkup(it, markupTarget) }
+                    }
                 var conversionImageOptions by
                     androidx.compose.runtime.saveable.rememberSaveable {
                         mutableStateOf(
@@ -398,7 +405,7 @@ class MainActivity : ComponentActivity() {
                         when {
                             screen in listOf("annotations", "pdf-pages", "pdf-diagnostics") ->
                                 "reader"
-                            screen == "text-compose" -> "convert"
+                            screen == "text-compose" || screen == "markup-review" -> "convert"
                             screen == "ocr-models" -> vm.ocrModelsReturn.value
                             screen == "storage" -> "settings"
                             screen == "profiles" -> vm.profileReturn.value
@@ -443,6 +450,17 @@ class MainActivity : ComponentActivity() {
                                         )
                                     )
                                 },
+                                onMarkup = { target ->
+                                    markupTarget = target
+                                    markupImport.launch(
+                                        arrayOf(
+                                            "text/*",
+                                            "application/zip",
+                                            "application/xhtml+xml",
+                                            "application/octet-stream",
+                                        )
+                                    )
+                                },
                                 onLongImages = { options ->
                                     longOptionsJson = options.json().toString()
                                     longImport.launch(arrayOf("image/*"))
@@ -478,6 +496,7 @@ class MainActivity : ComponentActivity() {
                                 },
                             )
                         "settings" -> SettingsScreen(vm)
+                        "markup-review" -> MarkupReviewScreen(vm)
                         "ocr-models" -> OcrModelsScreen(vm)
                         "storage" -> StorageScreen(vm)
                         "tasks" -> TaskCenterScreen(vm)

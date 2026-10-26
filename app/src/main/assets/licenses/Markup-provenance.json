@@ -1,0 +1,42 @@
+{
+  "commonmark": "0.30.0",
+  "jsoup": "1.23.2",
+  "licenses": [
+    {
+      "url": "https://raw.githubusercontent.com/commonmark/commonmark-java/commonmark-parent-0.30.0/LICENSE.txt",
+      "file": "CommonMark-LICENSE.txt",
+      "sha256": "db0ca9fbe898f07ba8a637e6f7b53ce7f8669c67673a8edcf30562e62935e8bb"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/jhy/jsoup/jsoup-1.23.2/LICENSE",
+      "file": "jsoup-LICENSE.txt",
+      "sha256": "f5d724c5818010c61bff2e177f5b6452434bc054807522bf241940bca8b1d6b1"
+    }
+  ],
+  "desugar": {
+    "version": "2.1.5",
+    "licenseSourceCommit": "092407c51c3eaaaa9e46f7b7e436dc642f614064",
+    "licenseNote": "Official Maven POM declares GPL2 with Classpath Exception; full corresponding license texts are fetched from the official repository at this pinned license-source commit, not represented as the artifact build commit.",
+    "sources": [
+      {
+        "url": "https://raw.githubusercontent.com/google/desugar_jdk_libs/092407c51c3eaaaa9e46f7b7e436dc642f614064/LICENSE",
+        "file": "DesugarJdk-LICENSE.txt",
+        "sha256": "4b9abebc4338048a7c2dc184e9f800deb349366bdf28eb23c2677a77b4c87726"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/google/desugar_jdk_libs/092407c51c3eaaaa9e46f7b7e436dc642f614064/ADDITIONAL_LICENSE_INFO",
+        "file": "DesugarJdk-ADDITIONAL_LICENSE_INFO.txt",
+        "sha256": "a69bce275ba7a3570af6579cb0f55682cd75fedfcd49e0e8e9022270c447c916"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/google/desugar_jdk_libs/092407c51c3eaaaa9e46f7b7e436dc642f614064/ASSEMBLY_EXCEPTION",
+        "file": "DesugarJdk-ASSEMBLY_EXCEPTION.txt",
+        "sha256": "a44eb7b5caf5534c6ef536b21edb40b4d6babf91bf97d9d45596868618b2c6fb"
+      },
+      {
+        "artifact": "com.android.tools:desugar_jdk_libs_nio:2.1.5",
+        "sha256": "d8044befae095781b9a80bf1faa92edc30382d75d437476784c1bf991598a976"
+      }
+    ]
+  }
+}

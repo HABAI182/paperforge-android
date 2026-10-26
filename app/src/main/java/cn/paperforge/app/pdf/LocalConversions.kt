@@ -25,7 +25,12 @@ import org.xmlpull.v1.XmlPullParser
 
 /** Offline, explicit conversion paths. Office input is a paragraph import, not a layout engine. */
 object LocalConversions {
-    fun readText(context: Context, uri: Uri, name: String): String {
+    fun readText(
+        context: Context,
+        uri: Uri,
+        name: String,
+        preserveMarkup: Boolean = false,
+    ): String {
         if (name.endsWith(".docx", true)) return docxText(context, uri)
         val bytes =
             context.contentResolver.openInputStream(uri)!!.use { stream ->
@@ -54,7 +59,7 @@ object LocalConversions {
                         }
                         .getOrElse { String(bytes, charset("GB18030")) }
             }.removePrefix("\uFEFF")
-        return if (name.endsWith(".html", true) || name.endsWith(".htm", true))
+        return if (!preserveMarkup && (name.endsWith(".html", true) || name.endsWith(".htm", true)))
             Html.fromHtml(decoded, Html.FROM_HTML_MODE_LEGACY).toString()
         else decoded
     }

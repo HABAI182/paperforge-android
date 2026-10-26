@@ -189,7 +189,7 @@
       "id": "UI03",
       "title": "工具搜索与固定项",
       "status": "partial",
-      "note": "工具搜索、独立转换中心、已有可配快捷项；收藏/别名注册表仍可扩展"
+      "note": "工具搜索、独立转换中心、已有可配快捷项；收藏/别名注册表仍可扩展；转换中心搜索置顶，草稿折叠，搜索时隐藏草稿摘要，避免常用入口被挤出首屏"
     },
     {
       "id": "UI04",
@@ -327,13 +327,13 @@
       "id": "CVT07",
       "title": "转换预览与保真模式",
       "status": "partial",
-      "note": "Office实际排版/结构Word/整页PPTX模式及表格校正；并排保真预览仍待补"
+      "note": "Office实际排版/结构Word/整页PPTX模式及表格校正；并排保真预览仍待补；Markdown/HTML已提供实际原件/转换结果标签预览和源码，Office并排仍待补"
     },
     {
       "id": "CVT08",
       "title": "Markdown和HTML双向基础",
-      "status": "planned",
-      "note": "完整目标保留，未在本版标记完成"
+      "status": "done",
+      "note": "CommonMark/Jsoup静态结构双向转换，标题/列表/链接/图片/代码/脚注和基本表格；合并表格与样式容器保留HTML并说明。ZIP保留相对资源路径/字节、来源SHA和报告，原件/实际输出预览与源码、系统打印另存PDF。实际WorkManager往返、UTF16/实体/字面量/管道符检查、真实系统保存及独立PDF图文链接复读通过。脚本绘制需先静态导出，非通用动态网页引擎。"
     },
     {
       "id": "CVT09",
@@ -595,8 +595,8 @@
     }
   ],
   "counts": {
-    "done": 57,
-    "planned": 21,
+    "done": 58,
+    "planned": 20,
     "partial": 20
   },
   "releaseHold": true,

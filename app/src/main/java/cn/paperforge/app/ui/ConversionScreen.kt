@@ -44,6 +44,8 @@ private val conversions =
         Conversion("PDF / 图片 → Excel 表格", "有线 / 无线表、合并单元格、离线 OCR，导出 XLSX", "手机表格", "tables-xlsx"),
         Conversion("PDF / 图片 → CSV 表格包", "每张表独立 CSV，附结构与来源信息", "手机表格", "tables-csv"),
         Conversion("PDF → PowerPoint · 整页外观", "手机本地生成，一页一张图片幻灯片", "文字", "pdf-pptx"),
+        Conversion("Markdown → HTML 资源包", "标题、列表、链接、表格、脚注与图片；附打印样式", "文字", "md-html"),
+        Conversion("HTML → Markdown 资源包", "有限语法转换；合并表格和复杂样式保留 HTML", "文字", "html-md"),
         Conversion("文字 / DOCX → PDF", "TXT、Markdown、HTML、DOCX 正文，中文分页排版", "生成 PDF", "text-pdf"),
         Conversion("图片 → PDF", "多图排序、裁边、滤镜和纸张尺寸", "生成 PDF", "image-pdf"),
         Conversion("图片格式互转", "JPG、PNG、WebP；支持批量打包", "图片", "image-format"),
@@ -72,6 +74,7 @@ fun ConversionScreen(
     onImages: () -> Unit,
     onMerge: () -> Unit,
     onText: (Float) -> Unit,
+    onMarkup: (String) -> Unit,
     onImageFormat: (ImageConversionOptions) -> Unit,
     onLongImages: (LongImageOptions) -> Unit,
     onDesktop: (String, org.json.JSONObject) -> Unit,
@@ -126,41 +129,6 @@ fun ConversionScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
-                Text("格式转换", style = MaterialTheme.typography.titleLarge)
-                Text(
-                    "选择转换方式，再选择文件。全程本机处理。",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 6.dp),
-                )
-            }
-            if (drafts.isNotEmpty())
-                item {
-                    Card(Modifier.fillMaxWidth()) {
-                        Column(Modifier.padding(14.dp)) {
-                            Text("继续编辑转换草稿", style = MaterialTheme.typography.titleMedium)
-                            drafts.take(3).forEach { row ->
-                                TextButton(onClick = { vm.openTask(row) }, enabled = !busy) {
-                                    Text(
-                                        org.json
-                                            .JSONObject(row.payload)
-                                            .getJSONObject("input")
-                                            .optString("name", row.title)
-                                    )
-                                }
-                            }
-                            if (drafts.size > 3)
-                                TextButton(
-                                    onClick = {
-                                        vm.taskFilter.value = "ATTENTION"
-                                        vm.screen.value = "tasks"
-                                    }
-                                ) {
-                                    Text("查看其他待处理任务")
-                                }
-                        }
-                    }
-                }
-            item {
                 OutlinedTextField(
                     query,
                     { query = it },
@@ -181,6 +149,41 @@ fun ConversionScreen(
                     }
                 }
             }
+            if (drafts.isNotEmpty() && query.isBlank())
+                item {
+                    Card(Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(horizontal = 14.dp, vertical = 4.dp)) {
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    "${drafts.size} 份转换草稿",
+                                    style = MaterialTheme.typography.titleSmall,
+                                )
+                                TextButton(
+                                    onClick = {
+                                        vm.taskFilter.value = "ATTENTION"
+                                        vm.screen.value = "tasks"
+                                    }
+                                ) {
+                                    Text("全部待办")
+                                }
+                            }
+                            TextButton(onClick = { vm.openTask(drafts.first()) }, enabled = !busy) {
+                                Text(
+                                    org.json
+                                        .JSONObject(drafts.first().payload)
+                                        .getJSONObject("input")
+                                        .optString("name", drafts.first().title),
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                )
+                            }
+                        }
+                    }
+                }
             val matches =
                 conversions.filter {
                     ((group == "全部" && it.group != "电脑引擎") || it.group == group) &&
@@ -193,6 +196,8 @@ fun ConversionScreen(
                 OutlinedCard(
                     onClick = {
                         when (entry.mode) {
+                            "md-html" -> onMarkup("HTML")
+                            "html-md" -> onMarkup("MD")
                             "text-pdf",
                             "image-format",
                             "office-options",
@@ -225,7 +230,7 @@ fun ConversionScreen(
             }
             item {
                 Text(
-                    "DOCX 导入正文与表格文字；HTML 提取文字；Markdown 保留源码。快速文字入口会重新排版；Office 排版入口使用手机引擎保留页面内容与布局。",
+                    "快速正文入口会重新排版文字；Markdown / HTML 使用独立结构转换。Office 排版入口使用手机引擎。",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

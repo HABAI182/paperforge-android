@@ -39,6 +39,7 @@ android {
     }
     androidResources { noCompress += listOf("ort", "mnn") }
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -66,6 +67,13 @@ android {
 ksp { arg("room.schemaLocation", "$projectDir/schemas") }
 
 dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs_nio:2.1.5")
+    implementation("org.jsoup:jsoup:1.23.2")
+    implementation("org.commonmark:commonmark:0.30.0")
+    implementation("org.commonmark:commonmark-ext-gfm-tables:0.30.0")
+    implementation("org.commonmark:commonmark-ext-gfm-strikethrough:0.30.0")
+    implementation("org.commonmark:commonmark-ext-footnotes:0.30.0")
+    implementation("org.commonmark:commonmark-ext-heading-anchor:0.30.0")
     implementation(project(":ocr-paddle"))
     implementation(platform("androidx.compose:compose-bom:2025.05.01"))
     androidTestImplementation(platform("androidx.compose:compose-bom:2025.05.01"))

@@ -702,7 +702,7 @@
       ],
       "scope": "标题列表表格有限语法、资源包与打印CSS",
       "acceptance": "已声明语法正确，不支持项有回退",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "CVT09",

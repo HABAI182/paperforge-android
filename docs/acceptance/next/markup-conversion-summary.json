@@ -1,0 +1,83 @@
+{
+  "checked": "2026-10-26",
+  "cards": [
+    "CVT08"
+  ],
+  "engines": [
+    "CommonMark Java 0.30.0",
+    "Jsoup 1.23.2",
+    "Android WebView / public PrintManager"
+  ],
+  "implemented": [
+    "Persistent WorkManager MD↔HTML static conversions; original imports retained and immutable results recorded",
+    "ZIP keeps relative resource paths, original bytes, main/report ZIP metadata, source and asset SHA256",
+    "Headings, lists, emphasis/strike, links, images, fenced code, footnotes and basic GFM tables; merged/nested tables and styled containers retain raw HTML with declared fallbacks",
+    "UTF16/BOM decoding, literal entity/Markdown punctuation and table pipes retain actual rendered text",
+    "Actual source/result preview and selectable source code; local resources and pinch zoom; external links open on explicit tap",
+    "Print CSS and actual Android system Save as PDF; PDF filename explicit; compact conversion search and drafts summary"
+  ],
+  "focusedChecks": [
+    {
+      "test": "packagedMarkdownHtmlRoundTripKeepsActualStructureAndAssetBytes",
+      "seconds": 1.865,
+      "result": "passed after fixing /data/data and /data/user/0 canonical alias",
+      "coverage": [
+        "two real WorkManager jobs",
+        "main name collision",
+        "CJK headings/list/table IDs and decimals",
+        "footnotes/link/code/images",
+        "exact asset SHA and unchanged original"
+      ]
+    },
+    {
+      "test": "utf16HtmlKeepsMergedTableAndStaticFallbacks",
+      "seconds": 0.346,
+      "result": "passed",
+      "coverage": [
+        "UTF16LE BOM",
+        "merged table HTML fallback",
+        "script removal notice",
+        "literal 1. prefix and &copy; entity text",
+        "inline code and text table pipes"
+      ]
+    }
+  ],
+  "actualUI": [
+    "Search HTML in conversion center -> Android picker -> actual queue -> generated ZIP rendered result",
+    "Source tab/code select the original Markdown, even with a preexisting index.html asset",
+    "Preview shows CJK heading, formatted text, table 00123 / 00077.50, code, footnote and package image",
+    "Public PrintManager -> Save as PDF -> Downloads/PaperForge-markup-proof.pdf; original ZIP preserved"
+  ],
+  "independentReadback": {
+    "reader": "Python zipfile/HTMLParser + PyMuPDF",
+    "assets": "Every retained resource hash matches report in HTML and MD packages",
+    "pdf": {
+      "bytes": 78825,
+      "pages": 1,
+      "sizePoints": [
+        595,
+        841
+      ],
+      "text": [
+        "CJK heading",
+        "00123",
+        "00077.50",
+        "footnote"
+      ],
+      "images": 1,
+      "URI": "https://example.com/project"
+    }
+  },
+  "bugsFixed": [
+    "Canonical cache root fixes Android /data/data vs /data/user/0 extraction/main-selection alias",
+    "PDF print title no longer inherits .zip and cannot default-overwrite its input ZIP",
+    "Mature Markdown text renderer preserves literal ordered prefixes/entities; table pipeline escapes real separators"
+  ],
+  "limits": [
+    "Static HTML/CSS only; scripts and remote resources are not fetched",
+    "Complex merged tables and styles may use raw HTML inside Markdown rather than pretending pure GFM supports them",
+    "PDF generation uses actual interactive phone system printing; it is not silent background batch conversion and saved PDF is at the chosen external location",
+    "Controlled emulator fixtures; no physical ARM64 printing or arbitrary website layout acceptance",
+    "No tag or release created"
+  ]
+}

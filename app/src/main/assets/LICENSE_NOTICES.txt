@@ -64,3 +64,11 @@ cancellable native-stage scheduling adapted. Full license: licenses/PaddleOCR-LI
 Optional official PP-OCRv5 Mobile ONNX weights and recognition dictionary
 are imported as a separate package; source revisions and SHA256 checksums
 travel in its provenance.json/manifest.json. They are not base-APK assets.
+
+Static Markdown/HTML conversion uses CommonMark Java 0.30.0 (BSD-2-Clause)
+and jsoup 1.23.2 (MIT). Full license copies and version provenance are in
+assets/licenses/CommonMark-LICENSE.txt, jsoup-LICENSE.txt and Markup-provenance.json.
+Android core-library desugaring uses desugar_jdk_libs_nio 2.1.5, GPL-2.0 with
+Classpath Exception; full license, additional notices and assembly exception
+are included as DesugarJdk-* texts. Only local parsers are used; network
+permission remains removed from the application.
