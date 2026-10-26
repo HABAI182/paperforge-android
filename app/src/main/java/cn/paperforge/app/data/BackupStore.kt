@@ -451,6 +451,21 @@ object BackupStore {
                                                     plan.remap(sourceIds).json().toString()
                                                 )
                                             }
+                                        if (old.type == "CONVERT") {
+                                            val restored = JSONObject(payload)
+                                            val checkpoint = restored.optJSONObject("checkpoint")
+                                            checkpoint?.keys()?.asSequence()?.toList()?.forEach {
+                                                key ->
+                                                if (key.startsWith("recipe-step-"))
+                                                    checkpoint.optJSONObject(key)?.let { stage ->
+                                                        if (stage.has("destinationUri")) {
+                                                            stage.remove("destinationUri")
+                                                            stage.put("complete", false)
+                                                        }
+                                                    }
+                                            }
+                                            payload = restored.toString()
+                                        }
                                         if (old.type == "SAVE")
                                             payload =
                                                 JSONObject(payload)

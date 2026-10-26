@@ -164,7 +164,18 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                         }
                     "extract-images" -> PdfTools.extractImages(input, file)
                     "searchable" ->
-                        PdfSearchable.convert(applicationContext, input, file) { report(it) }
+                        PdfSearchable.convert(
+                            applicationContext,
+                            input,
+                            file,
+                            cn.paperforge.app.ocr.OcrRequest.decode(
+                                    data.json.optJSONObject("ocrRequest"),
+                                    (applicationContext as PaperForgeApp).ocrEngine.id,
+                                )
+                                .bind((applicationContext as PaperForgeApp).ocrEngine),
+                        ) {
+                            report(it)
+                        }
                     "docx-layout" ->
                         PhoneDocx.convert(
                             input,

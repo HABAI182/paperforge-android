@@ -57,6 +57,7 @@ object UserSettings {
             "exportFormat" to "PDF",
             "exportNaming" to "{title}",
             "exportDestination" to "",
+            "workflowRecipes" to "[]",
         )
     lateinit var prefs: SharedPreferences
         private set
@@ -203,6 +204,10 @@ object UserSettings {
                     (value.isEmpty() || value.matches(Regex("[a-z0-9-]{1,64}"))) ->
                     result.put(key, value)
                 key == "exportNaming" && value is String -> result.put(key, value)
+                key == "workflowRecipes" && value is String ->
+                    runCatching { org.json.JSONArray(value) }
+                        .getOrNull()
+                        ?.let { result.put(key, it.toString()) }
                 key == "exportDestination" &&
                     value is String &&
                     (value.isEmpty() || value.matches(Regex("[a-f0-9]{24}"))) ->

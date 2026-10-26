@@ -90,9 +90,18 @@ object ToolCatalog {
                 ToolCapability("合并 PDF", "选择多份 PDF，调整顺序后合并", "整理", "merge"),
                 ToolCapability("压缩 PDF", "优化嵌入图片并保留文字和链接", "整理", "compress"),
                 ToolCapability("PDF 差异比较", "原生文字与外观、并排同步查看、区域定位与报告", "整理", "pdf-diff"),
+                ToolCapability("工作流配方", "按顺序处理，保存步骤；调整目录复用 OCR 与排版", "整理", "workflows"),
             )
             .map { entry ->
                 when (entry.mode) {
+                    "workflows" ->
+                        entry.copy(
+                            input = "单份 PDF、Office、TXT 或图片；每步检查格式匹配",
+                            output = "PDF、TXT、DOCX 或 PNG 页包；可保存到授权目录",
+                            parameters = "步骤增删/排序、压缩质量、纸张、命名模板、目的地；内置和命名配方",
+                            boundary = "仅提供列出的本机处理路线；Office 排版需要可选手机引擎。已有任务可调整重跑，参数相同的已完成阶段会复用。",
+                            aliases = "workflow recipe 自动 流水线 OCR 压缩 归档 批处理",
+                        )
                     "pdf-diff" ->
                         entry.copy(
                             input = "两份 PDF；原生文字层可比较文字，扫描件可比较外观",

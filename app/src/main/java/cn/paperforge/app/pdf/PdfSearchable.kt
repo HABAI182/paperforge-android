@@ -16,6 +16,7 @@ object PdfSearchable {
         context: Context,
         input: File,
         output: File,
+        ocrEngine: cn.paperforge.app.ocr.OcrEngine? = null,
         progress: suspend (Int) -> Unit = {},
     ) {
         val temporary = File(output.path + ".part")
@@ -45,9 +46,10 @@ object PdfSearchable {
                                             PdfRenderer.Page.RENDER_MODE_FOR_PRINT,
                                         )
                                         val engine =
-                                            (context.applicationContext
-                                                    as cn.paperforge.app.PaperForgeApp)
-                                                .ocrEngine
+                                            ocrEngine
+                                                ?: (context.applicationContext
+                                                        as cn.paperforge.app.PaperForgeApp)
+                                                    .ocrEngine
                                         val layout =
                                             NativeTextCoverage.removeCovered(
                                                 engine.recognizeBitmap(

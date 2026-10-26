@@ -54,6 +54,7 @@ object DocumentJobs {
  "TABLE_EXPORT" -> "导出表格"
  "PDF_DIFF" -> "PDF 差异比较"
  "OFFICE" -> "手机 Office 转换"
+ "RECIPE" -> "工作流配方"
  "TABLE_REVIEW" -> "表格草稿"
                             "MARKUP" -> if (JSONObject(input.getString("options") ?: "{}").optString("target") == "EPUB") "生成 EPUB 电子书" else "文档结构转换"
  else -> "图片转换" }}"
@@ -104,7 +105,8 @@ object DocumentJobs {
                 type == "SCAN_EXPORT" && input.getBoolean("searchable", false) ||
                 type == "PDF" && input.getString("mode") == "searchable" ||
                 type == "CONVERT" &&
-                    (input.getString("kind") == "TABLE_ANALYZE" ||
+                    (input.getString("kind") == "RECIPE" ||
+                        input.getString("kind") == "TABLE_ANALYZE" ||
                         input.getString("kind") == "MARKUP" &&
                             JSONObject(input.getString("options") ?: "{}").optString("target") ==
                                 "EPUB")

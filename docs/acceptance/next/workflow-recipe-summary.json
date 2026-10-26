@@ -1,0 +1,105 @@
+{
+  "checked": "2026-10-26",
+  "cards": [
+    "JOB04"
+  ],
+  "implemented": [
+    "Typed ordered workflow editor with step add/remove/move, parameters and ten real processing operations",
+    "PDF / Office / TXT / image single inputs; invalid type chains block run with the failing step",
+    "OCR text layer, image compression, PDF text / structured DOCX / PNG, Office/text/image to PDF, template rename and authorized directory save",
+    "Built-in examples and named save/copy/delete, portable settings and workflow profile group; only logical destination IDs in definitions",
+    "Existing CONVERT WorkManager queue and heavy-pipeline budget; frozen OCR request, retained inputs and stage resources",
+    "Per-stage input SHA / operation options / OCR signature, reuse completed prefix, step-number errors and run report",
+    "Parameter-version directories preserve old published stage files; Office stages receive their own versioned output target",
+    "SAVE stage remembers its own target, existing byte/hash verification, permission reselection, retry without redoing OCR; restore strips destination URI and completion flag",
+    "Task-center adjust/continue, intermediate result viewing with reader return to workflow, last runs on editor",
+    "Existing searchable-PDF worker now binds frozen OCR request; external-save write loop is cancellable between chunks"
+  ],
+  "focusedChecks": [
+    {
+      "test": "RecipeFlowTest.saveRetargetReusesOcrCompressionAndNamingStages",
+      "seconds": 4.287,
+      "result": "passed",
+      "coverage": [
+        "Real scanned PDF gets OCR text containing 00123",
+        "OCR/compression/template stage completion retained after expected missing-directory failure",
+        "Changing directory parameter reuses the three prior stages with identical paths/mtimes/hashes",
+        "Settings JSON carries named recipe; source PDF unchanged"
+      ]
+    },
+    {
+      "test": "RecipeFlowTest.changedTemplateKeepsPreviouslyPublishedResult",
+      "seconds": 0.693,
+      "result": "passed",
+      "coverage": [
+        "Two actual WorkManager runs with changed template",
+        "Different version directories and one/two result names",
+        "Old and new PDFs remain registered with identical source bytes",
+        "Old published result still exists and retains its hash"
+      ]
+    }
+  ],
+  "actualUI": [
+    "Task center identifies failed step 4 and opens adjust/continue",
+    "Editor shows retained results for prior steps",
+    "Android Documents folder selection and persistent grant replaces missing target",
+    "Continue completes the real save; normal PDF result dialog appears",
+    "Save named recipe and reopen recipe library"
+  ],
+  "independentReadback": {
+    "report": {
+      "recipe": "配方续跑验收",
+      "steps": [
+        {
+          "id": "afb1a753-b33f-461a-8955-b179fffff582",
+          "operation": "searchable",
+          "status": "reused",
+          "bytes": 5833883
+        },
+        {
+          "id": "6db21875-025c-44ad-8be4-73f3a7cc9748",
+          "operation": "compress",
+          "status": "reused",
+          "bytes": 81195
+        },
+        {
+          "id": "f0be080c-0335-42c3-aa59-a503e48f6545",
+          "operation": "rename",
+          "status": "reused",
+          "bytes": 81195
+        },
+        {
+          "id": "bb2c458e-684a-40e1-8785-6d835d7c1a23",
+          "operation": "save",
+          "status": "completed",
+          "bytes": 81195,
+          "elapsedMs": 275
+        }
+      ]
+    },
+    "sourceSha256": "a850c99ef89ceef62b23aedea6d6ff765ca774f8a0c4f37f07c3a2b592d606ef",
+    "prefixStageHashesUnchanged": true,
+    "savedFile": "扫描配方验收_1.pdf",
+    "bytes": 81195,
+    "sha256": "cedce8bd2dedc20b7bd926919f912a9ccabdb105367baf13125cd76a30f7b16b",
+    "folderCopyMatches": true,
+    "pages": 1,
+    "nativeText": "PaperForge·⻚眉Header\n纸匠Office 排版验收\n中文、English、编号00123;保留段落、图片、分⻚与台并单元格。\nPaperForge\n台并表头\n編号\n|地区\n00123\n华东\n00456\n华北\n合计\n离线转换/ Footer\n金额\n金额\n120.50\n80.00\n200.50\n"
+  },
+  "immutabilityProof": {
+    "task": "7eef89c6-7979-4cb5-9a0d-d23097f00de9",
+    "old": "/data/user/0/cn.paperforge.app/files/job-items/7eef89c6-7979-4cb5-9a0d-d23097f00de9/recipe/142bdade-2eb1-430a-8990-5511d82ccd6c/a90f3ae5adcd04504237be75/版本保留_one.pdf",
+    "new": "/data/user/0/cn.paperforge.app/files/job-items/7eef89c6-7979-4cb5-9a0d-d23097f00de9/recipe/142bdade-2eb1-430a-8990-5511d82ccd6c/c4d6d52fb65b72bc9cfa516e/版本保留_two.pdf",
+    "sha256": "5ba4f1f734babbe54f7098d0d3f4fadea05634af7a90bb7d8454698dc29bb075",
+    "oldResultRetained": true
+  },
+  "limits": [
+    "Controlled emulator and one scanned fixture; not a general OCR quality benchmark",
+    "Other workflow primitives reuse their existing engines; this group does not rerun every old conversion suite",
+    "Input is one file per run; internal OCR/native Office pass restarts if interrupted before stage completion",
+    "Only declared ten operations are exposed; no arbitrary shell or script step",
+    "Recipe definitions and resource mapping implemented for backup; no new backup/process-kill/permission-revocation matrix",
+    "Automatic tag/folder-triggered execution remains JOB05",
+    "No release/tag/version change; all-plan completion not claimed"
+  ]
+}

@@ -129,9 +129,11 @@ class SettingsProfiles(context: Context) {
                 "ocr" to "识别语言",
                 "appearance" to "外观",
                 "home" to "首页与工具",
+                "workflows" to "工作流配方",
             )
         private val groupKeys =
             mapOf(
+                "workflows" to setOf("workflowRecipes"),
                 "scan" to
                     setOf(
                         "detector",

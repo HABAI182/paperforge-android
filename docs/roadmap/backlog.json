@@ -1097,7 +1097,7 @@
       ],
       "scope": "有序步骤、类型匹配、失败定位与复制预设",
       "acceptance": "修改保存目录不重跑昂贵OCR",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "JOB05",
@@ -1252,8 +1252,8 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 63,
-    "planned": 17,
+    "done": 64,
+    "planned": 16,
     "partial": 18
   },
   "updated": "2026-10-26"

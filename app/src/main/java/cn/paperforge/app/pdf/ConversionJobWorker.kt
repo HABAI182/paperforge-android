@@ -52,6 +52,15 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                 var completed = 0
                 val file: File
                 when (job.input.getString("kind")) {
+                    "RECIPE" -> {
+                        file =
+                            RecipeJobs.run(repo, job) { percent, detail ->
+                                DocumentJobs.progress(repo, job, percent, detail)
+                                setProgress(workDataOf("progress" to percent))
+                            }
+                        // Stage resources belong to this durable task even if publication stops.
+                        completed = 1
+                    }
                     "OFFICE" -> {
                         file =
                             OfficeJobs.convert(repo, job) { percent, detail ->

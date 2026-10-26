@@ -145,6 +145,17 @@ fun TaskCenterScreen(vm: MainViewModel) {
                                         style = MaterialTheme.typography.bodySmall,
                                     )
                                 }
+                                if (
+                                    !active &&
+                                        row.type == "CONVERT" &&
+                                        org.json
+                                            .JSONObject(row.payload)
+                                            .optJSONObject("input")
+                                            ?.optString("kind") == "RECIPE"
+                                )
+                                    TextButton(onClick = { vm.editWorkflowRun(row) }) {
+                                        Text("调整配方并继续")
+                                    }
                                 if (row.state == LocalTaskState.RUNNING)
                                     LinearProgressIndicator(
                                         progress = { row.progress / 100f },

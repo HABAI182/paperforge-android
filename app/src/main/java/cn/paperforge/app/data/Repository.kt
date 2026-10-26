@@ -614,7 +614,13 @@ class Repository(val context: Context, val database: PaperDatabase) {
             val expected = java.security.MessageDigest.getInstance("SHA-256")
             context.contentResolver.openOutputStream(uri, "wt")?.use { output ->
                 java.security.DigestInputStream(file.inputStream(), expected).use {
-                    it.copyTo(output)
+                    val buffer = ByteArray(64 * 1024)
+                    while (true) {
+                        coroutineContext.ensureActive()
+                        val count = it.read(buffer)
+                        if (count < 0) break
+                        output.write(buffer, 0, count)
+                    }
                 }
                 output.flush()
             } ?: error("无法写入所选位置")

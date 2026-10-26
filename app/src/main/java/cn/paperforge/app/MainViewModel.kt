@@ -1350,6 +1350,139 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
 
     val textConversion = MutableStateFlow<TextConversionDraft?>(null)
+    val workflowDraft = MutableStateFlow(cn.paperforge.app.model.WorkflowRecipe())
+    val workflowRun = MutableStateFlow<String?>(null)
+    val workflowDirectoryStep = MutableStateFlow<String?>(null)
+
+    fun showWorkflowStage(file: File) = perform("打开步骤结果") { publishOutput(file) }
+
+    fun editWorkflowRun(row: LocalTaskRow) =
+        perform("载入配方与已完成步骤") {
+            workflowDraft.value =
+                cn.paperforge.app.model.WorkflowRecipe.decode(
+                    org.json
+                        .JSONObject(
+                            org.json
+                                .JSONObject(row.payload)
+                                .getJSONObject("input")
+                                .getString("options")
+                        )
+                        .getJSONObject("recipe")
+                )
+            workflowRun.value = row.id
+            screen.value = "workflows"
+        }
+
+    fun rememberWorkflowDirectory(uri: Uri) =
+        perform("记住工作流保存目录") {
+            val destination = ExportDestinations(repo.context).remember(uri)
+            val id = workflowDirectoryStep.value
+            val current = workflowDraft.value
+            workflowDraft.value =
+                current.copy(
+                    steps =
+                        current.steps.map {
+                            if (it.id != id) it
+                            else
+                                it.copy(
+                                    options =
+                                        org.json
+                                            .JSONObject(it.options.toString())
+                                            .put("destination", destination.id)
+                                )
+                        }
+                )
+            workflowDirectoryStep.value = null
+        }
+
+    fun runWorkflow(uri: Uri? = null) {
+        val recipe = cn.paperforge.app.model.WorkflowRecipe.decode(workflowDraft.value.json())
+        recipe.issue()?.let { issue ->
+            messages.trySend(issue)
+            return
+        }
+        if (!busy.compareAndSet(false, true)) return
+        progress.value = "准备工作流"
+        task =
+            viewModelScope.launch {
+                var queued: UUID? = null
+                try {
+                    queued =
+                        withContext(Dispatchers.IO) {
+                            val previous = workflowRun.value?.let { repo.dao.task(it) }
+                            if (previous == null) {
+                                val retained =
+                                    ConversionInputs.retain(
+                                            repo,
+                                            listOf(requireNotNull(uri) { "请选择输入文件" }),
+                                        )
+                                        .single()
+                                val name =
+                                    uri?.path?.let { repo.dao.documentByPath(it)?.title }
+                                        ?: retained.second
+                                DocumentJobs.enqueue(
+                                        repo,
+                                        "CONVERT",
+                                        JobInput(
+                                            org.json
+                                                .JSONObject()
+                                                .put("kind", "RECIPE")
+                                                .put("name", name)
+                                                .put(
+                                                    "inputs",
+                                                    org.json.JSONArray(listOf(retained.first.path)),
+                                                )
+                                                .put("names", org.json.JSONArray(listOf(name)))
+                                                .put(
+                                                    "options",
+                                                    org.json
+                                                        .JSONObject()
+                                                        .put("recipe", recipe.json())
+                                                        .toString(),
+                                                )
+                                        ),
+                                    )
+                                    .also { work ->
+                                        workflowRun.value =
+                                            repo.dao
+                                                .allTasks()
+                                                .first { it.workId == work.toString() }
+                                                .id
+                                    }
+                            } else {
+                                val updated =
+                                    repo.database.withTransaction {
+                                        val latest = checkNotNull(repo.dao.task(previous.id))
+                                        require(latest.state !in LocalTaskRow.active) { "此配方正在运行" }
+                                        val payload = org.json.JSONObject(latest.payload)
+                                        payload
+                                            .getJSONObject("input")
+                                            .put(
+                                                "options",
+                                                org.json
+                                                    .JSONObject()
+                                                    .put("recipe", recipe.json())
+                                                    .toString(),
+                                            )
+                                        latest.copy(payload = payload.toString()).also {
+                                            repo.dao.putTask(it)
+                                        }
+                                    }
+                                DocumentJobs.retry(repo, updated)
+                            }
+                        }
+                } catch (cancel: CancellationException) {
+                    throw cancel
+                } catch (error: Exception) {
+                    messages.send(error.message ?: "工作流未能开始")
+                } finally {
+                    busy.value = false
+                    progress.value = ""
+                }
+                queued?.let(::watchExport)
+            }
+    }
+
     val pdfDiffReview = MutableStateFlow<PdfDiffReview?>(null)
     val pdfDiffPosition = MutableStateFlow<Pair<Int, String?>>(0 to null)
     val pdfDiffOptions = MutableStateFlow(PdfDiffOptions())
@@ -1866,7 +1999,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun previewOutput(file: File) =
         perform("正在打开 PDF") {
-            outputReturn.value = screen.value.takeIf { it == "assembly" }
+            outputReturn.value = screen.value.takeIf { it == "assembly" || it == "workflows" }
             val doc = repo.registerPdf(file, file.nameWithoutExtension)
             selected.value = doc
             output.value = null

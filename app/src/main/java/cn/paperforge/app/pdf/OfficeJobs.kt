@@ -13,6 +13,7 @@ object OfficeJobs {
     suspend fun convert(
         repo: Repository,
         job: JobHandle,
+        destination: File? = null,
         progress: suspend (Int, String) -> Unit,
     ): File {
         val source = File(job.input.getStringArray("inputs")!!.single())
@@ -23,16 +24,22 @@ object OfficeJobs {
         }
         val directory = File(repo.exports, job.row.id).apply { mkdirs() }
         val file =
-            File(
-                directory,
-                safeFileName((job.input.getString("name") ?: "Office").substringBeforeLast('.')) +
-                    ".$format",
-            )
+            destination
+                ?: File(
+                    directory,
+                    safeFileName(
+                        (job.input.getString("name") ?: "Office").substringBeforeLast('.')
+                    ) + ".$format",
+                )
+        file.parentFile?.mkdirs()
+        val checkpointKey =
+            if (destination == null) "office-output"
+            else "office-output-${destination.parentFile!!.name}"
         val signature = "office-rpc1|${PdfAssembly.sha256(source)}|$format"
         val cached =
             JSONObject(checkNotNull(repo.dao.task(job.row.id)).payload)
                 .getJSONObject("checkpoint")
-                .optJSONObject("office-output")
+                .optJSONObject(checkpointKey)
         val ready =
             cached
                 ?.takeIf { it.optString("signature") == signature }
@@ -88,7 +95,7 @@ object OfficeJobs {
         DocumentJobs.checkpointFile(
             repo,
             job,
-            "office-output",
+            checkpointKey,
             file,
             JSONObject().put("signature", signature).put("protocol", 1),
         )
