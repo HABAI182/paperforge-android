@@ -58,6 +58,7 @@ object UserSettings {
             "exportNaming" to "{title}",
             "exportDestination" to "",
             "workflowRecipes" to "[]",
+            "autoExportRules" to "[]",
         )
     lateinit var prefs: SharedPreferences
         private set
@@ -204,7 +205,7 @@ object UserSettings {
                     (value.isEmpty() || value.matches(Regex("[a-z0-9-]{1,64}"))) ->
                     result.put(key, value)
                 key == "exportNaming" && value is String -> result.put(key, value)
-                key == "workflowRecipes" && value is String ->
+                key in setOf("workflowRecipes", "autoExportRules") && value is String ->
                     runCatching { org.json.JSONArray(value) }
                         .getOrNull()
                         ?.let { result.put(key, it.toString()) }

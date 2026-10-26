@@ -1110,7 +1110,7 @@
       ],
       "scope": "标签/文件夹条件，成功记录与手动重试",
       "acceptance": "离线不死循环，不默认删除原件",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "SET01",
@@ -1252,8 +1252,8 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 64,
-    "planned": 16,
+    "done": 65,
+    "planned": 15,
     "partial": 18
   },
   "updated": "2026-10-26"

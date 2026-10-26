@@ -72,6 +72,16 @@ data class PageSearch(val pageId: String, val documentId: String, val tokens: St
 @Dao
 interface DocumentDao {
     @Query(
+        "SELECT id,documentId,position,revision,processingMetadata,ocrText FROM pages ORDER BY documentId,position,id"
+    )
+    fun autoExportPageSignals(): Flow<List<AutoExportPageSignal>>
+
+    @Query(
+        "SELECT documentId,COUNT(*) AS pending FROM local_tasks WHERE documentId IS NOT NULL AND type='CAPTURE' AND state IN ('CAPTURING','QUEUED','RUNNING') GROUP BY documentId"
+    )
+    fun autoExportPending(): Flow<List<AutoExportPendingSignal>>
+
+    @Query(
         "SELECT * FROM documents WHERE trashedAt IS NULL AND listed=1 ORDER BY favorite DESC,modified DESC"
     )
     fun observeDocuments(): Flow<List<DocumentRow>>

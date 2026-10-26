@@ -133,7 +133,7 @@ class SettingsProfiles(context: Context) {
             )
         private val groupKeys =
             mapOf(
-                "workflows" to setOf("workflowRecipes"),
+                "workflows" to setOf("workflowRecipes", "autoExportRules"),
                 "scan" to
                     setOf(
                         "detector",

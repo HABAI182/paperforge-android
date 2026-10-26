@@ -1,0 +1,112 @@
+{
+  "checked": "2026-10-26",
+  "cards": [
+    "JOB05"
+  ],
+  "implemented": [
+    "Default-off rules with folder/subfolder and all-tag matching; empty conditions explicitly mean unrestricted",
+    "Rule-specific frozen PDF recipe copy, logical destination, scan paper/DPI/quality/OCR settings and stable delay",
+    "Rule settings/profile/backup integration; no network permission or automatic task when all rules disabled",
+    "Room document/page/revision/OCR record signals, capture-pending gate, source/rule fingerprint and durable task deduplication",
+    "Coalescing obsolete queued changes; explicit activation epoch on re-enable; manual run can request another copy",
+    "Frozen scan snapshot and original/dewarp/OCR resource references; existing PDF source remains unchanged",
+    "AUTO_EXPORT WorkManager jobs use the heavy-pipeline budget and reusable RecipeJobs stages; base PDF checkpoint has its own parameter version",
+    "No automatic Result.retry loop; unavailable targets keep the local prefix and error record; frozen retry and adjust/continue are exposed",
+    "Outputs are recorded with source provenance and do not become listed input documents, preventing feedback",
+    "Rule disable/delete cancels active jobs; originals are never deleted by the automation",
+    "Backup remaps snapshot page/document/resources and strips target URI / saved completion; manual retry can use the frozen task snapshot"
+  ],
+  "focusedCheck": {
+    "test": "AutoExportFlowTest.conditionTriggerDeduplicatesFailureAndManualRetryReusesScan",
+    "seconds": 3.449,
+    "result": "passed",
+    "coverage": [
+      "Actual Room signals trigger a matching scan document automatically",
+      "Subfolder/tag condition excludes another scan",
+      "Missing destination fails once at step 2 with retained scan PDF",
+      "Same source/rule enqueue is suppressed after failure and after success",
+      "Manual adjusted retry reuses base PDF path/hash/mtime and keeps source PNG hash",
+      "Completed PDF is in output history and not in listed source documents"
+    ]
+  },
+  "independentReadback": {
+    "pages": 1,
+    "bytes": 9506,
+    "sha256": "caaff9788079727628bdc1ab66a4c848584f9e26f06631ed843f5439846ebe69",
+    "pageSize": [
+      0.0,
+      0.0,
+      595.275634765625,
+      841.8897705078125
+    ],
+    "images": 1,
+    "baseReused": true,
+    "deduplicated": true,
+    "otherExcluded": true,
+    "sourceSha256": "6fac929f712045670eef07e5af7e4c495e63bb16fb5c5738e339f6cc8653c556"
+  },
+  "actualUI": [
+    "Conversion search opens automatic-export entry",
+    "New rule initially unchecked, folder AutoAcceptance and tag archive entered",
+    "System Documents/PaperForge-Exports target selected and granted",
+    "Save and enable submits the matching scan after its five-second delay",
+    "Success record appears and real target file is present",
+    "Demo rule switched off after checks; outputs remain available"
+  ],
+  "actualUIReadback": {
+    "rule": {
+      "id": "156b62d4-40aa-4aac-9077-7eccd2f96fa4",
+      "name": "自动导出规则",
+      "enabled": true,
+      "folder": "AutoAcceptance",
+      "tags": "archive",
+      "recipe": {
+        "id": "f5119040-726c-41a3-9960-c6b9651d6bc0",
+        "name": "新配方",
+        "input": "PDF",
+        "steps": [
+          {
+            "id": "91f0f236-6e8a-433a-b06e-20286a626873",
+            "operation": "rename",
+            "options": {
+              "template": "{title}_{date}"
+            }
+          },
+          {
+            "id": "264456b0-9b83-45fe-ada6-ca591991f108",
+            "operation": "save",
+            "options": {
+              "destination": "aa326abcc3979248fb77357d"
+            }
+          }
+        ]
+      },
+      "export": {
+        "paper": "Auto",
+        "resolution": "DRAFT",
+        "customDpi": 300,
+        "quality": 72,
+        "searchable": false,
+        "exportFormat": "PDF",
+        "exportNaming": "{title}",
+        "exportDestination": "aa326abcc3979248fb77357d"
+      },
+      "delaySeconds": 5,
+      "activation": "c00ea6d8-28b8-41de-90ee-93e7f63da247"
+    },
+    "fileName": "自动导出验收_2026-10-26.pdf",
+    "bytes": 7916,
+    "sha256": "d7c0dbee26857a1df063ae632c7b34807bf276117546de6d163637f99e7b52fe",
+    "externalCopyMatches": true,
+    "pages": 1,
+    "automaticRuleEnabledThroughUI": true
+  },
+  "limits": [
+    "Controlled x86_64 emulator, no physical-device/OEM acceptance claimed",
+    "An unavailable logical destination was used for the failure/no-loop check; an actual cloud-provider outage was not simulated",
+    "No repeated process-death, permission-revocation, backup or activation-toggle matrix",
+    "Internal native OCR/Office passes restart before their stage completes, as documented for workflows",
+    "Scanning may generate another export after a new stable batch or later edit; delay is configurable",
+    "No version/tag/release change; remaining roadmap cards are still open"
+  ]
+}

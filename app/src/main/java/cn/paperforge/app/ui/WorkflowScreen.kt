@@ -36,8 +36,9 @@ fun WorkflowScreen(vm: MainViewModel) {
     val documents by vm.repo.documents.collectAsState(emptyList())
     val runs =
         tasks.filter {
-            it.type == "CONVERT" &&
-                JSONObject(it.payload).optJSONObject("input")?.optString("kind") == "RECIPE"
+            it.type == "AUTO_EXPORT" ||
+                it.type == "CONVERT" &&
+                    JSONObject(it.payload).optJSONObject("input")?.optString("kind") == "RECIPE"
         }
     val current = runs.firstOrNull { it.id == runId }
     val locked = busy || current?.state in LocalTaskRow.active

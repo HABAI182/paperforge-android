@@ -416,6 +416,7 @@ class MainActivity : ComponentActivity() {
                         "notes" -> StudyNotesScreen(vm)
                         "comparison" -> LibraryComparisonScreen(vm)
                         "workflows" -> WorkflowScreen(vm)
+                        "auto-export" -> AutoExportScreen(vm)
                         "pdf-diff" ->
                             PdfDiffScreen(vm) { diffImport.launch(arrayOf("application/pdf")) }
                         "assembly" ->

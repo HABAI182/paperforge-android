@@ -91,9 +91,18 @@ object ToolCatalog {
                 ToolCapability("压缩 PDF", "优化嵌入图片并保留文字和链接", "整理", "compress"),
                 ToolCapability("PDF 差异比较", "原生文字与外观、并排同步查看、区域定位与报告", "整理", "pdf-diff"),
                 ToolCapability("工作流配方", "按顺序处理，保存步骤；调整目录复用 OCR 与排版", "整理", "workflows"),
+                ToolCapability("自动导出", "按文件夹和标签触发，结果与失败记录可继续", "整理", "auto-export"),
             )
             .map { entry ->
                 when (entry.mode) {
+                    "auto-export" ->
+                        entry.copy(
+                            input = "文档库中的扫描文档和 PDF；按标签、文件夹或子文件夹匹配",
+                            output = "按所选配方生成本地成品，可保存到授权目录",
+                            parameters = "规则启停、等待稳定时间、命名配方副本、目录、扫描导出参数、手动运行及重试",
+                            boundary = "默认关闭；失败后保留结果并等待手动处理，不循环重试。已有 PDF 保留原页，自动结果只进入导出记录。",
+                            aliases = "自动 归档 条件 规则 标签 文件夹 自动化 automation export",
+                        )
                     "workflows" ->
                         entry.copy(
                             input = "单份 PDF、Office、TXT 或图片；每步检查格式匹配",

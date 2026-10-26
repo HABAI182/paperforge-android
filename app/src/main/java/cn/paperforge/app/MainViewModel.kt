@@ -498,6 +498,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                         val latest = repo.dao.task(row.id) ?: error("任务已移除")
                         val payload = org.json.JSONObject(latest.payload)
                         val input = payload.optJSONObject("input")
+                        if (row.type == "AUTO_EXPORT") {
+                            input?.put("manual", true)?.put("delaySeconds", 0)
+                            repo.dao.putTask(latest.copy(payload = payload.toString()))
+                        }
                         if (input?.has("ocrRequest") == true) {
                             input.put(
                                 "ocrRequest",
@@ -993,6 +997,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                                 .remove("export")
                                 .apply()
                             if (info.state == WorkInfo.State.SUCCEEDED) {
+                                if (info.outputData.getBoolean("skipped", false)) {
+                                    messages.send(
+                                        info.outputData.getString("detail") ?: "已由较新的任务接续"
+                                    )
+                                    return@takeWhile false
+                                }
                                 outputLocked.value = false
                                 val file =
                                     File(info.outputData.getString("path") ?: error("任务没有本地结果"))
@@ -1351,6 +1361,98 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     val textConversion = MutableStateFlow<TextConversionDraft?>(null)
     val workflowDraft = MutableStateFlow(cn.paperforge.app.model.WorkflowRecipe())
+    val autoExportDraft = MutableStateFlow<cn.paperforge.app.model.AutoExportRule?>(null)
+
+    fun saveAutoExportRule(rule: cn.paperforge.app.model.AutoExportRule) =
+        perform("保存自动导出规则") {
+            if (rule.enabled) rule.issue()?.let { error(it) }
+            cn.paperforge.app.model.AutoExportRules.save(rule)
+            if (!rule.enabled)
+                repo.dao
+                    .allTasks()
+                    .filter {
+                        it.type == "AUTO_EXPORT" &&
+                            it.state in LocalTaskRow.active &&
+                            org.json
+                                .JSONObject(it.payload)
+                                .getJSONObject("input")
+                                .optString("automationRule") == rule.id
+                    }
+                    .forEach { DocumentJobs.cancel(repo, it) }
+            autoExportDraft.value = null
+        }
+
+    fun removeAutoExportRule(rule: cn.paperforge.app.model.AutoExportRule) =
+        perform("删除自动导出规则") {
+            cn.paperforge.app.model.AutoExportRules.remove(rule.id)
+            repo.dao
+                .allTasks()
+                .filter {
+                    it.type == "AUTO_EXPORT" &&
+                        it.state in LocalTaskRow.active &&
+                        org.json
+                            .JSONObject(it.payload)
+                            .getJSONObject("input")
+                            .optString("automationRule") == rule.id
+                }
+                .forEach { DocumentJobs.cancel(repo, it) }
+            if (autoExportDraft.value?.id == rule.id) autoExportDraft.value = null
+        }
+
+    fun rememberAutoExportDirectory(uri: Uri) =
+        perform("记住规则保存目录") {
+            val destination = ExportDestinations(repo.context).remember(uri)
+            val rule = autoExportDraft.value ?: return@perform
+            val last = rule.recipe.steps.indexOfLast { it.operation == "save" }
+            val steps = rule.recipe.steps.toMutableList()
+            if (last < 0)
+                steps +=
+                    cn.paperforge.app.model.RecipeStep(
+                        operation = "save",
+                        options = org.json.JSONObject().put("destination", destination.id),
+                    )
+            else
+                steps[last] =
+                    steps[last].copy(
+                        options =
+                            org.json
+                                .JSONObject(steps[last].options.toString())
+                                .put("destination", destination.id)
+                    )
+            autoExportDraft.value = rule.copy(recipe = rule.recipe.copy(steps = steps))
+        }
+
+    fun runAutoExportRule(rule: cn.paperforge.app.model.AutoExportRule) =
+        perform("提交匹配文档") {
+            var count = 0
+            for (signal in
+                AutoExportCoordinator.signals(repo).first().filter {
+                    it.ready && rule.matches(it.document)
+                }) if (AutoExportCoordinator.enqueue(repo, rule, signal, force = true) != null)
+                count++
+            messages.send("已提交 $count 份文档，结果见自动导出记录；尚在处理的文档请完成后再运行")
+        }
+
+    fun retryAutoExport(row: LocalTaskRow) {
+        appScope.launch {
+            runCatching {
+                    val updated =
+                        repo.database.withTransaction {
+                            val latest = checkNotNull(repo.dao.task(row.id))
+                            require(latest.state !in LocalTaskRow.active) { "任务正在运行" }
+                            val payload = org.json.JSONObject(latest.payload)
+                            payload
+                                .getJSONObject("input")
+                                .put("manual", true)
+                                .put("delaySeconds", 0)
+                            latest.copy(payload = payload.toString()).also { repo.dao.putTask(it) }
+                        }
+                    DocumentJobs.retry(repo, updated)
+                }
+                .onFailure { messages.send(it.message ?: "重试未能开始") }
+        }
+    }
+
     val workflowRun = MutableStateFlow<String?>(null)
     val workflowDirectoryStep = MutableStateFlow<String?>(null)
 
@@ -1455,6 +1557,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                                         val latest = checkNotNull(repo.dao.task(previous.id))
                                         require(latest.state !in LocalTaskRow.active) { "此配方正在运行" }
                                         val payload = org.json.JSONObject(latest.payload)
+                                        if (latest.type == "AUTO_EXPORT") {
+                                            payload
+                                                .getJSONObject("input")
+                                                .put("manual", true)
+                                                .put("delaySeconds", 0)
+                                            payload
+                                                .getJSONObject("input")
+                                                .optJSONObject("autoRule")
+                                                ?.put("recipe", recipe.json())
+                                        }
                                         payload
                                             .getJSONObject("input")
                                             .put(

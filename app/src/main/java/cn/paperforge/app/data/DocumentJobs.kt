@@ -41,10 +41,11 @@ data class JobHandle(val row: LocalTaskRow, val input: JobInput, val completed: 
 
 /** Room owns intent/checkpoints; WorkManager receives only the stable task identifier. */
 object DocumentJobs {
-    val types = setOf("PDF", "SCAN_EXPORT", "OCR", "SAVE", "CONVERT")
+    val types = setOf("PDF", "SCAN_EXPORT", "OCR", "SAVE", "CONVERT", "AUTO_EXPORT")
 
     private fun title(type: String, input: JobInput, source: String) =
         when (type) {
+            "AUTO_EXPORT" -> "$source · 自动导出"
             "SCAN_EXPORT" -> "$source · 导出 ${input.getString("format") ?: "PDF"}"
             "OCR" -> "$source · 全文识别"
             "SAVE" -> "$source · 保存到所选位置"
@@ -101,7 +102,8 @@ object DocumentJobs {
         workId: UUID = UUID.randomUUID(),
     ): LocalTaskRow {
         val needsOcr =
-            type == "OCR" ||
+            type == "AUTO_EXPORT" ||
+                type == "OCR" ||
                 type == "SCAN_EXPORT" && input.getBoolean("searchable", false) ||
                 type == "PDF" && input.getString("mode") == "searchable" ||
                 type == "CONVERT" &&
@@ -214,6 +216,18 @@ object DocumentJobs {
                     OneTimeWorkRequestBuilder<ConversionJobWorker>()
                         .setId(id)
                         .setInputData(data)
+                        .build()
+                "AUTO_EXPORT" ->
+                    OneTimeWorkRequestBuilder<AutoExportWorker>()
+                        .setId(id)
+                        .setInputData(data)
+                        .setInitialDelay(
+                            JSONObject(row.payload)
+                                .getJSONObject("input")
+                                .optInt("delaySeconds", 5)
+                                .toLong(),
+                            java.util.concurrent.TimeUnit.SECONDS,
+                        )
                         .build()
                 else -> error("未知任务类型")
             }

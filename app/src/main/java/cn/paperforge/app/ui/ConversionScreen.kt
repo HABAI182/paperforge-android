@@ -75,6 +75,7 @@ fun ConversionScreen(
         when (entry.mode) {
             "pdf-diff" -> vm.screen.value = "pdf-diff"
             "workflows" -> vm.screen.value = "workflows"
+            "auto-export" -> vm.screen.value = "auto-export"
             "md-html",
             "epub-html" -> onMarkup("HTML", org.json.JSONObject())
             "html-md",

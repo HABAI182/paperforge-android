@@ -147,11 +147,12 @@ fun TaskCenterScreen(vm: MainViewModel) {
                                 }
                                 if (
                                     !active &&
-                                        row.type == "CONVERT" &&
-                                        org.json
-                                            .JSONObject(row.payload)
-                                            .optJSONObject("input")
-                                            ?.optString("kind") == "RECIPE"
+                                        (row.type == "AUTO_EXPORT" ||
+                                            row.type == "CONVERT" &&
+                                                org.json
+                                                    .JSONObject(row.payload)
+                                                    .optJSONObject("input")
+                                                    ?.optString("kind") == "RECIPE")
                                 )
                                     TextButton(onClick = { vm.editWorkflowRun(row) }) {
                                         Text("调整配方并继续")

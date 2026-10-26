@@ -55,5 +55,6 @@ class PaperForgeApp : Application() {
                     android.util.Log.e("PaperForgeTasks", "Document task recovery failed", it)
                 }
         }
+        cn.paperforge.app.data.AutoExportCoordinator.start(repository, backgroundScope)
     }
 }

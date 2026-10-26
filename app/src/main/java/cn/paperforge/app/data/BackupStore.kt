@@ -434,6 +434,42 @@ object BackupStore {
                                                 paths + ids + pageIds,
                                             )
                                         resources
+                                            .firstOrNull { it.id == "auto-snapshot" }
+                                            ?.let { resource ->
+                                                val file = File(resource.path)
+                                                val before = JSONObject(file.readText())
+                                                val source =
+                                                    DocumentCodec.document(
+                                                        before.getJSONObject("document")
+                                                    )
+                                                val sourceId =
+                                                    document
+                                                        ?: ids[source.id]
+                                                        ?: UUID.randomUUID().toString()
+                                                val mapped =
+                                                    HistoryState.remap(
+                                                        before.toString(),
+                                                        { page(it, sourceId) },
+                                                    ) {
+                                                        pageIds.getOrPut(it) {
+                                                            UUID.randomUUID().toString()
+                                                        }
+                                                    }
+                                                mapped.put(
+                                                    "document",
+                                                    DocumentCodec.document(
+                                                        source.copy(
+                                                            id = sourceId,
+                                                            pdfPath =
+                                                                source.pdfPath?.let {
+                                                                    paths[it] ?: copy(it, sourceId)
+                                                                },
+                                                        )
+                                                    ),
+                                                )
+                                                file.writeText(mapped.toString())
+                                            }
+                                        resources
                                             .firstOrNull { it.id == "manifest" }
                                             ?.let { resource ->
                                                 val file = File(resource.path)
@@ -451,7 +487,7 @@ object BackupStore {
                                                     plan.remap(sourceIds).json().toString()
                                                 )
                                             }
-                                        if (old.type == "CONVERT") {
+                                        if (old.type in setOf("CONVERT", "AUTO_EXPORT")) {
                                             val restored = JSONObject(payload)
                                             val checkpoint = restored.optJSONObject("checkpoint")
                                             checkpoint?.keys()?.asSequence()?.toList()?.forEach {
