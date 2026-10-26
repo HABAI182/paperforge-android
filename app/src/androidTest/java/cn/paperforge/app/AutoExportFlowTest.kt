@@ -23,9 +23,10 @@ class AutoExportFlowTest {
         val repo = app.repository
         val before = UserSettings.string("autoExportRules", "[]")
         try {
+            val collection = "AutoAcceptance-${UUID.randomUUID()}"
             suspend fun scan(title: String, tags: String): Pair<DocumentRow, File> {
                 val original = repo.newScan()
-                val doc = original.copy(title = title, folder = "AutoAcceptance/child", tags = tags)
+                val doc = original.copy(title = title, folder = "$collection/child", tags = tags)
                 repo.dao.putDocument(doc)
                 val image = File(repo.folder(doc.id), "auto-original.png")
                 Bitmap.createBitmap(600, 800, Bitmap.Config.ARGB_8888).let { bitmap ->
@@ -76,7 +77,7 @@ class AutoExportFlowTest {
                 AutoExportRule(
                     name = "自动导出验收",
                     enabled = true,
-                    folder = "AutoAcceptance",
+                    folder = collection,
                     tags = "archive",
                     recipe = recipe,
                     export =
@@ -153,6 +154,13 @@ class AutoExportFlowTest {
             assertNotNull(repo.dao.output(output.path))
             assertNull(repo.dao.documentByPath(output.path))
             assertNull(AutoExportCoordinator.enqueue(repo, rule, signal))
+            val preview =
+                repo.registerPdf(output, "自动结果预览").copy(folder = collection, tags = "archive")
+            repo.dao.putDocument(preview)
+            val previewSignal =
+                AutoExportCoordinator.signals(repo).first().first { it.document.id == preview.id }
+            assertTrue(rule.matches(preview))
+            assertNull(AutoExportCoordinator.enqueue(repo, rule, previewSignal))
             File(app.cacheDir, "auto-export-proof.json")
                 .writeText(
                     JSONObject()
@@ -164,6 +172,7 @@ class AutoExportFlowTest {
                         .put("baseReused", true)
                         .put("deduplicated", true)
                         .put("otherExcluded", true)
+                        .put("previewDoesNotReenter", true)
                         .toString(2)
                 )
         } finally {

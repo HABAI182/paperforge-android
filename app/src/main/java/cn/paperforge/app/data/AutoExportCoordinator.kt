@@ -108,6 +108,28 @@ object AutoExportCoordinator {
         val row =
             repo.database.withTransaction {
                 val tasks = repo.dao.allTasks()
+                if (!force && signal.document.pdfPath != null) {
+                    val path = File(signal.document.pdfPath).canonicalPath
+                    val generated =
+                        tasks
+                            .filter { it.type == "AUTO_EXPORT" }
+                            .any { task ->
+                                val resources = task.resourceEntries()
+                                val original =
+                                    resources
+                                        .firstOrNull { it.id == "source" }
+                                        ?.path
+                                        ?.let { File(it).canonicalPath }
+                                path != original &&
+                                    resources.any { resource ->
+                                        (resource.id == "result" ||
+                                            resource.id == "auto-source-pdf" ||
+                                            resource.id.startsWith("recipe-step-")) &&
+                                            File(resource.path).canonicalPath == path
+                                    }
+                            }
+                    if (generated) return@withTransaction null
+                }
                 val existing =
                     tasks.firstOrNull {
                         it.type == "AUTO_EXPORT" &&

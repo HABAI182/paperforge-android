@@ -12,13 +12,13 @@
     "Frozen scan snapshot and original/dewarp/OCR resource references; existing PDF source remains unchanged",
     "AUTO_EXPORT WorkManager jobs use the heavy-pipeline budget and reusable RecipeJobs stages; base PDF checkpoint has its own parameter version",
     "No automatic Result.retry loop; unavailable targets keep the local prefix and error record; frozen retry and adjust/continue are exposed",
-    "Outputs are recorded with source provenance and do not become listed input documents, preventing feedback",
+    "Automatic outputs stay in export history; retained automatic-task provenance also excludes a derived PDF explicitly opened in the reader from subsequent automatic input",
     "Rule disable/delete cancels active jobs; originals are never deleted by the automation",
     "Backup remaps snapshot page/document/resources and strips target URI / saved completion; manual retry can use the frozen task snapshot"
   ],
   "focusedCheck": {
     "test": "AutoExportFlowTest.conditionTriggerDeduplicatesFailureAndManualRetryReusesScan",
-    "seconds": 3.449,
+    "seconds": 3.723,
     "result": "passed",
     "coverage": [
       "Actual Room signals trigger a matching scan document automatically",
@@ -26,8 +26,11 @@
       "Missing destination fails once at step 2 with retained scan PDF",
       "Same source/rule enqueue is suppressed after failure and after success",
       "Manual adjusted retry reuses base PDF path/hash/mtime and keeps source PNG hash",
-      "Completed PDF is in output history and not in listed source documents"
-    ]
+      "Completed PDF is in output history and not in listed source documents",
+      "Opening the derived PDF in the reader and giving it matching folder/tags does not enqueue another automatic export"
+    ],
+    "isolatedFixture": true,
+    "previewDoesNotReenter": true
   },
   "independentReadback": {
     "pages": 1,
