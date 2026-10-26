@@ -855,6 +855,53 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             selected.value = doc.copy(title = safeFileName(title))
         }
 
+    fun exportWithOptions(
+        title: String,
+        pages: Int,
+        options: cn.paperforge.app.model.ScanExportOptions,
+    ) {
+        val doc = selected.value ?: return
+        enqueueJob(
+            "SCAN_EXPORT",
+            workDataOf(
+                "document" to doc.id,
+                "paper" to options.paper,
+                "quality" to options.quality,
+                "title" to title,
+                "fileName" to options.fileName(title, pages),
+                "searchable" to (options.searchable && options.format == "PDF"),
+                "resolution" to options.effectiveResolution,
+                "format" to options.format,
+            ),
+        )
+    }
+
+    fun rememberOutputDirectory(uri: Uri) {
+        viewModelScope.launch {
+            runCatching {
+                    withContext(Dispatchers.IO) { ExportDestinations(repo.context).remember(uri) }
+                }
+                .onSuccess { destination ->
+                    UserSettings.set("exportDestination", destination.id)
+                    saveOutputToDirectory(destination.id)
+                }
+                .onFailure { messages.send(it.message ?: "无法授权保存目录，请重新选择") }
+        }
+    }
+
+    fun saveOutputToDirectory(
+        destinationId: String = UserSettings.string("exportDestination", "")
+    ) {
+        val file = output.value ?: return
+        val store = ExportDestinations(repo.context)
+        val destination = store.get(destinationId)
+        if (destination == null || !store.available(destination)) {
+            viewModelScope.launch { messages.send("目录授权已失效，请重新选择；本地成品保留") }
+            return
+        }
+        enqueueJob("SAVE", workDataOf("path" to file.path, "treeUri" to destination.uri.toString()))
+    }
+
     fun export(
         paper: String,
         quality: Int,

@@ -152,7 +152,7 @@ fun ScanEditorLayout(
                                 enabled = active != null && !busy,
                                 modifier = Modifier.weight(1f),
                             ) {
-                                Text("导出 PDF")
+                                Text("导出")
                             }
                         }
                     }

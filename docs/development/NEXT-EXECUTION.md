@@ -70,6 +70,8 @@
 
 35. 首页/转换/PDF工具箱统一搜索别名、分类和星标固定项；首页可直接启动具体转换，31条转换能力说明保留真实输入/输出/参数/引擎及模式限制。Word/OCR/图片搜索、固定恢复/界面重建和实际EPUB分发见 `docs/acceptance/next/tool-discovery-summary.json`。
 
+36. 纸张/DPI/质量/OCR/格式/文件名/目的地组合成导出预设，支持命名保存与一键套用；PDF和JPG/PNG包按真实纸张几何输出，系统目录授权仅留本机。目录保存/同名编号/哈希复读及重启记忆见 `docs/acceptance/next/export-presets-summary.json`。自动导出规则仍归JOB05。
+
 ## 后续执行顺序
 
 页序历史补充：重排只记录页面ID，删页/分割仅记录内容差异；新旧可读快照的撤销保留后来新增的扫描页和与操作无关的新OCR。备份对独立页序ID重映射，集中检查见 `docs/acceptance/next/sparse-history-summary.json`。不将此修复重复计为新完成的计划卡。

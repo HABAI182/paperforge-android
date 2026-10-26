@@ -54,6 +54,9 @@ object UserSettings {
             "recentCount" to 6f,
             "homeTools" to "images,pdf,ocr,merge,compress,tools",
             "pinnedTools" to "",
+            "exportFormat" to "PDF",
+            "exportNaming" to "{title}",
+            "exportDestination" to "",
         )
     lateinit var prefs: SharedPreferences
         private set
@@ -163,7 +166,8 @@ object UserSettings {
                 "ocrLanguage" to setOf("CHINESE", "LATIN"),
                 "ocrBackend" to setOf("MLKIT", "PADDLE"),
                 "ocrMode" to setOf("FAST", "BALANCED", "DETAILED"),
-                "paper" to setOf("Auto", "A4", "A5", "Letter"),
+                "paper" to setOf("Auto", "A4", "A5", "Letter", "ID"),
+                "exportFormat" to setOf("PDF", "JPG", "PNG"),
                 "resolution" to setOf("DRAFT", "STANDARD", "HIGH", "CUSTOM"),
                 "theme" to setOf("SYSTEM", "LIGHT", "DARK", "AMOLED"),
                 "accent" to setOf("GREEN", "BLUE", "PURPLE", "ORANGE"),
@@ -197,6 +201,11 @@ object UserSettings {
                 key == "ocrPackId" &&
                     value is String &&
                     (value.isEmpty() || value.matches(Regex("[a-z0-9-]{1,64}"))) ->
+                    result.put(key, value)
+                key == "exportNaming" && value is String -> result.put(key, value)
+                key == "exportDestination" &&
+                    value is String &&
+                    (value.isEmpty() || value.matches(Regex("[a-f0-9]{24}"))) ->
                     result.put(key, value)
                 key == "pinnedTools" && value is String ->
                     result.put(

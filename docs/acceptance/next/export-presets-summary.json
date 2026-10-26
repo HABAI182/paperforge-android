@@ -1,0 +1,88 @@
+{
+  "checked": "2026-10-26",
+  "cards": [
+    "SET02"
+  ],
+  "implemented": [
+    "Named export profiles bundle paper, resolution/custom DPI, quality, OCR, PDF/JPG/PNG format, filename template and logical destination ID",
+    "Daily/archive/share/PNG built-ins; one-tap apply, save/delete, existing profile export/import and backup integration",
+    "Filename tokens title/date/time/source-page count with exact output names inside per-job folders",
+    "PNG/JPG page ZIP uses paper/DPI geometry; lossless intermediate PDF avoids JPEG degradation for PNG; image packages explicitly have no searchable text layer",
+    "Image export stage reference/checkpoint is retained for retry; complete results and source images remain in app",
+    "SAF tree selection and persistent read/write grants; grants and device URIs stay in a separate device-local registry, presets carry only logical IDs",
+    "Result dialog offers remembered-directory save, reselect, and normal Save As with initial directory; collision creates a new numbered name",
+    "SAVE job remembers its own newly-created target URI for retry and verifies written length/SHA; backup strips destination URIs; permission errors expose reselection and retain the local result",
+    "Home/tool pins now also belong to the existing home settings-profile group"
+  ],
+  "focusedCheck": {
+    "test": "ExportPresetsFlowTest.portablePresetProducesNamedDpiImagesAndPdfWithoutChangingOtherSettings",
+    "result": "passed",
+    "seconds": 1.766,
+    "coverage": [
+      "Named export-profile restore without changing theme",
+      "Actual WorkManager PNG and PDF exports with template names",
+      "Two ordered pages, A4 at72 DPI, red/blue center pixels and two-page native PDF readback"
+    ]
+  },
+  "independentReadback": {
+    "pngPages": [
+      {
+        "name": "page-0001.png",
+        "width": 595,
+        "height": 841,
+        "center": [
+          255,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "page-0002.png",
+        "width": 595,
+        "height": 841,
+        "center": [
+          0,
+          0,
+          255
+        ]
+      }
+    ],
+    "pdfPages": 2,
+    "pdfSizes": [
+      [
+        595.28,
+        841.89
+      ],
+      [
+        595.28,
+        841.89
+      ]
+    ],
+    "savedCopies": [
+      {
+        "name": "导出预设验收 (2).pdf",
+        "bytes": 7170,
+        "sha256": "2a6ea421aa475d7e935ce6fb15ffe70db15540fa41bc6d591502643400c18a39"
+      },
+      {
+        "name": "导出预设验收.pdf",
+        "bytes": 7170,
+        "sha256": "2a6ea421aa475d7e935ce6fb15ffe70db15540fa41bc6d591502643400c18a39"
+      }
+    ]
+  },
+  "actualUI": [
+    "Editor export opens format/paper/DPI/template controls and built-in preset menu",
+    "Selected lightweight PDF preset and generated actual completed output",
+    "Android system Documents/PaperForge-Exports tree selection, explicit grant, actual saved file",
+    "Second explicit save creates (2).pdf; both saved copies have identical SHA256 and size, original is retained",
+    "Final APK installed, app force-stopped/reopened; remembered settings and authorized folder shown again"
+  ],
+  "limits": [
+    "Controlled emulator fixtures, no physical-device acceptance",
+    "Image export temporary PDF is retained with the task checkpoint until task resources are removed",
+    "Revocation path is implemented with persistent-grant checks and permission failure handling; no destructive grant-revocation sweep was performed",
+    "System Save As and in-app remembered-folder save remain explicit actions; this group does not implement JOB05 background automation",
+    "Only the new functional flow and affected UI/output checks were run, no old suites, no release/tag/version change"
+  ]
+}

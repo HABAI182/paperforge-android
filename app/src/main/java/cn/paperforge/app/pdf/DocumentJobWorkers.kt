@@ -114,7 +114,31 @@ class SaveDocumentWorker(context: Context, params: WorkerParameters) :
                     )
                 val file = File(job.input.getString("path") ?: error("本地结果已移除"))
                 require(file.isFile && file.length() > 0) { "本地结果已移除，请重新生成" }
-                val uri = Uri.parse(job.input.getString("uri") ?: error("请重新选择保存位置"))
+                val tree = job.input.getString("treeUri")
+                val uri =
+                    if (tree == null)
+                        Uri.parse(job.input.getString("uri") ?: error("请重新选择保存位置，本地成品保留"))
+                    else {
+                        val checkpoint =
+                            org.json
+                                .JSONObject(job.row.payload)
+                                .getJSONObject("checkpoint")
+                                .optString("destinationUri")
+                        if (checkpoint.isNotBlank()) Uri.parse(checkpoint)
+                        else {
+                            val target =
+                                ExportDestinations.create(
+                                    applicationContext,
+                                    Uri.parse(tree),
+                                    file.name,
+                                    android.webkit.MimeTypeMap.getSingleton()
+                                        .getMimeTypeFromExtension(file.extension.lowercase())
+                                        ?: "application/octet-stream",
+                                )
+                            DocumentJobs.checkpoint(repo, job, "destinationUri", target.toString())
+                            target
+                        }
+                    }
                 DocumentJobs.progress(repo, job, 5, "正在写入所选位置")
                 repo.saveOutput(file, uri)
                 withContext(NonCancellable) {
@@ -127,8 +151,12 @@ class SaveDocumentWorker(context: Context, params: WorkerParameters) :
                 DocumentJobs.fail(repo, handle, cancel, true)
                 throw cancel
             } catch (failure: Exception) {
-                DocumentJobs.fail(repo, handle, failure)
-                Result.failure(workDataOf("error" to (failure.message ?: "保存失败，本地结果保留")))
+                val issue =
+                    if (failure is SecurityException)
+                        IllegalStateException("目录授权已失效，请重新选择保存目录；本地成品保留", failure)
+                    else failure
+                DocumentJobs.fail(repo, handle, issue)
+                Result.failure(workDataOf("error" to (issue.message ?: "保存失败，本地结果保留")))
             }
         }
 }

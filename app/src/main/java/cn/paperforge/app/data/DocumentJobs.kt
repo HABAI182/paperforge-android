@@ -45,7 +45,7 @@ object DocumentJobs {
 
     private fun title(type: String, input: JobInput, source: String) =
         when (type) {
-            "SCAN_EXPORT" -> "$source · 导出 PDF"
+            "SCAN_EXPORT" -> "$source · 导出 ${input.getString("format") ?: "PDF"}"
             "OCR" -> "$source · 全文识别"
             "SAVE" -> "$source · 保存到所选位置"
             "CONVERT" ->
@@ -270,6 +270,32 @@ object DocumentJobs {
             payload.getJSONObject("checkpoint").put(key, value)
             repo.dao.putTask(
                 row.copy(payload = payload.toString(), updated = System.currentTimeMillis())
+            )
+        }
+
+    suspend fun checkpointFile(
+        repo: Repository,
+        handle: JobHandle,
+        key: String,
+        file: File,
+        metadata: JSONObject,
+    ) =
+        repo.database.withTransaction {
+            checkCurrent(repo, handle)
+            val row = checkNotNull(repo.dao.task(handle.row.id))
+            val payload = JSONObject(row.payload)
+            payload.getJSONObject("checkpoint").put(key, metadata.put("path", file.path))
+            repo.dao.putTask(
+                row.copy(
+                    payload = payload.toString(),
+                    resources =
+                        DocumentResources.encode(
+                                row.resourceEntries().filterNot { it.id == key } +
+                                    PageResource(key, "conversion-checkpoint", file.path)
+                            )
+                            .toString(),
+                    updated = System.currentTimeMillis(),
+                )
             )
         }
 

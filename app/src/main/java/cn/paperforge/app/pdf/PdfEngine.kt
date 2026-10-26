@@ -28,6 +28,7 @@ object PdfEngine {
         searchable: Boolean = false,
         resolution: String = "STANDARD",
         ocrEngine: cn.paperforge.app.ocr.OcrEngine? = null,
+        lossless: Boolean = false,
         progress: suspend (Int) -> Unit = {},
     ) {
         require(pages.isNotEmpty()) { "请先添加页面" }
@@ -137,7 +138,17 @@ object PdfEngine {
                         val effectiveDpi =
                             kotlin.math.round(bitmap.width * 72f / w).toInt().coerceAtLeast(1)
                         val image =
-                            PdfImageEncoder.scan(doc, bitmap, page.filter, quality, effectiveDpi)
+                            if (lossless)
+                                com.tom_roush.pdfbox.pdmodel.graphics.image.LosslessFactory
+                                    .createFromImage(doc, bitmap)
+                            else
+                                PdfImageEncoder.scan(
+                                    doc,
+                                    bitmap,
+                                    page.filter,
+                                    quality,
+                                    effectiveDpi,
+                                )
                         val x = (size.width - w) / 2
                         val y =
                             if (card)

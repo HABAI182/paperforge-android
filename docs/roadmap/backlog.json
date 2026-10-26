@@ -1134,7 +1134,7 @@
       ],
       "scope": "纸张DPI质量OCR格式命名目的地组合",
       "acceptance": "一次套用，下次保留，权限失效可重选",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "SET03",
@@ -1252,8 +1252,8 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 61,
-    "planned": 19,
+    "done": 62,
+    "planned": 18,
     "partial": 18
   },
   "updated": "2026-10-26"

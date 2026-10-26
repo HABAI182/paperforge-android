@@ -24,6 +24,7 @@ fun SettingsScreen(vm: MainViewModel) {
     val snapshot = remember(revision) { UserSettings.prefs.all }
     var query by remember { mutableStateOf("") }
     var reset by remember { mutableStateOf(false) }
+    var exportPresets by remember { mutableStateOf(false) }
     val importSettings =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             uri?.let(vm::importPreferences)
@@ -68,6 +69,13 @@ fun SettingsScreen(vm: MainViewModel) {
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text("配置档案与扫描模式")
+                }
+            if (visible("导出 预设 目录 命名 DPI 质量"))
+                OutlinedButton(
+                    onClick = { exportPresets = true },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("导出预设与保存目录")
                 }
             if (visible("任务 后台 进度 失败 重试"))
                 OutlinedButton(
@@ -282,6 +290,8 @@ fun SettingsScreen(vm: MainViewModel) {
             }
         }
     }
+    if (exportPresets)
+        ScanExportDialog(vm, "导出示例", 1, { exportPresets = false }, settingsOnly = true)
     if (reset)
         AlertDialog(
             onDismissRequest = { reset = false },

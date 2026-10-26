@@ -43,8 +43,12 @@ class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                     repo.rename(doc, title)
                     doc = doc.copy(title = safeFileName(title))
                 }
+                val format = data.getString("format") ?: "PDF"
                 val file =
-                    File(repo.exports, "${safeFileName(doc.title)}-${id.toString().take(8)}.pdf")
+                    File(
+                        File(repo.exports, job.row.id).apply { mkdirs() },
+                        "${safeFileName(data.getString("fileName") ?: doc.title)}.${if(format == "PDF") "pdf" else "zip"}",
+                    )
                 output = file
                 val request =
                     cn.paperforge.app.ocr.OcrRequest.decode(
@@ -84,23 +88,79 @@ class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                         report((index + 1) * 30 / pages.size, "文字层 ${index+1}/${pages.size} 页")
                     }
                 }
-                PdfEngine.scan(
-                    repo.dao.pages(doc.id),
-                    file,
-                    data.getString("paper") ?: "Auto",
-                    data.getInt("quality", 90),
-                    applicationContext,
-                    data.getBoolean("searchable", false),
-                    data.getString("resolution") ?: "STANDARD",
-                    engine,
+                val pages = repo.dao.pages(doc.id)
+                val fingerprint =
+                    listOf(
+                            pages.joinToString { "${it.id}:${it.revision}" },
+                            data.getString("paper"),
+                            data.getString("resolution"),
+                            data.getInt("quality", 90),
+                        )
+                        .joinToString("|")
+                val cached =
+                    org.json
+                        .JSONObject(job.row.payload)
+                        .getJSONObject("checkpoint")
+                        .optJSONObject("render-stage")
+                val stage =
+                    if (format == "PDF") file
+                    else if (
+                        cached?.optString("fingerprint") == fingerprint &&
+                            cached.optString("path").isNotBlank()
+                    )
+                        File(cached.getString("path"))
+                    else File(file.parentFile, "render-source.pdf")
+                if (
+                    format == "PDF" ||
+                        cached?.optString("fingerprint") != fingerprint ||
+                        !stage.isFile ||
+                        stage.length() == 0L
                 ) {
-                    report(if (data.getBoolean("searchable", false)) 30 + it * 70 / 100 else it)
+                    PdfEngine.scan(
+                        repo.dao.pages(doc.id),
+                        stage,
+                        data.getString("paper") ?: "Auto",
+                        data.getInt("quality", 90),
+                        applicationContext,
+                        data.getBoolean("searchable", false),
+                        data.getString("resolution") ?: "STANDARD",
+                        engine,
+                        lossless = format != "PDF",
+                    ) {
+                        report(
+                            if (format != "PDF") it * 60 / 100
+                            else if (data.getBoolean("searchable", false)) 30 + it * 70 / 100
+                            else it
+                        )
+                    }
+                    if (format != "PDF")
+                        DocumentJobs.checkpointFile(
+                            repo,
+                            job,
+                            "render-stage",
+                            stage,
+                            org.json.JSONObject().put("fingerprint", fingerprint),
+                        )
                 }
+                if (format != "PDF")
+                    PdfTools.images(
+                        stage,
+                        file,
+                        "",
+                        format.lowercase(java.util.Locale.ROOT),
+                        quality = data.getInt("quality", 90),
+                        dpi =
+                            cn.paperforge.app.imaging.ScanConfig.dpi(
+                                data.getString("resolution") ?: "STANDARD"
+                            ),
+                    ) {
+                        report(60 + it * 40 / 100, "正在打包页面图片")
+                    }
                 ensureActive()
                 withContext(NonCancellable) {
                     repo.database.withTransaction {
                         DocumentJobs.checkCurrent(repo, job)
-                        repo.registerPdf(file, doc.title, listed = false)
+                        if (format == "PDF") repo.registerPdf(file, doc.title, listed = false)
                         repo.recordOutput(file, doc)
                         DocumentJobs.complete(repo, job, file)
                         published = true

@@ -158,7 +158,17 @@ class SettingsProfiles(context: Context) {
                         "captureTimer",
                         "scanAspect",
                     ),
-                "export" to setOf("searchable", "paper", "resolution", "customDpi", "quality"),
+                "export" to
+                    setOf(
+                        "searchable",
+                        "paper",
+                        "resolution",
+                        "customDpi",
+                        "quality",
+                        "exportFormat",
+                        "exportNaming",
+                        "exportDestination",
+                    ),
                 "ocr" to setOf("ocrLanguage", "ocrMode", "ocrVoting", "ocrBackend", "ocrPackId"),
                 "appearance" to
                     setOf(
@@ -171,7 +181,7 @@ class SettingsProfiles(context: Context) {
                         "gridColumns",
                         "edgeTurn",
                     ),
-                "home" to setOf("recentCount", "homeTools", "homeCollection"),
+                "home" to setOf("recentCount", "homeTools", "homeCollection", "pinnedTools"),
             )
 
         fun keys(groups: Set<String>) = groups.flatMap { groupKeys[it].orEmpty() }.toSet()

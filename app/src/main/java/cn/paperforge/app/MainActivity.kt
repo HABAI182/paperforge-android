@@ -169,6 +169,11 @@ class MainActivity : ComponentActivity() {
                     ) { result ->
                         if (result.resultCode == RESULT_OK) result.data?.data?.let(vm::saveOutput)
                     }
+                val exportDirectory =
+                    rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) {
+                        uri ->
+                        uri?.let(vm::rememberOutputDirectory)
+                    }
                 val restore =
                     rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
                         it?.let(vm::restoreBackup)
@@ -580,9 +585,29 @@ class MainActivity : ComponentActivity() {
                         onDismissRequest = { vm.output.value = null },
                         title = { Text(if (file.extension == "pdf") "PDF 已生成" else "文件已生成") },
                         text = {
-                            Text(
-                                "${file.name}\n${file.length()/1024} KB\n${if(fileNotice.isNotBlank()) fileNotice+"\n" else ""}已保存在应用中，可另存到系统文件夹。"
-                            )
+                            val exportRevision by UserSettings.revision.collectAsState()
+                            val destination =
+                                remember(exportRevision) {
+                                    cn.paperforge.app.data
+                                        .ExportDestinations(this@MainActivity)
+                                        .get(UserSettings.string("exportDestination", ""))
+                                }
+                            Column {
+                                Text(
+                                    "${file.name}\n${file.length()/1024} KB\n${if(fileNotice.isNotBlank()) fileNotice+"\n" else ""}已保存在应用中，可另存到系统文件夹。"
+                                )
+                                destination?.let { folder ->
+                                    OutlinedButton(
+                                        onClick = { vm.saveOutputToDirectory(folder.id) },
+                                        modifier = Modifier.fillMaxWidth(),
+                                    ) {
+                                        Text("保存到 ${folder.name}")
+                                    }
+                                }
+                                TextButton(onClick = { exportDirectory.launch(destination?.uri) }) {
+                                    Text(if (destination == null) "选择并记住保存目录" else "重新选择保存目录")
+                                }
+                            }
                         },
                         confirmButton = {
                             TextButton(
@@ -592,6 +617,20 @@ class MainActivity : ComponentActivity() {
                                             .addCategory(Intent.CATEGORY_OPENABLE)
                                             .setType(mime(file))
                                             .putExtra(Intent.EXTRA_TITLE, file.name)
+                                            .apply {
+                                                cn.paperforge.app.data
+                                                    .ExportDestinations(this@MainActivity)
+                                                    .get(
+                                                        UserSettings.string("exportDestination", "")
+                                                    )
+                                                    ?.let {
+                                                        putExtra(
+                                                            android.provider.DocumentsContract
+                                                                .EXTRA_INITIAL_URI,
+                                                            it.uri,
+                                                        )
+                                                    }
+                                            }
                                     )
                                 }
                             ) {

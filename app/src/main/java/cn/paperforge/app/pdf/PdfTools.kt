@@ -246,6 +246,8 @@ object PdfTools {
         range: String,
         format: String = "jpg",
         edge: Int = 2000,
+        quality: Int = 92,
+        dpi: Int = 0,
         progress: suspend (Int) -> Unit = {},
     ) {
         val temp = File(output.path + ".part")
@@ -257,7 +259,9 @@ object PdfTools {
                         selected.forEachIndexed { i, n ->
                             coroutineContext.ensureActive()
                             renderer.openPage(n).use { page ->
-                                val scale = edge.toFloat() / maxOf(page.width, page.height)
+                                val scale =
+                                    if (dpi > 0) dpi / 72f
+                                    else edge.toFloat() / maxOf(page.width, page.height)
                                 val bitmap =
                                     Bitmap.createBitmap(
                                         (page.width * scale).toInt().coerceAtLeast(1),
@@ -280,7 +284,7 @@ object PdfTools {
                                                 @Suppress("DEPRECATION") Bitmap.CompressFormat.WEBP
                                             else -> Bitmap.CompressFormat.JPEG
                                         },
-                                        92,
+                                        quality,
                                         zip,
                                     )
                                     zip.closeEntry()

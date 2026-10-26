@@ -454,7 +454,12 @@ object BackupStore {
                                         if (old.type == "SAVE")
                                             payload =
                                                 JSONObject(payload)
-                                                    .apply { getJSONObject("input").remove("uri") }
+                                                    .apply {
+                                                        getJSONObject("input").remove("uri")
+                                                        getJSONObject("input").remove("treeUri")
+                                                        optJSONObject("checkpoint")
+                                                            ?.remove("destinationUri")
+                                                    }
                                                     .toString()
                                     }
                                     old.copy(

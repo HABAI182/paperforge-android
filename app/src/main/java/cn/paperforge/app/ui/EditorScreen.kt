@@ -109,11 +109,7 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
     var name by remember(doc?.id) { mutableStateOf(doc?.title ?: "") }
     var export by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
-    var paper by remember { mutableStateOf(UserSettings.string("paper", "Auto")) }
-    var resolution by remember { mutableStateOf(UserSettings.string("resolution", "STANDARD")) }
-    var quality by remember { mutableIntStateOf(UserSettings.number("quality", 90f).toInt()) }
     var adjust by remember { mutableStateOf(false) }
-    var searchable by remember { mutableStateOf(UserSettings.bool("searchable", true)) }
     var more by remember { mutableStateOf(false) }
     var bookSplit by remember { mutableStateOf(false) }
     var dewarp by remember { mutableStateOf(false) }
@@ -330,78 +326,7 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
             dismissButton = { TextButton(onClick = { adjust = false }) { Text("取消") } },
         )
     }
-    if (export)
-        AlertDialog(
-            onDismissRequest = { export = false },
-            title = { Text("导出多页 PDF") },
-            text = {
-                Column {
-                    Text("所有 ${pages.size} 页")
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(searchable, { searchable = it })
-                        Text("离线 OCR · 可搜索文字层")
-                    }
-                    TextButton(onClick = { paper = "ID" }) {
-                        Text(if (paper == "ID") "✓ 证件双面 A4 合版" else "证件双面 A4 合版")
-                    }
-                    Row(Modifier.horizontalScroll(rememberScrollState())) {
-                        listOf("Auto", "A4", "A5", "Letter").forEach { p ->
-                            TextButton(onClick = { paper = p }) {
-                                Text(
-                                    if (p == "Auto") "匹配扫描尺寸" else p,
-                                    color =
-                                        if (p == paper) MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
-                    }
-                    Row(
-                        Modifier.horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        listOf(
-                                "DRAFT" to "草稿 150 dpi",
-                                "STANDARD" to "标准 220 dpi",
-                                "HIGH" to "高清 300 dpi",
-                                "CUSTOM" to
-                                    "自定义 ${UserSettings.number("customDpi",300f).toInt()} dpi",
-                            )
-                            .forEach { (value, label) ->
-                                FilterChip(
-                                    resolution == value,
-                                    { resolution = value },
-                                    label = { Text(label) },
-                                )
-                            }
-                    }
-                    Text(
-                        "分辨率与压缩画质分别设置；源照片像素不足时保留实际清晰度，不虚构像素。固定纸张按比例留边。",
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                    Text("图像质量 $quality")
-                    Slider(
-                        value = quality.toFloat(),
-                        onValueChange = { quality = it.toInt() },
-                        valueRange = 50f..100f,
-                        steps = 9,
-                    )
-                    Text("后台生成后可预览、保存到任意文件夹或分享。", style = MaterialTheme.typography.bodySmall)
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        export = false
-                        vm.export(paper, quality, name, searchable, resolution)
-                    },
-                    enabled = !busy,
-                ) {
-                    Text("生成 PDF")
-                }
-            },
-            dismissButton = { TextButton(onClick = { export = false }) { Text("取消") } },
-        )
+    if (export) ScanExportDialog(vm, name, pages.size, { export = false })
     if (more && active != null)
         AlertDialog(
             onDismissRequest = { more = false },
