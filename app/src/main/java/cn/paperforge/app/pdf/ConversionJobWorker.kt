@@ -34,6 +34,7 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                                 when (job.input.getString("kind")) {
                                     "TABLE_ANALYZE" -> "TABLE_REVIEW"
                                     "MARKUP" -> "MARKUP"
+                                    "PDF_DIFF" -> "PDF_DIFF"
                                     else -> "CONVERT"
                                 },
                             "taskId" to job.row.id,
@@ -51,6 +52,15 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                 var completed = 0
                 val file: File
                 when (job.input.getString("kind")) {
+                    "PDF_DIFF" -> {
+                        file = File(repo.exports, "PaperForge-comparison-${job.row.workId}.zip")
+                        output = file
+                        PdfComparison.run(repo, job, file) { percent, detail ->
+                            DocumentJobs.progress(repo, job, percent, detail)
+                            setProgress(workDataOf("progress" to percent))
+                        }
+                        completed = 1
+                    }
                     "MARKUP" -> {
                         val epub = options.optString("target") == "EPUB"
                         file =
@@ -330,6 +340,7 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                             when (job.input.getString("kind")) {
                                 "TABLE_ANALYZE" -> "TABLE_REVIEW"
                                 "MARKUP" -> "MARKUP"
+                                "PDF_DIFF" -> "PDF_DIFF"
                                 else -> "CONVERT"
                             },
                         "taskId" to job.row.id,

@@ -52,6 +52,7 @@ object DocumentJobs {
                 "$source · ${when(input.getString("kind")) { "TEXT_PDF" -> "文字转 PDF"
  "TABLE_ANALYZE" -> "识别表格"
  "TABLE_EXPORT" -> "导出表格"
+ "PDF_DIFF" -> "PDF 差异比较"
  "TABLE_REVIEW" -> "表格草稿"
                             "MARKUP" -> if (JSONObject(input.getString("options") ?: "{}").optString("target") == "EPUB") "生成 EPUB 电子书" else "文档结构转换"
  else -> "图片转换" }}"

@@ -73,6 +73,7 @@ fun ConversionScreen(
     var bookColumns by rememberSaveable { mutableIntStateOf(0) }
     fun launch(entry: ToolCapability) {
         when (entry.mode) {
+            "pdf-diff" -> vm.screen.value = "pdf-diff"
             "md-html",
             "epub-html" -> onMarkup("HTML", org.json.JSONObject())
             "html-md",

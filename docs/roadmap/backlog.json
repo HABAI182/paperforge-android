@@ -1009,7 +1009,7 @@
       ],
       "scope": "并排同步、文本差异/视觉差异和报告",
       "acceptance": "能回到差异源区域，忽略项可配置",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "PDF08",
@@ -1252,8 +1252,8 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 62,
-    "planned": 18,
+    "done": 63,
+    "planned": 17,
     "partial": 18
   },
   "updated": "2026-10-26"

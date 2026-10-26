@@ -124,7 +124,12 @@ object MarkupDocuments {
             )
         }
 
-    suspend fun unpack(context: Context, source: File): File =
+    suspend fun unpack(
+        context: Context,
+        source: File,
+        maxFiles: Int = 5000,
+        maxBytes: Long = 400L * 1024 * 1024,
+    ): File =
         withContext(Dispatchers.IO) {
             val hash = PdfAssembly.sha256(source)
             val base = File(context.cacheDir, "markup-resources").canonicalFile.apply { mkdirs() }
@@ -140,7 +145,7 @@ object MarkupDocuments {
                     for (entry in zip.entries()) {
                         ensureActive()
                         count++
-                        require(count <= 5000) { "资源包文件过多" }
+                        require(count <= maxFiles) { "资源包文件过多" }
                         val target = File(directory, entry.name).canonicalFile
                         require(target.path.startsWith(directory.canonicalPath + File.separator)) {
                             "资源包路径不合适"
@@ -158,7 +163,7 @@ object MarkupDocuments {
                                     val n = input.read(buffer)
                                     if (n < 0) break
                                     bytes += n
-                                    require(bytes <= 400L * 1024 * 1024) { "资源包过大" }
+                                    require(bytes <= maxBytes) { "资源包过大" }
                                     output.write(buffer, 0, n)
                                 }
                             }

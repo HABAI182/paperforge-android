@@ -280,6 +280,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val searchHits = MutableStateFlow<List<cn.paperforge.app.pdf.PdfSearch.Hit>>(emptyList())
     val annotationPage = MutableStateFlow(0)
     val readerTarget = MutableStateFlow<Pair<String, Int>?>(null)
+    val readerLocation = MutableStateFlow<Pair<String, ReaderDestination>?>(null)
     val editorTarget = MutableStateFlow<Pair<String, Int>?>(null)
     val editorPageTarget = MutableStateFlow<Pair<String, String>?>(null)
     val libraryFocus = MutableStateFlow<LibrarySearchHit?>(null)
@@ -571,6 +572,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                                 .optString("kind") == "TABLE_ANALYZE"
                     ) {
                         tableWorkspace.result(row)
+                    } else if (
+                        row.type == "CONVERT" &&
+                            org.json
+                                .JSONObject(row.payload)
+                                .getJSONObject("input")
+                                .optString("kind") == "PDF_DIFF"
+                    ) {
+                        openPdfDiffResult(row)
                     } else if (row.type == "OCR") {
                         ocrPage = null
                         canCorrectOcr.value = false
@@ -1006,6 +1015,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                                                 ?: error("转换记录已移除")
                                         openMarkupResult(row)
                                     }
+                                    "PDF_DIFF" -> {
+                                        val row =
+                                            checkNotNull(
+                                                repo.dao.task(
+                                                    info.outputData.getString("taskId") ?: ""
+                                                )
+                                            )
+                                        openPdfDiffResult(row)
+                                    }
                                     "SAVE" -> messages.send("文件已保存并核对")
                                     else -> {
                                         val target = info.outputData.getLong("targetBytes", 0)
@@ -1290,6 +1308,123 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
 
     val textConversion = MutableStateFlow<TextConversionDraft?>(null)
+    val pdfDiffReview = MutableStateFlow<PdfDiffReview?>(null)
+    val pdfDiffPosition = MutableStateFlow<Pair<Int, String?>>(0 to null)
+    val pdfDiffOptions = MutableStateFlow(PdfDiffOptions())
+    val pdfDiffInputs = MutableStateFlow<List<Uri>>(emptyList())
+
+    fun startPdfComparison(uris: List<Uri>, options: PdfDiffOptions) {
+        if (uris.size != 2 || !busy.compareAndSet(false, true)) return
+        progress.value = "保留两份 PDF 原件"
+        task =
+            viewModelScope.launch {
+                var queued: UUID? = null
+                try {
+                    queued =
+                        withContext(Dispatchers.IO) {
+                            val files = ConversionInputs.retain(repo, uris)
+                            val library = repo.documents.first().associateBy { it.pdfPath }
+                            val names =
+                                files.mapIndexed { index, source ->
+                                    library[uris[index].path]?.title ?: source.second
+                                }
+                            DocumentJobs.enqueue(
+                                repo,
+                                "CONVERT",
+                                JobInput(
+                                    org.json
+                                        .JSONObject()
+                                        .put("kind", "PDF_DIFF")
+                                        .put("name", "文档比较")
+                                        .put(
+                                            "inputs",
+                                            org.json.JSONArray(files.map { it.first.path }),
+                                        )
+                                        .put("names", org.json.JSONArray(names))
+                                        .put("options", options.json().toString())
+                                ),
+                            )
+                        }
+                } catch (cancel: CancellationException) {
+                    throw cancel
+                } catch (error: Exception) {
+                    messages.send(error.message ?: "未能开始比较")
+                } finally {
+                    busy.value = false
+                    progress.value = ""
+                }
+                queued?.let(::watchExport)
+            }
+    }
+
+    private suspend fun openPdfDiffResult(row: LocalTaskRow) {
+        if (pdfDiffReview.value?.taskId != row.id) pdfDiffPosition.value = 0 to null
+        pdfDiffReview.value = withContext(Dispatchers.IO) { PdfDiffReview.open(repo, row) }
+        screen.value = "pdf-diff"
+    }
+
+    fun ignorePdfDifference(page: PdfDiffPage, finding: PdfDifference) =
+        perform("保存核对结果") { pdfDiffReview.value = pdfDiffReview.value?.toggle(repo, page, finding) }
+
+    fun exportPdfComparison() =
+        perform("生成比较报告") {
+            val review = pdfDiffReview.value ?: return@perform
+            val file = File(repo.exports, "PaperForge-comparison-${System.currentTimeMillis()}.zip")
+            PdfComparison.writeArchive(
+                file,
+                review.directory,
+                review.report,
+                listOf("left.pdf", "right.pdf").map { File(review.directory, it) },
+            )
+            publishOutput(file)
+        }
+
+    fun openPdfDifferenceSource(left: Boolean, page: PdfDiffPage, finding: PdfDifference?) =
+        perform("定位原 PDF") {
+            val review = pdfDiffReview.value ?: return@perform
+            val index = (if (left) page.leftPage else page.rightPage) ?: return@perform
+            val file = File(review.directory, if (left) "left.pdf" else "right.pdf")
+            val document =
+                markupPdfDocuments[file.path]
+                    ?.let { repo.dao.document(it) }
+                    ?.takeIf { it.trashedAt == null }
+                    ?: repo.importPdf(Uri.fromFile(file)).let {
+                        markupPdfDocuments[file.path] = it.id
+                        val name = review.report.getJSONArray("names").getString(if (left) 0 else 1)
+                        repo.rename(it, name)
+                        it.copy(title = name)
+                    }
+            repo.dao.opened(document.id, System.currentTimeMillis())
+            selected.value = document
+            searchHits.value = emptyList()
+            comparisonReturn.value = false
+            outputReturn.value = "pdf-diff"
+            readerTarget.value = null
+            val rect =
+                (if (left) finding?.left else finding?.right)?.let {
+                    val margin = maxOf(.025f, (it.right - it.left) * .15f)
+                    DiffRect(
+                        (it.left - margin).coerceAtLeast(0f),
+                        (it.top - .025f).coerceAtLeast(0f),
+                        (it.right + margin).coerceAtMost(1f),
+                        (it.bottom + .025f).coerceAtMost(1f),
+                    )
+                }
+            readerLocation.value =
+                document.id to
+                    if (rect == null) ReaderDestination(index, "Fit")
+                    else
+                        ReaderDestination(
+                            index,
+                            "FitR",
+                            rect.left,
+                            rect.top,
+                            rect.right,
+                            rect.bottom,
+                        )
+            screen.value = "reader"
+        }
+
     val markupReview = MutableStateFlow<MarkupReview?>(null)
     private val markupPdfDocuments = mutableMapOf<String, String>()
 

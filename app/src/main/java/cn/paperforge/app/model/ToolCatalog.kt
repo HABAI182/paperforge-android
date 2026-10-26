@@ -89,9 +89,18 @@ object ToolCatalog {
                 ToolCapability("PDF 每页独立拆分", "一页一份 PDF，打包保存", "整理", "split-each"),
                 ToolCapability("合并 PDF", "选择多份 PDF，调整顺序后合并", "整理", "merge"),
                 ToolCapability("压缩 PDF", "优化嵌入图片并保留文字和链接", "整理", "compress"),
+                ToolCapability("PDF 差异比较", "原生文字与外观、并排同步查看、区域定位与报告", "整理", "pdf-diff"),
             )
             .map { entry ->
                 when (entry.mode) {
+                    "pdf-diff" ->
+                        entry.copy(
+                            input = "两份 PDF；原生文字层可比较文字，扫描件可比较外观",
+                            output = "双栏差异工作台；原件 / 标注图片 / HTML / JSON 报告包",
+                            parameters = "两侧起始页、页眉页脚忽略范围、空白 / 大小写 / 灰度、外观容差、逐项忽略",
+                            boundary = "按所选起始页逐页配对；文字与外观记录可能重复。扫描件缺文字层时不声称语义差异，复杂插页可调整起始页核对。",
+                            aliases = "compare diff 对比 修订 审阅 版本 文档比较",
+                        )
                     "desktop-import" ->
                         entry.copy(
                             input = "电脑助手结果 ZIP",

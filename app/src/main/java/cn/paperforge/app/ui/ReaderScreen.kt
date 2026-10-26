@@ -228,6 +228,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
     var hitIndex by remember { mutableIntStateOf(0) }
     val hits by vm.searchHits.collectAsState()
     val readerTarget by vm.readerTarget.collectAsState()
+    val readerLocation by vm.readerLocation.collectAsState()
     fun goTo(index: Int) {
         val n = index.coerceIn(0, ((session?.count ?: 1) - 1).coerceAtLeast(0))
         navigationRequest = null
@@ -343,6 +344,13 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
         if (target != null && target.first == doc?.id && session != null) {
             goTo(target.second)
             vm.readerTarget.value = null
+        }
+    }
+    LaunchedEffect(readerLocation, session) {
+        val target = readerLocation
+        if (target != null && target.first == doc?.id && session != null) {
+            navigate(target.second)
+            vm.readerLocation.value = null
         }
     }
     BackHandler(!fullscreen && !search && navigationBack.isNotEmpty()) { returnToAnchor() }

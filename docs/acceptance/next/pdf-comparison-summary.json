@@ -1,0 +1,103 @@
+{
+  "checked": "2026-10-26",
+  "cards": [
+    "PDF07"
+  ],
+  "implemented": [
+    "Read-only retained originals; native text-line comparison and normalized 768x1088 visual grid using 1100px reference pages",
+    "Changed text blocks, visual regions, added/removed tail pages and page aspect changes; source-normalized region coordinates",
+    "Two synchronized page panels with zoom/pan, full-height viewer and clickable difference focus; independent source PDF region jump",
+    "Return to the same page group and difference selection; comfortable padding around source target",
+    "Start-page pairing offsets, header/footer exclusion, text whitespace/case and grayscale visual controls; difference tolerance",
+    "Per-finding persistent ignored IDs retained as task resources; filtered report export",
+    "Retained CONVERT jobs, per-page atomic image/JSON checkpoints, frozen input hashes/options/version, task-center reopen",
+    "Offline ZIP includes byte-identical originals, annotated page images via HTML overlays, machine-readable JSON and ignored IDs; no network added",
+    "Discoverable from Home/conversion catalog and existing library comparison"
+  ],
+  "focusedCheck": {
+    "test": "PdfComparisonFlowTest.retainedOriginalsTextVisualAddedPagesAndReviewedReport",
+    "result": "passed",
+    "seconds": 1.736,
+    "coverage": [
+      "100 to 200 text change",
+      "red to blue visual change",
+      "header exclusion and unchanged paired page",
+      "paired image-only pages explicitly appearance-only",
+      "added fourth page",
+      "source region bounds",
+      "persisted ignore / reopen / filtered archive",
+      "embedded original SHA256 unchanged"
+    ],
+    "executionNote": "One new functional test; emulator process reset discarded its first fixture, so it was rerun once to restore the fixture for UI checks. No old suites were repeated."
+  },
+  "actualUI": [
+    "Search diff in conversion center and open real PDF comparison setup",
+    "Select named library PDFs, set 12 percent top exclusion, enqueue and receive four-page-group report",
+    "Tap changed text and jump to original right PDF region; final padded target shows complete amount line",
+    "Ignore finding, move to group 3, open original right page 3 and return to group 3",
+    "Export actual comparison report to normal result dialog"
+  ],
+  "independentReadback": {
+    "originals": [
+      {
+        "file": "left.pdf",
+        "pages": 3,
+        "sha256": "1b89a897343f0e4de7c81c021140e193fb22b8faed398a6647afcc42e91009f5",
+        "firstPageText": "VERSION ONE\nInvoice amount 100"
+      },
+      {
+        "file": "right.pdf",
+        "pages": 4,
+        "sha256": "a3a582ca9f08fd8d1ca58a0637ea555580531aad50214afce567a4a70756a6d6",
+        "firstPageText": "VERSION TWO\nInvoice amount 200"
+      }
+    ],
+    "images": [
+      {
+        "file": "left-0.png",
+        "size": [
+          849,
+          1100
+        ],
+        "shapePixel": [
+          255,
+          0,
+          0
+        ]
+      },
+      {
+        "file": "right-0.png",
+        "size": [
+          849,
+          1100
+        ],
+        "shapePixel": [
+          0,
+          0,
+          255
+        ]
+      }
+    ],
+    "pageGroups": 4,
+    "ignored": [
+      "0:text-0"
+    ],
+    "htmlOriginalLinks": true,
+    "differencesPerGroup": [
+      3,
+      0,
+      1,
+      1
+    ]
+  },
+  "build": "Main APK assembled successfully; AndroidTest APK also assembled after bypassing a corrupt incremental KSP cache once with ksp.incremental=false. No source workaround was needed.",
+  "limits": [
+    "Controlled emulator fixtures; no physical device acceptance claimed",
+    "Pairing is sequential from selected offsets, without automatic semantic alignment after middle insertions",
+    "No native text layer means visual comparison only; use existing OCR route before semantic text review",
+    "Text and visual findings may describe the same change and are separately reviewable",
+    "No perspective registration or print-color fidelity claim; raster comparison uses a normalized reference grid",
+    "Checkpoints and result are retained with task resources; no crash/backup stress sweep performed",
+    "No version, tag or release was created"
+  ]
+}

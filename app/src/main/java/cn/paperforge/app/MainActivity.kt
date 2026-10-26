@@ -163,6 +163,19 @@ class MainActivity : ComponentActivity() {
                     ) { uris ->
                         if (uris.isNotEmpty()) vm.importAssemblySources(uris)
                     }
+                val diffImport =
+                    rememberLauncherForActivityResult(
+                        ActivityResultContracts.OpenMultipleDocuments()
+                    ) { uris ->
+                        if (uris.size == 2) vm.pdfDiffInputs.value = uris
+                        else if (uris.isNotEmpty())
+                            android.widget.Toast.makeText(
+                                    this,
+                                    "请选择两份 PDF",
+                                    android.widget.Toast.LENGTH_SHORT,
+                                )
+                                .show()
+                    }
                 val save =
                     rememberLauncherForActivityResult(
                         ActivityResultContracts.StartActivityForResult()
@@ -436,6 +449,8 @@ class MainActivity : ComponentActivity() {
                         "tables" -> TableReviewScreen(vm)
                         "notes" -> StudyNotesScreen(vm)
                         "comparison" -> LibraryComparisonScreen(vm)
+                        "pdf-diff" ->
+                            PdfDiffScreen(vm) { diffImport.launch(arrayOf("application/pdf")) }
                         "assembly" ->
                             PdfAssemblyScreen(vm) {
                                 assemblyImport.launch(arrayOf("application/pdf"))

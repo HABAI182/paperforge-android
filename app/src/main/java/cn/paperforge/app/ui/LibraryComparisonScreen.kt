@@ -83,6 +83,9 @@ fun LibraryComparisonScreen(vm: MainViewModel) {
                                 "相同内容集中显示，外观相似的页面可并排查看。",
                                 style = MaterialTheme.typography.bodyMedium,
                             )
+                            FilledTonalButton(onClick = { vm.screen.value = "pdf-diff" }) {
+                                Text("核对两份 PDF 的差异")
+                            }
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Button(onClick = controller::start, enabled = !running) {
                                     Text(if (report == null) "开始比较" else "重新比较")
