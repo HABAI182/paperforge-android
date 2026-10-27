@@ -19,6 +19,7 @@ object PdfSearchable {
         input: File,
         output: File,
         ocrEngine: cn.paperforge.app.ocr.OcrEngine? = null,
+        stages: JobFileStages? = null,
         progress: suspend (Int) -> Unit = {},
     ): JSONObject {
         val temporary = File(output.path + ".part")
@@ -31,6 +32,7 @@ object PdfSearchable {
                 if (ocrEngine != null) router.snapshot()
                 else cn.paperforge.app.ocr.OcrRequest.current(router.id).bind(router)
             val mapping = PdfTextLayer.Mapping().useFonts(engine.fontFiles)
+            val sourceHash = if (stages == null) "" else PdfAssembly.sha256(input)
             PDDocument.load(input, MemoryUsageSetting.setupTempFileOnly()).use { doc ->
                 val font = PdfTextLayer.font(context, doc)
                 ParcelFileDescriptor.open(input, ParcelFileDescriptor.MODE_READ_ONLY).use { fd ->
@@ -42,53 +44,66 @@ object PdfSearchable {
                             var added = 0
                             if (decision.needsOcr)
                                 renderer.openPage(i).use { view ->
-                                    val scale = 2400f / maxOf(view.width, view.height)
-                                    val bitmap =
-                                        Bitmap.createBitmap(
-                                            (view.width * scale).toInt().coerceAtLeast(1),
-                                            (view.height * scale).toInt().coerceAtLeast(1),
-                                            Bitmap.Config.ARGB_8888,
-                                        )
-                                    try {
-                                        bitmap.eraseColor(Color.WHITE)
-                                        view.render(
-                                            bitmap,
-                                            null,
-                                            null,
-                                            PdfRenderer.Page.RENDER_MODE_FOR_PRINT,
-                                        )
-                                        val layout =
-                                            NativeTextCoverage.removeCovered(
-                                                engine.recognizeBitmap(
-                                                    bitmap,
-                                                    cn.paperforge.app.UserSettings.string(
-                                                        "ocrLanguage",
-                                                        "CHINESE",
-                                                    ) != "LATIN",
-                                                ),
-                                                native,
+                                    suspend fun recognize(): cn.paperforge.app.model.OcrLayout {
+                                        val scale = 2400f / maxOf(view.width, view.height)
+                                        val bitmap =
+                                            Bitmap.createBitmap(
+                                                (view.width * scale).toInt().coerceAtLeast(1),
+                                                (view.height * scale).toInt().coerceAtLeast(1),
+                                                Bitmap.Config.ARGB_8888,
                                             )
-                                        val page = doc.getPage(i)
-                                        added = layout.lines.size
-                                        val box = page.cropBox
-                                        // PdfRenderer returns displayed coordinates. Undo page
-                                        // rotation before mapping.
-                                        val normalized =
-                                            PdfCoordinates.unrotate(layout, page.rotation)
-                                        PdfTextLayer.append(
-                                            doc,
-                                            page,
-                                            font,
-                                            normalized,
-                                            box.lowerLeftX,
-                                            box.lowerLeftY,
-                                            box.width,
-                                            box.height,
-                                            mapping,
-                                        )
-                                    } finally {
-                                        bitmap.recycle()
+                                        try {
+                                            bitmap.eraseColor(Color.WHITE)
+                                            view.render(
+                                                bitmap,
+                                                null,
+                                                null,
+                                                PdfRenderer.Page.RENDER_MODE_FOR_PRINT,
+                                            )
+                                            return engine.recognizeBitmap(
+                                                bitmap,
+                                                cn.paperforge.app.UserSettings.string(
+                                                    "ocrLanguage",
+                                                    "CHINESE",
+                                                ) != "LATIN",
+                                            )
+                                        } finally {
+                                            bitmap.recycle()
+                                        }
                                     }
+                                    val staged =
+                                        stages?.file(
+                                            "searchable-ocr-$i",
+                                            "pdf-ocr-stage-r1|$sourceHash|$i|${NativeTextCoverage.VERSION}|${engine.signature(true, cn.paperforge.app.ocr.OcrOptions.current())}",
+                                            "json",
+                                        ) { file ->
+                                            TableJobs.atomic(file, JSONObject(recognize().encode()))
+                                        }
+                                    val recognized =
+                                        if (staged == null) recognize()
+                                        else
+                                            cn.paperforge.app.model.OcrLayout.decode(
+                                                staged.readText()
+                                            )
+                                    val layout =
+                                        NativeTextCoverage.removeCovered(recognized, native)
+                                    val page = doc.getPage(i)
+                                    added = layout.lines.size
+                                    val box = page.cropBox
+                                    // PdfRenderer returns displayed coordinates. Undo page
+                                    // rotation before mapping.
+                                    val normalized = PdfCoordinates.unrotate(layout, page.rotation)
+                                    PdfTextLayer.append(
+                                        doc,
+                                        page,
+                                        font,
+                                        normalized,
+                                        box.lowerLeftX,
+                                        box.lowerLeftY,
+                                        box.width,
+                                        box.height,
+                                        mapping,
+                                    )
                                 }
                             decisions.put(
                                 JSONObject()

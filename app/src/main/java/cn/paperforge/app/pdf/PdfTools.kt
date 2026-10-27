@@ -248,6 +248,7 @@ object PdfTools {
         edge: Int = 2000,
         quality: Int = 92,
         dpi: Int = 0,
+        stages: JobFileStages? = null,
         progress: suspend (Int) -> Unit = {},
     ) {
         val temp = File(output.path + ".part")
@@ -255,28 +256,30 @@ object PdfTools {
             ParcelFileDescriptor.open(input, ParcelFileDescriptor.MODE_READ_ONLY).use { fd ->
                 PdfRenderer(fd).use { renderer ->
                     val selected = parsePageRange(range, renderer.pageCount)
-                    ZipOutputStream(temp.outputStream().buffered()).use { zip ->
-                        selected.forEachIndexed { i, n ->
-                            coroutineContext.ensureActive()
-                            renderer.openPage(n).use { page ->
-                                val scale =
-                                    if (dpi > 0) dpi / 72f
-                                    else edge.toFloat() / maxOf(page.width, page.height)
-                                val bitmap =
-                                    Bitmap.createBitmap(
-                                        (page.width * scale).toInt().coerceAtLeast(1),
-                                        (page.height * scale).toInt().coerceAtLeast(1),
-                                        Bitmap.Config.ARGB_8888,
-                                    )
-                                try {
-                                    bitmap.eraseColor(Color.WHITE)
-                                    page.render(
-                                        bitmap,
-                                        null,
-                                        null,
-                                        PdfRenderer.Page.RENDER_MODE_FOR_PRINT,
-                                    )
-                                    zip.putNextEntry(ZipEntry("page-%04d.%s".format(n + 1, format)))
+                    val signature =
+                        if (stages == null) ""
+                        else
+                            "pdf-images-r1|${PdfAssembly.sha256(input)}|$format|$edge|$quality|$dpi"
+                    suspend fun render(n: Int, destination: java.io.OutputStream) {
+                        renderer.openPage(n).use { page ->
+                            val scale =
+                                if (dpi > 0) dpi / 72f
+                                else edge.toFloat() / maxOf(page.width, page.height)
+                            val bitmap =
+                                Bitmap.createBitmap(
+                                    (page.width * scale).toInt().coerceAtLeast(1),
+                                    (page.height * scale).toInt().coerceAtLeast(1),
+                                    Bitmap.Config.ARGB_8888,
+                                )
+                            try {
+                                bitmap.eraseColor(Color.WHITE)
+                                page.render(
+                                    bitmap,
+                                    null,
+                                    null,
+                                    PdfRenderer.Page.RENDER_MODE_FOR_PRINT,
+                                )
+                                check(
                                     bitmap.compress(
                                         when (format) {
                                             "png" -> Bitmap.CompressFormat.PNG
@@ -285,14 +288,65 @@ object PdfTools {
                                             else -> Bitmap.CompressFormat.JPEG
                                         },
                                         quality,
-                                        zip,
+                                        destination,
                                     )
-                                    zip.closeEntry()
-                                } finally {
-                                    bitmap.recycle()
+                                ) {
+                                    "页面图片编码失败"
                                 }
+                            } finally {
+                                bitmap.recycle()
                             }
+                        }
+                    }
+                    ZipOutputStream(temp.outputStream().buffered()).use { zip ->
+                        selected.forEachIndexed { i, n ->
+                            coroutineContext.ensureActive()
+                            val image =
+                                stages?.file("pdf-image-$n", signature, format) { file ->
+                                    val atomic = android.util.AtomicFile(file)
+                                    val stream = atomic.startWrite()
+                                    try {
+                                        render(n, stream)
+                                        coroutineContext.ensureActive()
+                                        atomic.finishWrite(stream)
+                                    } catch (failure: Throwable) {
+                                        atomic.failWrite(stream)
+                                        throw failure
+                                    }
+                                }
+                            zip.putNextEntry(ZipEntry("page-%04d.%s".format(n + 1, format)))
+                            if (image == null) render(n, zip)
+                            else image.inputStream().use { it.copyTo(zip) }
+                            zip.closeEntry()
                             progress((i + 1) * 100 / selected.size)
+                        }
+                        if (stages != null) {
+                            zip.putNextEntry(ZipEntry("images.json"))
+                            zip.write(
+                                org.json
+                                    .JSONObject()
+                                    .put("format", 1)
+                                    .put("signature", signature)
+                                    .put("sourcePages", org.json.JSONArray(selected.map { it + 1 }))
+                                    .put(
+                                        "pages",
+                                        org.json.JSONArray(
+                                            selected.map {
+                                                org.json
+                                                    .JSONObject()
+                                                    .put("page", it + 1)
+                                                    .put(
+                                                        "file",
+                                                        "page-%04d.%s".format(it + 1, format),
+                                                    )
+                                            }
+                                        ),
+                                    )
+                                    .put("stages", stages.entries)
+                                    .toString(2)
+                                    .toByteArray(Charsets.UTF_8)
+                            )
+                            zip.closeEntry()
                         }
                     }
                 }

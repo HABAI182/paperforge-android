@@ -159,7 +159,13 @@ object RecipeJobs {
                             stageProgress(it)
                         }
                     "searchable" ->
-                        PdfSearchable.convert(repo.context, source, result, request.bind(router)) {
+                        PdfSearchable.convert(
+                            repo.context,
+                            source,
+                            result,
+                            request.bind(router),
+                            stages = JobFileStages(repo, job),
+                        ) {
                             stageProgress(it)
                         }
                     "compress" ->
@@ -182,6 +188,7 @@ object RecipeJobs {
                             step.options.optString("range"),
                             "png",
                             step.options.optInt("edge", 2200).coerceIn(600, 6000),
+                            stages = JobFileStages(repo, job),
                         ) {
                             stageProgress(it)
                         }

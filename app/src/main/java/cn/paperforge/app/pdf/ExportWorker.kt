@@ -89,6 +89,7 @@ class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                     }
                 }
                 val pages = repo.dao.pages(doc.id)
+                val pageStages = JobFileStages(repo, job)
                 val fingerprint =
                     listOf(
                             pages.joinToString { "${it.id}:${it.revision}" },
@@ -97,6 +98,8 @@ class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                             data.getInt("quality", 90),
                             data.getBoolean("searchable", false),
                             if (data.getBoolean("searchable", false)) PdfTextLayer.VERSION else "",
+                            if (data.getBoolean("searchable", false)) request.signature else "",
+                            pages.joinToString { JobFileStages.digest(it.ocrLayout.orEmpty()) },
                         )
                         .joinToString("|")
                 val cached =
@@ -118,12 +121,13 @@ class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                         !stage.isFile ||
                         stage.length() == 0L
                 ) {
-                    PdfEngine.scan(
-                        repo.dao.pages(doc.id),
+                    ScanPageStages.scan(
+                        applicationContext,
+                        pages,
                         stage,
+                        pageStages,
                         data.getString("paper") ?: "Auto",
                         data.getInt("quality", 90),
-                        applicationContext,
                         data.getBoolean("searchable", false),
                         data.getString("resolution") ?: "STANDARD",
                         engine,
@@ -155,6 +159,7 @@ class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                             cn.paperforge.app.imaging.ScanConfig.dpi(
                                 data.getString("resolution") ?: "STANDARD"
                             ),
+                        stages = pageStages,
                     ) {
                         report(60 + it * 40 / 100, "正在打包页面图片")
                     }

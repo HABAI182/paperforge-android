@@ -131,6 +131,11 @@ object DocumentJobs {
                 )
             input.json.put("ocrRequest", request.json())
         }
+        if (type == "SCAN_EXPORT")
+            input.json.put(
+                "resolution",
+                "DPI:${cn.paperforge.app.imaging.ScanConfig.dpi(input.getString("resolution") ?: "STANDARD")}",
+            )
         val doc = input.getString("document")?.let { repo.dao.document(it) }
         val files = mutableListOf<PageResource>()
         fun resource(id: String, path: String?) {

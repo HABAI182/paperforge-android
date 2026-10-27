@@ -204,6 +204,7 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                             range,
                             mode.substringAfter("images-"),
                             p.optInt("edge", 2200),
+                            stages = JobFileStages(repo, job),
                         ) {
                             report(it)
                         }
@@ -223,6 +224,7 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                                         (applicationContext as PaperForgeApp).ocrEngine.id,
                                     )
                                     .bind((applicationContext as PaperForgeApp).ocrEngine),
+                                stages = JobFileStages(repo, job),
                             ) {
                                 report(it)
                             }

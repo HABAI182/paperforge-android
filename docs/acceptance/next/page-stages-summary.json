@@ -1,0 +1,63 @@
+{
+  "checked": "2026-10-27",
+  "cards": [
+    "JOB01"
+  ],
+  "status": "partial",
+  "implementation": [
+    "Persistent SHA/length-checked page stage files registered as task resources and included in backup remapping",
+    "Scan PDF checkpoints per source page; ID front/back form a single checkpoint unit; page labels remain sequential",
+    "PDF/scan PNG/JPG/WebP ZIP output reuses completed image encodes; compatible pages/file manifest enables actual result preview",
+    "Searchable PDF caches each actual OCR layout before text-layer assembly; retry skips completed bitmap rendering and OCR",
+    "Workflow recipes share image and searchable-PDF page checkpoints",
+    "Custom export DPI is resolved when the job is prepared and remains fixed across later settings changes"
+  ],
+  "focusedAndroid": {
+    "class": "PageStagesFlowTest",
+    "result": "OK (1 test)",
+    "seconds": 3.388,
+    "log": "page-stages-android.log",
+    "database": "Isolated in-memory Room database; real durable files and actual BackupStore ZIP/restore",
+    "scanAfterActualBackupRestore": {
+      "reused": 1,
+      "generated": 2
+    },
+    "idPairAfterBackEdit": {
+      "reused": 1,
+      "generated": 1
+    },
+    "imageArchiveAfterNewWorkId": {
+      "reused": 1,
+      "generated": 2
+    },
+    "textLayerAfterNewWorkId": {
+      "reused": 1,
+      "generated": 2,
+      "totalOcrCallsForThreePages": 3
+    },
+    "actualZipPreviewPages": 3,
+    "sourceUnchanged": true,
+    "frozenResolution": "DPI:180"
+  },
+  "independentReadback": {
+    "report": "page-stages/independent-readback.json",
+    "engine": "MuPDF and Pillow",
+    "allThreeDirectAndResumedPagesPixelIdenticalAt100Dpi": true,
+    "allThreeInvisibleTextLayersPixelIdenticalAt100Dpi": true,
+    "actualZipPreviewMatchesEachPngPixelForPixel": true,
+    "idBackEditChangesOnlyItsOutputPage": true
+  },
+  "actualUI": {
+    "evidence": "page-stages/actual-ui.json",
+    "screenshot": "page-stages/actual-preview.png",
+    "route": "Android DocumentsUI import -> PDF tools PNG -> result -> actual ZIP comparison page 2/3"
+  },
+  "limits": [
+    "OCR layouts in this recovery check are supplied fixtures; real model accuracy belongs to the separate OCR evidence",
+    "New task handles/work IDs and actual backup restoration test durable recovery; this does not simulate all Android process-death or provider failure timing",
+    "Final ZIP assembly and final PDF object merging restart, while completed expensive image/OCR stages are reused",
+    "Other native PDF rewriting and raster/long-image tool paths still need their remaining checkpoints; JOB01 remains partial",
+    "Existing Office/table/format/batch backend suites were not repeated",
+    "No new version, tag or release"
+  ]
+}

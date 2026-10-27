@@ -1,0 +1,41 @@
+{
+  "scanAfterBackup": {
+    "reused": 1,
+    "generated": 2,
+    "stages": [
+      {
+        "key": "scan-page-0",
+        "reused": true,
+        "bytes": 7280,
+        "sha256": "104c314666e8557fa4dc54ac5c8c14e1f33b0e1aa42caeead900cb7df5116fce"
+      },
+      {
+        "key": "scan-page-1",
+        "reused": false,
+        "bytes": 7732,
+        "sha256": "e3f2f7c45958361e5bf1c6446e9e3056210f0ade6dedf7ceb87a01b7a7b39037"
+      },
+      {
+        "key": "scan-page-2",
+        "reused": false,
+        "bytes": 7885,
+        "sha256": "0738ddee6d289b3860e3f37aaea7e4042d452b8a4ee1ac81b1b6d9c04bd4bb1d"
+      }
+    ]
+  },
+  "idPairEdit": {
+    "reused": 1,
+    "generated": 1
+  },
+  "imagesAfterRestart": {
+    "reused": 1,
+    "generated": 2
+  },
+  "textAfterRestart": {
+    "reused": 1,
+    "generated": 2,
+    "totalOcrCalls": 3
+  },
+  "sourceUnchanged": true,
+  "frozenResolution": "DPI:180"
+}

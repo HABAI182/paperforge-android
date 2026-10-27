@@ -1,0 +1,52 @@
+{
+  "engine": "PyMuPDF / MuPDF and Pillow",
+  "dpi": 100,
+  "pages": [
+    {
+      "page": 1,
+      "directVsResumedPixelsIdentical": true,
+      "textLayerPixelsIdentical": true,
+      "text": "OCR PAGE 1\n"
+    },
+    {
+      "page": 2,
+      "directVsResumedPixelsIdentical": true,
+      "textLayerPixelsIdentical": true,
+      "text": "OCR PAGE 2\n"
+    },
+    {
+      "page": 3,
+      "directVsResumedPixelsIdentical": true,
+      "textLayerPixelsIdentical": true,
+      "text": "OCR PAGE 3\n"
+    }
+  ],
+  "archiveImages": [
+    {
+      "file": "page-0001.png",
+      "size": [
+        399,
+        600
+      ],
+      "actualPreviewPixelsIdentical": true
+    },
+    {
+      "file": "page-0002.png",
+      "size": [
+        399,
+        600
+      ],
+      "actualPreviewPixelsIdentical": true
+    },
+    {
+      "file": "page-0003.png",
+      "size": [
+        399,
+        600
+      ],
+      "actualPreviewPixelsIdentical": true
+    }
+  ],
+  "idCardPages": 2,
+  "idPairEditChangesOnlyFirstOutputPage": true
+}
