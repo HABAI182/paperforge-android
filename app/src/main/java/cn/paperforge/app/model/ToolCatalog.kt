@@ -56,6 +56,12 @@ object ToolCatalog {
                 ),
                 ToolCapability("PDF / 图片 → CSV 表格包", "每张表独立 CSV，附结构与来源信息", "手机表格", "tables-csv"),
                 ToolCapability("PDF → PowerPoint · 整页外观", "手机本地生成，一页一张图片幻灯片", "文字", "pdf-pptx"),
+                ToolCapability(
+                    "PDF → PowerPoint · 原生对象",
+                    "可见文字、图片和基础路径；复杂页可保留外观或优先编辑",
+                    "文字",
+                    "pdf-pptx-native",
+                ),
                 ToolCapability("Markdown → HTML 资源包", "标题、列表、链接、表格、脚注与图片；附打印样式", "文字", "md-html"),
                 ToolCapability("HTML → Markdown 资源包", "有限语法转换；合并表格和复杂样式保留 HTML", "文字", "html-md"),
                 ToolCapability(
@@ -229,6 +235,15 @@ object ToolCatalog {
                             boundary = "转换静态结构；远程图片不自动下载。",
                             engine = "手机离线 CommonMark + HTML",
                             aliases = "markdown md 网页 html 打印",
+                        )
+                    "pdf-pptx-native" ->
+                        entry.copy(
+                            input = "带原生内容的 PDF；扫描图仍作为图片",
+                            output = "文字框、图片和基础矢量形状组成的 PPTX；附逐页转换记录",
+                            parameters = "默认复杂页保留整页外观；可选择优先编辑并简化复杂效果",
+                            boundary =
+                                "字体使用本机字体近似；混合纸张等比居中到首页尺寸。不重建图表数据、动画与语义表格。竖排、坏文字映射或未完整解析的页保留外观。",
+                            aliases = "powerpoint ppt pptx 编辑 editable 文字 对象 图形 vector",
                         )
                     "html-md" ->
                         entry.copy(
@@ -467,6 +482,7 @@ object ToolCatalog {
             "docx" to "导出可编辑段落 DOCX",
             "docx-layout" to "手机结构重建 DOCX",
             "pdf-pptx" to "PDF 转 PPTX 整页图片",
+            "pdf-pptx-native" to "PDF 转 PPTX 原生对象",
             "docx-image" to "原页参考图 + 文字 DOCX",
             "optimize" to "图片优化与资源去重",
             "flatten" to "扁平化为图像 PDF（有损）",

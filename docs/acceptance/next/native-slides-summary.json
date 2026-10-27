@@ -1,0 +1,62 @@
+{
+  "checked": "2026-10-27",
+  "cards": [
+    "CVT13"
+  ],
+  "cardStatus": "done within documented conversion modes",
+  "implemented": [
+    "PDF to editable visible text boxes, embedded pictures and basic vector paths in PPTX; preserves PDF painting order",
+    "Font size, bold/italic, color/alpha and approximate installed-font mapping; source baselines mapped to the DrawingML em frame",
+    "Crop origin, page rotation and UserUnit handled; mixed page sizes fit proportionally onto the first slide canvas",
+    "Unsupported clipping/masks/blends/effects default to actual full-page appearance; explicit editing priority may simplify supported parsed objects",
+    "Bad Unicode, vertical/Type3 text or incomplete parsing retain page appearance even in editing priority",
+    "Scans remain pictures and invisible OCR is not presented as editable visible text",
+    "Single and batch conversion entries, human-readable page-mode totals, durable report resource and report inside PPTX",
+    "Earlier static PPTX and Office to PNG/JPG/WebP packages complete the other routes in this card"
+  ],
+  "focusedCheck": {
+    "test": "NativeSlidesFlowTest.nativeTextImagesPathsPaintingOrderRotationAndExplicitComplexPageModes",
+    "seconds": 7.296,
+    "result": "OK (1 test)",
+    "log": "native-slides-android.log",
+    "rerunReason": "Corrected observed 6.8pt English baseline shift; no old suites repeated"
+  },
+  "independentReadback": {
+    "report": "native-slides/independent-readback.json",
+    "engines": [
+      "OOXML XML/ZIP readback",
+      "PyMuPDF / MuPDF",
+      "actual phone Office engine"
+    ],
+    "nativePages": 2,
+    "appearancePages": 1,
+    "preferEditingSimplifiedPages": 1,
+    "maxSampleBaselineDifferencePt": 0.0362,
+    "sameImageUsedTwice": true,
+    "paintOrderVerifiedAgainstCoveringRectangle": true,
+    "originalSha256Unchanged": true
+  },
+  "actualUI": {
+    "entry": "PDF → PowerPoint · 原生对象",
+    "resultNotice": "原生对象 2 页 · 编辑简化 0 页 · 整页外观 1 页",
+    "actualSourceAndOutputCompared": true,
+    "complexPage3Compared": true,
+    "screenshots": [
+      "native-options-ui.png",
+      "native-comparison-ui.png",
+      "native-complex-page-ui.png"
+    ]
+  },
+  "schemaReferences": [
+    "https://learn.microsoft.com/en-us/office/open-xml/presentation/working-with-presentation-slides",
+    "https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.drawing.runproperties?view=openxml-3.0.1",
+    "https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.drawing.transform2d?view=openxml-3.0.1"
+  ],
+  "limits": [
+    "Fonts are approximate, including per-character width; no universal pixel-identical typography claim",
+    "Native objects are not semantic charts/tables, animation or audio reconstruction",
+    "Default unsupported-page rasterization retains appearance at 2200px longest edge; editing priority visibly simplifies effects",
+    "Concentrated synthetic three-page geometry/content fixture and actual UI; no physical-phone or general competitor fidelity claim",
+    "No new version, tag or release"
+  ]
+}

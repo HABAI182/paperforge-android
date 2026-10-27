@@ -1,0 +1,146 @@
+{
+  "focusedFlow": {
+    "sourceSha256": "5a82388fd3b7b7b65a2a1509de25d28516e43682a8932a174261f28d41b6ca4e",
+    "sourceUnchanged": true,
+    "nativePages": 2,
+    "appearancePages": 1,
+    "editPreferredSimplifiedPages": 1,
+    "sourceAndActualPptxPreviewPages": 3,
+    "standardReport": {
+      "format": 1,
+      "mode": "editable-visible-objects",
+      "preferEditable": false,
+      "detail": "可见原生文字、图片和基础路径作为对象；复杂页保留整页外观，扫描图仍为图片。字体以本机可用字体近似。原件可随时对照。",
+      "pages": [
+        {
+          "page": 1,
+          "mode": "editable-objects",
+          "textBoxes": 3,
+          "paths": 3,
+          "pictures": 2,
+          "appearanceReasons": [],
+          "fontMap": {
+            "Helvetica-Bold": "Liberation Sans",
+            "PaperForgeCJK-Regular": "Liberation Sans",
+            "Helvetica": "Liberation Sans"
+          },
+          "invisibleTextSkipped": 0
+        },
+        {
+          "page": 2,
+          "mode": "editable-objects",
+          "textBoxes": 1,
+          "paths": 1,
+          "pictures": 1,
+          "appearanceReasons": [],
+          "fontMap": {
+            "Helvetica": "Liberation Sans"
+          },
+          "invisibleTextSkipped": 0
+        },
+        {
+          "page": 3,
+          "mode": "page-appearance",
+          "textBoxes": 0,
+          "paths": 0,
+          "pictures": 1,
+          "appearanceReasons": [
+            "局部裁剪"
+          ],
+          "fontMap": {
+            "Helvetica": "Liberation Sans"
+          },
+          "invisibleTextSkipped": 0
+        }
+      ]
+    }
+  },
+  "paintOrder": {
+    "textShapeIndex": 7,
+    "coveringRectangleIndex": 8,
+    "originalOrderPreserved": true
+  },
+  "pptx": [
+    {
+      "page": 1,
+      "text": [
+        "NATIVE 00123",
+        "原生文字 00123",
+        "PAINT ORDER"
+      ],
+      "pictures": 2,
+      "editablePaths": 3
+    },
+    {
+      "page": 2,
+      "text": [
+        "ROTATED 00456"
+      ],
+      "pictures": 1,
+      "editablePaths": 1
+    },
+    {
+      "page": 3,
+      "text": [],
+      "pictures": 1,
+      "editablePaths": 0
+    }
+  ],
+  "textMetrics": [
+    {
+      "text": "NATIVE 00123",
+      "sourceOrigin": [
+        40.0,
+        70.0
+      ],
+      "actualOriginNormalizedToSource": [
+        39.96837157210351,
+        69.98840399212732
+      ],
+      "baselinePointDifference": [
+        -0.031628427896492894,
+        -0.01159600787268289
+      ],
+      "sourceFont": "Helvetica-Bold",
+      "actualFont": "LiberationSans-Bold",
+      "sourceSize": 24.0,
+      "actualSize": 24.009000778198242
+    },
+    {
+      "text": "原生文字 00123",
+      "sourceOrigin": [
+        40.0,
+        120.0
+      ],
+      "actualOriginNormalizedToSource": [
+        39.996371008554455,
+        119.96380281613845
+      ],
+      "baselinePointDifference": [
+        -0.003628991445545182,
+        -0.03619718386154602
+      ],
+      "sourceFont": "PaperForgeCJK-Regular",
+      "actualFont": "NotoSansCJKSC-Regular",
+      "sourceSize": 16.0,
+      "actualSize": 15.987000465393066
+    }
+  ],
+  "actualPixels": {
+    "imageTopLeftRed": [
+      254,
+      0,
+      0
+    ],
+    "imageBottomRightGreen": [
+      0,
+      255,
+      1
+    ],
+    "coveredTextBlack": [
+      0,
+      0,
+      0
+    ]
+  }
+}

@@ -27,6 +27,7 @@ fun PdfToolsDialog(vm: MainViewModel, initialMode: String = "", onDismiss: () ->
     var number by remember { mutableStateOf("5") }
     var printAllowed by remember { mutableStateOf(true) }
     var copyAllowed by remember { mutableStateOf(true) }
+    var preferEditable by remember { mutableStateOf(false) }
     if (mode == "redact") {
         LaunchedEffect(Unit) {
             vm.queueTool("redact")
@@ -81,6 +82,7 @@ fun PdfToolsDialog(vm: MainViewModel, initialMode: String = "", onDismiss: () ->
                             "docx",
                             "docx-layout",
                             "pdf-pptx",
+                            "pdf-pptx-native",
                             "docx-image",
                         )
                     val pageTools = setOf("split-each", "crop", "blank", "nup2", "nup4", "number")
@@ -181,6 +183,15 @@ fun PdfToolsDialog(vm: MainViewModel, initialMode: String = "", onDismiss: () ->
                     if (mode == "docx-layout")
                         Text("本机重建文字、表格与嵌入图片；扫描件会离线 OCR。复杂跨栏、裁剪图形和浮动对象可能重新排版，请对照原件。")
                     if (mode == "pdf-pptx") Text("每页生成一张图片幻灯片，保留页面外观；文字与图表不是独立可编辑对象。")
+                    if (mode == "pdf-pptx-native") {
+                        Text(
+                            "可见文字、图片和基础路径作为可编辑对象；复杂页默认保留整页外观。扫描图仍是图片，字体以本机字体近似；混合纸张等比居中到首页尺寸，附逐页记录。"
+                        )
+                        Row {
+                            Checkbox(preferEditable, { preferEditable = it })
+                            Text("优先编辑，简化复杂剪裁与遮罩", Modifier.padding(top = 10.dp))
+                        }
+                    }
                     if (mode == "docx-image") Text("每页参考图加可编辑文字段落，便于对照。图片保留页面外观；不重建原排版或表格。")
                     if (mode == "docx") Text("导出可编辑的文字段落，保留文字阅读顺序；图片、表格与原排版不属于此模式。")
                     if (mode in listOf("optimize", "nup2", "nup4"))
@@ -219,6 +230,7 @@ fun PdfToolsDialog(vm: MainViewModel, initialMode: String = "", onDismiss: () ->
                                         .put("text", text)
                                         .put("title", text)
                                         .put("author", second)
+                                        .put("preferEditable", preferEditable)
                                 if (mode == "crop") p.put("percent", number.toDoubleOrNull() ?: -1)
                                 if (mode == "blank") p.put("after", number.toIntOrNull() ?: -1)
                                 vm.queueTool(mode, p)

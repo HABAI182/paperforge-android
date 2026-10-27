@@ -767,7 +767,7 @@
       ],
       "scope": "PDF整页图PPTX、PPT图片包及后续编辑模式",
       "acceptance": "整页图模式不声称文字可编辑",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "CVT14",
@@ -1252,8 +1252,8 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 75,
-    "partial": 12,
+    "done": 76,
+    "partial": 11,
     "planned": 11
   },
   "updated": "2026-10-27"

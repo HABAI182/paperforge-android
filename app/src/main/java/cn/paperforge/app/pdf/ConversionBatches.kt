@@ -59,6 +59,7 @@ data class BatchPreset(val kind: String = "TEXT_PDF", val options: String = "{}"
                 "docx" to "Word 正文",
                 "docx-image" to "Word 外观",
                 "pdf-pptx" to "PowerPoint",
+                "pdf-pptx-native" to "PowerPoint 原生对象",
                 "images-jpg" to "JPG 页包",
                 "images-png" to "PNG 页包",
                 "images-webp" to "WebP 页包",

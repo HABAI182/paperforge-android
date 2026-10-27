@@ -1,0 +1,48 @@
+{
+  "format": 1,
+  "mode": "editable-visible-objects",
+  "preferEditable": false,
+  "detail": "可见原生文字、图片和基础路径作为对象；复杂页保留整页外观，扫描图仍为图片。字体以本机可用字体近似。原件可随时对照。",
+  "pages": [
+    {
+      "page": 1,
+      "mode": "editable-objects",
+      "textBoxes": 3,
+      "paths": 3,
+      "pictures": 2,
+      "appearanceReasons": [],
+      "fontMap": {
+        "Helvetica-Bold": "Liberation Sans",
+        "PaperForgeCJK-Regular": "Liberation Sans",
+        "Helvetica": "Liberation Sans"
+      },
+      "invisibleTextSkipped": 0
+    },
+    {
+      "page": 2,
+      "mode": "editable-objects",
+      "textBoxes": 1,
+      "paths": 1,
+      "pictures": 1,
+      "appearanceReasons": [],
+      "fontMap": {
+        "Helvetica": "Liberation Sans"
+      },
+      "invisibleTextSkipped": 0
+    },
+    {
+      "page": 3,
+      "mode": "page-appearance",
+      "textBoxes": 0,
+      "paths": 0,
+      "pictures": 1,
+      "appearanceReasons": [
+        "局部裁剪"
+      ],
+      "fontMap": {
+        "Helvetica": "Liberation Sans"
+      },
+      "invisibleTextSkipped": 0
+    }
+  ]
+}

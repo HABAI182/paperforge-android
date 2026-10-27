@@ -1,0 +1,48 @@
+{
+  "format": 1,
+  "mode": "editable-visible-objects",
+  "preferEditable": true,
+  "detail": "优先保留可编辑对象，复杂剪裁或遮罩可能被简化；未完整解码的页保留整页外观。扫描图仍为图片，字体以本机字体近似。",
+  "pages": [
+    {
+      "page": 1,
+      "mode": "editable-objects",
+      "textBoxes": 3,
+      "paths": 3,
+      "pictures": 2,
+      "appearanceReasons": [],
+      "fontMap": {
+        "Helvetica-Bold": "Liberation Sans",
+        "PaperForgeCJK-Regular": "Liberation Sans",
+        "Helvetica": "Liberation Sans"
+      },
+      "invisibleTextSkipped": 0
+    },
+    {
+      "page": 2,
+      "mode": "editable-objects",
+      "textBoxes": 1,
+      "paths": 1,
+      "pictures": 1,
+      "appearanceReasons": [],
+      "fontMap": {
+        "Helvetica": "Liberation Sans"
+      },
+      "invisibleTextSkipped": 0
+    },
+    {
+      "page": 3,
+      "mode": "editable-simplified",
+      "textBoxes": 1,
+      "paths": 1,
+      "pictures": 0,
+      "appearanceReasons": [
+        "局部裁剪"
+      ],
+      "fontMap": {
+        "Helvetica": "Liberation Sans"
+      },
+      "invisibleTextSkipped": 0
+    }
+  ]
+}

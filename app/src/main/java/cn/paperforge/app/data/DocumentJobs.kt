@@ -88,6 +88,7 @@ object DocumentJobs {
             "searchable" to "添加文字层",
             "docx-layout" to "转换 Word",
             "pdf-pptx" to "转换 PowerPoint",
+            "pdf-pptx-native" to "PowerPoint 原生对象",
             "txt" to "提取文字",
             "md" to "导出 Markdown",
             "html" to "导出 HTML",

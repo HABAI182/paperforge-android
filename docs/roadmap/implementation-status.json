@@ -362,8 +362,8 @@
     {
       "id": "CVT13",
       "title": "幻灯片与图片互转",
-      "status": "partial",
-      "note": "手机整页图PPTX已有；新增实际手机排版的PPT/Office→PNG/JPG/WebP静态图片包、参数、逐页检查点和原件/实际ZIP对照。10.692秒集中流程、缓存重试旧结果保留、独立复读与UI 800px输出通过，见 office-pages-summary.json。原生可编辑内容模式仍在开发，整卡保留partial。"
+      "status": "done",
+      "note": "PDF整页图片PPTX、手机Office到PNG/JPG/WebP静态页包，以及PDF可见原生文字/图片/基础路径可编辑PPTX均已接入；复杂页默认保留外观，可显式编辑优先简化，坏映射/竖排保留外观。逐页报告、批量与实际结果对照；基线修正后新流程7.296秒、独立OOXML/MuPDF和真实UI通过。字体近似，不声称图表/动画/语义表格重建。见 native-slides-summary.json"
     },
     {
       "id": "CVT14",
@@ -595,8 +595,8 @@
     }
   ],
   "counts": {
-    "done": 75,
-    "partial": 12,
+    "done": 76,
+    "partial": 11,
     "planned": 11
   },
   "releaseHold": true,

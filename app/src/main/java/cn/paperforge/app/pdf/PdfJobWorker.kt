@@ -56,7 +56,8 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                         "split-each" -> "zip"
                         "docx-image",
                         "docx-layout" -> "docx"
-                        "pdf-pptx" -> "pptx"
+                        "pdf-pptx",
+                        "pdf-pptx-native" -> "pptx"
                         "txt",
                         "md",
                         "html",
@@ -75,6 +76,7 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 var originRole = "assembly-origin"
                 var compression: JSONObject? = null
                 var redaction: PdfRedaction.Report? = null
+                var conversionNotice = ""
                 when (mode) {
                     "redact-semantic",
                     "redact-raster" -> {
@@ -237,6 +239,21 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                         }
                     "pdf-pptx" ->
                         PhoneSlides.convert(applicationContext, input, file) { report(it) }
+                    "pdf-pptx-native" -> {
+                        val result =
+                            NativeSlides.convert(
+                                applicationContext,
+                                input,
+                                file,
+                                p.optBoolean("preferEditable"),
+                            ) {
+                                report(it)
+                            }
+                        origin = result
+                        originRole = "slides-report"
+                        conversionNotice =
+                            "原生对象 ${result.getInt("editablePages")} 页 · 编辑简化 ${result.getInt("simplifiedPages")} 页 · 整页外观 ${result.getInt("appearancePages")} 页。详细转换记录保存在 PPTX 内。"
+                    }
                     "txt",
                     "md",
                     "html",
@@ -276,6 +293,19 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 }
                 if (mode in listOf("compress", "optimize")) report(100)
                 currentCoroutineContext().ensureActive()
+                if (extension != "pdf" && origin != null) {
+                    val metadata =
+                        File(repo.context.filesDir, "job-items/${job.row.id}/$originRole.json")
+                    originFile = metadata
+                    TableJobs.atomic(metadata, checkNotNull(origin))
+                    DocumentJobs.checkpointFile(
+                        repo,
+                        job,
+                        "tool-report",
+                        metadata,
+                        JSONObject().put("role", originRole),
+                    )
+                }
                 withContext(NonCancellable) {
                     repo.database.withTransaction {
                         DocumentJobs.checkCurrent(repo, job)
@@ -312,6 +342,7 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                             job,
                             file,
                             if (unmet) "未达到目标体积，已保留可用结果"
+                            else if (conversionNotice.isNotBlank()) conversionNotice
                             else redaction?.let { "${it.mode}：${it.detail}" } ?: "已完成",
                             if (unmet) cn.paperforge.app.data.LocalTaskState.PARTIAL
                             else cn.paperforge.app.data.LocalTaskState.SUCCEEDED,
@@ -325,6 +356,7 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                         "inputBytes" to (source?.length() ?: 0),
                         "outputBytes" to file.length(),
                         "mode" to mode,
+                        "notice" to conversionNotice,
                         "targetBytes" to (compression?.optLong("targetBytes", 0) ?: 0L),
                         "targetAchieved" to
                             (compression?.optBoolean("targetAchieved", true) ?: true),

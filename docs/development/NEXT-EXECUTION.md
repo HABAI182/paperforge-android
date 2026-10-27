@@ -102,6 +102,8 @@
 
 51. 新增 PowerPoint / Office → PNG/JPG/WebP 静态页包，最长边与质量可调，复用实际手机排版结果和逐页检查点；重试另存新 ZIP，旧结果不变，附真实页序/尺寸/来源与复用报告。批量和快捷搜索入口可用，对照读取实际 ZIP 图片。集中 10.692 秒、独立 Pillow/MuPDF 和真实界面 800px 输出见 `docs/acceptance/next/office-pages-summary.json`。CVT13 的原生可编辑内容模式仍在继续，此处不提前标整卡完成。
 
+52. PDF → PPTX 原生对象保留可见文字、图片与基础矢量、绘制顺序及裁边旋转；默认复杂页保留外观，可明确优先编辑简化效果，坏文字映射/竖排仍保留外观。单项与批量、逐页报告和实际结果对照接通。修正英文 6.8pt 基线偏移后，样本中英文误差均小于 0.04pt；集中 7.296 秒、独立 OOXML/MuPDF 与真实界面见 `docs/acceptance/next/native-slides-summary.json`。此时 CVT13 三条模式齐备，字体、语义与复杂效果的限制保留。
+
 ## 后续执行顺序
 
 页序历史补充：重排只记录页面ID，删页/分割仅记录内容差异；新旧可读快照的撤销保留后来新增的扫描页和与操作无关的新OCR。备份对独立页序ID重映射，集中检查见 `docs/acceptance/next/sparse-history-summary.json`。不将此修复重复计为新完成的计划卡。

@@ -418,6 +418,14 @@ private fun BatchPresetDialog(
                                 BatchPreset.pdfModes.entries.first { it.value == label }.key,
                             )
                         }
+                        if (options.optString("mode") == "pdf-pptx-native")
+                            Row {
+                                Checkbox(
+                                    options.optBoolean("preferEditable"),
+                                    { update("preferEditable", it) },
+                                )
+                                Text("优先编辑，简化复杂效果", Modifier.padding(top = 10.dp))
+                            }
                         if (
                             options.optString("mode") in
                                 setOf("images-jpg", "images-png", "images-webp")

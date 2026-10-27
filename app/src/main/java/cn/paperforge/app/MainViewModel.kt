@@ -1069,7 +1069,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                                         val notice =
                                             if (target > 0)
                                                 "目标 $target 字节 · 实际 ${file.length()} 字节 · ${if(info.outputData.getBoolean("targetAchieved",false)) "已达到目标" else "未达到目标，保留可用结果"}"
-                                            else ""
+                                            else info.outputData.getString("notice").orEmpty()
                                         publishOutput(file, notice = notice)
                                         if (info.outputData.getBoolean("partial", false))
                                             messages.send(
