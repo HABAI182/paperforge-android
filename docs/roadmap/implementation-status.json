@@ -363,7 +363,7 @@
       "id": "CVT13",
       "title": "幻灯片与图片互转",
       "status": "partial",
-      "note": "手机整页图PPTX完成；可编辑图表与全部幻灯片图片包入口仍可扩展"
+      "note": "手机整页图PPTX已有；新增实际手机排版的PPT/Office→PNG/JPG/WebP静态图片包、参数、逐页检查点和原件/实际ZIP对照。10.692秒集中流程、缓存重试旧结果保留、独立复读与UI 800px输出通过，见 office-pages-summary.json。原生可编辑内容模式仍在开发，整卡保留partial。"
     },
     {
       "id": "CVT14",

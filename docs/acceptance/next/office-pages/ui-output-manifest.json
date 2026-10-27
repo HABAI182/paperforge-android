@@ -1,0 +1,26 @@
+{
+  "format": 1,
+  "sourceSha256": "a03c1da4203a4cd8a9663329055dbdc551aafdf811d8b3585b6c0d62777197cf",
+  "renderedPdfSha256": "49a6c8e991205a90774019bd856b09a8b343526934c9ae8fb7c05cd00b677559",
+  "imageFormat": "png",
+  "edge": 800,
+  "quality": 92,
+  "staticPages": true,
+  "note": "每页为静态图片，动画、音频、备注和可编辑对象不随图片保留",
+  "pages": [
+    {
+      "page": 1,
+      "file": "page-0001.png",
+      "width": 800,
+      "height": 532,
+      "reused": false
+    },
+    {
+      "page": 2,
+      "file": "page-0002.png",
+      "width": 800,
+      "height": 532,
+      "reused": false
+    }
+  ]
+}

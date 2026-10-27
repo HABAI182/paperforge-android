@@ -100,6 +100,8 @@
 
 50. 转换结果、任务与批量成员可进入原件/实际结果对照；Office 两侧分别读取实际文件生成排版预览，PDF 直接读取，图像与正文明确标出预览表示。大图/并排、同步缩放拖动、同步或独立跳页、缺页提示，横屏压缩控制区，标题等高避免纸面错位。预览按哈希缓存并保留任务资源，清单只用资源ID。真实 DOCX→ODT、不同 PDF/PNG/WebP 所有权小样、独立 MuPDF 与实际横竖屏见 `docs/acceptance/next/conversion-preview-summary.json`；结构文档/表格继续使用各自真实结果工作台。
 
+51. 新增 PowerPoint / Office → PNG/JPG/WebP 静态页包，最长边与质量可调，复用实际手机排版结果和逐页检查点；重试另存新 ZIP，旧结果不变，附真实页序/尺寸/来源与复用报告。批量和快捷搜索入口可用，对照读取实际 ZIP 图片。集中 10.692 秒、独立 Pillow/MuPDF 和真实界面 800px 输出见 `docs/acceptance/next/office-pages-summary.json`。CVT13 的原生可编辑内容模式仍在继续，此处不提前标整卡完成。
+
 ## 后续执行顺序
 
 页序历史补充：重排只记录页面ID，删页/分割仅记录内容差异；新旧可读快照的撤销保留后来新增的扫描页和与操作无关的新OCR。备份对独立页序ID重映射，集中检查见 `docs/acceptance/next/sparse-history-summary.json`。不将此修复重复计为新完成的计划卡。

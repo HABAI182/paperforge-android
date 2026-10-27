@@ -65,6 +65,9 @@ fun ConversionScreen(
     var joinTables by rememberSaveable { mutableStateOf(false) }
     var tableStrategy by rememberSaveable { mutableStateOf("auto") }
     var officeTarget by rememberSaveable { mutableStateOf("docx") }
+    var officeImageFormat by rememberSaveable { mutableStateOf("png") }
+    var officeImageEdge by rememberSaveable { mutableStateOf("2200") }
+    var officeImageQuality by rememberSaveable { mutableIntStateOf(92) }
     var fontSize by rememberSaveable { mutableFloatStateOf(12f) }
     var bookTitle by rememberSaveable { mutableStateOf("") }
     var bookAuthor by rememberSaveable { mutableStateOf("") }
@@ -131,7 +134,10 @@ fun ConversionScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
-                OutlinedButton(onClick = { vm.screen.value = "conversion-batch" }, modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(
+                    onClick = { vm.screen.value = "conversion-batch" },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
                     Icon(Icons.Default.LibraryBooks, null)
                     Spacer(Modifier.width(8.dp))
                     Text("批量转换 · 共用预设 / 单项重试")
@@ -460,7 +466,10 @@ fun ConversionScreen(
                 )
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(
+                    Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
                     if (desktopJob.startsWith("office-")) {
                         Text("在手机本机使用 LibreOfficeKit 排版。首次安装手机引擎后，无需电脑或网络。")
                         TextButton(
@@ -475,6 +484,32 @@ fun ConversionScreen(
                     } else if (desktopJob.startsWith("tables-"))
                         Text("手机本机提取表格，完成后可逐格校正并导出 Excel 或 CSV。")
                     else Text("可选电脑扩展，通过任务 ZIP 交接；手机基础功能可以独立使用。")
+                    if (desktopJob == "office-images") {
+                        Text("每页导出为静态图片，动画、音频、备注和可编辑对象不随图片保留。")
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf("png", "jpg", "webp").forEach { f ->
+                                FilterChip(
+                                    officeImageFormat == f,
+                                    { officeImageFormat = f },
+                                    label = { Text(f.uppercase()) },
+                                )
+                            }
+                        }
+                        OutlinedTextField(
+                            officeImageEdge,
+                            { officeImageEdge = it },
+                            label = { Text("最长边像素（128–8192）") },
+                            singleLine = true,
+                        )
+                        if (officeImageFormat != "png") {
+                            Text("质量 $officeImageQuality%")
+                            Slider(
+                                officeImageQuality.toFloat(),
+                                { officeImageQuality = it.toInt() },
+                                valueRange = 20f..100f,
+                            )
+                        }
+                    }
                     if (desktopJob.startsWith("tables") || desktopJob == "pdf-docx") {
                         Row {
                             Checkbox(desktopOcr, { desktopOcr = it })
@@ -502,6 +537,9 @@ fun ConversionScreen(
             },
             confirmButton = {
                 TextButton(
+                    enabled =
+                        desktopJob != "office-images" ||
+                            officeImageEdge.toIntOrNull()?.let { it in 128..8192 } == true,
                     onClick = {
                         val mode = desktopJob
                         desktopJob = ""
@@ -511,9 +549,15 @@ fun ConversionScreen(
                                 .JSONObject()
                                 .put("ocr", desktopOcr)
                                 .put("tableStrategy", tableStrategy)
-                                .put("joinTables", joinTables),
+                                .put("joinTables", joinTables)
+                                .also {
+                                    if (mode == "office-images")
+                                        it.put("format", officeImageFormat)
+                                            .put("edge", officeImageEdge.toIntOrNull() ?: 2200)
+                                            .put("quality", officeImageQuality)
+                                },
                         )
-                    }
+                    },
                 ) {
                     Text(
                         if (desktopJob.startsWith("office-") || desktopJob.startsWith("tables-"))

@@ -55,6 +55,7 @@ object DocumentJobs {
  "TABLE_EXPORT" -> "导出表格"
  "PDF_DIFF" -> "PDF 差异比较"
  "OFFICE" -> "手机 Office 转换"
+ "OFFICE_IMAGES" -> "Office / 幻灯片图片包"
  "RECIPE" -> "工作流配方"
  "TABLE_REVIEW" -> "表格草稿"
  "BATCH_ITEM" -> "批量转换待提交"

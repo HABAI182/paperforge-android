@@ -87,6 +87,15 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                         output = file
                         completed = 1
                     }
+                    "OFFICE_IMAGES" -> {
+                        file =
+                            OfficePageImages.convert(repo, job) { percent, detail ->
+                                DocumentJobs.progress(repo, job, percent, detail)
+                                setProgress(workDataOf("progress" to percent))
+                            }
+                        output = file
+                        completed = 1
+                    }
                     "PDF_DIFF" -> {
                         file = File(repo.exports, "PaperForge-comparison-${job.row.workId}.zip")
                         output = file

@@ -265,10 +265,18 @@ class MainActivity : ComponentActivity() {
                     }
                 var mobileTarget by
                     androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("pdf") }
+                var mobileOfficeOptions by
+                    androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("{}") }
                 val mobileOfficeInput =
                     rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri
                         ->
-                        uri?.let { vm.phoneOffice(it, mobileTarget) }
+                        uri?.let {
+                            vm.phoneOffice(
+                                it,
+                                mobileTarget,
+                                org.json.JSONObject(mobileOfficeOptions),
+                            )
+                        }
                     }
                 var mobileTableCsv by
                     androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
@@ -497,6 +505,7 @@ class MainActivity : ComponentActivity() {
                                     when {
                                         mode.startsWith("office-") -> {
                                             mobileTarget = mode.removePrefix("office-")
+                                            mobileOfficeOptions = options.toString()
                                             mobileOfficeInput.launch(arrayOf("*/*"))
                                         }
                                         mode.startsWith("tables-") -> {

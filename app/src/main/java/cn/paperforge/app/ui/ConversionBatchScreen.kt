@@ -377,6 +377,7 @@ private fun BatchPresetDialog(
                 when (kind) {
                     "LAYOUT" -> options.optInt("dpi", 200).toString()
                     "IMAGES" -> options.optInt("edge", 4096).toString()
+                    "OFFICE_IMAGES" -> options.optInt("edge", 2200).toString()
                     else -> options.optDouble("fontSize", 12.0).toInt().toString()
                 }
             )
@@ -384,7 +385,8 @@ private fun BatchPresetDialog(
     val valid =
         when (kind) {
             "LAYOUT" -> number.toIntOrNull()?.let { it in 72..600 } == true
-            "IMAGES" -> number.toIntOrNull()?.let { it in 128..8192 } == true
+            "IMAGES",
+            "OFFICE_IMAGES" -> number.toIntOrNull()?.let { it in 128..8192 } == true
             "TEXT_PDF" -> number.toIntOrNull()?.let { it in 6..72 } == true
             else -> true
         }
@@ -450,10 +452,14 @@ private fun BatchPresetDialog(
                             }
                         }
                     }
-                    "IMAGES" -> {
+                    "IMAGES",
+                    "OFFICE_IMAGES" -> {
                         BatchChoice(
                             "输出",
-                            options.optString("format", "jpg"),
+                            options.optString(
+                                "format",
+                                if (kind == "OFFICE_IMAGES") "png" else "jpg",
+                            ),
                             listOf("jpg", "png", "webp"),
                         ) {
                             update("format", it)
@@ -471,13 +477,14 @@ private fun BatchPresetDialog(
                             { update("quality", it.toInt()) },
                             valueRange = 20f..100f,
                         )
-                        Row {
-                            Checkbox(
-                                options.optBoolean("keepAlpha", true),
-                                { update("keepAlpha", it) },
-                            )
-                            Text("保留透明背景", Modifier.padding(top = 12.dp))
-                        }
+                        if (kind == "IMAGES")
+                            Row {
+                                Checkbox(
+                                    options.optBoolean("keepAlpha", true),
+                                    { update("keepAlpha", it) },
+                                )
+                                Text("保留透明背景", Modifier.padding(top = 12.dp))
+                            }
                     }
                     "OFFICE" -> {
                         Text("使用手机 Office 引擎；原件保留。")
@@ -590,7 +597,8 @@ private fun BatchPresetDialog(
                 onClick = {
                     if (kind == "LAYOUT") options.put("dpi", number.toInt())
                     if (kind == "TEXT_PDF") options.put("fontSize", number.toInt())
-                    if (kind == "IMAGES") options.put("edge", number.toInt())
+                    if (kind in setOf("IMAGES", "OFFICE_IMAGES"))
+                        options.put("edge", number.toInt())
                     onSave(BatchPreset(kind, options.toString()))
                 },
             ) {

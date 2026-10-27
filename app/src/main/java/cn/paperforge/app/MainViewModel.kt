@@ -1311,7 +1311,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }
     }
 
-    fun phoneOffice(uri: Uri, format: String) {
+    fun phoneOffice(
+        uri: Uri,
+        format: String,
+        options: org.json.JSONObject = org.json.JSONObject(),
+    ) {
         if (!busy.compareAndSet(false, true)) return
         progress.value = "保留 Office 原件"
         task =
@@ -1327,7 +1331,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                                 JobInput(
                                     org.json
                                         .JSONObject()
-                                        .put("kind", "OFFICE")
+                                        .put(
+                                            "kind",
+                                            if (format == "images") "OFFICE_IMAGES" else "OFFICE",
+                                        )
                                         .put("name", retained.second)
                                         .put(
                                             "inputs",
@@ -1336,7 +1343,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                                         .put("names", org.json.JSONArray(listOf(retained.second)))
                                         .put(
                                             "options",
-                                            org.json.JSONObject().put("format", format).toString(),
+                                            (if (format == "images") options
+                                                else org.json.JSONObject().put("format", format))
+                                                .toString(),
                                         )
                                 ),
                             )

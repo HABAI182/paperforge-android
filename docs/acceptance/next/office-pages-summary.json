@@ -1,0 +1,44 @@
+{
+  "checked": "2026-10-27",
+  "cards": ["CVT13"],
+  "cardStatus": "partial; editable-content mode is still in progress",
+  "implemented": [
+    "PowerPoint / Office to static PNG, JPG or WebP page packages through the actual on-phone Office rendering",
+    "Format, longest-edge size and lossy quality in the conversion entry; the route also works as an independent batch member",
+    "Office PDF stage and each encoded page have independent durable checkpoints; retry reuses completed stages",
+    "Each retry publishes a separate ZIP, retaining previous results and original files",
+    "ZIP contains ordered image files and a static-page report with dimensions, source/render hashes and actual cache-reuse flags",
+    "Comparison viewer reads known generated image packages, using their manifest order or numbered page names; it never substitutes the original document for the result",
+    "Static-image mode explicitly distinguishes visible appearance from editable text/objects, animations, audio and notes"
+  ],
+  "focusedCheck": {
+    "test": "OfficePageImagesFlowTest.actualPptxStaticPagesCacheRetryAndImagePackageComparison",
+    "result": "passed",
+    "seconds": 10.692,
+    "log": "office-pages-android.log",
+    "cases": ["actual two-slide picture PPTX accepted by the phone Office engine", "640px PNG pages retain red/blue slide order", "retry reuses the same PDF and both page checkpoints", "page image bytes identical on retry and old ZIP hash unchanged", "original PPTX hash unchanged", "actual Office original and generated ZIP each produce two preview pages"]
+  },
+  "independentReadback": {
+    "engines": ["Pillow", "PyMuPDF / MuPDF"],
+    "report": "office-pages/independent-readback.json",
+    "pageSize": [640, 425],
+    "firstPageCenterRgb": [254, 0, 0],
+    "secondPageCenterRgb": [0, 0, 254],
+    "sourceAndResultPreviewOrderVerified": true
+  },
+  "actualUI": {
+    "conversionSearchEntry": "office-images",
+    "selectedSource": "Self-created PaperForge-slides-proof.pptx",
+    "customLongestEdge": 800,
+    "actualSavedZipManifestConfirmed800": true,
+    "sourceAndActualZipPage2ShownTogether": true,
+    "screenshot": "office-pages-ui.png"
+  },
+  "limits": [
+    "The concentrated new flow exercises PNG; JPG/WebP use the existing Android codecs but have no new fidelity benchmark here",
+    "Page appearance follows the optional phone Office engine and its available fonts and export behavior",
+    "Static output carries visible pages, not editable shapes, notes, audio or animations; original files remain retained",
+    "CVT13 remains partial until its separate editable-content mode is completed",
+    "No new version, tag or release"
+  ]
+}

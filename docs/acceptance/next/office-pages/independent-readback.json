@@ -1,0 +1,80 @@
+{
+  "focusedFlow": {
+    "sourceSha256": "a03c1da4203a4cd8a9663329055dbdc551aafdf811d8b3585b6c0d62777197cf",
+    "staticSlides": 2,
+    "longEdge": 640,
+    "sourceUnchanged": true,
+    "oldZipUnchanged": true,
+    "allPageCheckpointsReused": true,
+    "pageBytesIdenticalAfterRetry": true,
+    "sourceAndActualZipPreviewPages": 2
+  },
+  "zip": [
+    {
+      "page": 1,
+      "size": [
+        640,
+        425
+      ],
+      "centerRgb": [
+        254,
+        0,
+        0
+      ],
+      "checkpointReused": true
+    },
+    {
+      "page": 2,
+      "size": [
+        640,
+        425
+      ],
+      "centerRgb": [
+        0,
+        0,
+        254
+      ],
+      "checkpointReused": true
+    }
+  ],
+  "source-preview.pdf": [
+    {
+      "width": 600.0094604492188,
+      "height": 399.9968566894531,
+      "centerRgb": [
+        254,
+        0,
+        0
+      ]
+    },
+    {
+      "width": 600.0094604492188,
+      "height": 399.9968566894531,
+      "centerRgb": [
+        0,
+        0,
+        254
+      ]
+    }
+  ],
+  "actual-images-preview.pdf": [
+    {
+      "width": 640.0,
+      "height": 425.0,
+      "centerRgb": [
+        254,
+        0,
+        0
+      ]
+    },
+    {
+      "width": 640.0,
+      "height": 425.0,
+      "centerRgb": [
+        0,
+        0,
+        254
+      ]
+    }
+  ]
+}

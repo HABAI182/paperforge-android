@@ -24,6 +24,8 @@ data class BatchPreset(val kind: String = "TEXT_PDF", val options: String = "{}"
         val j = JSONObject(options)
         return when (kind) {
             "OFFICE" -> "Office → ${j.optString("format", "pdf").uppercase()}"
+            "OFFICE_IMAGES" ->
+                "幻灯片 / Office → ${j.optString("format", "png").uppercase()} 页包 · ${j.optInt("edge",2200)} px"
             "LAYOUT" ->
                 "OFD / DjVu → ${if(j.optString("target", "PDF") == "IMAGES") "PNG 页包" else "PDF"} · ${j.optInt("dpi", 200)} DPI"
             "MARKUP" -> "结构文本 → ${j.optString("target", "HTML")}"
@@ -43,6 +45,7 @@ data class BatchPreset(val kind: String = "TEXT_PDF", val options: String = "{}"
                 "PDF_TOOL" to "PDF 转换",
                 "IMAGES" to "图片转换",
                 "OFFICE" to "Office",
+                "OFFICE_IMAGES" to "幻灯片图片包",
                 "LAYOUT" to "OFD / DjVu",
                 "MARKUP" to "结构文本 / EPUB",
                 "TABLE_ANALYZE" to "表格识别",

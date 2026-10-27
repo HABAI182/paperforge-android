@@ -37,6 +37,12 @@ object ToolCatalog {
                     "office-options",
                 ),
                 ToolCapability(
+                    "PowerPoint / Office → 图片包",
+                    "按实际排版逐页输出 PNG、JPG 或 WebP，保留原件",
+                    "手机引擎",
+                    "office-images",
+                ),
+                ToolCapability(
                     "PDF → Word · 结构重建",
                     "手机本地重建文字、表格与嵌入图片；扫描页离线 OCR",
                     "文字",
@@ -118,12 +124,22 @@ object ToolCatalog {
                             boundary = "默认关闭；失败后保留结果并等待手动处理，不循环重试。已有 PDF 保留原页，自动结果只进入导出记录。",
                             aliases = "自动 归档 条件 规则 标签 文件夹 自动化 automation export",
                         )
+                    "office-images" ->
+                        entry.copy(
+                            input = "PPT / PPTX / ODP，以及手机引擎可读取的其他 Office 文档",
+                            output = "每页静态图片 ZIP，附页序、尺寸和来源报告；可实际预览",
+                            parameters = "PNG / JPG / WebP、最长边像素和图像质量；逐页检查点",
+                            boundary = "按手机 Office 引擎排版；图片保留可见外观，动画、音频、备注和可编辑对象不随图片保留。",
+                            engine = "可选手机 Office 引擎 · 离线",
+                            aliases = "ppt pptx odp slides 幻灯片 演示文稿 图片 相册 PNG JPG WebP",
+                        )
                     "conversion-batch" ->
                         entry.copy(
                             input = "多份 PDF、文字、图片、Office、OFD / DjVu 或结构文档",
                             output = "各文件独立结果；表格识别后继续校对并导出",
                             parameters = "共用预设、逐项输出与排版设置、失败项重试、原件重选",
-                            boundary = "只重试选定的失败项；Office / OFD / DjVu 使用对应可选手机引擎。合并、拼接等多对一操作仍使用各自工作台。",
+                            boundary =
+                                "只重试选定的失败项；Office / OFD / DjVu 使用对应可选手机引擎。合并、拼接等多对一操作仍使用各自工作台。",
                             aliases = "batch 批处理 批量 失败 重试 多文件 convert",
                         )
                     "workflows" ->

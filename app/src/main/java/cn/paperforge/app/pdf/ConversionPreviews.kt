@@ -1,5 +1,6 @@
 package cn.paperforge.app.pdf
 
+import android.graphics.BitmapFactory
 import android.net.Uri
 import cn.paperforge.app.data.*
 import com.tom_roush.pdfbox.io.MemoryUsageSetting
@@ -7,6 +8,7 @@ import com.tom_roush.pdfbox.pdmodel.*
 import com.tom_roush.pdfbox.pdmodel.common.PDRectangle
 import com.tom_roush.pdfbox.pdmodel.graphics.image.LosslessFactory
 import java.io.File
+import java.util.zip.ZipFile
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import org.json.JSONArray
@@ -48,7 +50,16 @@ object ConversionPreviews {
             resources.firstOrNull { it.id == "input-0" || it.id == "source" }?.path?.let(::File)
                 ?: return null
         val result = resources.firstOrNull { it.id == "result" }?.path?.let(::File) ?: return null
-        return if (source.isFile && result.isFile && supported(source) && supported(result))
+        val imagePackage =
+            input.optString("kind") == "OFFICE_IMAGES" ||
+                input.optString("mode") in
+                    setOf("images-jpg", "images-png", "images-webp", "extract-images")
+        return if (
+            source.isFile &&
+                result.isFile &&
+                supported(source) &&
+                (supported(result) || result.extension.lowercase() == "zip" && imagePackage)
+        )
             source to result
         else null
     }
@@ -114,6 +125,7 @@ object ConversionPreviews {
                     "pdf" -> "原始 PDF 页面"
                     in office -> "手机 Office 引擎排版预览"
                     in images -> "实际图像预览（最长边 2400 px）"
+                    "zip" -> "实际图片包静态预览（最长边 2400 px）"
                     else -> "实际正文的排版预览"
                 }
             val signature = "render-r1|${expected[index]}|$type|${PdfTextLayer.VERSION}"
@@ -154,6 +166,111 @@ object ConversionPreviews {
                             } catch (failure: Throwable) {
                                 atomic.failWrite(stream)
                                 throw failure
+                            }
+                        } else if (type == "zip") {
+                            val part = File(destination.path + ".part")
+                            try {
+                                PDDocument().use { pdf ->
+                                    ZipFile(source).use { zip ->
+                                        val index =
+                                            zip.getEntry("images.json")?.let { entry ->
+                                                JSONObject(
+                                                        zip.getInputStream(entry)
+                                                            .bufferedReader()
+                                                            .use { it.readText() }
+                                                    )
+                                                    .getJSONArray("pages")
+                                            }
+                                        val entries =
+                                            if (index != null)
+                                                (0 until index.length()).map {
+                                                    checkNotNull(
+                                                        zip.getEntry(
+                                                            index
+                                                                .getJSONObject(it)
+                                                                .getString("file")
+                                                        )
+                                                    )
+                                                }
+                                            else
+                                                zip.entries()
+                                                    .asSequence()
+                                                    .filter {
+                                                        !it.isDirectory &&
+                                                            it.name
+                                                                .substringAfterLast('.')
+                                                                .lowercase() in images
+                                                    }
+                                                    .sortedWith(
+                                                        compareBy<java.util.zip.ZipEntry> {
+                                                                Regex("[0-9]+")
+                                                                    .find(
+                                                                        it.name.substringAfterLast(
+                                                                            '/'
+                                                                        )
+                                                                    )
+                                                                    ?.value
+                                                                    ?.toLongOrNull() ?: 0L
+                                                            }
+                                                            .thenBy { it.name }
+                                                    )
+                                                    .toList()
+                                        require(entries.isNotEmpty()) { "图片包中没有可预览页面" }
+                                        for (entry in entries) {
+                                            currentCoroutineContext().ensureActive()
+                                            val bounds =
+                                                BitmapFactory.Options().apply {
+                                                    inJustDecodeBounds = true
+                                                }
+                                            zip.getInputStream(entry).use {
+                                                BitmapFactory.decodeStream(it, null, bounds)
+                                            }
+                                            var sample = 1
+                                            while (
+                                                maxOf(bounds.outWidth, bounds.outHeight) / sample >
+                                                    2400
+                                            ) sample *= 2
+                                            val bitmap =
+                                                zip.getInputStream(entry).use {
+                                                    BitmapFactory.decodeStream(
+                                                        it,
+                                                        null,
+                                                        BitmapFactory.Options().apply {
+                                                            inSampleSize = sample
+                                                        },
+                                                    )
+                                                } ?: error("图片无法读取：${entry.name}")
+                                            try {
+                                                val image =
+                                                    LosslessFactory.createFromImage(pdf, bitmap)
+                                                val page =
+                                                    PDPage(
+                                                        PDRectangle(
+                                                            image.width.toFloat(),
+                                                            image.height.toFloat(),
+                                                        )
+                                                    )
+                                                pdf.addPage(page)
+                                                PDPageContentStream(pdf, page).use {
+                                                    it.drawImage(
+                                                        image,
+                                                        0f,
+                                                        0f,
+                                                        page.mediaBox.width,
+                                                        page.mediaBox.height,
+                                                    )
+                                                }
+                                            } finally {
+                                                bitmap.recycle()
+                                            }
+                                        }
+                                    }
+                                    pdf.save(part)
+                                }
+                                currentCoroutineContext().ensureActive()
+                                check(part.renameTo(destination))
+                            } finally {
+                                part.delete()
                             }
                         } else if (type in images) {
                             val part = File(destination.path + ".part")
