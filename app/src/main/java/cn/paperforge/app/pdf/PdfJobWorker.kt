@@ -225,18 +225,27 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                         ) {
                             report(it)
                         }
-                    "docx-layout" ->
-                        PhoneDocx.convert(
-                            input,
-                            file,
-                            cn.paperforge.app.ocr.OcrRequest.decode(
-                                    data.json.optJSONObject("ocrRequest"),
-                                    (applicationContext as PaperForgeApp).ocrEngine.id,
-                                )
-                                .bind((applicationContext as PaperForgeApp).ocrEngine),
-                        ) {
-                            report(it)
-                        }
+                    "docx-layout" -> {
+                        val result =
+                            PhoneDocx.convert(
+                                input,
+                                file,
+                                cn.paperforge.app.ocr.OcrRequest.decode(
+                                        data.json.optJSONObject("ocrRequest"),
+                                        (applicationContext as PaperForgeApp).ocrEngine.id,
+                                    )
+                                    .bind((applicationContext as PaperForgeApp).ocrEngine),
+                                p.optString("layoutMode", "editable"),
+                            ) {
+                                report(it)
+                            }
+                        origin = result
+                        originRole = "docx-report"
+                        conversionNotice =
+                            if (result.getString("mode") == "appearance")
+                                "外观优先：${result.getJSONArray("pages").length()} 页整页图，文字和表格不作为独立可编辑对象。"
+                            else "编辑优先：标题、正文、表格与可见图片裁片；多栏按阅读顺序展开，附逐页记录。"
+                    }
                     "pdf-pptx" ->
                         PhoneSlides.convert(applicationContext, input, file) { report(it) }
                     "pdf-pptx-native" -> {

@@ -356,8 +356,8 @@
     {
       "id": "CVT12",
       "title": "版面DOCX导出",
-      "status": "partial",
-      "note": "手机真实字号/粗斜体、表格、嵌入图像与OCR结构；完整跨栏/脚注/裁剪对象还原不保证"
+      "status": "done",
+      "note": "编辑优先输出标题样式/分段文字/有线合并表格/可见图像裁片；真实横向间隙分列并按阅读顺序展开，脚注保留小号正文。外观优先保留整页图；逐页纸张/方向/裁边分节、宽度不均表格保留列比例；单项/批量/报告及实际结果对照接通。9.421秒新流程、独立OOXML/Pillow/MuPDF和真实UI通过。复杂浮动/语义脚注/无线表格的限制清楚说明。见 docx-layout-summary.json"
     },
     {
       "id": "CVT13",
@@ -595,8 +595,8 @@
     }
   ],
   "counts": {
-    "done": 76,
-    "partial": 11,
+    "done": 77,
+    "partial": 10,
     "planned": 11
   },
   "releaseHold": true,

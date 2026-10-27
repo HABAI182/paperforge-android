@@ -1,0 +1,41 @@
+{
+  "sourceSha256": "b5c55dafc44d21789cb4f86498073b535f5b29e0e867bc012491a8ee3d26bf39",
+  "sourceUnchanged": true,
+  "editablePages": 2,
+  "appearancePages": 2,
+  "editableReport": {
+    "format": 1,
+    "mode": "editable",
+    "detail": "可编辑单栏阅读流、标题样式、表格与实际可见图片裁片。跨栏按阅读顺序展开；脚注保留为小号正文，不推断脚注引用。字体近似，浮动复杂对象请对照原页。图片裁片包含该区域实际合成外观。",
+    "pages": [
+      {
+        "page": 1,
+        "widthPt": 600,
+        "heightPt": 800,
+        "mode": "editable-reading-order",
+        "ocr": false,
+        "twoColumnReadingOrder": true,
+        "headings": 1,
+        "paragraphs": 8,
+        "footnoteTextBlocks": 1,
+        "tables": 0,
+        "pictures": 0,
+        "imageStreamParsed": true
+      },
+      {
+        "page": 2,
+        "widthPt": 500,
+        "heightPt": 650,
+        "mode": "editable-reading-order",
+        "ocr": false,
+        "twoColumnReadingOrder": false,
+        "headings": 0,
+        "paragraphs": 1,
+        "footnoteTextBlocks": 0,
+        "tables": 1,
+        "pictures": 1,
+        "imageStreamParsed": true
+      }
+    ]
+  }
+}

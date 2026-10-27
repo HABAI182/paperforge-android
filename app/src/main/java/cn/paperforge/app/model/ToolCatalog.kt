@@ -194,9 +194,10 @@ object ToolCatalog {
                     "docx-layout" ->
                         entry.copy(
                             input = "原生 / 扫描 PDF",
-                            output = "可编辑 DOCX 结构文档",
-                            parameters = "离线 OCR、表格识别",
-                            boundary = "重建文字、表格和嵌入图片；复杂跨栏、浮动对象与公式可能重新排版。",
+                            output = "可编辑 DOCX 结构文档 / 整页外观 DOCX",
+                            parameters = "编辑优先 / 外观优先、离线 OCR、表格识别",
+                            boundary =
+                                "编辑模式按阅读顺序展开多栏，脚注保留为小号正文，图片为实际合成裁片；字体近似。外观模式为整页图片，不能独立编辑文字或表格。",
                             engine = "手机本地结构重建 + 可选 OCR",
                             aliases = "word office 文档 编辑 识字 ocr",
                         )

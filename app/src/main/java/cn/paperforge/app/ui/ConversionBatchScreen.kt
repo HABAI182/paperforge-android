@@ -418,6 +418,19 @@ private fun BatchPresetDialog(
                                 BatchPreset.pdfModes.entries.first { it.value == label }.key,
                             )
                         }
+                        if (options.optString("mode") == "docx-layout")
+                            BatchChoice(
+                                "版式模式",
+                                if (options.optString("layoutMode", "editable") == "appearance")
+                                    "外观优先（整页图）"
+                                else "编辑优先（阅读流）",
+                                listOf("编辑优先（阅读流）", "外观优先（整页图）"),
+                            ) {
+                                update(
+                                    "layoutMode",
+                                    if (it.startsWith("外观")) "appearance" else "editable",
+                                )
+                            }
                         if (options.optString("mode") == "pdf-pptx-native")
                             Row {
                                 Checkbox(

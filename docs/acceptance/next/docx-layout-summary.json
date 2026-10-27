@@ -1,0 +1,81 @@
+{
+  "checked": "2026-10-27",
+  "cards": [
+    "CVT12"
+  ],
+  "cardStatus": "done within documented two-mode reconstruction",
+  "implemented": [
+    "Editing mode emits real Word paragraphs, heading styles with outline levels, preserved run emphasis and merged-cell tables",
+    "Text rows split at horizontal gutters, with column-major reading order between spanning headings/footnote text",
+    "Only ruled tables are inferred in this conversion; aligned article columns are not silently converted to borderless tables",
+    "Unequal table-column widths and merged header spans are written to Word grid/cell widths",
+    "Visible embedded-image regions are cropped from actual rendered pages after graphics-state clipping, preserving orientation/compositing; no borrowed PDFBox bitmap recycling",
+    "Each source page supplies its own crop/rotation/UserUnit paper geometry via sections",
+    "Appearance mode uses full-page floating pictures and explicitly declares that text and cells are not independently editable",
+    "Single and batch presets, durable conversion report, report inside DOCX and actual-source/result comparison"
+  ],
+  "focusedCheck": {
+    "test": "DocxLayoutFlowTest.columnsHeadingsUnequalMergedTableVisibleCropAndMixedPageAppearance",
+    "seconds": 9.421,
+    "result": "OK (1 test)",
+    "log": "docx-layout-android.log",
+    "cases": [
+      "row-major painted PDF becomes left-column-then-right-column Word stream",
+      "heading/footnote text styles and all 00123/00456 identifiers",
+      "unequal-width two-column table and merged header",
+      "clipped red/green source image exports only the visible red crop",
+      "two different paper sizes and two actual Office-rendered pages in both modes",
+      "original source SHA256 unchanged",
+      "persistent tool-report and mode-specific completion notice"
+    ]
+  },
+  "independentReadback": {
+    "report": "docx-layout/independent-readback.json",
+    "engines": [
+      "OOXML ZIP/XML",
+      "Pillow",
+      "PyMuPDF / MuPDF",
+      "actual optional phone Office engine"
+    ],
+    "tableColumnTwips": [
+      2405,
+      5998
+    ],
+    "visibleImageCropPixels": [
+      170,
+      203
+    ],
+    "cropCenterRgb": [
+      255,
+      0,
+      0
+    ],
+    "appearanceRgbMeanAbsoluteDifferences": [
+      1.06394,
+      5.25521
+    ]
+  },
+  "actualUI": {
+    "entry": "PDF → Word · 结构重建",
+    "selectedMode": "外观优先",
+    "actualModeNoticeConfirmed": true,
+    "actualSourceAndResultPage2Compared": true,
+    "screenshots": [
+      "docx-mode-ui.png",
+      "docx-appearance-ui.png"
+    ]
+  },
+  "schemaReferences": [
+    "https://learn.microsoft.com/en-us/office/open-xml/word/working-with-paragraphs",
+    "https://learn.microsoft.com/en-us/office/open-xml/word/how-to-create-and-add-a-paragraph-style-to-a-word-processing-document"
+  ],
+  "limits": [
+    "Editing mode intentionally reflows columns; it does not reconstruct arbitrary floating layout, mathematical objects or original font metrics",
+    "Footnotes remain small styled text in reading order; semantic footnote references are not guessed",
+    "Borderless tables use the separate explicit table workspace",
+    "Visible image crops carry actual composited pixels from that region, including any overlapping content",
+    "Appearance uses 2200px page images; actual Office paper rounding differs by up to about 1.1pt on this mixed-size sample",
+    "Concentrated authored fixture and emulator UI; no general high-fidelity or physical-phone quality claim",
+    "No new version, tag or release"
+  ]
+}
