@@ -1,0 +1,56 @@
+{
+  "format": 1,
+  "runtime": "paddle-onnx-v1",
+  "id": "paddle-ppocrv5-latin",
+  "name": "PaddleOCR v5 Latin",
+  "version": "official-onnx-v5-mobile",
+  "languages": [
+    "en",
+    "fr",
+    "de",
+    "es",
+    "pt",
+    "it",
+    "nl",
+    "tr",
+    "pl",
+    "cs",
+    "sv"
+  ],
+  "source": "https://github.com/PaddlePaddle/PaddleOCR",
+  "sdkCommit": "dab3fe35379033fdcb2d0e9572fac0b36c9a9ebf",
+  "files": {
+    "LICENSE": {
+      "bytes": 11577,
+      "sha256": "8ae60061cdd89d5b70a5d71b2816ecc0da0bee21947688bff4b39928512a45af"
+    },
+    "det.onnx": {
+      "bytes": 4826518,
+      "sha256": "a431985659dc921974177a95adcfbb90fd9e51989a5e04d70d0b75f597b6e61d"
+    },
+    "font-LICENSE": {
+      "bytes": 4396,
+      "sha256": "cee9892f9f0cc8fe882c9e9537ee6a89621d86ee7ceaf70b02e2b2b1c25c061a"
+    },
+    "font.ttf": {
+      "bytes": 663544,
+      "sha256": "199c6f0ab4f3b8803bb4e22a4cd8f1dd95d472fbe3b8479cb3697659fd1c51b8"
+    },
+    "provenance.json": {
+      "bytes": 3520,
+      "sha256": "749b3f82d02d2c50738ad658c30bab5d8eb47345a665444790fd2b71cdb28e57"
+    },
+    "rec.onnx": {
+      "bytes": 8042023,
+      "sha256": "7888113072263cb471b93f66dd5e2ad70548dc526fa1ace760d0d973dd121498"
+    },
+    "rec.yml": {
+      "bytes": 6817,
+      "sha256": "0bbe984570f597af3638e50bdf2e8276f3ab26a61966096538b3b0d1849f5c84"
+    },
+    "upstream-model-card.md": {
+      "bytes": 28,
+      "sha256": "98b45ea81164d1e1a1dd82255207053b15cd6c69d922a1c5cf3387ce604d4b74"
+    }
+  }
+}

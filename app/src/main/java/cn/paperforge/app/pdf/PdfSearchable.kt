@@ -24,7 +24,13 @@ object PdfSearchable {
         val temporary = File(output.path + ".part")
         val decisions = JSONArray()
         try {
-            val mapping = PdfTextLayer.Mapping()
+            val router =
+                ocrEngine
+                    ?: (context.applicationContext as cn.paperforge.app.PaperForgeApp).ocrEngine
+            val engine =
+                if (ocrEngine != null) router.snapshot()
+                else cn.paperforge.app.ocr.OcrRequest.current(router.id).bind(router)
+            val mapping = PdfTextLayer.Mapping().useFonts(engine.fontFiles)
             PDDocument.load(input, MemoryUsageSetting.setupTempFileOnly()).use { doc ->
                 val font = PdfTextLayer.font(context, doc)
                 ParcelFileDescriptor.open(input, ParcelFileDescriptor.MODE_READ_ONLY).use { fd ->
@@ -51,11 +57,6 @@ object PdfSearchable {
                                             null,
                                             PdfRenderer.Page.RENDER_MODE_FOR_PRINT,
                                         )
-                                        val engine =
-                                            ocrEngine
-                                                ?: (context.applicationContext
-                                                        as cn.paperforge.app.PaperForgeApp)
-                                                    .ocrEngine
                                         val layout =
                                             NativeTextCoverage.removeCovered(
                                                 engine.recognizeBitmap(

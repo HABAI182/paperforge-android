@@ -38,6 +38,9 @@ class RoutingOcrEngine(private val context: Context, val packs: OcrModelPacks) :
     override val id
         get() = selected()?.let(::engineId) ?: BundledOcrEngine.ID
 
+    override val fontFiles
+        get() = selected()?.fontFiles.orEmpty()
+
     override fun snapshot(requestedId: String?): OcrEngine {
         if (requestedId == BundledOcrEngine.ID) return bundled
         val pack =
@@ -58,6 +61,8 @@ class RoutingOcrEngine(private val context: Context, val packs: OcrModelPacks) :
 
     private inner class Fixed(private val pack: OcrModelPack) : OcrEngine {
         override val id = engineId(pack)
+        override val fontFiles
+            get() = pack.fontFiles
 
         override suspend fun layout(
             page: PageRow,
@@ -120,7 +125,8 @@ class RoutingOcrEngine(private val context: Context, val packs: OcrModelPacks) :
                                 "modelLoadMs" to loadMs.toDouble(),
                             ),
                     )
-                layout.copy(rawRecognition = layout.encode())
+                OcrReadingOrder.arrange(layout, options.order)
+                    .copy(rawRecognition = layout.encode())
             }
     }
 

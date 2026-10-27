@@ -37,6 +37,7 @@ object UserSettings {
             "ocrPackId" to "",
             "ocrMode" to "BALANCED",
             "ocrVoting" to true,
+            "ocrOrder" to "AUTO",
             "searchable" to true,
             "paper" to "Auto",
             "resolution" to "STANDARD",

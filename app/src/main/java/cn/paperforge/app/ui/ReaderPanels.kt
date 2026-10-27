@@ -242,9 +242,10 @@ fun ReaderTextSheet(
                         Text(label)
                     }
                 }
-                listOf("按行" to 0, "先左后右" to 1, "先右后左" to 2).forEach { (label, value) ->
-                    FilterChip(order == value, { order = value }, label = { Text(label) })
-                }
+                listOf("自动" to 0, "按行" to 5, "先左后右" to 1, "先右后左" to 2, "竖排右至左" to 3, "竖排左至右" to 4)
+                    .forEach { (label, value) ->
+                        FilterChip(order == value, { order = value }, label = { Text(label) })
+                    }
             }
             if (loading) LinearProgressIndicator(Modifier.fillMaxWidth())
             error?.let { Text(it, color = MaterialTheme.colorScheme.error) }

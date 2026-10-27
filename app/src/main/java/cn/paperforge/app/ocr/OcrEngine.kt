@@ -18,6 +18,8 @@ import kotlinx.coroutines.tasks.await
 
 interface OcrEngine {
     val id: String
+    val fontFiles: List<java.io.File>
+        get() = emptyList()
 
     fun snapshot(requestedId: String? = null): OcrEngine = this
 
@@ -183,7 +185,8 @@ class BundledOcrEngine : OcrEngine {
 
     private suspend fun recognizeBitmap(source: Bitmap, chinese: Boolean, run: Run): OcrLayout {
         var best = run.pass(source, chinese, "original")
-        if (run.options.mode == OcrMode.FAST) return run.finish(OcrReadingOrder.arrange(best))
+        if (run.options.mode == OcrMode.FAST || OcrReadingOrder.vertical(best))
+            return run.finish(OcrReadingOrder.arrange(best, run.options.order))
         // 0/missing confidence is unknown; these observed scores are not calibrated probabilities.
         val medianAngle = median(best.lines.mapNotNull { it.angle })
         if (best.text.count { it.isLetterOrDigit() } < 24 || abs(medianAngle) > 45) {
@@ -315,7 +318,8 @@ class BundledOcrEngine : OcrEngine {
                             height = upright.height,
                             warnings = warnings,
                         )
-                    )
+                    ),
+                    run.options.order,
                 )
             return run.finish(
                 if (rotation == 0) result

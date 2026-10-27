@@ -122,7 +122,7 @@ fun OcrModelsScreen(vm: MainViewModel) {
                     ) {
                         Text(pack.name, style = MaterialTheme.typography.titleMedium)
                         Text(
-                            "${pack.languages.joinToString(" / ")} · ${"%.1f".format(pack.bytes/1048576.0)} MB · ${pack.version}",
+                            "${pack.languageSummary} · ${"%.1f".format(pack.bytes/1048576.0)} MB · ${pack.version}",
                             style = MaterialTheme.typography.bodySmall,
                         )
                         Text("Paddle 单路行级识别；模型包自带语言字典。", style = MaterialTheme.typography.bodySmall)
@@ -175,7 +175,7 @@ fun OcrModelsScreen(vm: MainViewModel) {
             text = {
                 Column(Modifier.heightIn(max = 440.dp).verticalScroll(rememberScrollState())) {
                     Text("版本：${pack.version}")
-                    Text("语言：${pack.languages.joinToString(" / ")}")
+                    Text("语言：${pack.languageSummary}")
                     Text("安装大小：${"%.1f".format(pack.bytes/1048576.0)} MB")
                     Text(
                         "模型指纹：${pack.fingerprint.take(16)}…",

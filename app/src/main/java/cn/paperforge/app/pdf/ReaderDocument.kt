@@ -217,27 +217,38 @@ object ReaderDocument {
             blocks
         }
 
-    fun order(blocks: List<ReaderTextBlock>, columns: Int): List<ReaderTextBlock> =
-        when (columns) {
-            1 ->
-                blocks.sortedWith(
-                    compareBy<ReaderTextBlock> {
-                            if (it.right - it.left > .65f) -1 else if (it.left < .5f) 0 else 1
-                        }
-                        .thenBy { it.top }
-                )
-            2 ->
-                blocks.sortedWith(
-                    compareBy<ReaderTextBlock> {
-                            if (it.right - it.left > .65f) -1 else if (it.left >= .5f) 0 else 1
-                        }
-                        .thenBy { it.top }
-                )
-            else ->
-                blocks.sortedWith(
-                    compareBy<ReaderTextBlock> { (it.top * 200).toInt() }.thenBy { it.left }
-                )
+    fun order(blocks: List<ReaderTextBlock>, columns: Int): List<ReaderTextBlock> {
+        val order =
+            when (columns) {
+                1 -> cn.paperforge.app.ocr.OcrOrder.COLUMNS_LTR
+                2 -> cn.paperforge.app.ocr.OcrOrder.COLUMNS_RTL
+                3 -> cn.paperforge.app.ocr.OcrOrder.VERTICAL_RTL
+                4 -> cn.paperforge.app.ocr.OcrOrder.VERTICAL_LTR
+                5 -> cn.paperforge.app.ocr.OcrOrder.ROWS
+                else -> cn.paperforge.app.ocr.OcrOrder.AUTO
+            }
+        // Only reuse the geometry ordering; original character offsets and source boxes survive.
+        val layout =
+            cn.paperforge.app.model.OcrLayout(
+                1,
+                1,
+                blocks.mapIndexed { index, b ->
+                    cn.paperforge.app.model.OcrLine(
+                        b.text,
+                        listOf(
+                            PointN(b.left, b.top),
+                            PointN(b.right, b.top),
+                            PointN(b.right, b.bottom),
+                            PointN(b.left, b.bottom),
+                        ),
+                        block = index,
+                    )
+                },
+            )
+        return cn.paperforge.app.ocr.OcrReadingOrder.arrange(layout, order).lines.map {
+            blocks[it.block]
         }
+    }
 
     private fun display(p: PointN, rotation: Int) =
         when ((rotation % 360 + 360) % 360) {

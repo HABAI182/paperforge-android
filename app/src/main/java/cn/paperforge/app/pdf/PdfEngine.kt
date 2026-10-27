@@ -49,6 +49,7 @@ object PdfEngine {
                                         .ocrEngine
                                 )
                     else null
+                mapping.useFonts(engine?.fontFiles.orEmpty())
                 pages.forEachIndexed { index, page ->
                     coroutineContext.ensureActive()
                     var layout =

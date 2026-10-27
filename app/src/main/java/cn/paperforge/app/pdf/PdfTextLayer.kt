@@ -9,10 +9,34 @@ import com.tom_roush.pdfbox.util.Matrix
 import kotlin.math.*
 
 object PdfTextLayer {
-    const val VERSION = "ocr-unicode-geometry-2"
+    const val VERSION = "ocr-unicode-geometry-fonts-3"
 
     class Mapping {
         private val mappings = mutableMapOf<String, MutableMap<Int, String>>()
+        private var files = emptyList<java.io.File>()
+        private val fonts = mutableMapOf<java.io.File, PDType0Font>()
+        private var document: PDDocument? = null
+
+        fun useFonts(value: List<java.io.File>) = apply { files = value.distinct() }
+
+        internal fun font(doc: PDDocument, preferred: PDType0Font, text: String): PDType0Font {
+            val normalized = java.text.Normalizer.normalize(text, java.text.Normalizer.Form.NFC)
+            fun supports(font: PDType0Font) =
+                normalized.codePoints().toArray().all { code ->
+                    Character.isISOControl(code) ||
+                        runCatching { font.encode(String(Character.toChars(code))) }.isSuccess
+                }
+            if (supports(preferred)) return preferred
+            check(document == null || document === doc) { "字体映射只能属于一份导出文档" }
+            document = doc
+            return files.firstNotNullOfOrNull { file ->
+                val font =
+                    fonts.getOrPut(file) {
+                        file.inputStream().use { PDType0Font.load(doc, it, true) }
+                    }
+                font.takeIf(::supports)
+            } ?: preferred
+        }
 
         internal fun record(font: PDType0Font, text: String) {
             val tag =
@@ -86,17 +110,19 @@ object PdfTextLayer {
                     val lineWidth = hypot(dx, dy).coerceAtLeast(1f)
                     val lineHeight =
                         hypot((p[3].x - p[0].x) * w, (p[3].y - p[0].y) * h).coerceAtLeast(1f)
-                    val text = safe(font, line.text)
+                    val selectedFont = mapping?.font(doc, font, line.text) ?: font
+                    val text = safe(selectedFont, line.text)
                     if (text.isBlank()) return@forEach
-                    val ascent = font.fontDescriptor.ascent / 1000f
-                    val descent = font.fontDescriptor.descent / 1000f
+                    val ascent = selectedFont.fontDescriptor.ascent / 1000f
+                    val descent = selectedFont.fontDescriptor.descent / 1000f
                     val size =
                         (lineHeight / (ascent - descent).coerceAtLeast(.1f)).coerceAtLeast(1f)
-                    val natural = (font.getStringWidth(text) / 1000 * size).coerceAtLeast(1f)
+                    val natural =
+                        (selectedFont.getStringWidth(text) / 1000 * size).coerceAtLeast(1f)
                     val angle = atan2(dy, dx)
                     val upX = (p[0].x - p[3].x) * w / lineHeight
                     val upY = -(p[0].y - p[3].y) * h / lineHeight
-                    mapping?.record(font, text)
+                    mapping?.record(selectedFont, text)
                     val actualText =
                         com.tom_roush.pdfbox.cos.COSDictionary().apply {
                             setString(com.tom_roush.pdfbox.cos.COSName.ACTUAL_TEXT, text)
@@ -108,7 +134,7 @@ object PdfTextLayer {
                             .create(actualText),
                     )
                     stream.beginText()
-                    stream.setFont(font, size)
+                    stream.setFont(selectedFont, size)
                     stream.setRenderingMode(RenderingMode.NEITHER)
                     stream.setHorizontalScaling(lineWidth / natural * 100)
                     stream.setTextMatrix(

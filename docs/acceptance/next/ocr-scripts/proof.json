@@ -1,0 +1,1926 @@
+{
+  "samples": [
+    {
+      "sample": "mobile",
+      "truth": "日本語の文書を読み取ります",
+      "recognized": "日本語の文書を読み取ります",
+      "copied": "日本語の文書を読み取ります",
+      "engine": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1",
+      "sourceSha256": "b0bb4fb6047a67cb061602463f2d77bc0f0aaf98a63c7af054815214409b7a8f",
+      "sourceUnchanged": true,
+      "fonts": [],
+      "layout": {
+        "schema": 4,
+        "ir": {
+          "format": "paperforge-ocr-ir",
+          "version": 1,
+          "page": {
+            "width": 2400,
+            "height": 426,
+            "coordinateSystem": "processed-page-normalized-top-left",
+            "sourceRevision": -1
+          },
+          "engine": {
+            "id": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1",
+            "version": "official-onnx-v5-mobile|f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd|sdk.dab3fe3.pf1",
+            "request": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1|false|FAST|true|AUTO|columns-vertical-baselines-2"
+          },
+          "readingOrder": [
+            "line-0"
+          ],
+          "blocks": [
+            {
+              "id": "block-0",
+              "kind": "text",
+              "bounds": [
+                [
+                  0.0475,
+                  0.3544601
+                ],
+                [
+                  0.54833335,
+                  0.3544601
+                ],
+                [
+                  0.54833335,
+                  0.6032864
+                ],
+                [
+                  0.0475,
+                  0.6032864
+                ]
+              ],
+              "paragraphs": [
+                {
+                  "id": "block-0-paragraph-0",
+                  "bounds": [
+                    [
+                      0.0475,
+                      0.3544601
+                    ],
+                    [
+                      0.54833335,
+                      0.3544601
+                    ],
+                    [
+                      0.54833335,
+                      0.6032864
+                    ],
+                    [
+                      0.0475,
+                      0.6032864
+                    ]
+                  ],
+                  "lines": [
+                    {
+                      "id": "line-0",
+                      "index": 0,
+                      "text": "日本語の文書を読み取ります",
+                      "corners": [
+                        [
+                          0.0475,
+                          0.36150235
+                        ],
+                        [
+                          0.54833335,
+                          0.3544601
+                        ],
+                        [
+                          0.54833335,
+                          0.59624416
+                        ],
+                        [
+                          0.0475,
+                          0.6032864
+                        ]
+                      ],
+                      "confidence": 0.99996346,
+                      "corrected": false,
+                      "words": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "tables": []
+        },
+        "width": 2400,
+        "height": 426,
+        "engineId": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1",
+        "engineVersion": "official-onnx-v5-mobile|f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd|sdk.dab3fe3.pf1",
+        "requestSignature": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1|false|FAST|true|AUTO|columns-vertical-baselines-2",
+        "engineMetrics": {
+          "detectionMs": 169,
+          "recognitionMs": 90,
+          "pipelineMs": 268,
+          "modelLoadMs": 323
+        },
+        "sourceRevision": -1,
+        "orientationCorrection": 0,
+        "deskewDegrees": 0,
+        "warnings": [],
+        "recognitionMode": "FAST",
+        "attempts": [
+          "paddle-original"
+        ],
+        "rawRecognition": {
+          "schema": 4,
+          "ir": {
+            "format": "paperforge-ocr-ir",
+            "version": 1,
+            "page": {
+              "width": 2400,
+              "height": 426,
+              "coordinateSystem": "processed-page-normalized-top-left",
+              "sourceRevision": -1
+            },
+            "engine": {
+              "id": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1",
+              "version": "official-onnx-v5-mobile|f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd|sdk.dab3fe3.pf1",
+              "request": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1|false|FAST|true|AUTO|columns-vertical-baselines-2"
+            },
+            "readingOrder": [
+              "line-0"
+            ],
+            "blocks": [
+              {
+                "id": "block-0",
+                "kind": "text",
+                "bounds": [
+                  [
+                    0.0475,
+                    0.3544601
+                  ],
+                  [
+                    0.54833335,
+                    0.3544601
+                  ],
+                  [
+                    0.54833335,
+                    0.6032864
+                  ],
+                  [
+                    0.0475,
+                    0.6032864
+                  ]
+                ],
+                "paragraphs": [
+                  {
+                    "id": "block-0-paragraph-0",
+                    "bounds": [
+                      [
+                        0.0475,
+                        0.3544601
+                      ],
+                      [
+                        0.54833335,
+                        0.3544601
+                      ],
+                      [
+                        0.54833335,
+                        0.6032864
+                      ],
+                      [
+                        0.0475,
+                        0.6032864
+                      ]
+                    ],
+                    "lines": [
+                      {
+                        "id": "line-0",
+                        "index": 0,
+                        "text": "日本語の文書を読み取ります",
+                        "corners": [
+                          [
+                            0.0475,
+                            0.36150235
+                          ],
+                          [
+                            0.54833335,
+                            0.3544601
+                          ],
+                          [
+                            0.54833335,
+                            0.59624416
+                          ],
+                          [
+                            0.0475,
+                            0.6032864
+                          ]
+                        ],
+                        "confidence": 0.99996346,
+                        "corrected": false,
+                        "words": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "tables": []
+          },
+          "width": 2400,
+          "height": 426,
+          "engineId": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1",
+          "engineVersion": "official-onnx-v5-mobile|f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd|sdk.dab3fe3.pf1",
+          "requestSignature": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1|false|FAST|true|AUTO|columns-vertical-baselines-2",
+          "engineMetrics": {
+            "detectionMs": 169,
+            "recognitionMs": 90,
+            "pipelineMs": 268,
+            "modelLoadMs": 323
+          },
+          "sourceRevision": -1,
+          "orientationCorrection": 0,
+          "deskewDegrees": 0,
+          "warnings": [],
+          "recognitionMode": "FAST",
+          "attempts": [
+            "paddle-original"
+          ],
+          "rawRecognition": null,
+          "lines": [
+            {
+              "text": "日本語の文書を読み取ります",
+              "corners": [
+                [
+                  0.0475,
+                  0.36150235
+                ],
+                [
+                  0.54833335,
+                  0.3544601
+                ],
+                [
+                  0.54833335,
+                  0.59624416
+                ],
+                [
+                  0.0475,
+                  0.6032864
+                ]
+              ],
+              "confidence": 0.99996346,
+              "angle": -0.80558765,
+              "block": 0,
+              "paragraph": 0,
+              "variant": "paddle-original",
+              "corrected": false,
+              "hypotheses": [],
+              "elements": []
+            }
+          ]
+        },
+        "lines": [
+          {
+            "text": "日本語の文書を読み取ります",
+            "corners": [
+              [
+                0.0475,
+                0.36150235
+              ],
+              [
+                0.54833335,
+                0.3544601
+              ],
+              [
+                0.54833335,
+                0.59624416
+              ],
+              [
+                0.0475,
+                0.6032864
+              ]
+            ],
+            "confidence": 0.99996346,
+            "angle": -0.80558765,
+            "block": 0,
+            "paragraph": 0,
+            "variant": "paddle-original",
+            "corrected": false,
+            "hypotheses": [],
+            "elements": []
+          }
+        ]
+      },
+      "report": {
+        "policy": "native-regions-images-unicode-2",
+        "pages": [
+          {
+            "page": 1,
+            "reason": "no-readable-native-text",
+            "ocr": true,
+            "nativeRegions": 0,
+            "badGlyphs": 0,
+            "imageRegions": 1,
+            "addedLines": 1
+          }
+        ]
+      }
+    },
+    {
+      "sample": "korean",
+      "truth": "문서를 읽고 원본을 보관합니다",
+      "recognized": "문서를 읽고 원본을 보관합니다",
+      "copied": "문서를 읽고 원본을 보관합니다",
+      "engine": "paddle:paddle-ppocrv5-korean-27582954:27582954449541419e5277721cc0b9d70a6a96f7d21d3923cf8cbe091076d005:pf1",
+      "sourceSha256": "eb68f50cce1b7538a5f7df53703ff2c25c5388a9a511b3c0b3cbe5a16a19b0d5",
+      "sourceUnchanged": true,
+      "fonts": [
+        "388092ff29e5a0c290933059c7a723935ba944929333c05b4d922a66dd59c79a"
+      ],
+      "layout": {
+        "schema": 4,
+        "ir": {
+          "format": "paperforge-ocr-ir",
+          "version": 1,
+          "page": {
+            "width": 2400,
+            "height": 426,
+            "coordinateSystem": "processed-page-normalized-top-left",
+            "sourceRevision": -1
+          },
+          "engine": {
+            "id": "paddle:paddle-ppocrv5-korean-27582954:27582954449541419e5277721cc0b9d70a6a96f7d21d3923cf8cbe091076d005:pf1",
+            "version": "official-onnx-v5-mobile|27582954449541419e5277721cc0b9d70a6a96f7d21d3923cf8cbe091076d005|sdk.dab3fe3.pf1",
+            "request": "paddle:paddle-ppocrv5-korean-27582954:27582954449541419e5277721cc0b9d70a6a96f7d21d3923cf8cbe091076d005:pf1|false|FAST|true|AUTO|columns-vertical-baselines-2"
+          },
+          "readingOrder": [
+            "line-0"
+          ],
+          "blocks": [
+            {
+              "id": "block-0",
+              "kind": "text",
+              "bounds": [
+                [
+                  0.044166666,
+                  0.3568075
+                ],
+                [
+                  0.5341667,
+                  0.3568075
+                ],
+                [
+                  0.5341667,
+                  0.59624416
+                ],
+                [
+                  0.044166666,
+                  0.59624416
+                ]
+              ],
+              "paragraphs": [
+                {
+                  "id": "block-0-paragraph-0",
+                  "bounds": [
+                    [
+                      0.044166666,
+                      0.3568075
+                    ],
+                    [
+                      0.5341667,
+                      0.3568075
+                    ],
+                    [
+                      0.5341667,
+                      0.59624416
+                    ],
+                    [
+                      0.044166666,
+                      0.59624416
+                    ]
+                  ],
+                  "lines": [
+                    {
+                      "id": "line-0",
+                      "index": 0,
+                      "text": "문서를 읽고 원본을 보관합니다",
+                      "corners": [
+                        [
+                          0.044166666,
+                          0.36150235
+                        ],
+                        [
+                          0.5341667,
+                          0.3568075
+                        ],
+                        [
+                          0.5341667,
+                          0.5915493
+                        ],
+                        [
+                          0.044166666,
+                          0.59624416
+                        ]
+                      ],
+                      "confidence": 0.9984524,
+                      "corrected": false,
+                      "words": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "tables": []
+        },
+        "width": 2400,
+        "height": 426,
+        "engineId": "paddle:paddle-ppocrv5-korean-27582954:27582954449541419e5277721cc0b9d70a6a96f7d21d3923cf8cbe091076d005:pf1",
+        "engineVersion": "official-onnx-v5-mobile|27582954449541419e5277721cc0b9d70a6a96f7d21d3923cf8cbe091076d005|sdk.dab3fe3.pf1",
+        "requestSignature": "paddle:paddle-ppocrv5-korean-27582954:27582954449541419e5277721cc0b9d70a6a96f7d21d3923cf8cbe091076d005:pf1|false|FAST|true|AUTO|columns-vertical-baselines-2",
+        "engineMetrics": {
+          "detectionMs": 112,
+          "recognitionMs": 40,
+          "pipelineMs": 155,
+          "modelLoadMs": 140
+        },
+        "sourceRevision": -1,
+        "orientationCorrection": 0,
+        "deskewDegrees": 0,
+        "warnings": [],
+        "recognitionMode": "FAST",
+        "attempts": [
+          "paddle-original"
+        ],
+        "rawRecognition": {
+          "schema": 4,
+          "ir": {
+            "format": "paperforge-ocr-ir",
+            "version": 1,
+            "page": {
+              "width": 2400,
+              "height": 426,
+              "coordinateSystem": "processed-page-normalized-top-left",
+              "sourceRevision": -1
+            },
+            "engine": {
+              "id": "paddle:paddle-ppocrv5-korean-27582954:27582954449541419e5277721cc0b9d70a6a96f7d21d3923cf8cbe091076d005:pf1",
+              "version": "official-onnx-v5-mobile|27582954449541419e5277721cc0b9d70a6a96f7d21d3923cf8cbe091076d005|sdk.dab3fe3.pf1",
+              "request": "paddle:paddle-ppocrv5-korean-27582954:27582954449541419e5277721cc0b9d70a6a96f7d21d3923cf8cbe091076d005:pf1|false|FAST|true|AUTO|columns-vertical-baselines-2"
+            },
+            "readingOrder": [
+              "line-0"
+            ],
+            "blocks": [
+              {
+                "id": "block-0",
+                "kind": "text",
+                "bounds": [
+                  [
+                    0.044166666,
+                    0.3568075
+                  ],
+                  [
+                    0.5341667,
+                    0.3568075
+                  ],
+                  [
+                    0.5341667,
+                    0.59624416
+                  ],
+                  [
+                    0.044166666,
+                    0.59624416
+                  ]
+                ],
+                "paragraphs": [
+                  {
+                    "id": "block-0-paragraph-0",
+                    "bounds": [
+                      [
+                        0.044166666,
+                        0.3568075
+                      ],
+                      [
+                        0.5341667,
+                        0.3568075
+                      ],
+                      [
+                        0.5341667,
+                        0.59624416
+                      ],
+                      [
+                        0.044166666,
+                        0.59624416
+                      ]
+                    ],
+                    "lines": [
+                      {
+                        "id": "line-0",
+                        "index": 0,
+                        "text": "문서를 읽고 원본을 보관합니다",
+                        "corners": [
+                          [
+                            0.044166666,
+                            0.36150235
+                          ],
+                          [
+                            0.5341667,
+                            0.3568075
+                          ],
+                          [
+                            0.5341667,
+                            0.5915493
+                          ],
+                          [
+                            0.044166666,
+                            0.59624416
+                          ]
+                        ],
+                        "confidence": 0.9984524,
+                        "corrected": false,
+                        "words": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "tables": []
+          },
+          "width": 2400,
+          "height": 426,
+          "engineId": "paddle:paddle-ppocrv5-korean-27582954:27582954449541419e5277721cc0b9d70a6a96f7d21d3923cf8cbe091076d005:pf1",
+          "engineVersion": "official-onnx-v5-mobile|27582954449541419e5277721cc0b9d70a6a96f7d21d3923cf8cbe091076d005|sdk.dab3fe3.pf1",
+          "requestSignature": "paddle:paddle-ppocrv5-korean-27582954:27582954449541419e5277721cc0b9d70a6a96f7d21d3923cf8cbe091076d005:pf1|false|FAST|true|AUTO|columns-vertical-baselines-2",
+          "engineMetrics": {
+            "detectionMs": 112,
+            "recognitionMs": 40,
+            "pipelineMs": 155,
+            "modelLoadMs": 140
+          },
+          "sourceRevision": -1,
+          "orientationCorrection": 0,
+          "deskewDegrees": 0,
+          "warnings": [],
+          "recognitionMode": "FAST",
+          "attempts": [
+            "paddle-original"
+          ],
+          "rawRecognition": null,
+          "lines": [
+            {
+              "text": "문서를 읽고 원본을 보관합니다",
+              "corners": [
+                [
+                  0.044166666,
+                  0.36150235
+                ],
+                [
+                  0.5341667,
+                  0.3568075
+                ],
+                [
+                  0.5341667,
+                  0.5915493
+                ],
+                [
+                  0.044166666,
+                  0.59624416
+                ]
+              ],
+              "confidence": 0.9984524,
+              "angle": -0.54895264,
+              "block": 0,
+              "paragraph": 0,
+              "variant": "paddle-original",
+              "corrected": false,
+              "hypotheses": [],
+              "elements": []
+            }
+          ]
+        },
+        "lines": [
+          {
+            "text": "문서를 읽고 원본을 보관합니다",
+            "corners": [
+              [
+                0.044166666,
+                0.36150235
+              ],
+              [
+                0.5341667,
+                0.3568075
+              ],
+              [
+                0.5341667,
+                0.5915493
+              ],
+              [
+                0.044166666,
+                0.59624416
+              ]
+            ],
+            "confidence": 0.9984524,
+            "angle": -0.54895264,
+            "block": 0,
+            "paragraph": 0,
+            "variant": "paddle-original",
+            "corrected": false,
+            "hypotheses": [],
+            "elements": []
+          }
+        ]
+      },
+      "report": {
+        "policy": "native-regions-images-unicode-2",
+        "pages": [
+          {
+            "page": 1,
+            "reason": "no-readable-native-text",
+            "ocr": true,
+            "nativeRegions": 0,
+            "badGlyphs": 0,
+            "imageRegions": 1,
+            "addedLines": 1
+          }
+        ]
+      }
+    },
+    {
+      "sample": "devanagari",
+      "truth": "यह एक हिंदी दस्तावेज है",
+      "recognized": "यह एक हिंदी दस्तावेज है",
+      "copied": "यह एक हिंदी दस्तावेज है",
+      "engine": "paddle:paddle-ppocrv5-devanagari-51f8aa8f:51f8aa8fb95647bf120908a4f64cee703bf7cde0c660ae155c8f382c31d36d33:pf1",
+      "sourceSha256": "e702ad3854bdba1d840d050a1a9bcca090637f7fbba0321416b23dcb4b82d319",
+      "sourceUnchanged": true,
+      "fonts": [
+        "a0d7453051b48a1adf19ae36a84bf5bd6fd54ce938ff4293269756eacdd187be"
+      ],
+      "layout": {
+        "schema": 4,
+        "ir": {
+          "format": "paperforge-ocr-ir",
+          "version": 1,
+          "page": {
+            "width": 2400,
+            "height": 426,
+            "coordinateSystem": "processed-page-normalized-top-left",
+            "sourceRevision": -1
+          },
+          "engine": {
+            "id": "paddle:paddle-ppocrv5-devanagari-51f8aa8f:51f8aa8fb95647bf120908a4f64cee703bf7cde0c660ae155c8f382c31d36d33:pf1",
+            "version": "official-onnx-v5-mobile|51f8aa8fb95647bf120908a4f64cee703bf7cde0c660ae155c8f382c31d36d33|sdk.dab3fe3.pf1",
+            "request": "paddle:paddle-ppocrv5-devanagari-51f8aa8f:51f8aa8fb95647bf120908a4f64cee703bf7cde0c660ae155c8f382c31d36d33:pf1|false|FAST|true|AUTO|columns-vertical-baselines-2"
+          },
+          "readingOrder": [
+            "line-0"
+          ],
+          "blocks": [
+            {
+              "id": "block-0",
+              "kind": "text",
+              "bounds": [
+                [
+                  0.038333334,
+                  0.31220657
+                ],
+                [
+                  0.38666666,
+                  0.31220657
+                ],
+                [
+                  0.38666666,
+                  0.63849765
+                ],
+                [
+                  0.038333334,
+                  0.63849765
+                ]
+              ],
+              "paragraphs": [
+                {
+                  "id": "block-0-paragraph-0",
+                  "bounds": [
+                    [
+                      0.038333334,
+                      0.31220657
+                    ],
+                    [
+                      0.38666666,
+                      0.31220657
+                    ],
+                    [
+                      0.38666666,
+                      0.63849765
+                    ],
+                    [
+                      0.038333334,
+                      0.63849765
+                    ]
+                  ],
+                  "lines": [
+                    {
+                      "id": "line-0",
+                      "index": 0,
+                      "text": "यह एक हिंदी दस्तावेज है",
+                      "corners": [
+                        [
+                          0.038333334,
+                          0.32394367
+                        ],
+                        [
+                          0.38625,
+                          0.31220657
+                        ],
+                        [
+                          0.38666666,
+                          0.62676054
+                        ],
+                        [
+                          0.03875,
+                          0.63849765
+                        ]
+                      ],
+                      "confidence": 0.9709912,
+                      "corrected": false,
+                      "words": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "tables": []
+        },
+        "width": 2400,
+        "height": 426,
+        "engineId": "paddle:paddle-ppocrv5-devanagari-51f8aa8f:51f8aa8fb95647bf120908a4f64cee703bf7cde0c660ae155c8f382c31d36d33:pf1",
+        "engineVersion": "official-onnx-v5-mobile|51f8aa8fb95647bf120908a4f64cee703bf7cde0c660ae155c8f382c31d36d33|sdk.dab3fe3.pf1",
+        "requestSignature": "paddle:paddle-ppocrv5-devanagari-51f8aa8f:51f8aa8fb95647bf120908a4f64cee703bf7cde0c660ae155c8f382c31d36d33:pf1|false|FAST|true|AUTO|columns-vertical-baselines-2",
+        "engineMetrics": {
+          "detectionMs": 75,
+          "recognitionMs": 22,
+          "pipelineMs": 100,
+          "modelLoadMs": 124
+        },
+        "sourceRevision": -1,
+        "orientationCorrection": 0,
+        "deskewDegrees": 0,
+        "warnings": [],
+        "recognitionMode": "FAST",
+        "attempts": [
+          "paddle-original"
+        ],
+        "rawRecognition": {
+          "schema": 4,
+          "ir": {
+            "format": "paperforge-ocr-ir",
+            "version": 1,
+            "page": {
+              "width": 2400,
+              "height": 426,
+              "coordinateSystem": "processed-page-normalized-top-left",
+              "sourceRevision": -1
+            },
+            "engine": {
+              "id": "paddle:paddle-ppocrv5-devanagari-51f8aa8f:51f8aa8fb95647bf120908a4f64cee703bf7cde0c660ae155c8f382c31d36d33:pf1",
+              "version": "official-onnx-v5-mobile|51f8aa8fb95647bf120908a4f64cee703bf7cde0c660ae155c8f382c31d36d33|sdk.dab3fe3.pf1",
+              "request": "paddle:paddle-ppocrv5-devanagari-51f8aa8f:51f8aa8fb95647bf120908a4f64cee703bf7cde0c660ae155c8f382c31d36d33:pf1|false|FAST|true|AUTO|columns-vertical-baselines-2"
+            },
+            "readingOrder": [
+              "line-0"
+            ],
+            "blocks": [
+              {
+                "id": "block-0",
+                "kind": "text",
+                "bounds": [
+                  [
+                    0.038333334,
+                    0.31220657
+                  ],
+                  [
+                    0.38666666,
+                    0.31220657
+                  ],
+                  [
+                    0.38666666,
+                    0.63849765
+                  ],
+                  [
+                    0.038333334,
+                    0.63849765
+                  ]
+                ],
+                "paragraphs": [
+                  {
+                    "id": "block-0-paragraph-0",
+                    "bounds": [
+                      [
+                        0.038333334,
+                        0.31220657
+                      ],
+                      [
+                        0.38666666,
+                        0.31220657
+                      ],
+                      [
+                        0.38666666,
+                        0.63849765
+                      ],
+                      [
+                        0.038333334,
+                        0.63849765
+                      ]
+                    ],
+                    "lines": [
+                      {
+                        "id": "line-0",
+                        "index": 0,
+                        "text": "यह एक हिंदी दस्तावेज है",
+                        "corners": [
+                          [
+                            0.038333334,
+                            0.32394367
+                          ],
+                          [
+                            0.38625,
+                            0.31220657
+                          ],
+                          [
+                            0.38666666,
+                            0.62676054
+                          ],
+                          [
+                            0.03875,
+                            0.63849765
+                          ]
+                        ],
+                        "confidence": 0.9709912,
+                        "corrected": false,
+                        "words": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "tables": []
+          },
+          "width": 2400,
+          "height": 426,
+          "engineId": "paddle:paddle-ppocrv5-devanagari-51f8aa8f:51f8aa8fb95647bf120908a4f64cee703bf7cde0c660ae155c8f382c31d36d33:pf1",
+          "engineVersion": "official-onnx-v5-mobile|51f8aa8fb95647bf120908a4f64cee703bf7cde0c660ae155c8f382c31d36d33|sdk.dab3fe3.pf1",
+          "requestSignature": "paddle:paddle-ppocrv5-devanagari-51f8aa8f:51f8aa8fb95647bf120908a4f64cee703bf7cde0c660ae155c8f382c31d36d33:pf1|false|FAST|true|AUTO|columns-vertical-baselines-2",
+          "engineMetrics": {
+            "detectionMs": 75,
+            "recognitionMs": 22,
+            "pipelineMs": 100,
+            "modelLoadMs": 124
+          },
+          "sourceRevision": -1,
+          "orientationCorrection": 0,
+          "deskewDegrees": 0,
+          "warnings": [],
+          "recognitionMode": "FAST",
+          "attempts": [
+            "paddle-original"
+          ],
+          "rawRecognition": null,
+          "lines": [
+            {
+              "text": "यह एक हिंदी दस्तावेज है",
+              "corners": [
+                [
+                  0.038333334,
+                  0.32394367
+                ],
+                [
+                  0.38625,
+                  0.31220657
+                ],
+                [
+                  0.38666666,
+                  0.62676054
+                ],
+                [
+                  0.03875,
+                  0.63849765
+                ]
+              ],
+              "confidence": 0.9709912,
+              "angle": -1.9321634,
+              "block": 0,
+              "paragraph": 0,
+              "variant": "paddle-original",
+              "corrected": false,
+              "hypotheses": [],
+              "elements": []
+            }
+          ]
+        },
+        "lines": [
+          {
+            "text": "यह एक हिंदी दस्तावेज है",
+            "corners": [
+              [
+                0.038333334,
+                0.32394367
+              ],
+              [
+                0.38625,
+                0.31220657
+              ],
+              [
+                0.38666666,
+                0.62676054
+              ],
+              [
+                0.03875,
+                0.63849765
+              ]
+            ],
+            "confidence": 0.9709912,
+            "angle": -1.9321634,
+            "block": 0,
+            "paragraph": 0,
+            "variant": "paddle-original",
+            "corrected": false,
+            "hypotheses": [],
+            "elements": []
+          }
+        ]
+      },
+      "report": {
+        "policy": "native-regions-images-unicode-2",
+        "pages": [
+          {
+            "page": 1,
+            "reason": "no-readable-native-text",
+            "ocr": true,
+            "nativeRegions": 0,
+            "badGlyphs": 0,
+            "imageRegions": 1,
+            "addedLines": 1
+          }
+        ]
+      }
+    },
+    {
+      "sample": "latin",
+      "truth": "Édition française numéro 00123",
+      "recognized": "Édition française numéro 00123",
+      "copied": "Édition française numéro 00123",
+      "engine": "paddle:paddle-ppocrv5-latin-49d8f8ed:49d8f8ed048dc3e1ae44e8903542233a88af5bf7c6040585e3d221bd9fd5dfa8:pf1",
+      "sourceSha256": "75e6f48d64c19688c2e887d77750d0521234260250edfac9d30baae4d3da029d",
+      "sourceUnchanged": true,
+      "fonts": [],
+      "layout": {
+        "schema": 4,
+        "ir": {
+          "format": "paperforge-ocr-ir",
+          "version": 1,
+          "page": {
+            "width": 2400,
+            "height": 426,
+            "coordinateSystem": "processed-page-normalized-top-left",
+            "sourceRevision": -1
+          },
+          "engine": {
+            "id": "paddle:paddle-ppocrv5-latin-49d8f8ed:49d8f8ed048dc3e1ae44e8903542233a88af5bf7c6040585e3d221bd9fd5dfa8:pf1",
+            "version": "official-onnx-v5-mobile|49d8f8ed048dc3e1ae44e8903542233a88af5bf7c6040585e3d221bd9fd5dfa8|sdk.dab3fe3.pf1",
+            "request": "paddle:paddle-ppocrv5-latin-49d8f8ed:49d8f8ed048dc3e1ae44e8903542233a88af5bf7c6040585e3d221bd9fd5dfa8:pf1|false|FAST|true|AUTO|columns-vertical-baselines-2"
+          },
+          "readingOrder": [
+            "line-0"
+          ],
+          "blocks": [
+            {
+              "id": "block-0",
+              "kind": "text",
+              "bounds": [
+                [
+                  0.04083333,
+                  0.32159624
+                ],
+                [
+                  0.59875,
+                  0.32159624
+                ],
+                [
+                  0.59875,
+                  0.6314554
+                ],
+                [
+                  0.04083333,
+                  0.6314554
+                ]
+              ],
+              "paragraphs": [
+                {
+                  "id": "block-0-paragraph-0",
+                  "bounds": [
+                    [
+                      0.04083333,
+                      0.32159624
+                    ],
+                    [
+                      0.59875,
+                      0.32159624
+                    ],
+                    [
+                      0.59875,
+                      0.6314554
+                    ],
+                    [
+                      0.04083333,
+                      0.6314554
+                    ]
+                  ],
+                  "lines": [
+                    {
+                      "id": "line-0",
+                      "index": 0,
+                      "text": "Édition française numéro 00123",
+                      "corners": [
+                        [
+                          0.04125,
+                          0.32159624
+                        ],
+                        [
+                          0.59875,
+                          0.33802816
+                        ],
+                        [
+                          0.59875,
+                          0.6314554
+                        ],
+                        [
+                          0.04083333,
+                          0.6150235
+                        ]
+                      ],
+                      "confidence": 0.9939943,
+                      "corrected": false,
+                      "words": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "tables": []
+        },
+        "width": 2400,
+        "height": 426,
+        "engineId": "paddle:paddle-ppocrv5-latin-49d8f8ed:49d8f8ed048dc3e1ae44e8903542233a88af5bf7c6040585e3d221bd9fd5dfa8:pf1",
+        "engineVersion": "official-onnx-v5-mobile|49d8f8ed048dc3e1ae44e8903542233a88af5bf7c6040585e3d221bd9fd5dfa8|sdk.dab3fe3.pf1",
+        "requestSignature": "paddle:paddle-ppocrv5-latin-49d8f8ed:49d8f8ed048dc3e1ae44e8903542233a88af5bf7c6040585e3d221bd9fd5dfa8:pf1|false|FAST|true|AUTO|columns-vertical-baselines-2",
+        "engineMetrics": {
+          "detectionMs": 81,
+          "recognitionMs": 33,
+          "pipelineMs": 118,
+          "modelLoadMs": 153
+        },
+        "sourceRevision": -1,
+        "orientationCorrection": 0,
+        "deskewDegrees": 0,
+        "warnings": [],
+        "recognitionMode": "FAST",
+        "attempts": [
+          "paddle-original"
+        ],
+        "rawRecognition": {
+          "schema": 4,
+          "ir": {
+            "format": "paperforge-ocr-ir",
+            "version": 1,
+            "page": {
+              "width": 2400,
+              "height": 426,
+              "coordinateSystem": "processed-page-normalized-top-left",
+              "sourceRevision": -1
+            },
+            "engine": {
+              "id": "paddle:paddle-ppocrv5-latin-49d8f8ed:49d8f8ed048dc3e1ae44e8903542233a88af5bf7c6040585e3d221bd9fd5dfa8:pf1",
+              "version": "official-onnx-v5-mobile|49d8f8ed048dc3e1ae44e8903542233a88af5bf7c6040585e3d221bd9fd5dfa8|sdk.dab3fe3.pf1",
+              "request": "paddle:paddle-ppocrv5-latin-49d8f8ed:49d8f8ed048dc3e1ae44e8903542233a88af5bf7c6040585e3d221bd9fd5dfa8:pf1|false|FAST|true|AUTO|columns-vertical-baselines-2"
+            },
+            "readingOrder": [
+              "line-0"
+            ],
+            "blocks": [
+              {
+                "id": "block-0",
+                "kind": "text",
+                "bounds": [
+                  [
+                    0.04083333,
+                    0.32159624
+                  ],
+                  [
+                    0.59875,
+                    0.32159624
+                  ],
+                  [
+                    0.59875,
+                    0.6314554
+                  ],
+                  [
+                    0.04083333,
+                    0.6314554
+                  ]
+                ],
+                "paragraphs": [
+                  {
+                    "id": "block-0-paragraph-0",
+                    "bounds": [
+                      [
+                        0.04083333,
+                        0.32159624
+                      ],
+                      [
+                        0.59875,
+                        0.32159624
+                      ],
+                      [
+                        0.59875,
+                        0.6314554
+                      ],
+                      [
+                        0.04083333,
+                        0.6314554
+                      ]
+                    ],
+                    "lines": [
+                      {
+                        "id": "line-0",
+                        "index": 0,
+                        "text": "Édition française numéro 00123",
+                        "corners": [
+                          [
+                            0.04125,
+                            0.32159624
+                          ],
+                          [
+                            0.59875,
+                            0.33802816
+                          ],
+                          [
+                            0.59875,
+                            0.6314554
+                          ],
+                          [
+                            0.04083333,
+                            0.6150235
+                          ]
+                        ],
+                        "confidence": 0.9939943,
+                        "corrected": false,
+                        "words": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "tables": []
+          },
+          "width": 2400,
+          "height": 426,
+          "engineId": "paddle:paddle-ppocrv5-latin-49d8f8ed:49d8f8ed048dc3e1ae44e8903542233a88af5bf7c6040585e3d221bd9fd5dfa8:pf1",
+          "engineVersion": "official-onnx-v5-mobile|49d8f8ed048dc3e1ae44e8903542233a88af5bf7c6040585e3d221bd9fd5dfa8|sdk.dab3fe3.pf1",
+          "requestSignature": "paddle:paddle-ppocrv5-latin-49d8f8ed:49d8f8ed048dc3e1ae44e8903542233a88af5bf7c6040585e3d221bd9fd5dfa8:pf1|false|FAST|true|AUTO|columns-vertical-baselines-2",
+          "engineMetrics": {
+            "detectionMs": 81,
+            "recognitionMs": 33,
+            "pipelineMs": 118,
+            "modelLoadMs": 153
+          },
+          "sourceRevision": -1,
+          "orientationCorrection": 0,
+          "deskewDegrees": 0,
+          "warnings": [],
+          "recognitionMode": "FAST",
+          "attempts": [
+            "paddle-original"
+          ],
+          "rawRecognition": null,
+          "lines": [
+            {
+              "text": "Édition française numéro 00123",
+              "corners": [
+                [
+                  0.04125,
+                  0.32159624
+                ],
+                [
+                  0.59875,
+                  0.33802816
+                ],
+                [
+                  0.59875,
+                  0.6314554
+                ],
+                [
+                  0.04083333,
+                  0.6150235
+                ]
+              ],
+              "confidence": 0.9939943,
+              "angle": 1.6882647,
+              "block": 0,
+              "paragraph": 0,
+              "variant": "paddle-original",
+              "corrected": false,
+              "hypotheses": [],
+              "elements": []
+            }
+          ]
+        },
+        "lines": [
+          {
+            "text": "Édition française numéro 00123",
+            "corners": [
+              [
+                0.04125,
+                0.32159624
+              ],
+              [
+                0.59875,
+                0.33802816
+              ],
+              [
+                0.59875,
+                0.6314554
+              ],
+              [
+                0.04083333,
+                0.6150235
+              ]
+            ],
+            "confidence": 0.9939943,
+            "angle": 1.6882647,
+            "block": 0,
+            "paragraph": 0,
+            "variant": "paddle-original",
+            "corrected": false,
+            "hypotheses": [],
+            "elements": []
+          }
+        ]
+      },
+      "report": {
+        "policy": "native-regions-images-unicode-2",
+        "pages": [
+          {
+            "page": 1,
+            "reason": "no-readable-native-text",
+            "ocr": true,
+            "nativeRegions": 0,
+            "badGlyphs": 0,
+            "imageRegions": 1,
+            "addedLines": 1
+          }
+        ]
+      }
+    },
+    {
+      "sample": "latin-vietnamese",
+      "truth": "Tài liệu tiếng Việt số 00123",
+      "recognized": "Tài liu ting Vit s 00123",
+      "copied": "Tài liu ting Vit s 00123",
+      "engine": "paddle:paddle-ppocrv5-latin-af94e95f:af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350:pf1",
+      "sourceSha256": "3854dcef3258b86255881383748dc52d1f563ea7a58ef56b6daf93c8692954d6",
+      "sourceUnchanged": true,
+      "fonts": [
+        "199c6f0ab4f3b8803bb4e22a4cd8f1dd95d472fbe3b8479cb3697659fd1c51b8"
+      ],
+      "layout": {
+        "schema": 4,
+        "ir": {
+          "format": "paperforge-ocr-ir",
+          "version": 1,
+          "page": {
+            "width": 2400,
+            "height": 426,
+            "coordinateSystem": "processed-page-normalized-top-left",
+            "sourceRevision": -1
+          },
+          "engine": {
+            "id": "paddle:paddle-ppocrv5-latin-af94e95f:af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350:pf1",
+            "version": "official-onnx-v5-mobile|af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350|sdk.dab3fe3.pf1",
+            "request": "paddle:paddle-ppocrv5-latin-af94e95f:af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350:pf1|false|FAST|true|AUTO|columns-vertical-baselines-2"
+          },
+          "readingOrder": [
+            "line-0"
+          ],
+          "blocks": [
+            {
+              "id": "block-0",
+              "kind": "text",
+              "bounds": [
+                [
+                  0.04125,
+                  0.32629108
+                ],
+                [
+                  0.51,
+                  0.32629108
+                ],
+                [
+                  0.51,
+                  0.62910795
+                ],
+                [
+                  0.04125,
+                  0.62910795
+                ]
+              ],
+              "paragraphs": [
+                {
+                  "id": "block-0-paragraph-0",
+                  "bounds": [
+                    [
+                      0.04125,
+                      0.32629108
+                    ],
+                    [
+                      0.51,
+                      0.32629108
+                    ],
+                    [
+                      0.51,
+                      0.62910795
+                    ],
+                    [
+                      0.04125,
+                      0.62910795
+                    ]
+                  ],
+                  "lines": [
+                    {
+                      "id": "line-0",
+                      "index": 0,
+                      "text": "Tài liu ting Vit s 00123",
+                      "corners": [
+                        [
+                          0.04125,
+                          0.32629108
+                        ],
+                        [
+                          0.51,
+                          0.32629108
+                        ],
+                        [
+                          0.51,
+                          0.62910795
+                        ],
+                        [
+                          0.04125,
+                          0.62910795
+                        ]
+                      ],
+                      "confidence": 0.97601134,
+                      "corrected": false,
+                      "words": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "tables": []
+        },
+        "width": 2400,
+        "height": 426,
+        "engineId": "paddle:paddle-ppocrv5-latin-af94e95f:af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350:pf1",
+        "engineVersion": "official-onnx-v5-mobile|af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350|sdk.dab3fe3.pf1",
+        "requestSignature": "paddle:paddle-ppocrv5-latin-af94e95f:af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350:pf1|false|FAST|true|AUTO|columns-vertical-baselines-2",
+        "engineMetrics": {
+          "detectionMs": 305,
+          "recognitionMs": 78,
+          "pipelineMs": 392,
+          "modelLoadMs": 253
+        },
+        "sourceRevision": -1,
+        "orientationCorrection": 0,
+        "deskewDegrees": 0,
+        "warnings": [],
+        "recognitionMode": "FAST",
+        "attempts": [
+          "paddle-original"
+        ],
+        "rawRecognition": {
+          "schema": 4,
+          "ir": {
+            "format": "paperforge-ocr-ir",
+            "version": 1,
+            "page": {
+              "width": 2400,
+              "height": 426,
+              "coordinateSystem": "processed-page-normalized-top-left",
+              "sourceRevision": -1
+            },
+            "engine": {
+              "id": "paddle:paddle-ppocrv5-latin-af94e95f:af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350:pf1",
+              "version": "official-onnx-v5-mobile|af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350|sdk.dab3fe3.pf1",
+              "request": "paddle:paddle-ppocrv5-latin-af94e95f:af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350:pf1|false|FAST|true|AUTO|columns-vertical-baselines-2"
+            },
+            "readingOrder": [
+              "line-0"
+            ],
+            "blocks": [
+              {
+                "id": "block-0",
+                "kind": "text",
+                "bounds": [
+                  [
+                    0.04125,
+                    0.32629108
+                  ],
+                  [
+                    0.51,
+                    0.32629108
+                  ],
+                  [
+                    0.51,
+                    0.62910795
+                  ],
+                  [
+                    0.04125,
+                    0.62910795
+                  ]
+                ],
+                "paragraphs": [
+                  {
+                    "id": "block-0-paragraph-0",
+                    "bounds": [
+                      [
+                        0.04125,
+                        0.32629108
+                      ],
+                      [
+                        0.51,
+                        0.32629108
+                      ],
+                      [
+                        0.51,
+                        0.62910795
+                      ],
+                      [
+                        0.04125,
+                        0.62910795
+                      ]
+                    ],
+                    "lines": [
+                      {
+                        "id": "line-0",
+                        "index": 0,
+                        "text": "Tài liu ting Vit s 00123",
+                        "corners": [
+                          [
+                            0.04125,
+                            0.32629108
+                          ],
+                          [
+                            0.51,
+                            0.32629108
+                          ],
+                          [
+                            0.51,
+                            0.62910795
+                          ],
+                          [
+                            0.04125,
+                            0.62910795
+                          ]
+                        ],
+                        "confidence": 0.97601134,
+                        "corrected": false,
+                        "words": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "tables": []
+          },
+          "width": 2400,
+          "height": 426,
+          "engineId": "paddle:paddle-ppocrv5-latin-af94e95f:af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350:pf1",
+          "engineVersion": "official-onnx-v5-mobile|af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350|sdk.dab3fe3.pf1",
+          "requestSignature": "paddle:paddle-ppocrv5-latin-af94e95f:af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350:pf1|false|FAST|true|AUTO|columns-vertical-baselines-2",
+          "engineMetrics": {
+            "detectionMs": 305,
+            "recognitionMs": 78,
+            "pipelineMs": 392,
+            "modelLoadMs": 253
+          },
+          "sourceRevision": -1,
+          "orientationCorrection": 0,
+          "deskewDegrees": 0,
+          "warnings": [],
+          "recognitionMode": "FAST",
+          "attempts": [
+            "paddle-original"
+          ],
+          "rawRecognition": null,
+          "lines": [
+            {
+              "text": "Tài liu ting Vit s 00123",
+              "corners": [
+                [
+                  0.04125,
+                  0.32629108
+                ],
+                [
+                  0.51,
+                  0.32629108
+                ],
+                [
+                  0.51,
+                  0.62910795
+                ],
+                [
+                  0.04125,
+                  0.62910795
+                ]
+              ],
+              "confidence": 0.97601134,
+              "angle": 0,
+              "block": 0,
+              "paragraph": 0,
+              "variant": "paddle-original",
+              "corrected": false,
+              "hypotheses": [],
+              "elements": []
+            }
+          ]
+        },
+        "lines": [
+          {
+            "text": "Tài liu ting Vit s 00123",
+            "corners": [
+              [
+                0.04125,
+                0.32629108
+              ],
+              [
+                0.51,
+                0.32629108
+              ],
+              [
+                0.51,
+                0.62910795
+              ],
+              [
+                0.04125,
+                0.62910795
+              ]
+            ],
+            "confidence": 0.97601134,
+            "angle": 0,
+            "block": 0,
+            "paragraph": 0,
+            "variant": "paddle-original",
+            "corrected": false,
+            "hypotheses": [],
+            "elements": []
+          }
+        ]
+      },
+      "report": {
+        "policy": "native-regions-images-unicode-2",
+        "pages": [
+          {
+            "page": 1,
+            "reason": "no-readable-native-text",
+            "ocr": true,
+            "nativeRegions": 0,
+            "badGlyphs": 0,
+            "imageRegions": 1,
+            "addedLines": 1
+          }
+        ]
+      }
+    },
+    {
+      "sample": "latin-czech",
+      "truth": "Český dokument číslo 00123",
+      "recognized": "Český dokument číslo 00123",
+      "copied": "Český dokument číslo 00123",
+      "engine": "paddle:paddle-ppocrv5-latin-af94e95f:af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350:pf1",
+      "sourceSha256": "d46dce0a8b6393d887a4b15835f0d6d580b38e009fcc0b3a829d33a8c69c4d86",
+      "sourceUnchanged": true,
+      "fonts": [
+        "199c6f0ab4f3b8803bb4e22a4cd8f1dd95d472fbe3b8479cb3697659fd1c51b8"
+      ],
+      "layout": {
+        "schema": 4,
+        "ir": {
+          "format": "paperforge-ocr-ir",
+          "version": 1,
+          "page": {
+            "width": 2400,
+            "height": 426,
+            "coordinateSystem": "processed-page-normalized-top-left",
+            "sourceRevision": -1
+          },
+          "engine": {
+            "id": "paddle:paddle-ppocrv5-latin-af94e95f:af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350:pf1",
+            "version": "official-onnx-v5-mobile|af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350|sdk.dab3fe3.pf1",
+            "request": "paddle:paddle-ppocrv5-latin-af94e95f:af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350:pf1|false|FAST|true|AUTO|columns-vertical-baselines-2"
+          },
+          "readingOrder": [
+            "line-0"
+          ],
+          "blocks": [
+            {
+              "id": "block-0",
+              "kind": "text",
+              "bounds": [
+                [
+                  0.04083333,
+                  0.31924883
+                ],
+                [
+                  0.53791666,
+                  0.31924883
+                ],
+                [
+                  0.53791666,
+                  0.63380283
+                ],
+                [
+                  0.04083333,
+                  0.63380283
+                ]
+              ],
+              "paragraphs": [
+                {
+                  "id": "block-0-paragraph-0",
+                  "bounds": [
+                    [
+                      0.04083333,
+                      0.31924883
+                    ],
+                    [
+                      0.53791666,
+                      0.31924883
+                    ],
+                    [
+                      0.53791666,
+                      0.63380283
+                    ],
+                    [
+                      0.04083333,
+                      0.63380283
+                    ]
+                  ],
+                  "lines": [
+                    {
+                      "id": "line-0",
+                      "index": 0,
+                      "text": "Český dokument číslo 00123",
+                      "corners": [
+                        [
+                          0.04083333,
+                          0.31924883
+                        ],
+                        [
+                          0.53791666,
+                          0.31924883
+                        ],
+                        [
+                          0.53791666,
+                          0.63380283
+                        ],
+                        [
+                          0.04083333,
+                          0.63380283
+                        ]
+                      ],
+                      "confidence": 0.99369913,
+                      "corrected": false,
+                      "words": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "tables": []
+        },
+        "width": 2400,
+        "height": 426,
+        "engineId": "paddle:paddle-ppocrv5-latin-af94e95f:af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350:pf1",
+        "engineVersion": "official-onnx-v5-mobile|af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350|sdk.dab3fe3.pf1",
+        "requestSignature": "paddle:paddle-ppocrv5-latin-af94e95f:af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350:pf1|false|FAST|true|AUTO|columns-vertical-baselines-2",
+        "engineMetrics": {
+          "detectionMs": 200,
+          "recognitionMs": 28,
+          "pipelineMs": 234,
+          "modelLoadMs": 235
+        },
+        "sourceRevision": -1,
+        "orientationCorrection": 0,
+        "deskewDegrees": 0,
+        "warnings": [],
+        "recognitionMode": "FAST",
+        "attempts": [
+          "paddle-original"
+        ],
+        "rawRecognition": {
+          "schema": 4,
+          "ir": {
+            "format": "paperforge-ocr-ir",
+            "version": 1,
+            "page": {
+              "width": 2400,
+              "height": 426,
+              "coordinateSystem": "processed-page-normalized-top-left",
+              "sourceRevision": -1
+            },
+            "engine": {
+              "id": "paddle:paddle-ppocrv5-latin-af94e95f:af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350:pf1",
+              "version": "official-onnx-v5-mobile|af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350|sdk.dab3fe3.pf1",
+              "request": "paddle:paddle-ppocrv5-latin-af94e95f:af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350:pf1|false|FAST|true|AUTO|columns-vertical-baselines-2"
+            },
+            "readingOrder": [
+              "line-0"
+            ],
+            "blocks": [
+              {
+                "id": "block-0",
+                "kind": "text",
+                "bounds": [
+                  [
+                    0.04083333,
+                    0.31924883
+                  ],
+                  [
+                    0.53791666,
+                    0.31924883
+                  ],
+                  [
+                    0.53791666,
+                    0.63380283
+                  ],
+                  [
+                    0.04083333,
+                    0.63380283
+                  ]
+                ],
+                "paragraphs": [
+                  {
+                    "id": "block-0-paragraph-0",
+                    "bounds": [
+                      [
+                        0.04083333,
+                        0.31924883
+                      ],
+                      [
+                        0.53791666,
+                        0.31924883
+                      ],
+                      [
+                        0.53791666,
+                        0.63380283
+                      ],
+                      [
+                        0.04083333,
+                        0.63380283
+                      ]
+                    ],
+                    "lines": [
+                      {
+                        "id": "line-0",
+                        "index": 0,
+                        "text": "Český dokument číslo 00123",
+                        "corners": [
+                          [
+                            0.04083333,
+                            0.31924883
+                          ],
+                          [
+                            0.53791666,
+                            0.31924883
+                          ],
+                          [
+                            0.53791666,
+                            0.63380283
+                          ],
+                          [
+                            0.04083333,
+                            0.63380283
+                          ]
+                        ],
+                        "confidence": 0.99369913,
+                        "corrected": false,
+                        "words": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "tables": []
+          },
+          "width": 2400,
+          "height": 426,
+          "engineId": "paddle:paddle-ppocrv5-latin-af94e95f:af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350:pf1",
+          "engineVersion": "official-onnx-v5-mobile|af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350|sdk.dab3fe3.pf1",
+          "requestSignature": "paddle:paddle-ppocrv5-latin-af94e95f:af94e95f2ac996f8c71fd1130aa54defe842159ca10ffb6fefe533204a54a350:pf1|false|FAST|true|AUTO|columns-vertical-baselines-2",
+          "engineMetrics": {
+            "detectionMs": 200,
+            "recognitionMs": 28,
+            "pipelineMs": 234,
+            "modelLoadMs": 235
+          },
+          "sourceRevision": -1,
+          "orientationCorrection": 0,
+          "deskewDegrees": 0,
+          "warnings": [],
+          "recognitionMode": "FAST",
+          "attempts": [
+            "paddle-original"
+          ],
+          "rawRecognition": null,
+          "lines": [
+            {
+              "text": "Český dokument číslo 00123",
+              "corners": [
+                [
+                  0.04083333,
+                  0.31924883
+                ],
+                [
+                  0.53791666,
+                  0.31924883
+                ],
+                [
+                  0.53791666,
+                  0.63380283
+                ],
+                [
+                  0.04083333,
+                  0.63380283
+                ]
+              ],
+              "confidence": 0.99369913,
+              "angle": 0,
+              "block": 0,
+              "paragraph": 0,
+              "variant": "paddle-original",
+              "corrected": false,
+              "hypotheses": [],
+              "elements": []
+            }
+          ]
+        },
+        "lines": [
+          {
+            "text": "Český dokument číslo 00123",
+            "corners": [
+              [
+                0.04083333,
+                0.31924883
+              ],
+              [
+                0.53791666,
+                0.31924883
+              ],
+              [
+                0.53791666,
+                0.63380283
+              ],
+              [
+                0.04083333,
+                0.63380283
+              ]
+            ],
+            "confidence": 0.99369913,
+            "angle": 0,
+            "block": 0,
+            "paragraph": 0,
+            "variant": "paddle-original",
+            "corrected": false,
+            "hypotheses": [],
+            "elements": []
+          }
+        ]
+      },
+      "report": {
+        "policy": "native-regions-images-unicode-2",
+        "pages": [
+          {
+            "page": 1,
+            "reason": "no-readable-native-text",
+            "ocr": true,
+            "nativeRegions": 0,
+            "badGlyphs": 0,
+            "imageRegions": 1,
+            "addedLines": 1
+          }
+        ]
+      }
+    }
+  ]
+}

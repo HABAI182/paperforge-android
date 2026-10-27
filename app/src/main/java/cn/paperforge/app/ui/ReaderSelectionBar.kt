@@ -54,17 +54,28 @@ internal fun ReaderSelectionBar(
                             )
                         }
                         HorizontalDivider()
-                        listOf("按行顺序" to 0, "先左栏后右栏" to 1, "先右栏后左栏" to 2).forEach { (name, order) ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text((if (selection.model.order == order) "✓ " else "") + name)
-                                },
-                                onClick = {
-                                    more = false
-                                    onChange(selection.reordered(order))
-                                },
+                        listOf(
+                                "自动顺序" to 0,
+                                "按行顺序" to 5,
+                                "先左栏后右栏" to 1,
+                                "先右栏后左栏" to 2,
+                                "竖排从右至左" to 3,
+                                "竖排从左至右" to 4,
                             )
-                        }
+                            .forEach { (name, order) ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            (if (selection.model.order == order) "✓ " else "") +
+                                                name
+                                        )
+                                    },
+                                    onClick = {
+                                        more = false
+                                        onChange(selection.reordered(order))
+                                    },
+                                )
+                            }
                         HorizontalDivider()
                         DropdownMenuItem(
                             text = { Text("文字、摘录与朗读") },

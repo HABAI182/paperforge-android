@@ -140,16 +140,23 @@ fun SettingsScreen(vm: MainViewModel) {
                 SettingSlider("默认对比度", "contrast", 1f, 0.5f..1.8f, "", 100f)
                 SettingSlider("默认曲面校正强度", "dewarpStrength", 1f, 0f..1f, "%", 100f)
             }
-            if (visible("导出 PDF OCR 文字 识别 DPI")) {
+            if (visible("导出 PDF OCR 文字 识别 DPI 竖排 多栏 排序 脚本 vertical order")) {
                 Text("导出与识别", style = MaterialTheme.typography.titleLarge)
                 OcrOptionsControl()
-                SettingToggle("结合多次识别结果校对", "ocrVoting", true)
-                SettingChoices(
-                    "OCR 语言",
-                    "ocrLanguage",
-                    "CHINESE",
-                    listOf("CHINESE" to "中文 + 英文", "LATIN" to "英文 / 拉丁字母"),
-                )
+                if (UserSettings.string("ocrBackend", "MLKIT") == "PADDLE")
+                    Text(
+                        "识别语言按当前模型包决定，可在“离线 OCR 与模型包”中切换。",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                else {
+                    SettingToggle("结合多次识别结果校对", "ocrVoting", true)
+                    SettingChoices(
+                        "OCR 语言",
+                        "ocrLanguage",
+                        "CHINESE",
+                        listOf("CHINESE" to "中文 + 英文", "LATIN" to "英文 / 拉丁字母"),
+                    )
+                }
                 SettingToggle("扫描导出默认附带文字层", "searchable", true)
                 SettingChoices(
                     "默认纸张",

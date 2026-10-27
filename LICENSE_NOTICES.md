@@ -54,3 +54,5 @@ Office 手机引擎使用 LibreOfficeKit 26.2.6.3，JNI 包装原文件保留 MP
 PPTX 空模板由 python-pptx 1.0.2 生成，模板许可文本保留在 `app/src/main/assets/templates/LICENSE-python-pptx.txt`。Android 表格、结构 DOCX、PPTX 打包与调用逻辑为本轮实现，复用既有 PDFBox/OpenCV/内置 ML Kit。
 
 `desktop/` 是可选源码适配器，Python 依赖版本固定在其 requirements 中；pdf2docx 上游已停止活跃维护，当前 MIT；PyMuPDF 等依赖继续适用各自许可。手机默认流程不依赖这些 Python 包，本次不发布 Windows 第三方运行时二进制。
+
+可选 OCR 包新增官方 PaddleOCR v5 Korean / Devanagari / Latin ONNX 权重与字典，继续使用 Apache-2.0；中英 v5 Mobile 包补充已验证的日文能力说明，权重不变。韩文、天城文和拉丁文包分别包含 Google Fonts 的 Noto Sans KR / Noto Sans Devanagari / Noto Sans 静态化衍生字体，重命名为 PaperForge Korean / Devanagari / Latin；SIL OFL 1.1 全文、固定来源提交、原始与派生哈希均在包内 `font-LICENSE` / `provenance.json`。字体不加入基础 APK。具体版本和使用方式见 [model-packs/README.md](model-packs/README.md)。

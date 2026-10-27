@@ -1,0 +1,86 @@
+{
+  "checked": "2026-10-27",
+  "cards": [
+    "OCR08"
+  ],
+  "device": "Android 35 AOSP x86_64 emulator; no owner-phone or ARM64 quality acceptance",
+  "implementation": [
+    "Shared six-way row/column/vertical order for OCR and reader selection/reflow; wide headings and footers form reading bands",
+    "Canonical vertical baseline quads preserve actual detector geometry and raw SDK text; clearly vertical bundled pages stop after one native pass",
+    "Queued requests freeze order; old serialized requests default to AUTO; cache signatures include layout policy",
+    "Four independently installable official ONNX model packs; Japanese metadata refresh preserves baseline model identity",
+    "Optional pinned static TrueType export fonts for Korean, Devanagari and Latin; fonts participate in model identity and frozen PDF export",
+    "Model language labels localized; irrelevant ML Kit sampling/voting controls hidden for Paddle"
+  ],
+  "focusedAndroid": [
+    {
+      "class": "OcrWritingFlowTest",
+      "seconds": 4.37,
+      "result": "OK (1 test)",
+      "log": "ocr-writing-flow-android.log",
+      "cases": [
+        "real Paddle three-column vertical order and baseline",
+        "manual LTR frozen through global settings changes",
+        "bundled balanced vertical takes one native pass",
+        "search/copy geometry and immutable source",
+        "authored three-column heading/body/footer no text lost"
+      ]
+    },
+    {
+      "class": "OcrScriptsFlowTest",
+      "seconds": 5.787,
+      "result": "OK (1 test)",
+      "log": "ocr-scripts-android.log",
+      "samples": [
+        "Japanese",
+        "Korean",
+        "Hindi",
+        "French"
+      ]
+    },
+    {
+      "class": "OcrScriptsFlowTest scripts=latin",
+      "seconds": 2.33,
+      "result": "OK (1 test)",
+      "log": "ocr-czech-android.log",
+      "sample": "Czech extended letters with new Latin export font"
+    }
+  ],
+  "independentReadback": {
+    "vertical": "ocr-writing/independent-readback.json",
+    "scripts": "ocr-scripts/independent-readback.json",
+    "engine": "PyMuPDF / MuPDF",
+    "visiblePixelsIdenticalAt72Dpi": true,
+    "supportedClearPrintSamples": 5,
+    "supportedSamplesAllMatchAuthoredTruth": true,
+    "negativeSample": {
+      "language": "Vietnamese",
+      "errors": 4,
+      "characters": 23,
+      "cer": 0.17391304347826086,
+      "action": "Fixed Latin ONNX dictionary lacks these Vietnamese characters; support label withdrawn, original failure retained"
+    }
+  },
+  "actualUI": "ocr-writing/actual-ui.json",
+  "evidence": [
+    "ocr-writing/proof.json",
+    "ocr-writing/prototype.json",
+    "ocr-writing/order-menu.png",
+    "ocr-writing/model-import.png",
+    "ocr-scripts/proof.json"
+  ],
+  "sources": [
+    "https://www.paddleocr.ai/latest/en/version3.x/algorithm/PP-OCRv5/PP-OCRv5_multi_languages.html",
+    "https://github.com/PaddlePaddle/PaddleOCR/blob/main/docs/version3.x/module_usage/text_recognition.en.md",
+    "model-packs/README.md"
+  ],
+  "limits": [
+    "Clear authored print samples are not a handwriting, photo-quality or full-language corpus",
+    "Paddle preserves one actual vertical 紙→纸 variant; no script substitution fabricated to improve metrics",
+    "Automatic column/vertical detection is geometric and may need manual override for complex layouts",
+    "No fabricated per-character boxes when an engine supplies only line geometry",
+    "Optional fonts apply to OCR invisible PDF layers; general complex-script TXT typesetting and arbitrary mixed-font editing are not claimed",
+    "Vietnamese is a documented negative sample for this fixed dictionary, despite broader upstream product language lists",
+    "No new version/tag/release; old broad suites not repeated"
+  ]
+}

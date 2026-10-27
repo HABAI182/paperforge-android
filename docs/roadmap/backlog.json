@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "baseline": "0.5.0",
-  "checked": "2026-10-26",
+  "checked": "2026-10-27",
   "estimates": "rough person-day ranges; cards may overlap and are not additive deadlines",
   "tasks": [
     {
@@ -573,7 +573,7 @@
       ],
       "scope": "按脚本与布局能力逐步支持，阅读顺序可调",
       "acceptance": "竖排不逐行错拼，多栏顺序可核对",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "OCR09",
@@ -1252,8 +1252,8 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 80,
-    "partial": 7,
+    "done": 81,
+    "partial": 6,
     "planned": 11
   },
   "updated": "2026-10-27"

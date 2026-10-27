@@ -1,0 +1,78 @@
+{
+  "engine": "PyMuPDF / MuPDF",
+  "dpi": 72,
+  "samples": [
+    {
+      "sample": "mobile",
+      "text": "日本語の文書を読み取ります\n",
+      "expectedRecognition": "日本語の文書を読み取ります",
+      "visiblePixelsIdentical": true,
+      "normalizedCopyMatchesActualRecognition": true,
+      "matchesTruth": true,
+      "referenceCharacters": 13,
+      "errors": 0,
+      "cer": 0.0,
+      "supportedPackLanguage": true
+    },
+    {
+      "sample": "korean",
+      "text": "문서를 읽고 원본을 보관합니다\n",
+      "expectedRecognition": "문서를 읽고 원본을 보관합니다",
+      "visiblePixelsIdentical": true,
+      "normalizedCopyMatchesActualRecognition": true,
+      "matchesTruth": true,
+      "referenceCharacters": 13,
+      "errors": 0,
+      "cer": 0.0,
+      "supportedPackLanguage": true
+    },
+    {
+      "sample": "devanagari",
+      "text": "यह एक हिंदी दस्तावेज है\n",
+      "expectedRecognition": "यह एक हिंदी दस्तावेज है",
+      "visiblePixelsIdentical": true,
+      "normalizedCopyMatchesActualRecognition": true,
+      "matchesTruth": true,
+      "referenceCharacters": 19,
+      "errors": 0,
+      "cer": 0.0,
+      "supportedPackLanguage": true
+    },
+    {
+      "sample": "latin",
+      "text": "Édition française numéro 00123\n",
+      "expectedRecognition": "Édition française numéro 00123",
+      "visiblePixelsIdentical": true,
+      "normalizedCopyMatchesActualRecognition": true,
+      "matchesTruth": true,
+      "referenceCharacters": 27,
+      "errors": 0,
+      "cer": 0.0,
+      "supportedPackLanguage": true
+    },
+    {
+      "sample": "latin-vietnamese",
+      "text": "Tài liu ting Vit s 00123\n",
+      "expectedRecognition": "Tài liu ting Vit s 00123",
+      "visiblePixelsIdentical": true,
+      "normalizedCopyMatchesActualRecognition": true,
+      "matchesTruth": false,
+      "referenceCharacters": 23,
+      "errors": 4,
+      "cer": 0.17391304347826086,
+      "supportedPackLanguage": false
+    },
+    {
+      "sample": "latin-czech",
+      "text": "Český dokument číslo 00123\n",
+      "expectedRecognition": "Český dokument číslo 00123",
+      "visiblePixelsIdentical": true,
+      "normalizedCopyMatchesActualRecognition": true,
+      "matchesTruth": true,
+      "referenceCharacters": 23,
+      "errors": 0,
+      "cer": 0.0,
+      "supportedPackLanguage": true
+    }
+  ]
+}

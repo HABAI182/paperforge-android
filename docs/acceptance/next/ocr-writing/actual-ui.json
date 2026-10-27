@@ -1,0 +1,10 @@
+{
+  "selectedAndRestoredOrder": [
+    "AUTO",
+    "VERTICAL_LTR",
+    "AUTO"
+  ],
+  "paddleHidesMlKitSamplingAndVoting": true,
+  "modelImportViaAndroidDocumentsUI": "paddle-v5-latin.pfocr.zip",
+  "importNotice": "已导入 PaddleOCR v5 Latin，可选择使用"
+}

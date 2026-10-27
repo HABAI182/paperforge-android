@@ -15,11 +15,14 @@ data class OcrRequest(val engineId: String, val chinese: Boolean, val options: O
             .put("chinese", chinese)
             .put("mode", options.mode.name)
             .put("voting", options.pageAgreement)
+            .put("order", options.order.name)
 
     fun bind(router: OcrEngine): OcrEngine {
         val base = router.snapshot(engineId)
         return object : OcrEngine {
             override val id = base.id
+            override val fontFiles
+                get() = base.fontFiles
 
             override fun signature(chinese: Boolean, options: OcrOptions) =
                 this@OcrRequest.signature
@@ -37,7 +40,7 @@ data class OcrRequest(val engineId: String, val chinese: Boolean, val options: O
 
     companion object {
         fun signature(engineId: String, chinese: Boolean, options: OcrOptions) =
-            "$engineId|$chinese|${options.mode.name}|${options.pageAgreement}"
+            "$engineId|$chinese|${options.mode.name}|${options.pageAgreement}|${options.order.name}|${OcrReadingOrder.VERSION}"
 
         fun current(
             engineId: String,
@@ -57,6 +60,7 @@ data class OcrRequest(val engineId: String, val chinese: Boolean, val options: O
                     OcrOptions(
                         OcrMode.parse(json.optString("mode", "BALANCED")),
                         json.optBoolean("voting", true),
+                        OcrOrder.parse(json.optString("order", "AUTO")),
                     ),
                 )
     }

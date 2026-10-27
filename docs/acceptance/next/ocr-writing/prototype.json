@@ -1,0 +1,1897 @@
+{
+  "purpose": "real engine prototype; no general quality claim",
+  "verticalExpectedRightToLeft": [
+    "紙匠掃描測試",
+    "保留原始文件",
+    "閱讀順序正確"
+  ],
+  "japaneseExpected": "日本語の文書を読み取ります",
+  "vertical": {
+    "paddle": {
+      "engine": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1",
+      "elapsedMs": 1192,
+      "layout": {
+        "schema": 4,
+        "ir": {
+          "format": "paperforge-ocr-ir",
+          "version": 1,
+          "page": {
+            "width": 800,
+            "height": 1000,
+            "coordinateSystem": "processed-page-normalized-top-left",
+            "sourceRevision": -1
+          },
+          "engine": {
+            "id": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1",
+            "version": "official-onnx-v5-mobile|f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd|sdk.dab3fe3.pf1",
+            "request": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1|true|FAST|false"
+          },
+          "readingOrder": [
+            "line-0",
+            "line-1",
+            "line-2"
+          ],
+          "blocks": [
+            {
+              "id": "block-0",
+              "kind": "text",
+              "bounds": [
+                [
+                  0.18875,
+                  0.065
+                ],
+                [
+                  0.8675,
+                  0.065
+                ],
+                [
+                  0.8675,
+                  0.719
+                ],
+                [
+                  0.18875,
+                  0.719
+                ]
+              ],
+              "paragraphs": [
+                {
+                  "id": "block-0-paragraph-0",
+                  "bounds": [
+                    [
+                      0.18875,
+                      0.065
+                    ],
+                    [
+                      0.8675,
+                      0.065
+                    ],
+                    [
+                      0.8675,
+                      0.719
+                    ],
+                    [
+                      0.18875,
+                      0.719
+                    ]
+                  ],
+                  "lines": [
+                    {
+                      "id": "line-0",
+                      "index": 0,
+                      "text": "閱讀順序正確",
+                      "corners": [
+                        [
+                          0.18875,
+                          0.072
+                        ],
+                        [
+                          0.3125,
+                          0.072
+                        ],
+                        [
+                          0.3125,
+                          0.715
+                        ],
+                        [
+                          0.18875,
+                          0.715
+                        ]
+                      ],
+                      "confidence": 0.97141975,
+                      "corrected": false,
+                      "words": []
+                    },
+                    {
+                      "id": "line-1",
+                      "index": 1,
+                      "text": "保留原始文件",
+                      "corners": [
+                        [
+                          0.46,
+                          0.069
+                        ],
+                        [
+                          0.5925,
+                          0.069
+                        ],
+                        [
+                          0.5925,
+                          0.716
+                        ],
+                        [
+                          0.46,
+                          0.716
+                        ]
+                      ],
+                      "confidence": 0.99960816,
+                      "corrected": false,
+                      "words": []
+                    },
+                    {
+                      "id": "line-2",
+                      "index": 2,
+                      "text": "纸匠掃描測試",
+                      "corners": [
+                        [
+                          0.73375,
+                          0.065
+                        ],
+                        [
+                          0.8675,
+                          0.065
+                        ],
+                        [
+                          0.8675,
+                          0.719
+                        ],
+                        [
+                          0.73375,
+                          0.719
+                        ]
+                      ],
+                      "confidence": 0.8771285,
+                      "corrected": false,
+                      "words": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "tables": []
+        },
+        "width": 800,
+        "height": 1000,
+        "engineId": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1",
+        "engineVersion": "official-onnx-v5-mobile|f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd|sdk.dab3fe3.pf1",
+        "requestSignature": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1|true|FAST|false",
+        "engineMetrics": {
+          "detectionMs": 512,
+          "recognitionMs": 152,
+          "pipelineMs": 689,
+          "modelLoadMs": 319
+        },
+        "sourceRevision": -1,
+        "orientationCorrection": 0,
+        "deskewDegrees": 0,
+        "warnings": [],
+        "recognitionMode": "FAST",
+        "attempts": [
+          "paddle-original"
+        ],
+        "rawRecognition": {
+          "schema": 4,
+          "ir": {
+            "format": "paperforge-ocr-ir",
+            "version": 1,
+            "page": {
+              "width": 800,
+              "height": 1000,
+              "coordinateSystem": "processed-page-normalized-top-left",
+              "sourceRevision": -1
+            },
+            "engine": {
+              "id": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1",
+              "version": "official-onnx-v5-mobile|f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd|sdk.dab3fe3.pf1",
+              "request": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1|true|FAST|false"
+            },
+            "readingOrder": [
+              "line-0",
+              "line-1",
+              "line-2"
+            ],
+            "blocks": [
+              {
+                "id": "block-0",
+                "kind": "text",
+                "bounds": [
+                  [
+                    0.18875,
+                    0.065
+                  ],
+                  [
+                    0.8675,
+                    0.065
+                  ],
+                  [
+                    0.8675,
+                    0.719
+                  ],
+                  [
+                    0.18875,
+                    0.719
+                  ]
+                ],
+                "paragraphs": [
+                  {
+                    "id": "block-0-paragraph-0",
+                    "bounds": [
+                      [
+                        0.18875,
+                        0.065
+                      ],
+                      [
+                        0.8675,
+                        0.065
+                      ],
+                      [
+                        0.8675,
+                        0.719
+                      ],
+                      [
+                        0.18875,
+                        0.719
+                      ]
+                    ],
+                    "lines": [
+                      {
+                        "id": "line-0",
+                        "index": 0,
+                        "text": "閱讀順序正確",
+                        "corners": [
+                          [
+                            0.18875,
+                            0.072
+                          ],
+                          [
+                            0.3125,
+                            0.072
+                          ],
+                          [
+                            0.3125,
+                            0.715
+                          ],
+                          [
+                            0.18875,
+                            0.715
+                          ]
+                        ],
+                        "confidence": 0.97141975,
+                        "corrected": false,
+                        "words": []
+                      },
+                      {
+                        "id": "line-1",
+                        "index": 1,
+                        "text": "保留原始文件",
+                        "corners": [
+                          [
+                            0.46,
+                            0.069
+                          ],
+                          [
+                            0.5925,
+                            0.069
+                          ],
+                          [
+                            0.5925,
+                            0.716
+                          ],
+                          [
+                            0.46,
+                            0.716
+                          ]
+                        ],
+                        "confidence": 0.99960816,
+                        "corrected": false,
+                        "words": []
+                      },
+                      {
+                        "id": "line-2",
+                        "index": 2,
+                        "text": "纸匠掃描測試",
+                        "corners": [
+                          [
+                            0.73375,
+                            0.065
+                          ],
+                          [
+                            0.8675,
+                            0.065
+                          ],
+                          [
+                            0.8675,
+                            0.719
+                          ],
+                          [
+                            0.73375,
+                            0.719
+                          ]
+                        ],
+                        "confidence": 0.8771285,
+                        "corrected": false,
+                        "words": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "tables": []
+          },
+          "width": 800,
+          "height": 1000,
+          "engineId": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1",
+          "engineVersion": "official-onnx-v5-mobile|f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd|sdk.dab3fe3.pf1",
+          "requestSignature": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1|true|FAST|false",
+          "engineMetrics": {
+            "detectionMs": 512,
+            "recognitionMs": 152,
+            "pipelineMs": 689,
+            "modelLoadMs": 319
+          },
+          "sourceRevision": -1,
+          "orientationCorrection": 0,
+          "deskewDegrees": 0,
+          "warnings": [],
+          "recognitionMode": "FAST",
+          "attempts": [
+            "paddle-original"
+          ],
+          "rawRecognition": null,
+          "lines": [
+            {
+              "text": "閱讀順序正確",
+              "corners": [
+                [
+                  0.18875,
+                  0.072
+                ],
+                [
+                  0.3125,
+                  0.072
+                ],
+                [
+                  0.3125,
+                  0.715
+                ],
+                [
+                  0.18875,
+                  0.715
+                ]
+              ],
+              "confidence": 0.97141975,
+              "angle": 0,
+              "block": 0,
+              "paragraph": 0,
+              "variant": "paddle-original",
+              "corrected": false,
+              "hypotheses": [],
+              "elements": []
+            },
+            {
+              "text": "保留原始文件",
+              "corners": [
+                [
+                  0.46,
+                  0.069
+                ],
+                [
+                  0.5925,
+                  0.069
+                ],
+                [
+                  0.5925,
+                  0.716
+                ],
+                [
+                  0.46,
+                  0.716
+                ]
+              ],
+              "confidence": 0.99960816,
+              "angle": 0,
+              "block": 0,
+              "paragraph": 0,
+              "variant": "paddle-original",
+              "corrected": false,
+              "hypotheses": [],
+              "elements": []
+            },
+            {
+              "text": "纸匠掃描測試",
+              "corners": [
+                [
+                  0.73375,
+                  0.065
+                ],
+                [
+                  0.8675,
+                  0.065
+                ],
+                [
+                  0.8675,
+                  0.719
+                ],
+                [
+                  0.73375,
+                  0.719
+                ]
+              ],
+              "confidence": 0.8771285,
+              "angle": 0,
+              "block": 0,
+              "paragraph": 0,
+              "variant": "paddle-original",
+              "corrected": false,
+              "hypotheses": [],
+              "elements": []
+            }
+          ]
+        },
+        "lines": [
+          {
+            "text": "閱讀順序正確",
+            "corners": [
+              [
+                0.18875,
+                0.072
+              ],
+              [
+                0.3125,
+                0.072
+              ],
+              [
+                0.3125,
+                0.715
+              ],
+              [
+                0.18875,
+                0.715
+              ]
+            ],
+            "confidence": 0.97141975,
+            "angle": 0,
+            "block": 0,
+            "paragraph": 0,
+            "variant": "paddle-original",
+            "corrected": false,
+            "hypotheses": [],
+            "elements": []
+          },
+          {
+            "text": "保留原始文件",
+            "corners": [
+              [
+                0.46,
+                0.069
+              ],
+              [
+                0.5925,
+                0.069
+              ],
+              [
+                0.5925,
+                0.716
+              ],
+              [
+                0.46,
+                0.716
+              ]
+            ],
+            "confidence": 0.99960816,
+            "angle": 0,
+            "block": 0,
+            "paragraph": 0,
+            "variant": "paddle-original",
+            "corrected": false,
+            "hypotheses": [],
+            "elements": []
+          },
+          {
+            "text": "纸匠掃描測試",
+            "corners": [
+              [
+                0.73375,
+                0.065
+              ],
+              [
+                0.8675,
+                0.065
+              ],
+              [
+                0.8675,
+                0.719
+              ],
+              [
+                0.73375,
+                0.719
+              ]
+            ],
+            "confidence": 0.8771285,
+            "angle": 0,
+            "block": 0,
+            "paragraph": 0,
+            "variant": "paddle-original",
+            "corrected": false,
+            "hypotheses": [],
+            "elements": []
+          }
+        ]
+      }
+    },
+    "bundled": {
+      "engine": "mlkit-bundled-v031",
+      "elapsedMs": 1961,
+      "layout": {
+        "schema": 4,
+        "ir": {
+          "format": "paperforge-ocr-ir",
+          "version": 1,
+          "page": {
+            "width": 800,
+            "height": 1000,
+            "coordinateSystem": "processed-page-normalized-top-left",
+            "sourceRevision": -1
+          },
+          "engine": {
+            "id": "mlkit-bundled-v031",
+            "version": "Chinese16.0.1/Latin16.0.1",
+            "request": "mlkit-bundled-v031|true|FAST|false"
+          },
+          "readingOrder": [
+            "line-0",
+            "line-1",
+            "line-2"
+          ],
+          "blocks": [
+            {
+              "id": "block-2",
+              "kind": "text",
+              "bounds": [
+                [
+                  0.75,
+                  0.08
+                ],
+                [
+                  0.84,
+                  0.08
+                ],
+                [
+                  0.84,
+                  0.702
+                ],
+                [
+                  0.75,
+                  0.702
+                ]
+              ],
+              "paragraphs": [
+                {
+                  "id": "block-2-paragraph-0",
+                  "bounds": [
+                    [
+                      0.75,
+                      0.08
+                    ],
+                    [
+                      0.84,
+                      0.08
+                    ],
+                    [
+                      0.84,
+                      0.702
+                    ],
+                    [
+                      0.75,
+                      0.702
+                    ]
+                  ],
+                  "lines": [
+                    {
+                      "id": "line-0",
+                      "index": 0,
+                      "text": "紙匠掃描測試",
+                      "corners": [
+                        [
+                          0.84,
+                          0.08
+                        ],
+                        [
+                          0.84,
+                          0.702
+                        ],
+                        [
+                          0.75,
+                          0.702
+                        ],
+                        [
+                          0.75,
+                          0.08
+                        ]
+                      ],
+                      "confidence": 0.34309897,
+                      "corrected": false,
+                      "words": [
+                        {
+                          "id": "line-0-word-0",
+                          "text": "紙匠掃描測試",
+                          "corners": [
+                            [
+                              0.84,
+                              0.08
+                            ],
+                            [
+                              0.84,
+                              0.702
+                            ],
+                            [
+                              0.75,
+                              0.702
+                            ],
+                            [
+                              0.75,
+                              0.08
+                            ]
+                          ],
+                          "confidence": 0.34309897
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "block-1",
+              "kind": "text",
+              "bounds": [
+                [
+                  0.46875,
+                  0.081
+                ],
+                [
+                  0.5725,
+                  0.081
+                ],
+                [
+                  0.5725,
+                  0.704
+                ],
+                [
+                  0.46875,
+                  0.704
+                ]
+              ],
+              "paragraphs": [
+                {
+                  "id": "block-1-paragraph-1",
+                  "bounds": [
+                    [
+                      0.46875,
+                      0.081
+                    ],
+                    [
+                      0.5725,
+                      0.081
+                    ],
+                    [
+                      0.5725,
+                      0.704
+                    ],
+                    [
+                      0.46875,
+                      0.704
+                    ]
+                  ],
+                  "lines": [
+                    {
+                      "id": "line-1",
+                      "index": 1,
+                      "text": "保留原始文件",
+                      "corners": [
+                        [
+                          0.5725,
+                          0.082
+                        ],
+                        [
+                          0.56875,
+                          0.704
+                        ],
+                        [
+                          0.46875,
+                          0.703
+                        ],
+                        [
+                          0.4725,
+                          0.081
+                        ]
+                      ],
+                      "confidence": 0.734375,
+                      "corrected": false,
+                      "words": [
+                        {
+                          "id": "line-1-word-0",
+                          "text": "保留原始文件",
+                          "corners": [
+                            [
+                              0.5725,
+                              0.082
+                            ],
+                            [
+                              0.56875,
+                              0.704
+                            ],
+                            [
+                              0.46875,
+                              0.703
+                            ],
+                            [
+                              0.4725,
+                              0.081
+                            ]
+                          ],
+                          "confidence": 0.734375
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "block-0",
+              "kind": "text",
+              "bounds": [
+                [
+                  0.1975,
+                  0.083
+                ],
+                [
+                  0.3025,
+                  0.083
+                ],
+                [
+                  0.3025,
+                  0.705
+                ],
+                [
+                  0.1975,
+                  0.705
+                ]
+              ],
+              "paragraphs": [
+                {
+                  "id": "block-0-paragraph-2",
+                  "bounds": [
+                    [
+                      0.1975,
+                      0.083
+                    ],
+                    [
+                      0.3025,
+                      0.083
+                    ],
+                    [
+                      0.3025,
+                      0.705
+                    ],
+                    [
+                      0.1975,
+                      0.705
+                    ]
+                  ],
+                  "lines": [
+                    {
+                      "id": "line-2",
+                      "index": 2,
+                      "text": "開讀順序正確",
+                      "corners": [
+                        [
+                          0.3025,
+                          0.085
+                        ],
+                        [
+                          0.29,
+                          0.705
+                        ],
+                        [
+                          0.1975,
+                          0.703
+                        ],
+                        [
+                          0.21,
+                          0.083
+                        ]
+                      ],
+                      "confidence": 0.4140625,
+                      "corrected": false,
+                      "words": [
+                        {
+                          "id": "line-2-word-0",
+                          "text": "開讀順序正確",
+                          "corners": [
+                            [
+                              0.3025,
+                              0.085
+                            ],
+                            [
+                              0.29,
+                              0.705
+                            ],
+                            [
+                              0.1975,
+                              0.703
+                            ],
+                            [
+                              0.21,
+                              0.083
+                            ]
+                          ],
+                          "confidence": 0.4140625
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "tables": []
+        },
+        "width": 800,
+        "height": 1000,
+        "engineId": "mlkit-bundled-v031",
+        "engineVersion": "Chinese16.0.1/Latin16.0.1",
+        "requestSignature": "mlkit-bundled-v031|true|FAST|false",
+        "engineMetrics": {},
+        "sourceRevision": -1,
+        "orientationCorrection": 0,
+        "deskewDegrees": 0,
+        "warnings": [],
+        "recognitionMode": "FAST",
+        "attempts": [
+          "original"
+        ],
+        "rawRecognition": {
+          "schema": 4,
+          "ir": {
+            "format": "paperforge-ocr-ir",
+            "version": 1,
+            "page": {
+              "width": 800,
+              "height": 1000,
+              "coordinateSystem": "processed-page-normalized-top-left",
+              "sourceRevision": -1
+            },
+            "engine": {
+              "id": "mlkit-bundled-v031",
+              "version": "Chinese16.0.1/Latin16.0.1",
+              "request": ""
+            },
+            "readingOrder": [
+              "line-0",
+              "line-1",
+              "line-2"
+            ],
+            "blocks": [
+              {
+                "id": "block-0",
+                "kind": "text",
+                "bounds": [
+                  [
+                    0.1975,
+                    0.083
+                  ],
+                  [
+                    0.3025,
+                    0.083
+                  ],
+                  [
+                    0.3025,
+                    0.705
+                  ],
+                  [
+                    0.1975,
+                    0.705
+                  ]
+                ],
+                "paragraphs": [
+                  {
+                    "id": "block-0-paragraph-0",
+                    "bounds": [
+                      [
+                        0.1975,
+                        0.083
+                      ],
+                      [
+                        0.3025,
+                        0.083
+                      ],
+                      [
+                        0.3025,
+                        0.705
+                      ],
+                      [
+                        0.1975,
+                        0.705
+                      ]
+                    ],
+                    "lines": [
+                      {
+                        "id": "line-0",
+                        "index": 0,
+                        "text": "開讀順序正確",
+                        "corners": [
+                          [
+                            0.3025,
+                            0.085
+                          ],
+                          [
+                            0.29,
+                            0.705
+                          ],
+                          [
+                            0.1975,
+                            0.703
+                          ],
+                          [
+                            0.21,
+                            0.083
+                          ]
+                        ],
+                        "confidence": 0.4140625,
+                        "corrected": false,
+                        "words": [
+                          {
+                            "id": "line-0-word-0",
+                            "text": "開讀順序正確",
+                            "corners": [
+                              [
+                                0.3025,
+                                0.085
+                              ],
+                              [
+                                0.29,
+                                0.705
+                              ],
+                              [
+                                0.1975,
+                                0.703
+                              ],
+                              [
+                                0.21,
+                                0.083
+                              ]
+                            ],
+                            "confidence": 0.4140625
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "block-1",
+                "kind": "text",
+                "bounds": [
+                  [
+                    0.46875,
+                    0.081
+                  ],
+                  [
+                    0.5725,
+                    0.081
+                  ],
+                  [
+                    0.5725,
+                    0.704
+                  ],
+                  [
+                    0.46875,
+                    0.704
+                  ]
+                ],
+                "paragraphs": [
+                  {
+                    "id": "block-1-paragraph-1",
+                    "bounds": [
+                      [
+                        0.46875,
+                        0.081
+                      ],
+                      [
+                        0.5725,
+                        0.081
+                      ],
+                      [
+                        0.5725,
+                        0.704
+                      ],
+                      [
+                        0.46875,
+                        0.704
+                      ]
+                    ],
+                    "lines": [
+                      {
+                        "id": "line-1",
+                        "index": 1,
+                        "text": "保留原始文件",
+                        "corners": [
+                          [
+                            0.5725,
+                            0.082
+                          ],
+                          [
+                            0.56875,
+                            0.704
+                          ],
+                          [
+                            0.46875,
+                            0.703
+                          ],
+                          [
+                            0.4725,
+                            0.081
+                          ]
+                        ],
+                        "confidence": 0.734375,
+                        "corrected": false,
+                        "words": [
+                          {
+                            "id": "line-1-word-0",
+                            "text": "保留原始文件",
+                            "corners": [
+                              [
+                                0.5725,
+                                0.082
+                              ],
+                              [
+                                0.56875,
+                                0.704
+                              ],
+                              [
+                                0.46875,
+                                0.703
+                              ],
+                              [
+                                0.4725,
+                                0.081
+                              ]
+                            ],
+                            "confidence": 0.734375
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "block-2",
+                "kind": "text",
+                "bounds": [
+                  [
+                    0.75,
+                    0.08
+                  ],
+                  [
+                    0.84,
+                    0.08
+                  ],
+                  [
+                    0.84,
+                    0.702
+                  ],
+                  [
+                    0.75,
+                    0.702
+                  ]
+                ],
+                "paragraphs": [
+                  {
+                    "id": "block-2-paragraph-2",
+                    "bounds": [
+                      [
+                        0.75,
+                        0.08
+                      ],
+                      [
+                        0.84,
+                        0.08
+                      ],
+                      [
+                        0.84,
+                        0.702
+                      ],
+                      [
+                        0.75,
+                        0.702
+                      ]
+                    ],
+                    "lines": [
+                      {
+                        "id": "line-2",
+                        "index": 2,
+                        "text": "紙匠掃描測試",
+                        "corners": [
+                          [
+                            0.84,
+                            0.08
+                          ],
+                          [
+                            0.84,
+                            0.702
+                          ],
+                          [
+                            0.75,
+                            0.702
+                          ],
+                          [
+                            0.75,
+                            0.08
+                          ]
+                        ],
+                        "confidence": 0.34309897,
+                        "corrected": false,
+                        "words": [
+                          {
+                            "id": "line-2-word-0",
+                            "text": "紙匠掃描測試",
+                            "corners": [
+                              [
+                                0.84,
+                                0.08
+                              ],
+                              [
+                                0.84,
+                                0.702
+                              ],
+                              [
+                                0.75,
+                                0.702
+                              ],
+                              [
+                                0.75,
+                                0.08
+                              ]
+                            ],
+                            "confidence": 0.34309897
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "tables": []
+          },
+          "width": 800,
+          "height": 1000,
+          "engineId": "mlkit-bundled-v031",
+          "engineVersion": "Chinese16.0.1/Latin16.0.1",
+          "requestSignature": "",
+          "engineMetrics": {},
+          "sourceRevision": -1,
+          "orientationCorrection": 0,
+          "deskewDegrees": 0,
+          "warnings": [],
+          "recognitionMode": "legacy",
+          "attempts": [],
+          "rawRecognition": null,
+          "lines": [
+            {
+              "text": "開讀順序正確",
+              "corners": [
+                [
+                  0.3025,
+                  0.085
+                ],
+                [
+                  0.29,
+                  0.705
+                ],
+                [
+                  0.1975,
+                  0.703
+                ],
+                [
+                  0.21,
+                  0.083
+                ]
+              ],
+              "confidence": 0.4140625,
+              "angle": 90.841515,
+              "block": 0,
+              "paragraph": 0,
+              "variant": "original",
+              "corrected": false,
+              "hypotheses": [],
+              "elements": [
+                {
+                  "text": "開讀順序正確",
+                  "corners": [
+                    [
+                      0.3025,
+                      0.085
+                    ],
+                    [
+                      0.29,
+                      0.705
+                    ],
+                    [
+                      0.1975,
+                      0.703
+                    ],
+                    [
+                      0.21,
+                      0.083
+                    ]
+                  ],
+                  "confidence": 0.4140625,
+                  "angle": 90.841515
+                }
+              ]
+            },
+            {
+              "text": "保留原始文件",
+              "corners": [
+                [
+                  0.5725,
+                  0.082
+                ],
+                [
+                  0.56875,
+                  0.704
+                ],
+                [
+                  0.46875,
+                  0.703
+                ],
+                [
+                  0.4725,
+                  0.081
+                ]
+              ],
+              "confidence": 0.734375,
+              "angle": 90.21166,
+              "block": 1,
+              "paragraph": 1,
+              "variant": "original",
+              "corrected": false,
+              "hypotheses": [],
+              "elements": [
+                {
+                  "text": "保留原始文件",
+                  "corners": [
+                    [
+                      0.5725,
+                      0.082
+                    ],
+                    [
+                      0.56875,
+                      0.704
+                    ],
+                    [
+                      0.46875,
+                      0.703
+                    ],
+                    [
+                      0.4725,
+                      0.081
+                    ]
+                  ],
+                  "confidence": 0.734375,
+                  "angle": 90.21166
+                }
+              ]
+            },
+            {
+              "text": "紙匠掃描測試",
+              "corners": [
+                [
+                  0.84,
+                  0.08
+                ],
+                [
+                  0.84,
+                  0.702
+                ],
+                [
+                  0.75,
+                  0.702
+                ],
+                [
+                  0.75,
+                  0.08
+                ]
+              ],
+              "confidence": 0.34309897,
+              "angle": 89.96976,
+              "block": 2,
+              "paragraph": 2,
+              "variant": "original",
+              "corrected": false,
+              "hypotheses": [],
+              "elements": [
+                {
+                  "text": "紙匠掃描測試",
+                  "corners": [
+                    [
+                      0.84,
+                      0.08
+                    ],
+                    [
+                      0.84,
+                      0.702
+                    ],
+                    [
+                      0.75,
+                      0.702
+                    ],
+                    [
+                      0.75,
+                      0.08
+                    ]
+                  ],
+                  "confidence": 0.34309897,
+                  "angle": 89.96976
+                }
+              ]
+            }
+          ]
+        },
+        "lines": [
+          {
+            "text": "紙匠掃描測試",
+            "corners": [
+              [
+                0.84,
+                0.08
+              ],
+              [
+                0.84,
+                0.702
+              ],
+              [
+                0.75,
+                0.702
+              ],
+              [
+                0.75,
+                0.08
+              ]
+            ],
+            "confidence": 0.34309897,
+            "angle": 89.96976,
+            "block": 2,
+            "paragraph": 0,
+            "variant": "original",
+            "corrected": false,
+            "hypotheses": [],
+            "elements": [
+              {
+                "text": "紙匠掃描測試",
+                "corners": [
+                  [
+                    0.84,
+                    0.08
+                  ],
+                  [
+                    0.84,
+                    0.702
+                  ],
+                  [
+                    0.75,
+                    0.702
+                  ],
+                  [
+                    0.75,
+                    0.08
+                  ]
+                ],
+                "confidence": 0.34309897,
+                "angle": 89.96976
+              }
+            ]
+          },
+          {
+            "text": "保留原始文件",
+            "corners": [
+              [
+                0.5725,
+                0.082
+              ],
+              [
+                0.56875,
+                0.704
+              ],
+              [
+                0.46875,
+                0.703
+              ],
+              [
+                0.4725,
+                0.081
+              ]
+            ],
+            "confidence": 0.734375,
+            "angle": 90.21166,
+            "block": 1,
+            "paragraph": 1,
+            "variant": "original",
+            "corrected": false,
+            "hypotheses": [],
+            "elements": [
+              {
+                "text": "保留原始文件",
+                "corners": [
+                  [
+                    0.5725,
+                    0.082
+                  ],
+                  [
+                    0.56875,
+                    0.704
+                  ],
+                  [
+                    0.46875,
+                    0.703
+                  ],
+                  [
+                    0.4725,
+                    0.081
+                  ]
+                ],
+                "confidence": 0.734375,
+                "angle": 90.21166
+              }
+            ]
+          },
+          {
+            "text": "開讀順序正確",
+            "corners": [
+              [
+                0.3025,
+                0.085
+              ],
+              [
+                0.29,
+                0.705
+              ],
+              [
+                0.1975,
+                0.703
+              ],
+              [
+                0.21,
+                0.083
+              ]
+            ],
+            "confidence": 0.4140625,
+            "angle": 90.841515,
+            "block": 0,
+            "paragraph": 2,
+            "variant": "original",
+            "corrected": false,
+            "hypotheses": [],
+            "elements": [
+              {
+                "text": "開讀順序正確",
+                "corners": [
+                  [
+                    0.3025,
+                    0.085
+                  ],
+                  [
+                    0.29,
+                    0.705
+                  ],
+                  [
+                    0.1975,
+                    0.703
+                  ],
+                  [
+                    0.21,
+                    0.083
+                  ]
+                ],
+                "confidence": 0.4140625,
+                "angle": 90.841515
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "japanese": {
+    "paddle": {
+      "engine": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1",
+      "elapsedMs": 382,
+      "layout": {
+        "schema": 4,
+        "ir": {
+          "format": "paperforge-ocr-ir",
+          "version": 1,
+          "page": {
+            "width": 1500,
+            "height": 320,
+            "coordinateSystem": "processed-page-normalized-top-left",
+            "sourceRevision": -1
+          },
+          "engine": {
+            "id": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1",
+            "version": "official-onnx-v5-mobile|f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd|sdk.dab3fe3.pf1",
+            "request": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1|true|FAST|false"
+          },
+          "readingOrder": [
+            "line-0"
+          ],
+          "blocks": [
+            {
+              "id": "block-0",
+              "kind": "text",
+              "bounds": [
+                [
+                  0.028666666,
+                  0.275
+                ],
+                [
+                  0.5793333,
+                  0.275
+                ],
+                [
+                  0.5793333,
+                  0.50625
+                ],
+                [
+                  0.028666666,
+                  0.50625
+                ]
+              ],
+              "paragraphs": [
+                {
+                  "id": "block-0-paragraph-0",
+                  "bounds": [
+                    [
+                      0.028666666,
+                      0.275
+                    ],
+                    [
+                      0.5793333,
+                      0.275
+                    ],
+                    [
+                      0.5793333,
+                      0.50625
+                    ],
+                    [
+                      0.028666666,
+                      0.50625
+                    ]
+                  ],
+                  "lines": [
+                    {
+                      "id": "line-0",
+                      "index": 0,
+                      "text": "日本語の文書を読み取ります",
+                      "corners": [
+                        [
+                          0.028666666,
+                          0.275
+                        ],
+                        [
+                          0.5793333,
+                          0.275
+                        ],
+                        [
+                          0.5793333,
+                          0.50625
+                        ],
+                        [
+                          0.028666666,
+                          0.50625
+                        ]
+                      ],
+                      "confidence": 0.9998225,
+                      "corrected": false,
+                      "words": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "tables": []
+        },
+        "width": 1500,
+        "height": 320,
+        "engineId": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1",
+        "engineVersion": "official-onnx-v5-mobile|f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd|sdk.dab3fe3.pf1",
+        "requestSignature": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1|true|FAST|false",
+        "engineMetrics": {
+          "detectionMs": 229,
+          "recognitionMs": 143,
+          "pipelineMs": 377,
+          "modelLoadMs": 0
+        },
+        "sourceRevision": -1,
+        "orientationCorrection": 0,
+        "deskewDegrees": 0,
+        "warnings": [],
+        "recognitionMode": "FAST",
+        "attempts": [
+          "paddle-original"
+        ],
+        "rawRecognition": {
+          "schema": 4,
+          "ir": {
+            "format": "paperforge-ocr-ir",
+            "version": 1,
+            "page": {
+              "width": 1500,
+              "height": 320,
+              "coordinateSystem": "processed-page-normalized-top-left",
+              "sourceRevision": -1
+            },
+            "engine": {
+              "id": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1",
+              "version": "official-onnx-v5-mobile|f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd|sdk.dab3fe3.pf1",
+              "request": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1|true|FAST|false"
+            },
+            "readingOrder": [
+              "line-0"
+            ],
+            "blocks": [
+              {
+                "id": "block-0",
+                "kind": "text",
+                "bounds": [
+                  [
+                    0.028666666,
+                    0.275
+                  ],
+                  [
+                    0.5793333,
+                    0.275
+                  ],
+                  [
+                    0.5793333,
+                    0.50625
+                  ],
+                  [
+                    0.028666666,
+                    0.50625
+                  ]
+                ],
+                "paragraphs": [
+                  {
+                    "id": "block-0-paragraph-0",
+                    "bounds": [
+                      [
+                        0.028666666,
+                        0.275
+                      ],
+                      [
+                        0.5793333,
+                        0.275
+                      ],
+                      [
+                        0.5793333,
+                        0.50625
+                      ],
+                      [
+                        0.028666666,
+                        0.50625
+                      ]
+                    ],
+                    "lines": [
+                      {
+                        "id": "line-0",
+                        "index": 0,
+                        "text": "日本語の文書を読み取ります",
+                        "corners": [
+                          [
+                            0.028666666,
+                            0.275
+                          ],
+                          [
+                            0.5793333,
+                            0.275
+                          ],
+                          [
+                            0.5793333,
+                            0.50625
+                          ],
+                          [
+                            0.028666666,
+                            0.50625
+                          ]
+                        ],
+                        "confidence": 0.9998225,
+                        "corrected": false,
+                        "words": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "tables": []
+          },
+          "width": 1500,
+          "height": 320,
+          "engineId": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1",
+          "engineVersion": "official-onnx-v5-mobile|f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd|sdk.dab3fe3.pf1",
+          "requestSignature": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1|true|FAST|false",
+          "engineMetrics": {
+            "detectionMs": 229,
+            "recognitionMs": 143,
+            "pipelineMs": 377,
+            "modelLoadMs": 0
+          },
+          "sourceRevision": -1,
+          "orientationCorrection": 0,
+          "deskewDegrees": 0,
+          "warnings": [],
+          "recognitionMode": "FAST",
+          "attempts": [
+            "paddle-original"
+          ],
+          "rawRecognition": null,
+          "lines": [
+            {
+              "text": "日本語の文書を読み取ります",
+              "corners": [
+                [
+                  0.028666666,
+                  0.275
+                ],
+                [
+                  0.5793333,
+                  0.275
+                ],
+                [
+                  0.5793333,
+                  0.50625
+                ],
+                [
+                  0.028666666,
+                  0.50625
+                ]
+              ],
+              "confidence": 0.9998225,
+              "angle": 0,
+              "block": 0,
+              "paragraph": 0,
+              "variant": "paddle-original",
+              "corrected": false,
+              "hypotheses": [],
+              "elements": []
+            }
+          ]
+        },
+        "lines": [
+          {
+            "text": "日本語の文書を読み取ります",
+            "corners": [
+              [
+                0.028666666,
+                0.275
+              ],
+              [
+                0.5793333,
+                0.275
+              ],
+              [
+                0.5793333,
+                0.50625
+              ],
+              [
+                0.028666666,
+                0.50625
+              ]
+            ],
+            "confidence": 0.9998225,
+            "angle": 0,
+            "block": 0,
+            "paragraph": 0,
+            "variant": "paddle-original",
+            "corrected": false,
+            "hypotheses": [],
+            "elements": []
+          }
+        ]
+      }
+    },
+    "bundled": {
+      "engine": "mlkit-bundled-v031",
+      "elapsedMs": 421,
+      "layout": {
+        "schema": 4,
+        "ir": {
+          "format": "paperforge-ocr-ir",
+          "version": 1,
+          "page": {
+            "width": 1500,
+            "height": 320,
+            "coordinateSystem": "processed-page-normalized-top-left",
+            "sourceRevision": -1
+          },
+          "engine": {
+            "id": "mlkit-bundled-v031",
+            "version": "Chinese16.0.1/Latin16.0.1",
+            "request": "mlkit-bundled-v031|true|FAST|false"
+          },
+          "readingOrder": [],
+          "blocks": [],
+          "tables": []
+        },
+        "width": 1500,
+        "height": 320,
+        "engineId": "mlkit-bundled-v031",
+        "engineVersion": "Chinese16.0.1/Latin16.0.1",
+        "requestSignature": "mlkit-bundled-v031|true|FAST|false",
+        "engineMetrics": {},
+        "sourceRevision": -1,
+        "orientationCorrection": 0,
+        "deskewDegrees": 0,
+        "warnings": [],
+        "recognitionMode": "FAST",
+        "attempts": [
+          "original"
+        ],
+        "rawRecognition": {
+          "schema": 4,
+          "ir": {
+            "format": "paperforge-ocr-ir",
+            "version": 1,
+            "page": {
+              "width": 1500,
+              "height": 320,
+              "coordinateSystem": "processed-page-normalized-top-left",
+              "sourceRevision": -1
+            },
+            "engine": {
+              "id": "mlkit-bundled-v031",
+              "version": "Chinese16.0.1/Latin16.0.1",
+              "request": ""
+            },
+            "readingOrder": [],
+            "blocks": [],
+            "tables": []
+          },
+          "width": 1500,
+          "height": 320,
+          "engineId": "mlkit-bundled-v031",
+          "engineVersion": "Chinese16.0.1/Latin16.0.1",
+          "requestSignature": "",
+          "engineMetrics": {},
+          "sourceRevision": -1,
+          "orientationCorrection": 0,
+          "deskewDegrees": 0,
+          "warnings": [],
+          "recognitionMode": "legacy",
+          "attempts": [],
+          "rawRecognition": null,
+          "lines": []
+        },
+        "lines": []
+      }
+    }
+  }
+}

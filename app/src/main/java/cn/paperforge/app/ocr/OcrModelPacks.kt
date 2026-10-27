@@ -32,7 +32,20 @@ data class OcrModelPack(
     val bytes
         get() = directory.walkTopDown().filter { it.isFile }.sumOf { it.length() }
 
+    val languageSummary
+        get() =
+            languages.joinToString(" / ") { code ->
+                java.util.Locale.forLanguageTag(code)
+                    .getDisplayLanguage(java.util.Locale.SIMPLIFIED_CHINESE)
+                    .ifBlank { code }
+            }
+
     fun file(name: String) = File(directory, name)
+
+    val fontFiles
+        get() =
+            if (manifest.getJSONObject("files").has("font.ttf")) listOf(file("font.ttf"))
+            else emptyList()
 }
 
 /** Sideloaded model data stays outside the APK and outside disposable caches. */
@@ -112,8 +125,21 @@ class OcrModelPacks(val context: Context) {
                 if (destination.exists()) {
                     val existing = read(destination)
                     require(existing.fingerprint == pack.fingerprint)
+                    val metadata = JSONObject(existing.manifest.toString())
+                    listOf("name", "languages").forEach { key ->
+                        if (pack.manifest.has(key)) metadata.put(key, pack.manifest.get(key))
+                    }
+                    val atomic = android.util.AtomicFile(File(destination, "manifest.json"))
+                    val stream = atomic.startWrite()
+                    try {
+                        stream.write(metadata.toString(2).toByteArray(Charsets.UTF_8))
+                        atomic.finishWrite(stream)
+                    } catch (error: Throwable) {
+                        atomic.failWrite(stream)
+                        throw error
+                    }
                     refresh()
-                    return@withContext existing
+                    return@withContext checkNotNull(find(existing.id))
                 }
                 withContext(NonCancellable) {
                     check(staging.renameTo(destination)) { "无法保存模型包" }
@@ -148,14 +174,15 @@ class OcrModelPacks(val context: Context) {
         require(setOf("det.onnx", "rec.onnx", "rec.yml", "LICENSE").all { files.has(it) }) {
             "模型包缺少检测、识别、字典或来源许可文件"
         }
+        require(!files.has("font.ttf") || files.has("font-LICENSE")) { "模型包的导出字体缺少许可文件" }
         for (name in files.keys()) require(
             name.matches(Regex("[A-Za-z0-9_.-]{1,80}")) &&
                 files.getJSONObject(name).getString("sha256").matches(Regex("[0-9a-f]{64}"))
         )
         val hashes =
-            listOf("det.onnx", "rec.onnx", "rec.yml").joinToString(":") {
-                files.getJSONObject(it).getString("sha256")
-            }
+            (listOf("det.onnx", "rec.onnx", "rec.yml") +
+                    if (files.has("font.ttf")) listOf("font.ttf") else emptyList())
+                .joinToString(":") { files.getJSONObject(it).getString("sha256") }
         val fingerprint =
             MessageDigest.getInstance("SHA-256").digest(hashes.toByteArray()).joinToString("") {
                 "%02x".format(it.toInt() and 255)
