@@ -10,6 +10,8 @@ import com.tom_roush.pdfbox.pdmodel.PDDocument
 import java.io.File
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.ensureActive
+import org.json.JSONArray
+import org.json.JSONObject
 
 object PdfSearchable {
     suspend fun convert(
@@ -18,8 +20,9 @@ object PdfSearchable {
         output: File,
         ocrEngine: cn.paperforge.app.ocr.OcrEngine? = null,
         progress: suspend (Int) -> Unit = {},
-    ) {
+    ): JSONObject {
         val temporary = File(output.path + ".part")
+        val decisions = JSONArray()
         try {
             val mapping = PdfTextLayer.Mapping()
             PDDocument.load(input, MemoryUsageSetting.setupTempFileOnly()).use { doc ->
@@ -28,8 +31,10 @@ object PdfSearchable {
                     PdfRenderer(fd).use { renderer ->
                         for (i in 0 until renderer.pageCount) {
                             coroutineContext.ensureActive()
-                            val native = NativeTextCoverage.regions(doc, i)
-                            if (!NativeTextCoverage.substantial(native))
+                            val decision = NativeTextCoverage.assess(doc, i)
+                            val native = decision.regions
+                            var added = 0
+                            if (decision.needsOcr)
                                 renderer.openPage(i).use { view ->
                                     val scale = 2400f / maxOf(view.width, view.height)
                                     val bitmap =
@@ -63,6 +68,7 @@ object PdfSearchable {
                                                 native,
                                             )
                                         val page = doc.getPage(i)
+                                        added = layout.lines.size
                                         val box = page.cropBox
                                         // PdfRenderer returns displayed coordinates. Undo page
                                         // rotation before mapping.
@@ -83,6 +89,16 @@ object PdfSearchable {
                                         bitmap.recycle()
                                     }
                                 }
+                            decisions.put(
+                                JSONObject()
+                                    .put("page", i + 1)
+                                    .put("reason", decision.reason)
+                                    .put("ocr", decision.needsOcr)
+                                    .put("nativeRegions", native.size)
+                                    .put("badGlyphs", decision.badGlyphs)
+                                    .put("imageRegions", decision.images.size)
+                                    .put("addedLines", added)
+                            )
                             progress((i + 1) * 100 / renderer.pageCount)
                         }
                     }
@@ -92,6 +108,7 @@ object PdfSearchable {
             mapping.finish(temporary)
             PDDocument.load(temporary).use { require(it.numberOfPages > 0) }
             check(temporary.renameTo(output))
+            return JSONObject().put("policy", NativeTextCoverage.VERSION).put("pages", decisions)
         } finally {
             temporary.delete()
         }

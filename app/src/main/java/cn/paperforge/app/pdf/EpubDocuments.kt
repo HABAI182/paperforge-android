@@ -22,7 +22,7 @@ import org.jsoup.parser.Parser
 
 /** OCF/OPF order is authoritative; auxiliary documents remain addressable for notes. */
 object EpubDocuments {
-    const val VERSION = "epub-ocf-spine-v1"
+    const val VERSION = "epub-ocf-spine-native-regions-v2"
 
     private data class Item(
         val id: String,
@@ -696,11 +696,8 @@ object EpubDocuments {
                     section
                         .appendElement("h1")
                         .text(info.outline.firstOrNull { it.page == i }?.title ?: "第 ${i + 1} 页")
-                    var blocks =
-                        ReaderDocument.text(input, i).filter {
-                            it.text.isNotBlank() && '\uFFFD' !in it.text
-                        }
-                    var usedOcr = false
+                    val blocks = PageTextSource.load(context, input, i, engine)
+                    val usedOcr = blocks.any { it.source == "ocr" }
                     val imageName = "page-${i + 1}.jpg"
                     renderer.openPage(i).use { page ->
                         val scale = 1600f / maxOf(page.width, page.height)
@@ -715,23 +712,6 @@ object EpubDocuments {
                             page.render(image, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
                             File(root, imageName).outputStream().use {
                                 image.compress(Bitmap.CompressFormat.JPEG, 90, it)
-                            }
-                            if (blocks.sumOf { it.text.length } < 5) {
-                                val result = engine.recognizeBitmap(image)
-                                blocks =
-                                    result.lines.mapNotNull { line ->
-                                        if (line.corners.isEmpty()) null
-                                        else
-                                            ReaderTextBlock(
-                                                line.text,
-                                                line.corners.minOf { it.x },
-                                                line.corners.minOf { it.y },
-                                                line.corners.maxOf { it.x },
-                                                line.corners.maxOf { it.y },
-                                                "ocr",
-                                            )
-                                    }
-                                usedOcr = true
                             }
                         } finally {
                             image.recycle()

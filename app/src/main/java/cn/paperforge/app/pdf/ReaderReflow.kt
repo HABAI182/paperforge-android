@@ -63,7 +63,7 @@ object ReaderReflow {
         withContext(Dispatchers.IO) {
             val hash = PdfAssembly.sha256(file)
             val signature =
-                "$VERSION:${PdfGlyphGeometry.VERSION}:$hash:$page:$columns:${engine.signature(UserSettings.string("ocrLanguage", "CHINESE") != "LATIN", OcrOptions.current())}"
+                "$VERSION:${NativeTextCoverage.VERSION}:${PdfGlyphGeometry.VERSION}:$hash:$page:$columns:${engine.signature(UserSettings.string("ocrLanguage", "CHINESE") != "LATIN", OcrOptions.current())}"
             val key =
                 MessageDigest.getInstance("SHA-256").digest(signature.toByteArray()).joinToString(
                     ""
@@ -77,8 +77,6 @@ object ReaderReflow {
                 if (cached.items.all { it.image?.exists() != false }) return@withContext cached
             }
             var blocks = PageTextSource.load(context, file, page, engine, recognize)
-            if (blocks.sumOf { it.text.length } < 5 && !recognize)
-                blocks = PageTextSource.load(context, file, page, engine, true)
             ensureActive()
             val bitmap =
                 ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY).use { fd ->

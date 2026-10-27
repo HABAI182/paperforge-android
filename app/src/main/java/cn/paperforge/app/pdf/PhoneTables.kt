@@ -7,7 +7,6 @@ import android.os.ParcelFileDescriptor
 import cn.paperforge.app.model.OcrLayout
 import cn.paperforge.app.ocr.OcrEngine
 import com.tom_roush.pdfbox.pdmodel.PDDocument
-import com.tom_roush.pdfbox.text.PDFTextStripper
 import com.tom_roush.pdfbox.text.TextPosition
 import java.io.File
 import java.util.zip.ZipEntry
@@ -23,6 +22,7 @@ import org.opencv.imgproc.Imgproc
 /** Table geometry and editable output run on Android; no desktop or public service. */
 object PhoneTables {
     const val VERSION = "grid-separators-v2"
+
     data class Token(
         val text: String,
         val box: RectF,
@@ -424,8 +424,9 @@ object PhoneTables {
                 else -> x to y
             }
         val stripper =
-            object : PDFTextStripper() {
+            object : ReadablePdfTextStripper(pdf) {
                 override fun writeString(text: String, positions: MutableList<TextPosition>) {
+                    if (positions.any { !NativeTextCoverage.valid(it) }) return
                     positions.forEach { pos ->
                         val a =
                             display(
@@ -572,14 +573,37 @@ object PhoneTables {
                                         )
                                 )
                             }
-                    if (tokens.sumOf { it.text.length } < 5 && options.optBoolean("ocr", true)) {
+                    val needsSupplement =
+                        native?.let { pdf ->
+                            val assessment = NativeTextCoverage.assess(pdf, index)
+                            assessment.needsOcr &&
+                                (assessment.badGlyphs > 0 ||
+                                    assessment.images.any { image ->
+                                        RectF.intersects(
+                                            image,
+                                            RectF(
+                                                actual.left,
+                                                actual.top,
+                                                actual.right,
+                                                actual.bottom,
+                                            ),
+                                        )
+                                    })
+                        } ?: false
+                    if (
+                        (tokens.sumOf { it.text.length } < 5 || needsSupplement) &&
+                            options.optBoolean("ocr", true)
+                    ) {
                         recognized =
                             engine.recognizeBitmap(
                                 crop,
                                 cn.paperforge.app.UserSettings.string("ocrLanguage", "CHINESE") !=
                                     "LATIN",
                             )
-                        tokens = ocrTokens(recognized)
+                        val kept =
+                            tokens.map { token -> NativeTextCoverage.Region(token.text, token.box) }
+                        tokens =
+                            tokens + ocrTokens(NativeTextCoverage.removeCovered(recognized, kept))
                     }
                     var found =
                         detect(crop, index + 1, tokens, options.optString("tableStrategy", "auto"))

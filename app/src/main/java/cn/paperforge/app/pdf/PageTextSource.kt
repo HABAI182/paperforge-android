@@ -26,7 +26,7 @@ object PageTextSource {
             val key =
                 MessageDigest.getInstance("SHA-256")
                     .digest(
-                        "selection-v3:${PdfGlyphGeometry.VERSION}:${file.canonicalPath}:${file.length()}:${file.lastModified()}:$page"
+                        "selection-v4:${NativeTextCoverage.VERSION}:${PdfGlyphGeometry.VERSION}:${engine.signature(cn.paperforge.app.UserSettings.string("ocrLanguage","CHINESE") != "LATIN", cn.paperforge.app.ocr.OcrOptions.current())}:${file.canonicalPath}:${file.length()}:${file.lastModified()}:$page"
                             .toByteArray()
                     )
                     .joinToString("") { "%02x".format(it.toInt() and 255) }
@@ -39,7 +39,8 @@ object PageTextSource {
                         it == '\uFFFD' || Character.getType(it) == Character.PRIVATE_USE.toInt()
                     } <= block.text.length / 5
                 }
-            if (!recognize) return@withContext native
+            if (!recognize && (region != null || !NativeTextCoverage.assess(file, page).needsOcr))
+                return@withContext native
             val bitmap =
                 ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY).use {
                     descriptor ->
@@ -117,7 +118,16 @@ object PageTextSource {
                     bitmap.recycle()
                 }
             val extra =
-                ocr.lines
+                NativeTextCoverage.removeCovered(
+                        ocr,
+                        native.map {
+                            NativeTextCoverage.Region(
+                                it.text,
+                                android.graphics.RectF(it.left, it.top, it.right, it.bottom),
+                            )
+                        },
+                    )
+                    .lines
                     .mapNotNull { line ->
                         if (line.corners.isEmpty()) null
                         else
@@ -131,7 +141,6 @@ object PageTextSource {
                                 ocrUnits(line),
                             )
                     }
-                    .filter { block -> native.none { known -> overlaps(known, block) } }
             val result = ReaderDocument.order(native + extra, 0)
             if (region != null) return@withContext result
             target.parentFile?.mkdirs()
@@ -168,16 +177,6 @@ object PageTextSource {
                 }
             }
             .orEmpty()
-    }
-
-    private fun overlaps(a: ReaderTextBlock, b: ReaderTextBlock): Boolean {
-        val intersection =
-            (minOf(a.right, b.right) - maxOf(a.left, b.left)).coerceAtLeast(0f) *
-                (minOf(a.bottom, b.bottom) - maxOf(a.top, b.top)).coerceAtLeast(0f)
-        val area =
-            minOf((a.right - a.left) * (a.bottom - a.top), (b.right - b.left) * (b.bottom - b.top))
-                .coerceAtLeast(.000001f)
-        return intersection / area > .65f
     }
 
     private fun encode(blocks: List<ReaderTextBlock>) =

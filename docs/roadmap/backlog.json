@@ -599,7 +599,7 @@
       ],
       "scope": "按页/区域判断已有文字与坏文字层",
       "acceptance": "原生页不重复OCR，页眉不使整页误跳过",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "CVT01",
@@ -1252,8 +1252,8 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 77,
-    "partial": 10,
+    "done": 78,
+    "partial": 9,
     "planned": 11
   },
   "updated": "2026-10-27"

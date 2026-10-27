@@ -373,10 +373,17 @@ internal object DocxLayout {
                                                             Character.PRIVATE_USE.toInt()
                                                 }
                                             }
-                                        val scanned = tokens.sumOf { it.text.length } < 5
+                                        val decision = NativeTextCoverage.assess(pdf, index)
+                                        val scanned = decision.needsOcr
                                         if (scanned)
                                             tokens =
-                                                PhoneTables.ocrTokens(ocr.recognizeBitmap(bitmap))
+                                                tokens +
+                                                    PhoneTables.ocrTokens(
+                                                        NativeTextCoverage.removeCovered(
+                                                            ocr.recognizeBitmap(bitmap),
+                                                            decision.regions,
+                                                        )
+                                                    )
                                         // Aligned article columns are not evidence of a table.
                                         // Borderless tables remain in the explicit table workspace.
                                         val tables =

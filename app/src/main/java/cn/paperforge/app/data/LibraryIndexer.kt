@@ -35,7 +35,8 @@ object LibraryIndexer {
             withContext(Dispatchers.IO) {
                 val file = doc.pdfPath?.let(::File) ?: return@withContext
                 if (doc.kind != "pdf" || !file.exists()) return@withContext
-                fun fingerprint() = "${file.path}:${file.length()}:${file.lastModified()}"
+                fun fingerprint() =
+                    "${cn.paperforge.app.pdf.NativeTextCoverage.VERSION}:${file.path}:${file.length()}:${file.lastModified()}"
                 val fingerprint = fingerprint()
                 if (repo.dao.pdfIndex(doc.id)?.fingerprint == fingerprint) return@withContext
                 val job = currentCoroutineContext()
@@ -46,11 +47,17 @@ object LibraryIndexer {
                     count = pdf.numberOfPages
                     val text = StringBuilder()
                     val stripper =
-                        object : PDFTextStripper() {
+                        object : cn.paperforge.app.pdf.ReadablePdfTextStripper(pdf) {
                             override fun writeString(
                                 value: String,
                                 positions: MutableList<TextPosition>,
                             ) {
+                                if (
+                                    positions.any {
+                                        !cn.paperforge.app.pdf.NativeTextCoverage.valid(it)
+                                    }
+                                )
+                                    return
                                 text.append(value)
                             }
 

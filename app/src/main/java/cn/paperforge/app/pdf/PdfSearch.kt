@@ -2,7 +2,6 @@ package cn.paperforge.app.pdf
 
 import cn.paperforge.app.model.CjkSearch
 import com.tom_roush.pdfbox.pdmodel.PDDocument
-import com.tom_roush.pdfbox.text.PDFTextStripper
 import com.tom_roush.pdfbox.text.TextPosition
 import java.io.File
 import java.text.Normalizer
@@ -23,8 +22,9 @@ object PdfSearch {
         val result = mutableListOf<Hit>()
         PDDocument.load(file).use { doc ->
             val stripper =
-                object : PDFTextStripper() {
+                object : ReadablePdfTextStripper(doc) {
                     override fun writeString(text: String, positions: MutableList<TextPosition>) {
+                        if (positions.any { !NativeTextCoverage.valid(it) }) return
                         val chars = StringBuilder()
                         val mapping = mutableListOf<TextPosition>()
                         positions.forEach { p ->

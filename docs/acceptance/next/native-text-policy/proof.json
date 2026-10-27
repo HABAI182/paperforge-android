@@ -1,0 +1,42 @@
+{
+  "sourceSha256": "e5932cd2a2e685dfee17323f090ca6efbb21e48b80d3377373cce3433f54193d",
+  "sourceUnchanged": true,
+  "selectionOcrCalls": 2,
+  "exportOcrCalls": 2,
+  "cachedReadDidNotRepeatOcr": true,
+  "shortNativeSkippedOcr": true,
+  "mixedHeaderCount": 1,
+  "badGlyphs": 15,
+  "report": {
+    "policy": "native-regions-images-unicode-2",
+    "pages": [
+      {
+        "page": 1,
+        "reason": "native-text",
+        "ocr": false,
+        "nativeRegions": 1,
+        "badGlyphs": 0,
+        "imageRegions": 0,
+        "addedLines": 0
+      },
+      {
+        "page": 2,
+        "reason": "uncovered-image-region",
+        "ocr": true,
+        "nativeRegions": 3,
+        "badGlyphs": 0,
+        "imageRegions": 1,
+        "addedLines": 2
+      },
+      {
+        "page": 3,
+        "reason": "unreliable-unicode",
+        "ocr": true,
+        "nativeRegions": 0,
+        "badGlyphs": 15,
+        "imageRegions": 0,
+        "addedLines": 1
+      }
+    ]
+  }
+}

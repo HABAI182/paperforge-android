@@ -1,0 +1,65 @@
+{
+  "flow": {
+    "sourceSha256": "e5932cd2a2e685dfee17323f090ca6efbb21e48b80d3377373cce3433f54193d",
+    "sourceUnchanged": true,
+    "selectionOcrCalls": 2,
+    "exportOcrCalls": 2,
+    "cachedReadDidNotRepeatOcr": true,
+    "shortNativeSkippedOcr": true,
+    "mixedHeaderCount": 1,
+    "badGlyphs": 15,
+    "report": {
+      "policy": "native-regions-images-unicode-2",
+      "pages": [
+        {
+          "page": 1,
+          "reason": "native-text",
+          "ocr": false,
+          "nativeRegions": 1,
+          "badGlyphs": 0,
+          "imageRegions": 0,
+          "addedLines": 0
+        },
+        {
+          "page": 2,
+          "reason": "uncovered-image-region",
+          "ocr": true,
+          "nativeRegions": 3,
+          "badGlyphs": 0,
+          "imageRegions": 1,
+          "addedLines": 2
+        },
+        {
+          "page": 3,
+          "reason": "unreliable-unicode",
+          "ocr": true,
+          "nativeRegions": 0,
+          "badGlyphs": 15,
+          "imageRegions": 0,
+          "addedLines": 1
+        }
+      ]
+    }
+  },
+  "independentPages": [
+    {
+      "page": 1,
+      "visiblePixelsIdenticalAt100Dpi": true,
+      "pixelSha256": "d0ac87d7e5c481898fc0fcb3818a5cdfdbb911a5f4905d0e1dc576d9adbf32f8"
+    },
+    {
+      "page": 2,
+      "visiblePixelsIdenticalAt100Dpi": true,
+      "pixelSha256": "ee0266df6526796fb15beb9f3bf91903ba8d9d811c00ad4c91ca5c363d835e04"
+    },
+    {
+      "page": 3,
+      "visiblePixelsIdenticalAt100Dpi": true,
+      "pixelSha256": "2279e6361d540b8c14a596fdc0dd485ed0188d294ee528a77ea97b1a9978832a"
+    }
+  ],
+  "realBadUnicodeMappingConfirmed": true,
+  "correctedTextAlsoPresent": true,
+  "originalContentRetained": true,
+  "note": "Known OCR layout fixture isolates extraction/coverage/de-duplication; this is not an OCR recognition-accuracy measurement. Original damaged Unicode mapping remains physically present in derived PDF; PaperForge extraction filters that page font before line grouping."
+}

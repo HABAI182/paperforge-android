@@ -212,19 +212,30 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                             report(it)
                         }
                     "extract-images" -> PdfTools.extractImages(input, file)
-                    "searchable" ->
-                        PdfSearchable.convert(
-                            applicationContext,
-                            input,
-                            file,
-                            cn.paperforge.app.ocr.OcrRequest.decode(
-                                    data.json.optJSONObject("ocrRequest"),
-                                    (applicationContext as PaperForgeApp).ocrEngine.id,
-                                )
-                                .bind((applicationContext as PaperForgeApp).ocrEngine),
-                        ) {
-                            report(it)
-                        }
+                    "searchable" -> {
+                        val result =
+                            PdfSearchable.convert(
+                                applicationContext,
+                                input,
+                                file,
+                                cn.paperforge.app.ocr.OcrRequest.decode(
+                                        data.json.optJSONObject("ocrRequest"),
+                                        (applicationContext as PaperForgeApp).ocrEngine.id,
+                                    )
+                                    .bind((applicationContext as PaperForgeApp).ocrEngine),
+                            ) {
+                                report(it)
+                            }
+                        origin = result
+                        originRole = "ocr-coverage-report"
+                        val decisions = result.getJSONArray("pages")
+                        val recognized =
+                            (0 until decisions.length()).count {
+                                decisions.getJSONObject(it).getBoolean("ocr")
+                            }
+                        conversionNotice =
+                            "保留原生文字 ${decisions.length()-recognized} 页 · 补识别 $recognized 页，附逐页文字覆盖记录。"
+                    }
                     "docx-layout" -> {
                         val result =
                             PhoneDocx.convert(

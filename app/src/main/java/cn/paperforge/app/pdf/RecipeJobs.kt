@@ -66,9 +66,12 @@ object RecipeJobs {
             val key = "recipe-step-${step.id}"
             val signature =
                 "recipe1|${PdfAssembly.sha256(source)}|${step.json()}|${if(step.operation in setOf("searchable", "pdf-docx")) request.signature else ""}" +
-                    if (step.operation in setOf("searchable", "text-pdf"))
+                    (if (step.operation in setOf("searchable", "text-pdf"))
                         "|${PdfTextLayer.VERSION}"
-                    else ""
+                    else "") +
+                    (if (step.operation in setOf("searchable", "pdf-docx", "pdf-txt"))
+                        "|${NativeTextCoverage.VERSION}"
+                    else "")
             val cached =
                 JSONObject(checkNotNull(repo.dao.task(job.row.id)).payload)
                     .getJSONObject("checkpoint")

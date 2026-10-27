@@ -342,7 +342,7 @@ object PdfComparison {
         val options = PdfDiffOptions.decode(JSONObject(job.input.getString("options") ?: "{}"))
         val hashes = files.map { PdfAssembly.sha256(it) }
         val signature =
-            "$VERSION|${PdfGlyphGeometry.VERSION}|${hashes.joinToString()}|${options.json()}"
+            "$VERSION|${NativeTextCoverage.VERSION}|${PdfGlyphGeometry.VERSION}|${hashes.joinToString()}|${options.json()}"
         val directory = File(repo.context.filesDir, "job-items/${job.row.id}").apply { mkdirs() }
         val pages = mutableListOf<PdfDiffPage>()
         PdfSession(files[0], 1).use { left ->

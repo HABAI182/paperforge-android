@@ -1,0 +1,53 @@
+{
+  "checked": "2026-10-27",
+  "cards": [
+    "OCR10"
+  ],
+  "cardStatus": "done within documented heuristic coverage and demonstrable Unicode checks",
+  "implemented": [
+    "Shared per-page assessment examines trustworthy Unicode/geometry and significant image regions, rather than requiring a large native character count",
+    "Short purely native pages skip OCR; native header/footer bands do not mark an entire scanned body as covered",
+    "Unicode replacement/private/unassigned/control mappings identify broken page fonts; extraction filters those fonts before line grouping, so valid added OCR on the same line remains readable",
+    "Reader selection/reflow, EPUB reflow, structured DOCX, searchable PDF and selected table regions supplement uncovered content while retaining trustworthy native text",
+    "De-duplication requires matching normalized text and geometry; complete word geometry permits removal of the overlapping native word while retaining other words",
+    "Reader caches include policy/engine options; comparison, workflow and library indexing signatures include changed text policy",
+    "Searchable PDF emits a durable per-page reason/native/bad-glyph/image/addition report and human-readable completion totals",
+    "Search, plain text extraction and native table text use the same trustworthy-font filter; original page content is retained"
+  ],
+  "focusedCheck": {
+    "test": "NativeTextPolicyFlowTest.shortNativeMixedImageBrokenUnicodeAndPartialWordDedup",
+    "seconds": 1.53,
+    "result": "OK (1 test)",
+    "log": "native-text-policy-android.log",
+    "selectionOcrCalls": 2,
+    "exportOcrCalls": 2,
+    "repeatedCachedReadDidNotCallOcr": true,
+    "nativeHeaderCount": 1,
+    "actualBrokenGlyphs": 15,
+    "cases": [
+      "short native page needs zero OCR calls",
+      "image contains native header and footer with over 60 characters but still requires body OCR",
+      "same OCR line has a native HEADER and separately retained MISSING word",
+      "real authored ToUnicode private-use mapping triggers OCR fallback",
+      "reader and text export can read the repaired layer despite the old layer sharing the page",
+      "source SHA256 unchanged"
+    ]
+  },
+  "independentReadback": {
+    "report": "native-text-policy/independent-readback.json",
+    "engine": "PyMuPDF / MuPDF",
+    "allThreePagesVisiblePixelsIdenticalAt100Dpi": true,
+    "actualBadUnicodeMappingConfirmed": true,
+    "newCorrectedTextPresent": true
+  },
+  "limits": [
+    "The OCR layouts in the concentrated check are supplied fixtures; this measures coverage/extraction/de-duplication, not model recognition accuracy",
+    "Significant-image and vertical-band coverage is heuristic; photographs or sparse searchable scans may receive one supplemental OCR pass",
+    "Printable but semantically wrong Unicode cannot be identified reliably by these checks",
+    "Original damaged Unicode maps remain physically present in derived PDFs to preserve source content; other readers may still expose them, while PaperForge filters the affected page font",
+    "Partial OCR without complete word geometry retains the complete unmatched line, prioritizing content retention over speculative deletion",
+    "Library index/EPUB/DOCX/table integrations compile and share the policy; their old broad suites were not repeated",
+    "UI verification is grouped with the upcoming adaptive UI work; emulator processes reset when the user continued",
+    "No new version, tag or release"
+  ]
+}

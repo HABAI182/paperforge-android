@@ -6,7 +6,6 @@ import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
 import com.tom_roush.pdfbox.io.MemoryUsageSetting
 import com.tom_roush.pdfbox.pdmodel.PDDocument
-import com.tom_roush.pdfbox.text.PDFTextStripper
 import java.io.File
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -25,7 +24,7 @@ object PdfTextExport {
 
     fun paragraphs(doc: PDDocument, page: Int): List<String> {
         val text =
-            PDFTextStripper()
+            ReadablePdfTextStripper(doc)
                 .apply {
                     sortByPosition = true
                     startPage = page + 1

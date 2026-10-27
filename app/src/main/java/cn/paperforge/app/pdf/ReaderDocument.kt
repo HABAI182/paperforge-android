@@ -8,7 +8,6 @@ import com.tom_roush.pdfbox.pdmodel.interactive.action.PDActionURI
 import com.tom_roush.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink
 import com.tom_roush.pdfbox.pdmodel.interactive.documentnavigation.destination.*
 import com.tom_roush.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem
-import com.tom_roush.pdfbox.text.PDFTextStripper
 import com.tom_roush.pdfbox.text.TextPosition
 import java.io.File
 
@@ -142,8 +141,9 @@ object ReaderDocument {
             val box = page.cropBox
             val blocks = mutableListOf<ReaderTextBlock>()
             val stripper =
-                object : PDFTextStripper() {
+                object : ReadablePdfTextStripper(doc) {
                     override fun writeString(text: String, positions: MutableList<TextPosition>) {
+                        if (positions.any { !NativeTextCoverage.valid(it) }) return
                         val groups = mutableListOf<MutableList<TextPosition>>()
                         positions.forEach { p ->
                             val group = groups.lastOrNull()

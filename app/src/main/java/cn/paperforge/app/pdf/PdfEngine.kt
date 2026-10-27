@@ -12,7 +12,6 @@ import cn.paperforge.app.model.parsePageRange
 import com.tom_roush.pdfbox.io.MemoryUsageSetting
 import com.tom_roush.pdfbox.pdmodel.*
 import com.tom_roush.pdfbox.pdmodel.common.PDRectangle
-import com.tom_roush.pdfbox.text.PDFTextStripper
 import java.io.File
 import java.io.FileOutputStream
 import kotlin.coroutines.coroutineContext
@@ -242,7 +241,7 @@ object PdfEngine {
 
     fun text(input: File): String =
         PDDocument.load(input, MemoryUsageSetting.setupTempFileOnly()).use {
-            PDFTextStripper().apply { sortByPosition = true }.getText(it)
+            ReadablePdfTextStripper(it).apply { sortByPosition = true }.getText(it)
         }
 
     suspend fun compress(
