@@ -1,0 +1,43 @@
+{
+  "checked": "2026-10-27",
+  "cards": ["PDF04"],
+  "implemented": [
+    "Search current-page text or drag a region, then create a separate queued output with an explicit semantic or raster mode",
+    "Semantic mode removes the encoded target bytes inside one Tj/TJ string and preserves subsequent text advance and vector paths",
+    "NFKC search matching handles fullwidth digits; surrounding Chinese text and unselected pages remain available",
+    "Full save removes old content streams from the reachable output; document metadata, annotations, forms, attachments and auxiliary catalog content are dropped with an explicit report",
+    "Raster mode repaints the whole document and masks the selected region; it is named separately and makes no claim to preserve selectable text",
+    "Both modes use durable jobs with retained inputs, cancellation/retry and saved mode/scope reports"
+  ],
+  "focusedCheck": {
+    "test": "PdfRedactionFlowTest",
+    "result": "passed",
+    "combinedRun": "backup-redaction-android.log",
+    "combinedSeconds": 39.729,
+    "cases": ["partial Tj and TJ strings", "subsequent text advances", "CJK/fullwidth target", "same word and images on an untouched page", "both actual queued modes and reports", "raster mask pixel", "original input hash unchanged"]
+  },
+  "independentReadback": {
+    "engine": "PyMuPDF / MuPDF",
+    "report": "redaction/independent-readback.json",
+    "targetAbsentFromSinglePageRawAndAllDecodedStreams": true,
+    "surroundingTextAndVectorPathsPreserved": true,
+    "maxPreservedWordPointError": 0.0000152587890625,
+    "unselectedPagePixelsAndSameWordPreserved": true,
+    "rasterTextEmptyAndMaskedPixelBlack": true,
+    "fixtures": "Small synthetic PDFs created by PaperForge tests; no third-party document content"
+  },
+  "actualUI": {
+    "pageForwardAndBack": "passed after fixing bitmap ownership on preview replacement",
+    "search": "SECRET: one hit on selected page",
+    "queuedOutputGenerated": true,
+    "resultPreviewAndReturnToOriginalWorkbench": true,
+    "screenshot": "redaction-workbench-ui.png"
+  },
+  "limits": [
+    "Semantic mode currently supports one unique target within one decodable text string on the selected page",
+    "Selected-page images, Form XObjects, marked content, unsupported resources, text clipping, vertical fonts and Type3 fonts require the explicitly separate raster route",
+    "Other pages may still contain the same text; this is a selected-page operation",
+    "Automatic sensitive-data suggestions from the Claude review remain a separate pending enhancement",
+    "No new tag or release"
+  ]
+}

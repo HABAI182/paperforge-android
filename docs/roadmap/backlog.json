@@ -881,7 +881,7 @@
       ],
       "scope": "设置书签阅读状态配方纳入，追加与重复策略",
       "acceptance": "恢复后可继续编辑和阅读，不只得到PDF",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "LIB07",
@@ -972,7 +972,7 @@
       ],
       "scope": "删除目标内容，原页其他对象保留；栅格回退另命名",
       "acceptance": "被删内容无法提取，未删文字仍可选",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "PDF05",
@@ -1252,9 +1252,9 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 71,
-    "partial": 15,
-    "planned": 12
+    "done": 73,
+    "partial": 14,
+    "planned": 11
   },
   "updated": "2026-10-27"
 }

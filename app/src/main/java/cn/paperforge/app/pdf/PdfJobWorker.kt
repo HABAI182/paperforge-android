@@ -74,7 +74,54 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 var origin: JSONObject? = null
                 var originRole = "assembly-origin"
                 var compression: JSONObject? = null
+                var redaction: PdfRedaction.Report? = null
                 when (mode) {
+                    "redact-semantic",
+                    "redact-raster" -> {
+                        val sourceFile = requireNotNull(source) { "来源 PDF 已移除" }
+                        require(sourceFile.isFile) { "来源 PDF 已移除" }
+                        // A previous interrupted attempt may have written this job's unregistered
+                        // output.
+                        val part = File(file.path + ".part")
+                        if (sourceFile.canonicalFile == file.canonicalFile) {
+                            output = null
+                            error("输出不能覆盖来源 PDF")
+                        }
+                        require(sourceFile.canonicalFile != part.canonicalFile) { "临时输出不能覆盖来源 PDF" }
+                        if (file.exists()) check(file.delete()) { "无法清理中断的任务输出" }
+                        if (part.exists()) check(part.delete()) { "无法清理中断的临时文件" }
+                        report(5)
+                        val result =
+                            if (mode == "redact-semantic") {
+                                PdfRedaction.semantic(
+                                    input,
+                                    file,
+                                    p.getInt("page"),
+                                    p.getString("target"),
+                                )
+                            } else {
+                                PdfRedaction.raster(
+                                    applicationContext,
+                                    input,
+                                    file,
+                                    p.getInt("page"),
+                                    p.getDouble("left").toFloat(),
+                                    p.getDouble("top").toFloat(),
+                                    p.getDouble("right").toFloat(),
+                                    p.getDouble("bottom").toFloat(),
+                                ) {
+                                    report(it.coerceAtLeast(5))
+                                }
+                            }
+                        redaction = result
+                        origin =
+                            JSONObject()
+                                .put("mode", result.mode)
+                                .put("detail", result.detail)
+                                .put("page", p.getInt("page") + 1)
+                        originRole = "redaction-report"
+                        report(100)
+                    }
                     "assemble" -> {
                         val manifest = File(p.getString("manifest"))
                         assemblyManifest = manifest
@@ -264,7 +311,8 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                             repo,
                             job,
                             file,
-                            if (unmet) "未达到目标体积，已保留可用结果" else "已完成",
+                            if (unmet) "未达到目标体积，已保留可用结果"
+                            else redaction?.let { "${it.mode}：${it.detail}" } ?: "已完成",
                             if (unmet) cn.paperforge.app.data.LocalTaskState.PARTIAL
                             else cn.paperforge.app.data.LocalTaskState.SUCCEEDED,
                         )

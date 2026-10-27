@@ -80,18 +80,48 @@ object AutoExportCoordinator {
                 .distinctUntilChanged()
                 .collect { signals ->
                     val rules = AutoExportRules.all().filter { it.enabled && it.issue() == null }
-                    for (signal in signals.filter { it.ready }) for (rule in
-                        rules.filter { it.matches(signal.document) }) {
-                        try {
-                            enqueue(repo, rule, signal)
-                        } catch (cancel: CancellationException) {
-                            throw cancel
-                        } catch (error: Exception) {
-                            android.util.Log.w(
-                                "PaperForgeAutoExport",
-                                "Could not prepare automatic export",
-                                error,
+                    val restoreState = BackupState(repo.context)
+                    for (signal in signals.filter { it.ready }) {
+                        val baseline = restoreState.baseline(signal.document.id)
+                        if (baseline == signal.fingerprint) continue
+                        if (baseline != null) {
+                            val actual =
+                                repo.database.withTransaction {
+                                    val document =
+                                        repo.dao.document(signal.document.id)
+                                            ?: return@withTransaction null
+                                    val pageSignal =
+                                        repo.dao.pages(document.id).joinToString(",") { page ->
+                                            AutoExportPageSignal(
+                                                    page.id,
+                                                    page.documentId,
+                                                    page.position,
+                                                    page.revision,
+                                                    page.processingMetadata,
+                                                    page.ocrText,
+                                                )
+                                                .signature
+                                        }
+                                    AutoExportSignal(document, pageSignal, 0).fingerprint
+                                }
+                            if (
+                                actual == null || actual != signal.fingerprint || actual == baseline
                             )
+                                continue
+                            restoreState.clearBaseline(signal.document.id, baseline)
+                        }
+                        for (rule in rules.filter { it.matches(signal.document) }) {
+                            try {
+                                enqueue(repo, rule, signal)
+                            } catch (cancel: CancellationException) {
+                                throw cancel
+                            } catch (error: Exception) {
+                                android.util.Log.w(
+                                    "PaperForgeAutoExport",
+                                    "Could not prepare automatic export",
+                                    error,
+                                )
+                            }
                         }
                     }
                 }

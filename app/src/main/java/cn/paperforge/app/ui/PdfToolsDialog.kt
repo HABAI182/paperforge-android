@@ -27,6 +27,13 @@ fun PdfToolsDialog(vm: MainViewModel, initialMode: String = "", onDismiss: () ->
     var number by remember { mutableStateOf("5") }
     var printAllowed by remember { mutableStateOf(true) }
     var copyAllowed by remember { mutableStateOf(true) }
+    if (mode == "redact") {
+        LaunchedEffect(Unit) {
+            vm.queueTool("redact")
+            onDismiss()
+        }
+        return
+    }
     if (mode == "compress") {
         val doc by vm.selected.collectAsState()
         PdfCompressionDialog(vm, doc?.pdfPath?.let({ java.io.File(it) }), onDismiss)

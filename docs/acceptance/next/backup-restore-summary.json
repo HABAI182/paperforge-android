@@ -1,0 +1,34 @@
+{
+  "checked": "2026-10-27",
+  "cards": ["LIB06"],
+  "implemented": [
+    "Preview document count, archive size, matching source identities and same-name-only documents before restoring",
+    "Append independent editable copies or skip identities already present; original document/page identities survive restore and rebackup",
+    "Restore page history, reader position, bookmarks, notes, resources and related tasks with independent identifiers",
+    "Optionally retain local workspace/settings; merge recipes and automatic rules without replacing locally changed versions or duplicating identical conflict copies",
+    "Imported rules start disabled; existing local rules remain enabled, with a restored-document baseline preventing restore itself from triggering a new automatic export",
+    "Side-state rollback attempts every component even if one rollback fails"
+  ],
+  "focusedCheck": {
+    "test": "BackupRestoreFlowTest.appendOrSkipIdentityPreservesEditableDocumentsAndMergesWorkflowsSafely",
+    "result": "passed",
+    "combinedRun": "backup-redaction-android.log",
+    "combinedSeconds": 39.729,
+    "cases": ["same-name distinct document retained", "append then skip then rebackup", "original/page identity preserved", "editable undo and reader zoom/bookmarks", "local workspace retained", "recipe/rule conflict merge", "no automatic export on restore; actual later undo triggers and completes an automatic task"]
+  },
+  "actualUI": {
+    "archiveDocuments": 80,
+    "existingIdentities": 80,
+    "sameNameOnly": 0,
+    "workspaceLabelTogglesWholeRow": true,
+    "previewCancelledWithoutAnotherRestore": true,
+    "screenshot": "backup-restore-ui.png",
+    "rawLibraryArchive": "Local-only; not included in repository evidence"
+  },
+  "limits": [
+    "Duplicate detection uses source identities, not filename or file-content similarity",
+    "Linked cross-document history involving a skipped document requires append mode rather than inventing a partial undo",
+    "No claim of atomicity across Room and preferences under arbitrary process termination or simultaneous settings edits",
+    "No new tag or release"
+  ]
+}

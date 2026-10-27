@@ -1,0 +1,225 @@
+{
+  "fullwidth-redacted.pdf": {
+    "sha256": "bba908c18abbe278515260b50dd4a4d09016dd1b55e98e4f4970aeda3dfaf717",
+    "pages": [
+      {
+        "text": "前 \n 后\n",
+        "images": 0,
+        "drawings": 0,
+        "width": 300.0,
+        "height": 300.0
+      }
+    ],
+    "decodedStreams": 5,
+    "streamsContainingSecret": 0,
+    "streamsContainingPrivate": 0,
+    "rawSecret": false
+  },
+  "fullwidth-source.pdf": {
+    "sha256": "8f4672da3da4341accd289aa16251572328b78bd84b79da6dceca9e3d2e50efa",
+    "pages": [
+      {
+        "text": "前 ００１２３ 后\n",
+        "images": 0,
+        "drawings": 0,
+        "width": 300.0,
+        "height": 300.0
+      }
+    ],
+    "decodedStreams": 5,
+    "streamsContainingSecret": 0,
+    "streamsContainingPrivate": 0,
+    "rawSecret": false
+  },
+  "image-source.pdf": {
+    "sha256": "130bb1ee401102acbcbb0fa1f8958bddd202f5e8948eeed15a518e62046485bc",
+    "pages": [
+      {
+        "text": "SECRET\n",
+        "images": 1,
+        "drawings": 0,
+        "width": 300.0,
+        "height": 300.0
+      }
+    ],
+    "decodedStreams": 3,
+    "streamsContainingSecret": 1,
+    "streamsContainingPrivate": 0,
+    "rawSecret": false
+  },
+  "mixed-redacted.pdf": {
+    "sha256": "c71e486e666f002d2f24a1da8c23d396316f9bc7abe3ae179b612d467a825896",
+    "pages": [
+      {
+        "text": "PUBLIC \n KEEP\nBEFORE PRIVATE AFTER END\n",
+        "images": 0,
+        "drawings": 1,
+        "width": 300.0,
+        "height": 300.0
+      },
+      {
+        "text": "OTHER SECRET PAGE\n",
+        "images": 1,
+        "drawings": 1,
+        "width": 300.0,
+        "height": 300.0
+      }
+    ],
+    "decodedStreams": 5,
+    "streamsContainingSecret": 1,
+    "streamsContainingPrivate": 1,
+    "rawSecret": false
+  },
+  "mixed-source.pdf": {
+    "sha256": "fdcbdc2372e3eb4cfa7ccb3e4a73ebb7fe3cc8dc7b53775de31f945bf3d363ed",
+    "pages": [
+      {
+        "text": "PUBLIC SECRET KEEP\nBEFORE PRIVATE AFTER END\n",
+        "images": 0,
+        "drawings": 1,
+        "width": 300.0,
+        "height": 300.0
+      },
+      {
+        "text": "OTHER SECRET PAGE\n",
+        "images": 1,
+        "drawings": 1,
+        "width": 300.0,
+        "height": 300.0
+      }
+    ],
+    "decodedStreams": 5,
+    "streamsContainingSecret": 2,
+    "streamsContainingPrivate": 1,
+    "rawSecret": false
+  },
+  "native-source.pdf": {
+    "sha256": "16be5150fcb8caab2287cbf7746b86d3a3423db3e9aab290a8b69cc7f968d6ca",
+    "pages": [
+      {
+        "text": "PUBLIC SECRET KEEP\nBEFORE PRIVATE AFTER END\n",
+        "images": 0,
+        "drawings": 1,
+        "width": 300.0,
+        "height": 300.0
+      }
+    ],
+    "decodedStreams": 1,
+    "streamsContainingSecret": 1,
+    "streamsContainingPrivate": 1,
+    "rawSecret": false
+  },
+  "native-tj-array.pdf": {
+    "sha256": "6cde4c6bdb5ddcf4335293cdee4c18354c2bbfc0ae40d286674c881d2884213f",
+    "pages": [
+      {
+        "text": "PUBLIC \n KEEP\nBEFORE \n AFTER END\n",
+        "images": 0,
+        "drawings": 1,
+        "width": 300.0,
+        "height": 300.0
+      }
+    ],
+    "decodedStreams": 1,
+    "streamsContainingSecret": 0,
+    "streamsContainingPrivate": 0,
+    "rawSecret": false
+  },
+  "native-tj.pdf": {
+    "sha256": "0ffb1e0ddf9a5c5070842aa261a46726273bbce9908b8cc38fd4e90d435eb977",
+    "pages": [
+      {
+        "text": "PUBLIC \n KEEP\nBEFORE PRIVATE AFTER END\n",
+        "images": 0,
+        "drawings": 1,
+        "width": 300.0,
+        "height": 300.0
+      }
+    ],
+    "decodedStreams": 1,
+    "streamsContainingSecret": 0,
+    "streamsContainingPrivate": 1,
+    "rawSecret": false
+  },
+  "raster-redacted.pdf": {
+    "sha256": "64c068bb0d0ce5f4139f79b3b109b967da7d4dee8257c09e6d560498c85e4797",
+    "pages": [
+      {
+        "text": "",
+        "images": 1,
+        "drawings": 0,
+        "width": 300.0,
+        "height": 300.0
+      }
+    ],
+    "decodedStreams": 3,
+    "streamsContainingSecret": 0,
+    "streamsContainingPrivate": 0,
+    "rawSecret": false
+  },
+  "preservedTextPositionAndVectors": {
+    "words": [
+      {
+        "text": "KEEP",
+        "sourceBox": [
+          135.13600158691406,
+          44.94999694824219,
+          172.4879913330078,
+          64.18599700927734
+        ],
+        "outputBox": [
+          135.13601684570312,
+          44.94999694824219,
+          172.48800659179688,
+          64.18599700927734
+        ],
+        "maxPointError": 1.52587890625e-05
+      },
+      {
+        "text": "AFTER",
+        "sourceBox": [
+          160.25799560546875,
+          74.94999694824219,
+          210.14999389648438,
+          94.18599700927734
+        ],
+        "outputBox": [
+          160.2580108642578,
+          74.94999694824219,
+          210.15000915527344,
+          94.18599700927734
+        ],
+        "maxPointError": 1.52587890625e-05
+      }
+    ],
+    "vectorPathsUnchanged": true
+  },
+  "untouchedPageInspection": {
+    "selectedPageTargetAbsent": true,
+    "unselectedSameWordRetained": true,
+    "unselectedPageVisiblePixelsUnchanged": true,
+    "unselectedPageImages": 1
+  },
+  "fullwidthInspection": {
+    "normalizedTargetAbsent": true,
+    "surroundingChineseRetained": true
+  },
+  "rasterInspection": {
+    "textEmpty": true,
+    "maskedPixelAt90x90": [
+      0,
+      0,
+      0
+    ]
+  },
+  "queue-report.json": {
+    "mode": "语义文字删除",
+    "detail": "仅处理所选页，保留页面原生文字、图片和矢量内容；其他页可能仍含相同文字。移除文档信息、批注、表单、附件及其他目录附加内容。",
+    "page": 1
+  },
+  "raster-report.json": {
+    "mode": "整份栅格脱敏",
+    "detail": "所有页面重绘为图像；原生文字、矢量、表单、批注、附件与元数据不保留。请目视检查遮盖范围。",
+    "page": 1
+  }
+}

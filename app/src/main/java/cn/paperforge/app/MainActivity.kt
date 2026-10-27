@@ -391,6 +391,9 @@ class MainActivity : ComponentActivity() {
                     }
                     vm.screen.value =
                         when {
+                            screen == "pdf-redaction" ->
+                                if (vm.redactionSource.value?.pdfPath == null) "home"
+                                else "reader".also { vm.selected.value = vm.redactionSource.value }
                             screen in listOf("annotations", "pdf-pages", "pdf-diagnostics") ->
                                 "reader"
                             screen == "text-compose" || screen == "markup-review" -> "convert"
@@ -410,6 +413,26 @@ class MainActivity : ComponentActivity() {
                         "editor" -> EditorScreen(vm) { images.launch(arrayOf("image/*")) }
                         "reader" -> ReaderScreen(vm, share)
                         "pdf-diagnostics" -> PdfDiagnosticsScreen(vm)
+                        "pdf-redaction" -> {
+                            val source by vm.redactionSource.collectAsState()
+                            val path = source?.pdfPath
+                            if (path != null)
+                                PdfRedactionScreen(
+                                    input = File(path),
+                                    onBack = {
+                                        vm.selected.value = source
+                                        vm.screen.value = "reader"
+                                    },
+                                    onSubmit = vm::queueRedaction,
+                                )
+                            else
+                                Column(Modifier.padding(24.dp)) {
+                                    Text("请先打开要处理的 PDF")
+                                    TextButton(onClick = { vm.screen.value = "home" }) {
+                                        Text("返回首页")
+                                    }
+                                }
+                        }
                         "text-compose" -> TextConversionScreen(vm)
                         "long-image-compose" -> LongImageComposeScreen(vm.longImages)
                         "tables" -> TableReviewScreen(vm)
@@ -750,6 +773,7 @@ class MainActivity : ComponentActivity() {
                         },
                     )
                 }
+                BackupRestoreDialog(vm)
                 if (about)
                     AlertDialog(
                         onDismissRequest = { about = false },

@@ -93,6 +93,8 @@ object DocumentJobs {
             "flatten" to "整页重绘",
             "split-each" to "逐页拆分",
             "marks" to "保存批注",
+            "redact-semantic" to "语义文字脱敏",
+            "redact-raster" to "整份栅格脱敏",
         )[mode] ?: "PDF 处理"
 
     suspend fun prepare(

@@ -12,6 +12,62 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 object BackupStore {
+    enum class DuplicatePolicy {
+        APPEND_ALL,
+        SKIP_SAME_ID,
+    }
+
+    data class Preview(val documents: Int, val sameId: Int, val sameName: Int, val bytes: Long)
+
+    suspend fun preview(repo: Repository, uri: Uri): Preview {
+        val archive = File(repo.context.cacheDir, "restore-preview-${UUID.randomUUID()}.zip")
+        try {
+            repo.context.contentResolver.openInputStream(uri)?.use { input ->
+                archive.outputStream().use { input.copyTo(it) }
+            } ?: error("无法读取备份")
+            ZipFile(archive).use { zip ->
+                val entry = zip.getEntry("paperforge.json") ?: error("不是纸匠备份文件")
+                val raw = zip.getInputStream(entry).use { it.readBytes() }
+                val metadata = JSONObject(raw.toString(Charsets.UTF_8))
+                val format = metadata.getInt("format")
+                require(format in 1..3) { "不支持的备份版本" }
+                if (format >= 2) {
+                    val integrity = zip.getEntry("integrity.json") ?: error("备份缺少完整性清单")
+                    val checks =
+                        JSONObject(
+                            zip.getInputStream(integrity).bufferedReader().use { it.readText() }
+                        )
+                    require(
+                        sha(raw) == checks.getJSONObject("paperforge.json").getString("sha256")
+                    ) {
+                        "备份目录校验失败"
+                    }
+                }
+                val rows = metadata.getJSONArray("documents")
+                val existing = repo.dao.allDocuments()
+                val origins = BackupState(repo.context).documentOrigins()
+                val archiveOrigins = metadata.optJSONObject("documentOrigins") ?: JSONObject()
+                fun matching(doc: DocumentRow) =
+                    existing.any {
+                        it.id == doc.id ||
+                            origins.optString(it.id, it.id) ==
+                                archiveOrigins.optString(doc.id, doc.id)
+                    }
+                val names = existing.map { it.title }.toSet()
+                val docs =
+                    (0 until rows.length()).map { DocumentCodec.document(rows.getJSONObject(it)) }
+                return Preview(
+                    docs.size,
+                    docs.count(::matching),
+                    docs.count { it.title in names && !matching(it) },
+                    archive.length(),
+                )
+            }
+        } finally {
+            archive.delete()
+        }
+    }
+
     private data class Snapshot(
         val documents: List<DocumentRow>,
         val pages: List<PageRow>,
@@ -59,9 +115,36 @@ object BackupStore {
                     "pending/${UUID.randomUUID()}.${File(it).extension.ifBlank { "bin" }}"
                 })
         fun page(p: PageRow) = DocumentCodec.page(PageResources.remap(p, mapping::getValue))
+        val origins = BackupState(repo.context)
+        val documentOrigins = origins.documentOrigins()
+        val pageOrigins = origins.pageOrigins()
+        val referencedPageIds =
+            (pages.map { it.id } +
+                    history.flatMap { row ->
+                        (HistoryState.pages(row.beforeJson) + HistoryState.pages(row.afterJson))
+                            .map { it.id }
+                    })
+                .toSet()
         val metadata =
             JSONObject()
                 .put("format", 3)
+                .put(
+                    "documentOrigins",
+                    JSONObject().apply {
+                        documents.forEach { doc ->
+                            if (documentOrigins.has(doc.id))
+                                put(doc.id, documentOrigins.getString(doc.id))
+                        }
+                    },
+                )
+                .put(
+                    "pageOrigins",
+                    JSONObject().apply {
+                        referencedPageIds.forEach { id ->
+                            if (pageOrigins.has(id)) put(id, pageOrigins.getString(id))
+                        }
+                    },
+                )
                 .put(
                     "tasks",
                     JSONArray().apply {
@@ -207,7 +290,12 @@ object BackupStore {
         }
     }
 
-    suspend fun restore(repo: Repository, uri: Uri): Int {
+    suspend fun restore(
+        repo: Repository,
+        uri: Uri,
+        policy: DuplicatePolicy = DuplicatePolicy.APPEND_ALL,
+        applyWorkspace: Boolean = true,
+    ): Int {
         val archive = File(repo.context.cacheDir, "restore-${UUID.randomUUID()}.zip")
         repo.context.contentResolver.openInputStream(uri)?.use { input ->
             archive.outputStream().use { input.copyTo(it) }
@@ -244,9 +332,68 @@ object BackupStore {
                 val h = metadata.optJSONArray("history") ?: JSONArray()
                 val documents =
                     (0 until d.length()).map { DocumentCodec.document(d.getJSONObject(it)) }
-                val ids = documents.associate { it.id to UUID.randomUUID().toString() }
+                require(documents.map { it.id }.distinct().size == documents.size) { "备份文档身份重复" }
+                val state = BackupState(repo.context)
+                val existing = repo.dao.allDocuments()
+                val localDocumentOrigins = state.documentOrigins()
+                val archiveDocumentOrigins =
+                    metadata.optJSONObject("documentOrigins") ?: JSONObject()
+                val archivePageOrigins = metadata.optJSONObject("pageOrigins") ?: JSONObject()
+                val matches =
+                    documents
+                        .mapNotNull { doc ->
+                            val found =
+                                existing.firstOrNull { it.id == doc.id }
+                                    ?: existing.firstOrNull {
+                                        localDocumentOrigins.optString(it.id, it.id) ==
+                                            archiveDocumentOrigins.optString(doc.id, doc.id)
+                                    }
+                            found?.let { doc.id to it.id }
+                        }
+                        .toMap()
+                val skipped =
+                    if (policy == DuplicatePolicy.SKIP_SAME_ID) matches.keys else emptySet()
+                val imported = documents.filterNot { it.id in skipped }
+                if (skipped.isNotEmpty()) {
+                    for (i in 0 until h.length()) {
+                        val row = h.getJSONObject(i)
+                        if (row.getString("documentId") !in skipped) {
+                            for (key in listOf("before", "after")) {
+                                val state = row.getJSONObject(key).toString()
+                                require(
+                                    !HistoryState.isTransfer(state) ||
+                                        HistoryState.pages(state).none { it.documentId in skipped }
+                                ) {
+                                    "备份中有跨文档移动历史，无法安全跳过关联文档；请选择全部追加"
+                                }
+                            }
+                        }
+                    }
+                }
+                val ids =
+                    documents.associate {
+                        it.id to
+                            if (it.id in skipped) matches.getValue(it.id)
+                            else UUID.randomUUID().toString()
+                    }
+                val importedIds = ids.filterKeys { it !in skipped }
                 val historicalDocumentIds = mutableMapOf<String, String>()
                 val pageIds = mutableMapOf<String, String>()
+                val localPageOrigins = state.pageOrigins()
+                val existingPages = repo.dao.allPages()
+                (0 until p.length())
+                    .map { DocumentCodec.page(p.getJSONObject(it)) }
+                    .filter { it.documentId in skipped }
+                    .forEach { old ->
+                        val source = archivePageOrigins.optString(old.id, old.id)
+                        existingPages
+                            .firstOrNull {
+                                it.documentId == matches[old.documentId] &&
+                                    (it.id == old.id ||
+                                        localPageOrigins.optString(it.id, it.id) == source)
+                            }
+                            ?.let { pageIds[old.id] = it.id }
+                    }
                 val taskIds = mutableMapOf<String, String>()
                 val files = mutableMapOf<Pair<String, String>, String>()
                 fun copy(entry: String, docId: String): String =
@@ -304,7 +451,11 @@ object BackupStore {
                                         origin.put("documentId", ids[document] ?: JSONObject.NULL)
                                         origin.put(
                                             "pageId",
-                                            if (sourcePage.isNotBlank() && sourcePage != "null")
+                                            if (document in skipped && sourcePage !in pageIds)
+                                                JSONObject.NULL
+                                            else if (
+                                                sourcePage.isNotBlank() && sourcePage != "null"
+                                            )
                                                 pageIds.getOrPut(sourcePage) {
                                                     UUID.randomUUID().toString()
                                                 }
@@ -329,13 +480,13 @@ object BackupStore {
                     )
                 }
                 val restored =
-                    documents.map { old ->
+                    imported.map { old ->
                         val id = ids.getValue(old.id)
                         old.copy(id = id, pdfPath = old.pdfPath?.let { copy(it, id) })
                     }
                 val annotations = metadata.optJSONObject("annotations")
                 metadata.optJSONObject("documentResources")?.let { resources ->
-                    documents.forEach { doc ->
+                    imported.forEach { doc ->
                         resources.optJSONArray(doc.id)?.let { array ->
                             val id = ids.getValue(doc.id)
                             val entries =
@@ -346,7 +497,7 @@ object BackupStore {
                         }
                     }
                 }
-                documents.forEach { old ->
+                imported.forEach { old ->
                     annotations?.optJSONArray(old.id)?.let { marks ->
                         File(repo.folder(ids.getValue(old.id)), "annotations.json").also {
                             it.writeText(marks.toString())
@@ -355,233 +506,337 @@ object BackupStore {
                     }
                 }
                 val pages =
-                    (0 until p.length()).map { page(DocumentCodec.page(p.getJSONObject(it))) }
+                    (0 until p.length())
+                        .map { DocumentCodec.page(p.getJSONObject(it)) }
+                        .filterNot { it.documentId in skipped }
+                        .map { page(it) }
                 val histories =
-                    (0 until h.length()).map { i ->
-                        val old = h.getJSONObject(i)
-                        fun state(key: String) =
-                            HistoryState.remap(
-                                old.getJSONObject(key).toString(),
-                                { page(it, ids.getValue(old.getString("documentId"))) },
-                            ) { id ->
-                                pageIds.getOrPut(id) { UUID.randomUUID().toString() }
-                            }
-                        val before = state("before")
-                        val after = state("after")
-                        EditHistory(
-                            documentId = ids.getValue(old.getString("documentId")),
-                            pageId =
-                                pageIds.getOrPut(old.getString("pageId")) {
-                                    UUID.randomUUID().toString()
-                                },
-                            beforeJson = before.toString(),
-                            afterJson = after.toString(),
-                            applied = old.getBoolean("applied"),
-                        )
-                    }
-                val outputRows =
-                    metadata
-                        .optJSONArray("outputs")
-                        ?.let { array ->
-                            (0 until array.length())
-                                .map { OutputRow.decode(array.getJSONObject(it)) }
-                                .map { old ->
-                                    val outputId = old.outputDocumentId?.let(ids::get)
-                                    old.copy(
-                                        path = copy(old.path, outputId ?: ""),
-                                        sourceDocumentId = old.sourceDocumentId?.let(ids::get),
-                                        outputDocumentId = outputId,
-                                    )
+                    (0 until h.length())
+                        .filter { h.getJSONObject(it).getString("documentId") !in skipped }
+                        .map { i ->
+                            val old = h.getJSONObject(i)
+                            fun state(key: String) =
+                                HistoryState.remap(
+                                    old.getJSONObject(key).toString(),
+                                    { page(it, ids.getValue(old.getString("documentId"))) },
+                                ) { id ->
+                                    pageIds.getOrPut(id) { UUID.randomUUID().toString() }
                                 }
+                            val before = state("before")
+                            val after = state("after")
+                            EditHistory(
+                                documentId = ids.getValue(old.getString("documentId")),
+                                pageId =
+                                    pageIds.getOrPut(old.getString("pageId")) {
+                                        UUID.randomUUID().toString()
+                                    },
+                                beforeJson = before.toString(),
+                                afterJson = after.toString(),
+                                applied = old.getBoolean("applied"),
+                            )
                         }
-                        .orEmpty()
+                val outputRows =
+                    if (imported.isEmpty()) emptyList()
+                    else
+                        metadata
+                            .optJSONArray("outputs")
+                            ?.let { array ->
+                                (0 until array.length())
+                                    .map { OutputRow.decode(array.getJSONObject(it)) }
+                                    .filterNot {
+                                        it.sourceDocumentId in skipped ||
+                                            it.outputDocumentId in skipped
+                                    }
+                                    .map { old ->
+                                        val outputId = old.outputDocumentId?.let(ids::get)
+                                        old.copy(
+                                            path = copy(old.path, outputId ?: ""),
+                                            sourceDocumentId = old.sourceDocumentId?.let(ids::get),
+                                            outputDocumentId = outputId,
+                                        )
+                                    }
+                            }
+                            .orEmpty()
                 val taskRows =
-                    metadata
-                        .optJSONArray("tasks")
-                        ?.let { array ->
-                            (0 until array.length())
-                                .map { LocalTaskRow.decode(array.getJSONObject(it)) }
-                                .map { old ->
-                                    val document = old.documentId?.let(ids::get)
-                                    val resources =
-                                        if (document == null && old.type == "CAPTURE") emptyList()
-                                        else
-                                            old.resourceEntries().map { resource ->
-                                                val path =
-                                                    if (resource.path.startsWith("pending/"))
-                                                        files.getOrPut(
-                                                            resource.path to (document ?: "")
+                    if (imported.isEmpty()) emptyList()
+                    else
+                        metadata
+                            .optJSONArray("tasks")
+                            ?.let { array ->
+                                (0 until array.length())
+                                    .map { LocalTaskRow.decode(array.getJSONObject(it)) }
+                                    .filterNot { it.documentId in skipped }
+                                    .map { old ->
+                                        val document = old.documentId?.let(ids::get)
+                                        val resources =
+                                            if (document == null && old.type == "CAPTURE")
+                                                emptyList()
+                                            else
+                                                old.resourceEntries().map { resource ->
+                                                    val path =
+                                                        if (resource.path.startsWith("pending/"))
+                                                            files.getOrPut(
+                                                                resource.path to (document ?: "")
+                                                            ) {
+                                                                File(
+                                                                        repo.folder(document ?: ""),
+                                                                        "${UUID.randomUUID()}.jpg",
+                                                                    )
+                                                                    .path
+                                                            }
+                                                        else copy(resource.path, document ?: "")
+                                                    resource.copy(path = path)
+                                                }
+                                        var payload = old.payload
+                                        if (old.type in DocumentJobs.types) {
+                                            val paths =
+                                                old.resourceEntries().zip(resources).associate {
+                                                    (before, after) ->
+                                                    before.path to after.path
+                                                }
+                                            payload =
+                                                DocumentJobs.remapPayload(
+                                                    payload,
+                                                    paths + ids + pageIds,
+                                                )
+                                            resources
+                                                .firstOrNull { it.id == "auto-snapshot" }
+                                                ?.let { resource ->
+                                                    val file = File(resource.path)
+                                                    val before = JSONObject(file.readText())
+                                                    val source =
+                                                        DocumentCodec.document(
+                                                            before.getJSONObject("document")
+                                                        )
+                                                    val sourceId =
+                                                        document
+                                                            ?: ids[source.id]
+                                                            ?: UUID.randomUUID().toString()
+                                                    val mapped =
+                                                        HistoryState.remap(
+                                                            before.toString(),
+                                                            { page(it, sourceId) },
                                                         ) {
-                                                            File(
-                                                                    repo.folder(document ?: ""),
-                                                                    "${UUID.randomUUID()}.jpg",
-                                                                )
-                                                                .path
+                                                            pageIds.getOrPut(it) {
+                                                                UUID.randomUUID().toString()
+                                                            }
                                                         }
-                                                    else copy(resource.path, document ?: "")
-                                                resource.copy(path = path)
-                                            }
-                                    var payload = old.payload
-                                    if (old.type in DocumentJobs.types) {
-                                        val paths =
-                                            old.resourceEntries().zip(resources).associate {
-                                                (before, after) ->
-                                                before.path to after.path
-                                            }
-                                        payload =
-                                            DocumentJobs.remapPayload(
-                                                payload,
-                                                paths + ids + pageIds,
-                                            )
-                                        resources
-                                            .firstOrNull { it.id == "auto-snapshot" }
-                                            ?.let { resource ->
-                                                val file = File(resource.path)
-                                                val before = JSONObject(file.readText())
-                                                val source =
-                                                    DocumentCodec.document(
-                                                        before.getJSONObject("document")
+                                                    mapped.put(
+                                                        "document",
+                                                        DocumentCodec.document(
+                                                            source.copy(
+                                                                id = sourceId,
+                                                                pdfPath =
+                                                                    source.pdfPath?.let {
+                                                                        paths[it]
+                                                                            ?: copy(it, sourceId)
+                                                                    },
+                                                            )
+                                                        ),
                                                     )
-                                                val sourceId =
-                                                    document
-                                                        ?: ids[source.id]
-                                                        ?: UUID.randomUUID().toString()
-                                                val mapped =
-                                                    HistoryState.remap(
-                                                        before.toString(),
-                                                        { page(it, sourceId) },
-                                                    ) {
-                                                        pageIds.getOrPut(it) {
+                                                    file.writeText(mapped.toString())
+                                                }
+                                            resources
+                                                .firstOrNull { it.id == "manifest" }
+                                                ?.let { resource ->
+                                                    val file = File(resource.path)
+                                                    val plan =
+                                                        cn.paperforge.app.pdf.AssemblyPlan.decode(
+                                                            JSONObject(file.readText())
+                                                        )
+                                                    val sourceIds = ids.toMutableMap()
+                                                    plan.sources.forEach { source ->
+                                                        sourceIds.getOrPut(source.documentId) {
                                                             UUID.randomUUID().toString()
                                                         }
                                                     }
-                                                mapped.put(
-                                                    "document",
-                                                    DocumentCodec.document(
-                                                        source.copy(
-                                                            id = sourceId,
-                                                            pdfPath =
-                                                                source.pdfPath?.let {
-                                                                    paths[it] ?: copy(it, sourceId)
-                                                                },
-                                                        )
-                                                    ),
-                                                )
-                                                file.writeText(mapped.toString())
-                                            }
-                                        resources
-                                            .firstOrNull { it.id == "manifest" }
-                                            ?.let { resource ->
-                                                val file = File(resource.path)
-                                                val plan =
-                                                    cn.paperforge.app.pdf.AssemblyPlan.decode(
-                                                        JSONObject(file.readText())
+                                                    file.writeText(
+                                                        plan.remap(sourceIds).json().toString()
                                                     )
-                                                val sourceIds = ids.toMutableMap()
-                                                plan.sources.forEach { source ->
-                                                    sourceIds.getOrPut(source.documentId) {
+                                                }
+                                            if (old.type in setOf("CONVERT", "AUTO_EXPORT")) {
+                                                val restored = JSONObject(payload)
+                                                val checkpoint =
+                                                    restored.optJSONObject("checkpoint")
+                                                checkpoint
+                                                    ?.keys()
+                                                    ?.asSequence()
+                                                    ?.toList()
+                                                    ?.forEach { key ->
+                                                        if (key.startsWith("recipe-step-"))
+                                                            checkpoint.optJSONObject(key)?.let {
+                                                                stage ->
+                                                                if (stage.has("destinationUri")) {
+                                                                    stage.remove("destinationUri")
+                                                                    stage.put("complete", false)
+                                                                }
+                                                            }
+                                                    }
+                                                payload = restored.toString()
+                                            }
+                                            if (old.type == "SAVE")
+                                                payload =
+                                                    JSONObject(payload)
+                                                        .apply {
+                                                            getJSONObject("input").remove("uri")
+                                                            getJSONObject("input").remove("treeUri")
+                                                            optJSONObject("checkpoint")
+                                                                ?.remove("destinationUri")
+                                                        }
+                                                        .toString()
+                                        }
+                                        old.copy(
+                                            payload = payload,
+                                            id =
+                                                taskIds.getOrPut(old.id) {
+                                                    UUID.randomUUID().toString()
+                                                },
+                                            documentId = document,
+                                            pageId =
+                                                old.pageId?.let {
+                                                    pageIds.getOrPut(it) {
                                                         UUID.randomUUID().toString()
                                                     }
-                                                }
-                                                file.writeText(
-                                                    plan.remap(sourceIds).json().toString()
-                                                )
-                                            }
-                                        if (old.type in setOf("CONVERT", "AUTO_EXPORT")) {
-                                            val restored = JSONObject(payload)
-                                            val checkpoint = restored.optJSONObject("checkpoint")
-                                            checkpoint?.keys()?.asSequence()?.toList()?.forEach {
-                                                key ->
-                                                if (key.startsWith("recipe-step-"))
-                                                    checkpoint.optJSONObject(key)?.let { stage ->
-                                                        if (stage.has("destinationUri")) {
-                                                            stage.remove("destinationUri")
-                                                            stage.put("complete", false)
-                                                        }
+                                                },
+                                            targetPageId =
+                                                old.targetPageId?.let {
+                                                    pageIds.getOrPut(it) {
+                                                        UUID.randomUUID().toString()
                                                     }
-                                            }
-                                            payload = restored.toString()
-                                        }
-                                        if (old.type == "SAVE")
-                                            payload =
-                                                JSONObject(payload)
-                                                    .apply {
-                                                        getJSONObject("input").remove("uri")
-                                                        getJSONObject("input").remove("treeUri")
-                                                        optJSONObject("checkpoint")
-                                                            ?.remove("destinationUri")
-                                                    }
-                                                    .toString()
+                                                },
+                                            resources =
+                                                DocumentResources.encode(resources).toString(),
+                                            workId = UUID.randomUUID().toString(),
+                                            state =
+                                                if (document == null && old.type == "CAPTURE")
+                                                    LocalTaskState.CANCELLED
+                                                else if (old.state in LocalTaskRow.active)
+                                                    if (old.type == "CAPTURE")
+                                                        LocalTaskState.CAPTURING
+                                                    else LocalTaskState.PARTIAL
+                                                else old.state,
+                                            updated = System.currentTimeMillis(),
+                                        )
                                     }
-                                    old.copy(
-                                        payload = payload,
-                                        id =
-                                            taskIds.getOrPut(old.id) {
-                                                UUID.randomUUID().toString()
-                                            },
-                                        documentId = document,
-                                        pageId =
-                                            old.pageId?.let {
-                                                pageIds.getOrPut(it) {
-                                                    UUID.randomUUID().toString()
-                                                }
-                                            },
-                                        targetPageId =
-                                            old.targetPageId?.let {
-                                                pageIds.getOrPut(it) {
-                                                    UUID.randomUUID().toString()
-                                                }
-                                            },
-                                        resources = DocumentResources.encode(resources).toString(),
-                                        workId = UUID.randomUUID().toString(),
-                                        state =
-                                            if (document == null && old.type == "CAPTURE")
-                                                LocalTaskState.CANCELLED
-                                            else if (old.state in LocalTaskRow.active)
-                                                if (old.type == "CAPTURE") LocalTaskState.CAPTURING
-                                                else LocalTaskState.PARTIAL
-                                            else old.state,
-                                        updated = System.currentTimeMillis(),
-                                    )
-                                }
-                        }
-                        .orEmpty()
+                            }
+                            .orEmpty()
                 coroutineContext.ensureActive()
                 kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
                     repo.database.withTransaction {
+                        sideChanged = true
+                        val baseline =
+                            restored.associate { doc ->
+                                val pageSignal =
+                                    pages
+                                        .filter { it.documentId == doc.id }
+                                        .joinToString(",") { page ->
+                                            AutoExportPageSignal(
+                                                    page.id,
+                                                    page.documentId,
+                                                    page.position,
+                                                    page.revision,
+                                                    page.processingMetadata,
+                                                    page.ocrText,
+                                                )
+                                                .signature
+                                        }
+                                doc.id to AutoExportSignal(doc, pageSignal, 0).fingerprint
+                            }
+                        val importedPageIds =
+                            (0 until p.length())
+                                .map { DocumentCodec.page(p.getJSONObject(it)) }
+                                .filterNot { it.documentId in skipped }
+                                .map { it.id }
+                                .toMutableSet()
+                        for (i in 0 until h.length()) {
+                            val row = h.getJSONObject(i)
+                            if (row.getString("documentId") !in skipped) {
+                                importedPageIds.add(row.getString("pageId"))
+                                for (key in listOf("before", "after")) {
+                                    importedPageIds.addAll(
+                                        HistoryState.pages(row.getJSONObject(key).toString())
+                                            .filterNot { it.documentId in skipped }
+                                            .map { it.id }
+                                    )
+                                }
+                            }
+                        }
+                        state.publish(
+                            imported.associate {
+                                ids.getValue(it.id) to
+                                    archiveDocumentOrigins.optString(it.id, it.id)
+                            },
+                            pageIds
+                                .filterKeys { it in importedPageIds }
+                                .map { (old, new) -> new to archivePageOrigins.optString(old, old) }
+                                .toMap(),
+                            baseline,
+                        )
                         restored.forEach { repo.dao.putDocument(it) }
                         pages.forEach { repo.dao.putPage(it) }
                         histories.forEach { repo.dao.addHistory(it) }
-                        outputRows.forEach { repo.dao.putOutput(it) }
-                        taskRows.forEach { repo.dao.putTask(it) }
-                        sideChanged = true
-                        metadata.optJSONObject("assemblyDraft")?.let {
-                            cn.paperforge.app.pdf.AssemblyDraft.write(
-                                repo.context,
-                                cn.paperforge.app.pdf.AssemblyPlan.decode(it).remap(ids),
-                            )
-                        }
-                        metadata.optJSONObject("profiles")?.let {
-                            SettingsProfiles(repo.context).importJson(it.toString())
-                        }
+                        if (imported.isNotEmpty()) outputRows.forEach { repo.dao.putOutput(it) }
+                        if (imported.isNotEmpty()) taskRows.forEach { repo.dao.putTask(it) }
+                        if (applyWorkspace)
+                            metadata.optJSONObject("assemblyDraft")?.let {
+                                cn.paperforge.app.pdf.AssemblyDraft.write(
+                                    repo.context,
+                                    cn.paperforge.app.pdf.AssemblyPlan.decode(it).remap(ids),
+                                )
+                            }
+                        if (applyWorkspace)
+                            metadata.optJSONObject("profiles")?.let {
+                                SettingsProfiles(repo.context)
+                                    .importJson(BackupWorkflows.profiles(it).toString())
+                            }
                         metadata.optJSONObject("library")?.let {
-                            LibraryPreferences(repo.context).restore(it, ids)
+                            val data =
+                                if (applyWorkspace) it
+                                else
+                                    JSONObject().apply {
+                                        it.optJSONArray("families")?.let { families ->
+                                            put("families", families)
+                                        }
+                                    }
+                            LibraryPreferences(repo.context).restore(data, importedIds)
                         }
                         val signatures = repo.context.getSharedPreferences("signature", 0)
-                        if (!signatures.contains("strokes") && metadata.has("signature"))
+                        if (
+                            applyWorkspace &&
+                                !signatures.contains("strokes") &&
+                                metadata.has("signature")
+                        )
                             signatures
                                 .edit()
                                 .putString("strokes", metadata.getString("signature"))
                                 .apply()
                         metadata.optJSONObject("reader")?.let {
-                            cn.paperforge.app.ReaderPreferences(repo.context).restore(it, ids)
+                            cn.paperforge.app
+                                .ReaderPreferences(repo.context)
+                                .restore(it, importedIds)
                         }
                         metadata.optJSONArray("studyNotes")?.let {
-                            cn.paperforge.app.reader.StudyNotes.restore(repo.context, it, ids)
+                            cn.paperforge.app.reader.StudyNotes.restore(
+                                repo.context,
+                                it,
+                                importedIds,
+                            )
                         }
-                        metadata.optJSONObject("preferences")?.let {
-                            cn.paperforge.app.UserSettings.importJson(it.toString())
-                        }
+                        val preferences =
+                            metadata.optJSONObject("preferences")
+                                ?: JSONObject().put("format", 1).put("preferences", JSONObject())
+                        val merged = BackupWorkflows.preferences(preferences)
+                        val selected =
+                            if (applyWorkspace) merged
+                            else {
+                                val all = merged.getJSONObject("preferences")
+                                val workflows = JSONObject()
+                                for (key in listOf("workflowRecipes", "autoExportRules")) {
+                                    if (all.has(key)) workflows.put(key, all.get(key))
+                                }
+                                JSONObject().put("format", 1).put("preferences", workflows)
+                            }
+                        cn.paperforge.app.UserSettings.importJson(selected.toString())
                     }
                     published = true
                 }

@@ -2163,6 +2163,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                             "convert",
                             "jobs",
                             "auto-export",
+                            "pdf-redaction",
                         )
                 }
             val doc = repo.registerPdf(file, file.nameWithoutExtension)
@@ -2171,8 +2172,21 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             screen.value = "reader"
         }
 
+    val redactionSource = MutableStateFlow<DocumentRow?>(null)
+
+    fun queueRedaction(mode: String, options: org.json.JSONObject) {
+        val source = redactionSource.value ?: return
+        selected.value = source
+        queueTool(mode, options)
+    }
+
     fun queueTool(mode: String, options: org.json.JSONObject = org.json.JSONObject()) {
         if (busy.value) return
+        if (mode == "redact") {
+            redactionSource.value = selected.value
+            screen.value = "pdf-redaction"
+            return
+        }
         enqueueJob(
             "PDF",
             JobInput(
@@ -2369,15 +2383,35 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             messages.send("已应用 $count 项个性化设置")
         }
 
+    val backupPreview = MutableStateFlow<Pair<Uri, BackupStore.Preview>?>(null)
+
     fun restoreBackup(uri: Uri) =
+        perform("正在检查备份") { backupPreview.value = uri to BackupStore.preview(repo, uri) }
+
+    fun cancelBackupRestore() {
+        backupPreview.value = null
+    }
+
+    fun confirmBackupRestore(policy: BackupStore.DuplicatePolicy, applyWorkspace: Boolean) {
+        val pending = backupPreview.value ?: return
+        backupPreview.value = null
+        restoreBackupNow(pending.first, policy, applyWorkspace)
+    }
+
+    private fun restoreBackupNow(
+        uri: Uri,
+        policy: BackupStore.DuplicatePolicy,
+        applyWorkspace: Boolean,
+    ) =
         perform("正在恢复备份") {
             assembly.cancelLoading()
             assembly.flush()
-            val count = BackupStore.restore(repo, uri)
+            val count = BackupStore.restore(repo, uri, policy, applyWorkspace)
             canUndoNames.value = LibraryPreferences(repo.context).renameUndo().isNotEmpty()
             comparison.refreshFamilies()
             assembly.reload()
-            messages.send("已恢复 $count 份文档")
+            val workspace = if (applyWorkspace) "已应用设置和工作区" else "已保留本机设置和工作区"
+            messages.send("已追加 $count 份文档；$workspace；配方和规则已合并，新规则已停用")
         }
 
     private fun markDraft() = File(repo.folder(selected.value!!.id), "annotations.json")
