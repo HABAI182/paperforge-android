@@ -59,10 +59,17 @@ fun PaperForgeTheme(forceDarkSystemBars: Boolean = false, content: @Composable (
                 primaryContainer = lerp(accent, Color.Black, .55f),
                 onPrimaryContainer = lerp(accent, Color.White, .8f),
                 secondary = lerp(accent, Color.White, .55f),
+                onSecondary = Color(0xFF102019),
                 secondaryContainer = lerp(accent, Color.Black, .65f),
                 onSecondaryContainer = Color(0xFFE2EAE6),
                 background = Color(0xFF111715),
+                onBackground = Color(0xFFE4EAE6),
                 surface = Color(0xFF111715),
+                surfaceBright = Color(0xFF303B35),
+                surfaceDim = Color(0xFF0D1210),
+                inverseSurface = Color(0xFFE4EAE6),
+                inverseOnSurface = Color(0xFF1C2822),
+                inversePrimary = accent,
                 surfaceContainerLowest = Color(0xFF0D1210),
                 surfaceContainerLow = Color(0xFF19211E),
                 surfaceContainer = Color(0xFF1D2622),
@@ -73,6 +80,7 @@ fun PaperForgeTheme(forceDarkSystemBars: Boolean = false, content: @Composable (
                 outline = Color(0xFF87958C),
                 outlineVariant = Color(0xFF3B4941),
                 tertiary = Color(0xFFE5BD82),
+                onTertiary = Color(0xFF2B1900),
                 tertiaryContainer = Color(0xFF554329),
                 onTertiaryContainer = Color(0xFFFFDDB0),
                 surfaceTint = Color.Transparent,
@@ -80,13 +88,21 @@ fun PaperForgeTheme(forceDarkSystemBars: Boolean = false, content: @Composable (
         else
             lightColorScheme(
                 primary = accent,
+                onPrimary = Color.White,
                 primaryContainer = lerp(accent, Color.White, .82f),
                 onPrimaryContainer = lerp(accent, Color.Black, .5f),
                 secondary = accent,
+                onSecondary = Color.White,
                 secondaryContainer = lerp(accent, Color.White, .88f),
                 onSecondaryContainer = lerp(accent, Color.Black, .45f),
                 background = Color(0xFFFAF9F5),
+                onBackground = Color(0xFF1C2822),
                 surface = Color(0xFFFAF9F5),
+                surfaceBright = Color(0xFFFAF9F5),
+                surfaceDim = Color(0xFFDDE3DA),
+                inverseSurface = Color(0xFF1C2822),
+                inverseOnSurface = Color(0xFFFAF9F5),
+                inversePrimary = lerp(accent, Color.White, .48f),
                 surfaceContainerLowest = Color.White,
                 surfaceContainerLow = Color(0xFFF1F3EE),
                 surfaceContainer = Color(0xFFECEFE9),
@@ -97,6 +113,7 @@ fun PaperForgeTheme(forceDarkSystemBars: Boolean = false, content: @Composable (
                 outline = Color(0xFF75857A),
                 outlineVariant = Color(0xFFCFD9CF),
                 tertiary = Color(0xFF795A27),
+                onTertiary = Color.White,
                 tertiaryContainer = Color(0xFFFFDEAC),
                 onTertiaryContainer = Color(0xFF2B1900),
                 surfaceTint = Color.Transparent,
@@ -116,6 +133,12 @@ fun PaperForgeTheme(forceDarkSystemBars: Boolean = false, content: @Composable (
         else selectedColors
     val typography =
         Typography(
+            displayLarge =
+                TextStyle(fontSize = 40.sp, lineHeight = 48.sp, fontWeight = FontWeight.SemiBold),
+            displayMedium =
+                TextStyle(fontSize = 36.sp, lineHeight = 44.sp, fontWeight = FontWeight.SemiBold),
+            displaySmall =
+                TextStyle(fontSize = 32.sp, lineHeight = 40.sp, fontWeight = FontWeight.SemiBold),
             headlineLarge =
                 TextStyle(fontSize = 30.sp, lineHeight = 38.sp, fontWeight = FontWeight.SemiBold),
             headlineMedium =
@@ -126,6 +149,8 @@ fun PaperForgeTheme(forceDarkSystemBars: Boolean = false, content: @Composable (
                 TextStyle(fontSize = 20.sp, lineHeight = 28.sp, fontWeight = FontWeight.Medium),
             titleMedium =
                 TextStyle(fontSize = 16.sp, lineHeight = 23.sp, fontWeight = FontWeight.Medium),
+            titleSmall =
+                TextStyle(fontSize = 14.sp, lineHeight = 21.sp, fontWeight = FontWeight.Medium),
             bodyLarge = TextStyle(fontSize = 16.sp, lineHeight = 24.sp),
             bodyMedium = TextStyle(fontSize = 15.sp, lineHeight = 23.sp),
             bodySmall = TextStyle(fontSize = 13.sp, lineHeight = 19.sp),
@@ -147,12 +172,16 @@ fun PaperForgeTheme(forceDarkSystemBars: Boolean = false, content: @Composable (
                 TextStyle(fontSize = 11.sp, lineHeight = 16.sp, fontWeight = FontWeight.Medium),
         )
     val density = LocalDensity.current
+    val customScale = UserSettings.number("fontScale", 1f).coerceIn(.85f, 1.3f)
+    val effectiveFontScale =
+        if (density.fontScale >= 2f) density.fontScale
+        else (density.fontScale * customScale).coerceAtMost(2f)
+    val reducedMotion =
+        UserSettings.bool("reduceMotion", false) ||
+            !android.animation.ValueAnimator.areAnimatorsEnabled()
     CompositionLocalProvider(
-        LocalDensity provides
-            Density(
-                density.density,
-                density.fontScale * UserSettings.number("fontScale", 1f).coerceIn(.85f, 1.3f),
-            )
+        LocalPaperMotion provides PaperMotion(reducedMotion),
+        LocalDensity provides Density(density.density, effectiveFontScale),
     ) {
         MaterialTheme(
             colorScheme = finalColors,

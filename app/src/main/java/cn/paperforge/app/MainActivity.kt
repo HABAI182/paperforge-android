@@ -419,161 +419,162 @@ class MainActivity : ComponentActivity() {
                         }
                 }
                 Box(Modifier.fillMaxSize()) {
-                    when (screen) {
-                        "capture" -> CameraScreen(vm) { images.launch(arrayOf("image/*")) }
-                        "editor" -> EditorScreen(vm) { images.launch(arrayOf("image/*")) }
-                        "reader" -> ReaderScreen(vm, share)
-                        "pdf-diagnostics" -> PdfDiagnosticsScreen(vm)
-                        "pdf-redaction" -> {
-                            val source by vm.redactionSource.collectAsState()
-                            val path = source?.pdfPath
-                            if (path != null)
-                                PdfRedactionScreen(
-                                    input = File(path),
-                                    onBack = {
-                                        vm.selected.value = source
-                                        vm.screen.value = "reader"
-                                    },
-                                    onSubmit = vm::queueRedaction,
-                                )
-                            else
-                                Column(Modifier.padding(24.dp)) {
-                                    Text("请先打开要处理的 PDF")
-                                    TextButton(onClick = { vm.screen.value = "home" }) {
-                                        Text("返回首页")
+                    DocumentWorkspace(vm, screen) {
+                        when (screen) {
+                            "capture" -> CameraScreen(vm) { images.launch(arrayOf("image/*")) }
+                            "editor" -> EditorScreen(vm) { images.launch(arrayOf("image/*")) }
+                            "reader" -> ReaderScreen(vm, share)
+                            "pdf-diagnostics" -> PdfDiagnosticsScreen(vm)
+                            "pdf-redaction" -> {
+                                val source by vm.redactionSource.collectAsState()
+                                val path = source?.pdfPath
+                                if (path != null)
+                                    PdfRedactionScreen(
+                                        input = File(path),
+                                        onBack = {
+                                            vm.selected.value = source
+                                            vm.screen.value = "reader"
+                                        },
+                                        onSubmit = vm::queueRedaction,
+                                    )
+                                else
+                                    Column(Modifier.padding(24.dp)) {
+                                        Text("请先打开要处理的 PDF")
+                                        TextButton(onClick = { vm.screen.value = "home" }) {
+                                            Text("返回首页")
+                                        }
                                     }
-                                }
-                        }
-                        "conversion-batch" -> ConversionBatchScreen(vm)
-                        "conversion-preview" -> ConversionPreviewScreen(vm)
-                        "text-compose" -> TextConversionScreen(vm)
-                        "long-image-compose" -> LongImageComposeScreen(vm.longImages)
-                        "tables" -> TableReviewScreen(vm)
-                        "notes" -> StudyNotesScreen(vm)
-                        "comparison" -> LibraryComparisonScreen(vm)
-                        "workflows" -> WorkflowScreen(vm)
-                        "auto-export" -> AutoExportScreen(vm)
-                        "format-conversion" -> FormatConversionScreen(vm)
-                        "pdf-diff" ->
-                            PdfDiffScreen(vm) { diffImport.launch(arrayOf("application/pdf")) }
-                        "assembly" ->
-                            PdfAssemblyScreen(vm) {
-                                assemblyImport.launch(arrayOf("application/pdf"))
                             }
-                        "convert" ->
-                            ConversionScreen(
-                                vm,
-                                onPdf = { mode ->
-                                    vm.pdfEntry.value = mode
-                                    pdf.launch(arrayOf("application/pdf"))
-                                },
-                                onImages = { images.launch(arrayOf("image/*")) },
-                                onMerge = { merge.launch(arrayOf("application/pdf")) },
-                                onText = { size ->
-                                    conversionFont = size
-                                    textImport.launch(
-                                        arrayOf(
-                                            "text/*",
-                                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                            "application/octet-stream",
-                                        )
-                                    )
-                                },
-                                onMarkup = { target, options ->
-                                    markupTarget = target
-                                    markupOptions = options.toString()
-                                    markupImport.launch(
-                                        arrayOf(
-                                            "text/*",
-                                            "application/zip",
-                                            "application/xhtml+xml",
-                                            "application/epub+zip",
-                                            "application/pdf",
-                                            "application/octet-stream",
-                                        )
-                                    )
-                                },
-                                onLongImages = { options ->
-                                    longOptionsJson = options.json().toString()
-                                    longImport.launch(arrayOf("image/*"))
-                                },
-                                onImageFormat = { settings ->
-                                    conversionImageOptions = settings.json().toString()
-                                    formatImport.launch(arrayOf("image/*"))
-                                },
-                                onDesktop = { mode, options ->
-                                    when {
-                                        mode.startsWith("office-") -> {
-                                            mobileTarget = mode.removePrefix("office-")
-                                            mobileOfficeOptions = options.toString()
-                                            mobileOfficeInput.launch(arrayOf("*/*"))
-                                        }
-                                        mode.startsWith("tables-") -> {
-                                            mobileTableCsv = mode.endsWith("csv")
-                                            mobileTableOptions = options.toString()
-                                            mobileTableInput.launch(
-                                                arrayOf("application/pdf", "image/*")
+                            "conversion-batch" -> ConversionBatchScreen(vm)
+                            "conversion-preview" -> ConversionPreviewScreen(vm)
+                            "text-compose" -> TextConversionScreen(vm)
+                            "long-image-compose" -> LongImageComposeScreen(vm.longImages)
+                            "tables" -> TableReviewScreen(vm)
+                            "notes" -> StudyNotesScreen(vm)
+                            "comparison" -> LibraryComparisonScreen(vm)
+                            "workflows" -> WorkflowScreen(vm)
+                            "auto-export" -> AutoExportScreen(vm)
+                            "format-conversion" -> FormatConversionScreen(vm)
+                            "pdf-diff" ->
+                                PdfDiffScreen(vm) { diffImport.launch(arrayOf("application/pdf")) }
+                            "assembly" ->
+                                PdfAssemblyScreen(vm) {
+                                    assemblyImport.launch(arrayOf("application/pdf"))
+                                }
+                            "convert" ->
+                                ConversionScreen(
+                                    vm,
+                                    onPdf = { mode ->
+                                        vm.pdfEntry.value = mode
+                                        pdf.launch(arrayOf("application/pdf"))
+                                    },
+                                    onImages = { images.launch(arrayOf("image/*")) },
+                                    onMerge = { merge.launch(arrayOf("application/pdf")) },
+                                    onText = { size ->
+                                        conversionFont = size
+                                        textImport.launch(
+                                            arrayOf(
+                                                "text/*",
+                                                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                                "application/octet-stream",
                                             )
+                                        )
+                                    },
+                                    onMarkup = { target, options ->
+                                        markupTarget = target
+                                        markupOptions = options.toString()
+                                        markupImport.launch(
+                                            arrayOf(
+                                                "text/*",
+                                                "application/zip",
+                                                "application/xhtml+xml",
+                                                "application/epub+zip",
+                                                "application/pdf",
+                                                "application/octet-stream",
+                                            )
+                                        )
+                                    },
+                                    onLongImages = { options ->
+                                        longOptionsJson = options.json().toString()
+                                        longImport.launch(arrayOf("image/*"))
+                                    },
+                                    onImageFormat = { settings ->
+                                        conversionImageOptions = settings.json().toString()
+                                        formatImport.launch(arrayOf("image/*"))
+                                    },
+                                    onDesktop = { mode, options ->
+                                        when {
+                                            mode.startsWith("office-") -> {
+                                                mobileTarget = mode.removePrefix("office-")
+                                                mobileOfficeOptions = options.toString()
+                                                mobileOfficeInput.launch(arrayOf("*/*"))
+                                            }
+                                            mode.startsWith("tables-") -> {
+                                                mobileTableCsv = mode.endsWith("csv")
+                                                mobileTableOptions = options.toString()
+                                                mobileTableInput.launch(
+                                                    arrayOf("application/pdf", "image/*")
+                                                )
+                                            }
+                                            else -> {
+                                                desktopMode = mode
+                                                desktopOptions = options.toString()
+                                                desktopImport.launch(arrayOf("*/*"))
+                                            }
                                         }
-                                        else -> {
-                                            desktopMode = mode
-                                            desktopOptions = options.toString()
-                                            desktopImport.launch(arrayOf("*/*"))
-                                        }
-                                    }
-                                },
-                                onResult = {
-                                    desktopResult.launch(
-                                        arrayOf("application/zip", "application/octet-stream")
-                                    )
-                                },
-                            )
-                        "settings" -> SettingsScreen(vm)
-                        "markup-review" -> MarkupReviewScreen(vm)
-                        "ocr-models" -> OcrModelsScreen(vm)
-                        "storage" -> StorageScreen(vm)
-                        "tasks" -> TaskCenterScreen(vm)
-                        "profiles" -> SettingsProfilesScreen(vm)
-                        "ocr-proof" -> OcrProofreadScreen(vm)
-                        "rename-batch" -> BatchRenameScreen(vm)
-                        "outputs" -> OutputHistoryScreen(vm)
-                        "pages" -> PageGridScreen(vm)
-                        "pdf-pages" -> PdfPageGridScreen(vm)
-                        "merge" -> MergeScreen(vm)
-                        "annotations" -> AnnotationScreen(vm)
-                        else ->
-                            HomeScreen(
-                                vm,
-                                { images.launch(arrayOf("image/*")) },
-                                { pdf.launch(arrayOf("application/pdf")) },
-                                { merge.launch(arrayOf("application/pdf")) },
-                                { about = true },
-                                {
-                                    restore.launch(
-                                        arrayOf("application/zip", "application/octet-stream")
-                                    )
-                                },
-                                onPdfTool = { mode ->
-                                    vm.pdfEntry.value = mode
-                                    pdf.launch(arrayOf("application/pdf"))
-                                },
-                                onOcrImages = {
-                                    recognizeImport = true
-                                    images.launch(arrayOf("image/*"))
-                                },
-                            )
+                                    },
+                                    onResult = {
+                                        desktopResult.launch(
+                                            arrayOf("application/zip", "application/octet-stream")
+                                        )
+                                    },
+                                )
+                            "settings" -> SettingsScreen(vm)
+                            "markup-review" -> MarkupReviewScreen(vm)
+                            "ocr-models" -> OcrModelsScreen(vm)
+                            "storage" -> StorageScreen(vm)
+                            "tasks" -> TaskCenterScreen(vm)
+                            "profiles" -> SettingsProfilesScreen(vm)
+                            "ocr-proof" -> OcrProofreadScreen(vm)
+                            "rename-batch" -> BatchRenameScreen(vm)
+                            "outputs" -> OutputHistoryScreen(vm)
+                            "pages" -> PageGridScreen(vm)
+                            "pdf-pages" -> PdfPageGridScreen(vm)
+                            "merge" -> MergeScreen(vm)
+                            "annotations" -> AnnotationScreen(vm)
+                            else ->
+                                HomeScreen(
+                                    vm,
+                                    { images.launch(arrayOf("image/*")) },
+                                    { pdf.launch(arrayOf("application/pdf")) },
+                                    { merge.launch(arrayOf("application/pdf")) },
+                                    { about = true },
+                                    {
+                                        restore.launch(
+                                            arrayOf("application/zip", "application/octet-stream")
+                                        )
+                                    },
+                                    onPdfTool = { mode ->
+                                        vm.pdfEntry.value = mode
+                                        pdf.launch(arrayOf("application/pdf"))
+                                    },
+                                    onOcrImages = {
+                                        recognizeImport = true
+                                        images.launch(arrayOf("image/*"))
+                                    },
+                                )
+                        }
                     }
                     SnackbarHost(
                         snackbar,
-                        Modifier.align(Alignment.BottomCenter)
-                            .navigationBarsPadding()
-                            .padding(
-                                bottom =
-                                    when (screen) {
-                                        "reader" -> 160.dp
-                                        "editor" -> 168.dp
-                                        else -> 88.dp
-                                    }
+                        Modifier.align(
+                                if (screen in setOf("reader", "editor")) Alignment.TopCenter
+                                else Alignment.BottomCenter
+                            )
+                            .then(
+                                if (screen in setOf("reader", "editor"))
+                                        Modifier.statusBarsPadding().padding(top = 128.dp)
+                                else Modifier.navigationBarsPadding().padding(bottom = 88.dp)
                             ),
                     )
                     if (busy)

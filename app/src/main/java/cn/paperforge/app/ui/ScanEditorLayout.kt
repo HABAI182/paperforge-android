@@ -59,6 +59,11 @@ fun ScanEditorLayout(
     val active = pages.getOrNull(pager.currentPage)
     val scope = rememberCoroutineScope()
     FocusSystemBars(fullscreen)
+    val requestDocumentFocus = LocalDocumentFocus.current
+    DisposableEffect(fullscreen, requestDocumentFocus) {
+        requestDocumentFocus(fullscreen)
+        onDispose { requestDocumentFocus(false) }
+    }
     BackHandler(fullscreen || enhance || thumbnails) {
         when {
             fullscreen -> fullscreen = false

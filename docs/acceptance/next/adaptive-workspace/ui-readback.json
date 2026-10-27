@@ -1,0 +1,27 @@
+{
+  "readerPageAfterWideFullscreenDocumentSwitchAndNarrowResize": 2,
+  "selectionCloseFullyVisible": true,
+  "selectionCloseBounds": [
+    88,
+    1806,
+    284,
+    1877
+  ],
+  "copyNoticeBounds": [
+    77,
+    414,
+    434,
+    488
+  ],
+  "selectionTextBounds": [
+    55,
+    1590,
+    1025,
+    1643
+  ],
+  "copyNoticeAboveSelectionActions": true,
+  "systemFontScale200WithAllSixReaderActionsReachable": true,
+  "systemFontScaleRestored": 1.0,
+  "noOldBackendSuiteRepeated": true,
+  "copyNoticeBelowTopBarButtons": true
+}

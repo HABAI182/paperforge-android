@@ -1,0 +1,8 @@
+{
+  "ocrBackend": "PADDLE",
+  "ocrLanguage": "LATIN",
+  "fontScale": "1.25",
+  "ocrMode": "DETAILED",
+  "reduceMotion": "false",
+  "theme": "DARK"
+}

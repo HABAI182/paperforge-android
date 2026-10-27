@@ -1,10 +1,13 @@
 package cn.paperforge.app.ui
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
@@ -75,12 +78,23 @@ internal fun LibraryDocumentCard(
     menu: @Composable () -> Unit,
     details: @Composable ColumnScope.() -> Unit,
 ) {
+    val feedback = selectionFeedback()
+    val cardColor by
+        animateColorAsState(
+            if (selected && selecting) MaterialTheme.colorScheme.secondaryContainer
+            else MaterialTheme.colorScheme.surfaceContainerLowest,
+            tween(LocalPaperMotion.current.stateMs),
+            label = "document selection",
+        )
     @Composable
     fun selection() {
         if (selecting)
             Checkbox(
                 selected,
-                { onSelect() },
+                {
+                    feedback()
+                    onSelect()
+                },
                 enabled = enabled,
                 modifier = Modifier.semantics { contentDescription = "选择文档 ${document.title}" },
             )
@@ -88,13 +102,18 @@ internal fun LibraryDocumentCard(
     Card(
         modifier
             .fillMaxWidth()
-            .combinedClickable(enabled = enabled, onClick = onOpen, onLongClick = onLongClick),
-        colors =
-            CardDefaults.cardColors(
-                containerColor =
-                    if (selected && selecting) MaterialTheme.colorScheme.secondaryContainer
-                    else MaterialTheme.colorScheme.surfaceContainerLowest
+            .combinedClickable(
+                enabled = enabled,
+                onClick = {
+                    if (selecting) feedback()
+                    onOpen()
+                },
+                onLongClick = {
+                    feedback()
+                    onLongClick()
+                },
             ),
+        colors = CardDefaults.cardColors(containerColor = cardColor),
     ) {
         if (covers)
             Column(Modifier.padding(if (compact) 8.dp else 12.dp)) {

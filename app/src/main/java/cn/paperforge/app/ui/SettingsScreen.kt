@@ -4,6 +4,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -11,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -164,7 +166,11 @@ fun SettingsScreen(vm: MainViewModel) {
                 SettingSlider("自定义分辨率", "customDpi", 300f, 72f..600f, "DPI")
                 SettingSlider("PDF 图片画质", "quality", 90f, 40f..100f, "")
             }
-            if (visible("外观 主题 颜色 字体 布局 密度 列表 封面 网格 列数")) {
+            if (
+                visible(
+                    "外观 主题 颜色 字体 布局 密度 列表 封面 网格 列数 动效 动画 触感 振动 宽屏 侧栏 平板 theme font motion haptic sidebar"
+                )
+            ) {
                 Text("外观", style = MaterialTheme.typography.titleLarge)
                 SettingChoices(
                     "主题",
@@ -173,6 +179,9 @@ fun SettingsScreen(vm: MainViewModel) {
                     listOf("SYSTEM" to "跟随系统", "LIGHT" to "浅色", "DARK" to "深色", "AMOLED" to "纯黑"),
                 )
                 SettingToggle("使用系统动态配色", "dynamicColor", false)
+                SettingToggle("减少动效", "reduceMotion", false)
+                SettingToggle("文档选择触感", "haptics", true)
+                SettingToggle("宽屏文档侧栏", "documentSidebar", true)
                 SettingChoices(
                     "主题色",
                     "accent",
@@ -180,6 +189,7 @@ fun SettingsScreen(vm: MainViewModel) {
                     listOf("GREEN" to "墨绿", "BLUE" to "蓝色", "PURPLE" to "紫色", "ORANGE" to "橙色"),
                 )
                 SettingSlider("应用字体比例", "fontScale", 1f, 0.85f..1.3f, "%", 100f)
+                Text("系统大字号优先；达到 200% 后，应用比例不再叠加放大。", style = MaterialTheme.typography.bodySmall)
                 SettingToggle("紧凑文档卡片", "compactRows", false)
                 SettingChoices(
                     "文档布局",
@@ -315,9 +325,14 @@ fun SettingsScreen(vm: MainViewModel) {
 private fun SettingToggle(title: String, key: String, default: Boolean) {
     val revision by UserSettings.revision.collectAsState()
     val value = remember(revision) { UserSettings.bool(key, default) }
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        Modifier.fillMaxWidth()
+            .heightIn(min = 56.dp)
+            .toggleable(value, role = Role.Switch, onValueChange = { UserSettings.set(key, it) }),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Text(title, Modifier.weight(1f))
-        Switch(value, { UserSettings.set(key, it) })
+        Switch(value, null)
     }
 }
 
@@ -374,6 +389,7 @@ private fun SettingSlider(
             { pending = it },
             onValueChangeFinished = { UserSettings.set(key, pending) },
             valueRange = range,
+            modifier = Modifier.semantics { contentDescription = title },
         )
     }
 }

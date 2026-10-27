@@ -1,0 +1,75 @@
+{
+  "checked": "2026-10-27",
+  "cards": [
+    "UI01",
+    "UI07",
+    "UI08"
+  ],
+  "cardStatus": {
+    "UI01": "done",
+    "UI07": "done for common document/task/result states",
+    "UI08": "partial; separating folds and full accessibility audit remain"
+  },
+  "implemented": [
+    "Wide reader and scan editor provide a live searchable/filterable document sidebar; current selection is visible and each document retains its own reading position",
+    "One movable Compose content tree changes between single-pane and list/detail layouts; full-screen focus hides the sidebar without rebuilding the reader",
+    "Width threshold grows with font size; narrow windows retain the original canvas-first interface",
+    "Complete base typography, spacing/motion tokens and semantic inverse/background/surface roles remove default lavender notifications in the ink theme",
+    "Optional selection haptics, reduce-motion preference and respect for disabled system animators; selected-card and sidebar transitions use the same durations",
+    "Custom application font size no longer amplifies system scales at or above 200%; larger system accessibility scales remain respected",
+    "Settings switches expose a whole-row switch role and 56dp minimum height; sliders have readable names; toolbar action semantics avoid duplicated icon/text labels",
+    "Reader pages expose accessibility actions for previous/next page, zoom reset and reading page text; physical TalkBack audit is not claimed",
+    "Task filters/actions wrap, titles have two visual lines, long permanent instructions become a compact count, state labels distinguish attention/failure and empty filters offer a next action",
+    "PDF open/page-render loading and failure states have retry actions instead of indefinite failure spinners",
+    "Text-selection actions wrap so completion stays reachable; app copy notifications sit below top controls and above selection actions"
+  ],
+  "actualUI": {
+    "proof": "adaptive-workspace/ui-readback.json",
+    "wideWindowPixels": [
+      2560,
+      1600
+    ],
+    "wideDensityDpi": 240,
+    "narrowWindowPixels": [
+      1080,
+      2340
+    ],
+    "systemFontScale200": true,
+    "wideToFullScreenToDocumentSwitchToNarrowPageRetained": 2,
+    "allSixReaderActionsReachable": true,
+    "taskResultRetryRemoveReachableAt200": true,
+    "wholeRowReduceMotionToggleCheckedAndRestored": true,
+    "completeSelectionFullyVisible": true,
+    "copyNoticeBelowTopToolbarAndAboveSelection": true
+  },
+  "actualMixedPdfOcr": {
+    "engine": "PaddleOCR v5 Mobile",
+    "packId": "paddle-ppocrv5-mobile-f1d703cc",
+    "configuration": {
+      "backend": "PADDLE",
+      "language": "LATIN",
+      "mode": "DETAILED"
+    },
+    "selectedText": "SCANNED BODY 00123",
+    "oneExactNativeHeader": true,
+    "record": "adaptive-workspace/mixed-text-real-paddle.json",
+    "packManifest": "adaptive-workspace/actual-ocr-pack-manifest.json",
+    "note": "Corrects the earlier conversational engine label. The current installed pack and preferences were read back; this is one clear authored sample, not a recognition quality benchmark."
+  },
+  "validation": {
+    "latestBuild": "assembleDebug passed, 10s",
+    "buildLog": "adaptive-workspace-build.log",
+    "oldBackendSuitesRepeated": false,
+    "newLayoutUnitTestsAdded": false,
+    "uiVerification": "Actual UiAutomator/ADB operations and screenshots; focused re-checks after observed layout fixes only"
+  },
+  "limits": [
+    "Separating fold/hinge geometry is not yet wired; UI08 remains partial",
+    "Physical-phone/foldable measurements and a full TalkBack traversal remain pending; custom accessibility actions are implemented and compiled",
+    "New reader error/retry states compile; no fault-injection matrix was added for this UI-only change",
+    "Haptic requests are implemented; the emulator does not prove physical vibration feel",
+    "Android may briefly show its own clipboard overlay; the application notification placement is independently controlled",
+    "The emulator retains earlier synthetic stress/task fixtures; its task count is not the owner phone task count",
+    "No version, tag or release"
+  ]
+}

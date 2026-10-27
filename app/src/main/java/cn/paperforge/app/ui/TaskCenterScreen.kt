@@ -65,7 +65,7 @@ fun TaskCenterScreen(vm: MainViewModel) {
         }
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
-            Row(
+            FlowRow(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
@@ -79,13 +79,23 @@ fun TaskCenterScreen(vm: MainViewModel) {
                 }
             }
             Text(
-                "扫描、OCR、PDF 导出和外部保存集中管理。已完成的结果和失败检查点会保留。",
+                "${selected.size} 项任务",
                 Modifier.padding(16.dp),
                 style = MaterialTheme.typography.bodySmall,
             )
             if (selected.isEmpty())
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("这里暂时没有任务", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    PaperEmptyState(
+                        Icons.Default.TaskAlt,
+                        "这里暂时没有任务",
+                        if (filter == "ATTENTION") "当前没有需要处理的失败、停止或部分完成任务。"
+                        else "扫描、转换和保存任务会出现在这里。",
+                        if (filter == "ALL") "返回文档库" else "查看全部任务",
+                        {
+                            if (filter == "ALL") vm.screen.value = "home"
+                            else vm.taskFilter.value = "ALL"
+                        },
+                    )
                 }
             else
                 LazyColumn(
@@ -124,18 +134,23 @@ fun TaskCenterScreen(vm: MainViewModel) {
                                         row.title,
                                         Modifier.weight(1f).padding(horizontal = 10.dp),
                                         style = MaterialTheme.typography.titleMedium,
-                                    )
-                                    Text(
-                                        if (textDraft) "待编辑"
-                                        else if (
-                                            row.type == "CONVERT" &&
-                                                row.state == LocalTaskState.PARTIAL
-                                        )
-                                            "部分完成"
-                                        else taskStateName(row.state),
-                                        style = MaterialTheme.typography.labelMedium,
+                                        maxLines = 2,
+                                        overflow =
+                                            androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                                     )
                                 }
+                                PaperStatusLabel(
+                                    if (textDraft) "待编辑"
+                                    else if (
+                                        row.type == "CONVERT" && row.state == LocalTaskState.PARTIAL
+                                    )
+                                        "部分完成"
+                                    else taskStateName(row.state),
+                                    attention =
+                                        row.state in
+                                            setOf(LocalTaskState.PARTIAL, LocalTaskState.CANCELLED),
+                                    error = row.state == LocalTaskState.FAILED,
+                                )
                                 Text(
                                     (if (row.type == "CAPTURE") "第 ${row.position+1} 页 · "
                                     else "") + row.detail,
@@ -165,7 +180,7 @@ fun TaskCenterScreen(vm: MainViewModel) {
                                         progress = { row.progress / 100f },
                                         modifier = Modifier.fillMaxWidth(),
                                     )
-                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                     if (row.type == "CAPTURE")
                                         TextButton(
                                             onClick = { preview = row },

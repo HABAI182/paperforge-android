@@ -4,6 +4,8 @@ import android.graphics.Bitmap
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,8 +20,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.SemanticsPropertyKey
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -50,6 +55,7 @@ internal fun ReaderPage(
     onTransform: (PageTransform) -> Unit,
     onTap: () -> Unit,
     onLongPress: (PointN) -> Unit = {},
+    onReadText: (() -> Unit)? = null,
     onLinkTap: (PointN) -> Boolean = { false },
     edgeTurning: Boolean = true,
     onEdgeTurn: (Int) -> Unit = {},
@@ -67,12 +73,11 @@ internal fun ReaderPage(
     regionDraft: OcrRegion? = null,
     onRegionSelection: (OcrRegion, Boolean) -> Unit = { _, _ -> },
 ) {
-    val bitmap by
-        produceState<Bitmap?>(null, session, index) {
-            value =
-                withContext(Dispatchers.IO) {
-                    runCatching { session.render(index, 1600) }.getOrNull()
-                }
+    var renderAttempt by remember(session, index) { mutableIntStateOf(0) }
+    val preview by
+        produceState<Result<Bitmap>?>(null, session, index, renderAttempt) {
+            value = null
+            value = withContext(Dispatchers.IO) { runCatching { session.render(index, 1600) } }
         }
     val picking by rememberUpdatedState(regionPicking)
     val pick by rememberUpdatedState(onRegionSelection)
@@ -93,10 +98,18 @@ internal fun ReaderPage(
     var tapJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
     var lastTap by remember { mutableLongStateOf(0L) }
     var rootSize by remember { mutableStateOf(IntSize.Zero) }
-    val b = bitmap
+    val b = preview?.getOrNull()
     if (b == null) {
         Box(Modifier.fillMaxWidth().height(320.dp), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
+            if (preview?.isFailure == true)
+                PaperEmptyState(
+                    Icons.Default.Description,
+                    "这一页暂时无法显示",
+                    "可重试预览，或通过页面面板查看其他页。",
+                    "重试预览",
+                    { renderAttempt++ },
+                )
+            else CircularProgressIndicator()
         }
         return
     }
@@ -208,6 +221,37 @@ internal fun ReaderPage(
             .testTag("reader-viewport-$index")
             .semantics {
                 this[PdfViewTransformKey] = listOf(transform.zoom, transform.x, transform.y)
+                stateDescription = "第 ${index+1} 页，缩放 ${(transform.zoom*100).toInt()}%"
+                customActions = buildList {
+                    if (index > 0)
+                        add(
+                            CustomAccessibilityAction("上一页") {
+                                edgeTurn(-1)
+                                true
+                            }
+                        )
+                    if (index + 1 < session.count)
+                        add(
+                            CustomAccessibilityAction("下一页") {
+                                edgeTurn(1)
+                                true
+                            }
+                        )
+                    add(
+                        CustomAccessibilityAction("重置缩放") {
+                            change(PageTransform())
+                            true
+                        }
+                    )
+                    onReadText?.let { read ->
+                        add(
+                            CustomAccessibilityAction("读取本页文字") {
+                                read()
+                                true
+                            }
+                        )
+                    }
+                }
             }
             .onSizeChanged { rootSize = it }
             .clipToBounds()

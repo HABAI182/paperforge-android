@@ -66,11 +66,14 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
     val file = doc?.pdfPath?.let { File(it) }
     var session by remember(file) { mutableStateOf<PdfSession?>(null) }
     var loadError by remember(file) { mutableStateOf<String?>(null) }
+    var openAttempt by remember(file) { mutableIntStateOf(0) }
     // Close even when opening is cancelled between IO completion and state publication.
-    LaunchedEffect(file) {
+    LaunchedEffect(file, openAttempt) {
         var opened: PdfSession? = null
+        session = null
+        loadError = null
         try {
-            withContext(Dispatchers.IO) { opened = file?.let(::PdfSession) }
+            withContext(Dispatchers.IO) { opened = PdfSession(requireNotNull(file)) }
             withContext(Dispatchers.Main.immediate) { session = opened }
             kotlinx.coroutines.awaitCancellation()
         } catch (cancel: kotlinx.coroutines.CancellationException) {
@@ -264,6 +267,11 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
         onDispose { lifecycle.lifecycle.removeObserver(observer) }
     }
     val window = (context as? Activity)?.window
+    val requestDocumentFocus = LocalDocumentFocus.current
+    DisposableEffect(fullscreen, requestDocumentFocus) {
+        requestDocumentFocus(fullscreen)
+        onDispose { requestDocumentFocus(false) }
+    }
     DisposableEffect(window, fullscreen) {
         val controller = window?.let { WindowCompat.getInsetsController(it, it.decorView) }
         controller?.systemBarsBehavior =
@@ -606,7 +614,24 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
             ) {
                 val s = session
                 if (s == null)
-                    Text(loadError ?: "正在打开 PDF…", Modifier.align(Alignment.Center).padding(32.dp))
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        if (loadError != null)
+                            PaperEmptyState(
+                                Icons.Default.Description,
+                                "PDF 暂时无法打开",
+                                "原文件保留，可重试或返回文档库。",
+                                if (file == null) "返回文档库" else "重试打开",
+                                { if (file == null) vm.closeDocument() else openAttempt++ },
+                            )
+                        else
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                CircularProgressIndicator()
+                                Text("正在打开 PDF…")
+                            }
+                    }
                 else if (horizontal)
                     HorizontalPager(
                         pager,
@@ -660,6 +685,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                                             interaction++
                                         },
                                         onLongPress = { p -> selectText(index, p) },
+                                        onReadText = { selectText(index, null) },
                                         selection = selection?.takeIf { it.model.page == index },
                                         onSelectionMove = { start, p ->
                                             selection = selection?.move(start, p)
@@ -744,6 +770,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                                     interaction++
                                 },
                                 onLongPress = { p -> selectText(index, p) },
+                                onReadText = { selectText(index, null) },
                                 selection = selection?.takeIf { it.model.page == index },
                                 onSelectionMove = { start, p ->
                                     selection = selection?.move(start, p)

@@ -369,7 +369,7 @@
       "dependencies": [],
       "scope": "完整明暗语义色、字号、间距、形状、状态",
       "acceptance": "主色与选中容器一致，大字号可读",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "UI02",
@@ -447,7 +447,7 @@
       ],
       "scope": "区分等待/失败/部分完成，提示不盖按钮",
       "acceptance": "失败可操作，成功有打开与保存位置",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "UI08",
@@ -1252,8 +1252,8 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 78,
-    "partial": 9,
+    "done": 80,
+    "partial": 7,
     "planned": 11
   },
   "updated": "2026-10-27"

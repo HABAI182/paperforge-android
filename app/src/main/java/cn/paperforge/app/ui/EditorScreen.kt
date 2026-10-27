@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
 import cn.paperforge.app.UserSettings
@@ -506,13 +507,23 @@ fun ToolAction(
                 enabled = enabled,
                 role = androidx.compose.ui.semantics.Role.Button,
                 onClick = onClick,
-            ),
+            )
+            .clearAndSetSemantics {
+                contentDescription = label
+                role = Role.Button
+                if (enabled)
+                    onClick(label) {
+                        onClick()
+                        true
+                    }
+                else disabled()
+            },
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
             Icon(
                 icon,
-                label,
+                null,
                 tint =
                     if (enabled) MaterialTheme.colorScheme.onSurface
                     else MaterialTheme.colorScheme.onSurface.copy(alpha = .38f),

@@ -36,7 +36,7 @@ internal fun ReaderSelectionBar(
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodySmall,
             )
-            Row(Modifier.horizontalScroll(rememberScrollState())) {
+            FlowRow(Modifier.fillMaxWidth()) {
                 TextButton(onClick = onCopy) { Text("复制") }
                 TextButton(onClick = { onMark("highlight") }) { Text("高亮") }
                 TextButton(onClick = { onChange(selection.line()) }) { Text("选本行") }

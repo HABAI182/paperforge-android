@@ -1,0 +1,35 @@
+{
+  "format": 1,
+  "runtime": "paddle-onnx-v1",
+  "id": "paddle-ppocrv5-mobile",
+  "name": "PaddleOCR v5 Mobile",
+  "version": "official-onnx-v5-mobile",
+  "languages": [
+    "zh",
+    "en"
+  ],
+  "source": "https://github.com/PaddlePaddle/PaddleOCR",
+  "sdkCommit": "dab3fe35379033fdcb2d0e9572fac0b36c9a9ebf",
+  "files": {
+    "det.onnx": {
+      "bytes": 4826518,
+      "sha256": "a431985659dc921974177a95adcfbb90fd9e51989a5e04d70d0b75f597b6e61d"
+    },
+    "provenance.json": {
+      "bytes": 1286,
+      "sha256": "04287f5e0588bb84c20e5cceca237fc738cfc33e70d6bd17ba738b93789c182a"
+    },
+    "rec.onnx": {
+      "bytes": 16534782,
+      "sha256": "da72dc72ca4dc220df0dfde68c1dedc31c58d3e76a25871122e5056227d50092"
+    },
+    "rec.yml": {
+      "bytes": 148345,
+      "sha256": "5dfeb2777f6d0db8177d8128a8acfcf6e6276dc4ac73ea3bf0dc06d6a5e85d8e"
+    },
+    "LICENSE": {
+      "bytes": 11577,
+      "sha256": "8ae60061cdd89d5b70a5d71b2816ecc0da0bee21947688bff4b39928512a45af"
+    }
+  }
+}

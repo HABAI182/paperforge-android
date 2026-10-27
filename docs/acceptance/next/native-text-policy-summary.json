@@ -47,7 +47,12 @@
     "Original damaged Unicode maps remain physically present in derived PDFs to preserve source content; other readers may still expose them, while PaperForge filters the affected page font",
     "Partial OCR without complete word geometry retains the complete unmatched line, prioritizing content retention over speculative deletion",
     "Library index/EPUB/DOCX/table integrations compile and share the policy; their old broad suites were not repeated",
-    "UI verification is grouped with the upcoming adaptive UI work; emulator processes reset when the user continued",
     "No new version, tag or release"
-  ]
+  ],
+  "actualUI": {
+    "engine": "PaddleOCR v5 Mobile",
+    "selectedScannedBody": "SCANNED BODY 00123",
+    "nativeHeaderRetainedOnce": true,
+    "evidence": "adaptive-workspace-summary.json"
+  }
 }
