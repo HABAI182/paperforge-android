@@ -689,7 +689,7 @@
       ],
       "scope": "原件/结果预览，外观/编辑/对象保留模式",
       "acceptance": "预览是真实输出，不用原图冒充结果",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "CVT08",
@@ -1252,8 +1252,8 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 74,
-    "partial": 13,
+    "done": 75,
+    "partial": 12,
     "planned": 11
   },
   "updated": "2026-10-27"

@@ -1,0 +1,22 @@
+{
+  "office": {
+    "leftPages": 2,
+    "rightPages": 2,
+    "actualOutputFormat": "odt",
+    "originalSha256": "412d7fe8679edb32dcfebae97b8128f865cf2f6e5e094f8ec932ecca3db6ec9a",
+    "outputSha256": "cfcbb832b8cdf61fa77edf431a1aa5bbb14e3572768b9da1302a118495676316",
+    "samePreparedTaskReused": true
+  },
+  "native": {
+    "leftPages": 2,
+    "rightPages": 1,
+    "actualResultDiffersFromOriginal": true,
+    "manifestHasOnlyResourceIds": true,
+    "relocatedResourceGraphLoads": true
+  },
+  "image": {
+    "source": "blue PNG",
+    "actualResult": "red WebP",
+    "pages": 1
+  }
+}

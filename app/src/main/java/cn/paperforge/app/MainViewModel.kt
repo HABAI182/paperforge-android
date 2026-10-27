@@ -556,6 +556,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun openTask(row: LocalTaskRow, retake: Boolean = false) {
+        if (
+            row.type == "CONVERT" &&
+                org.json.JSONObject(row.payload).getJSONObject("input").optString("kind") ==
+                    "CONVERSION_PREVIEW"
+        ) {
+            showConversionPreview(row)
+            return
+        }
         conversionReturn.value =
             if (BatchConversions.batchId(row).isNotBlank()) "conversion-batch" else "convert"
         if (BatchConversions.batchId(row).isNotBlank())
@@ -1251,6 +1259,19 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
 
     val batches = ConversionBatches(repo, viewModelScope) { messages.send(it) }
+
+    val conversionPreviewTask = MutableStateFlow("")
+    val conversionPreviewReturn = MutableStateFlow("convert")
+
+    private fun showConversionPreview(row: LocalTaskRow) {
+        if (screen.value != "conversion-preview") conversionPreviewReturn.value = screen.value
+        conversionPreviewTask.value = row.id
+        output.value = null
+        screen.value = "conversion-preview"
+    }
+
+    fun compareConversion(row: LocalTaskRow) =
+        perform("准备原件与实际结果对照") { showConversionPreview(ConversionPreviews.prepare(repo, row)) }
 
     val tableWorkspace =
         TableWorkspace(

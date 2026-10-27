@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
 import cn.paperforge.app.data.*
 import cn.paperforge.app.pdf.BatchConversions
+import cn.paperforge.app.pdf.ConversionPreviews
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -100,7 +101,8 @@ fun TaskCenterScreen(vm: MainViewModel) {
                                     .optJSONObject("input")
                                     ?.optBoolean("draft") == true
                         val available =
-                            BatchConversions.member(row) || textDraft ||
+                            BatchConversions.member(row) ||
+                                textDraft ||
                                 row.documentId != null ||
                                 row.resourceEntries().any {
                                     it.id in setOf("result", "save-source") && File(it.path).isFile
@@ -206,10 +208,11 @@ fun TaskCenterScreen(vm: MainViewModel) {
                                             TextButton(onClick = { vm.retryTask(row) }) {
                                                 Text(
                                                     if (
-                                                        org.json
-                                                            .JSONObject(row.payload)
-                                                            .optJSONObject("input")
-                                                            ?.has("ocrRequest") == true
+                                                        BatchConversions.batchId(row).isBlank() &&
+                                                            org.json
+                                                                .JSONObject(row.payload)
+                                                                .optJSONObject("input")
+                                                                ?.has("ocrRequest") == true
                                                     )
                                                         "按当前识别设置重试"
                                                     else "重试"
@@ -221,6 +224,10 @@ fun TaskCenterScreen(vm: MainViewModel) {
                                             }
                                     }
                                 }
+                                if (!active && ConversionPreviews.files(row) != null)
+                                    TextButton(onClick = { vm.compareConversion(row) }) {
+                                        Text("原件 / 结果对照")
+                                    }
                                 if (!active && row.type in DocumentJobs.types)
                                     TextButton(onClick = { vm.forgetTask(row) }) {
                                         Text(if (textDraft) "删除转换草稿" else "移除记录")

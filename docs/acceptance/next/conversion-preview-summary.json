@@ -1,0 +1,49 @@
+{
+  "checked": "2026-10-27",
+  "cards": ["CVT07"],
+  "implemented": [
+    "Original/result comparison from conversion results, task center and batch members, alongside existing markup and table workspaces",
+    "Office originals and actual Office outputs are independently rendered by the optional on-phone engine; PDFs display their actual files",
+    "Image previews decode the actual input/output including WebP and EXIF; text previews explicitly identify source-body typesetting",
+    "Large single-side view or side-by-side, linked scale/pan, linked or independent page selection, explicit missing-page state",
+    "Equal caption frames align both page canvases; short landscape layouts use compact controls",
+    "Durable preview task, per-side hash/version checkpoints and reuse of prepared tasks; original bytes and conversion outputs remain unchanged",
+    "Manifest references resource IDs, avoiding embedded device paths; existing backup resource remapping can relocate the graph",
+    "Existing conversion catalog retains the distinct structure, editable-body and page-appearance modes with their actual output limits",
+    "Batch retry text now matches frozen OCR behavior; image-size input is constrained to the actual encoder's 8192px limit"
+  ],
+  "focusedCheck": {
+    "test": "ConversionPreviewFlowTest.realOfficeResultsNativeDifferencesAndPortablePreviewResources",
+    "result": "passed",
+    "seconds": 10.477,
+    "log": "conversion-preview-android.log",
+    "cases": ["actual DOCX to ODT conversion and two independent Office previews", "two-page original and one-page different PDF fixture", "blue PNG original and red WebP result fixtures", "prepared preview task reused", "original/result hashes unchanged", "resource-ID manifest loaded after all files relocated"]
+  },
+  "independentReadback": {
+    "engine": "PyMuPDF / MuPDF",
+    "report": "conversion-preview/independent-readback.json",
+    "checkedPdfFiles": 6,
+    "office": "Both actual file renderings have two pages with 00123 and 200.50; Chinese text, merged table heading, explicit second page and headers/footers are readable",
+    "nativeFixtures": "Original contains ORIGINAL on two pages; actual result fixture contains 00456 on one page and does not contain ORIGINAL",
+    "imageFixtures": "Exact center pixels: original blue [0,0,255], actual result red [255,0,0]"
+  },
+  "actualUI": {
+    "sample": "Real batch text-to-PDF output; original body preview is 12pt, actual output is 18pt",
+    "sourceResultSwitchAndSideBySide": true,
+    "returnToBatch": true,
+    "portraitPageCanvasesAligned": true,
+    "landscapePageCanvasesAligned": true,
+    "landscapeCanvasHeightPx": 630,
+    "bounds": "conversion-preview-ui-bounds.json",
+    "screenshots": ["conversion-preview-ui.png", "conversion-preview-landscape.png"]
+  },
+  "limits": [
+    "Office preview reflects the installed phone engine and available fonts, not a universal desktop Word pixel-equivalence guarantee",
+    "Plain text has a clearly labeled typeset preview; it has no original fixed-page layout",
+    "Markup/EPUB resource packages and tables retain their existing actual-result workspaces; arbitrary ZIP files are not misrepresented as rendered documents",
+    "Native and color fixtures test file ownership and missing pages, not a new conversion algorithm or fidelity benchmark",
+    "Relocation validates the preview resource graph; no repeated full-library backup suite was run for this UI addition",
+    "Actual UI checks cover switching, simultaneous pages, return and rotation; gesture quality on a physical phone remains separate",
+    "No new version, tag or release"
+  ]
+}

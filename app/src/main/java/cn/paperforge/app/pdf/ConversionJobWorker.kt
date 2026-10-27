@@ -52,6 +52,14 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                 var completed = 0
                 val file: File
                 when (job.input.getString("kind")) {
+                    "CONVERSION_PREVIEW" -> {
+                        file =
+                            ConversionPreviews.run(repo, job) { percent, detail ->
+                                DocumentJobs.progress(repo, job, percent, detail)
+                                setProgress(workDataOf("progress" to percent))
+                            }
+                        completed = 1
+                    }
                     "RECIPE" -> {
                         file =
                             RecipeJobs.run(repo, job) { percent, detail ->
@@ -354,7 +362,11 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                                 )
                             }
                         }
-                        if (job.input.getString("kind") != "TABLE_ANALYZE") repo.recordOutput(file)
+                        if (
+                            job.input.getString("kind") !in
+                                setOf("TABLE_ANALYZE", "CONVERSION_PREVIEW")
+                        )
+                            repo.recordOutput(file)
                         DocumentJobs.complete(
                             repo,
                             job,

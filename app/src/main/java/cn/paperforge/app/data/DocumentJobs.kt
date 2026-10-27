@@ -58,6 +58,7 @@ object DocumentJobs {
  "RECIPE" -> "工作流配方"
  "TABLE_REVIEW" -> "表格草稿"
  "BATCH_ITEM" -> "批量转换待提交"
+ "CONVERSION_PREVIEW" -> "原件 / 结果对照"
  "LAYOUT" -> "OFD / DjVu 转换"
                             "MARKUP" -> if (JSONObject(input.getString("options") ?: "{}").optString("target") == "EPUB") "生成 EPUB 电子书" else "文档结构转换"
  else -> "图片转换" }}"

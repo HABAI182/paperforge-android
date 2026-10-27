@@ -256,6 +256,10 @@ fun ConversionBatchScreen(vm: MainViewModel) {
                                 TextButton(onClick = { vm.openTask(row) }) {
                                     Text(if (table) "校对表格" else "查看结果")
                                 }
+                            if (ConversionPreviews.files(row) != null)
+                                TextButton(onClick = { vm.compareConversion(row) }) {
+                                    Text("原件 / 结果对照")
+                                }
                             if (editable)
                                 TextButton(
                                     onClick = {
@@ -303,9 +307,11 @@ fun ConversionBatchScreen(vm: MainViewModel) {
                                     Text(
                                         if (childInput.optString("kind") == "TABLE_REVIEW") "继续校对"
                                         else
-                                            (if (childInput.optString("kind") == "TABLE_ANALYZE")
-                                                "区域表格识别"
-                                            else "表格导出") +
+                                            (when (childInput.optString("kind")) {
+                                                "TABLE_ANALYZE" -> "区域表格识别"
+                                                "CONVERSION_PREVIEW" -> "原件 / 结果对照"
+                                                else -> "表格导出"
+                                            }) +
                                                 " · " +
                                                 (if (failedChild) "重试"
                                                 else taskStateName(child.state))
@@ -378,7 +384,7 @@ private fun BatchPresetDialog(
     val valid =
         when (kind) {
             "LAYOUT" -> number.toIntOrNull()?.let { it in 72..600 } == true
-            "IMAGES" -> number.toIntOrNull()?.let { it in 128..16000 } == true
+            "IMAGES" -> number.toIntOrNull()?.let { it in 128..8192 } == true
             "TEXT_PDF" -> number.toIntOrNull()?.let { it in 6..72 } == true
             else -> true
         }
@@ -455,7 +461,7 @@ private fun BatchPresetDialog(
                         OutlinedTextField(
                             number,
                             { number = it },
-                            label = { Text("最长边像素（128–16000）") },
+                            label = { Text("最长边像素（128–8192）") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                         )

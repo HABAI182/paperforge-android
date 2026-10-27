@@ -326,8 +326,8 @@
     {
       "id": "CVT07",
       "title": "转换预览与保真模式",
-      "status": "partial",
-      "note": "Office实际排版/结构Word/整页PPTX模式及表格校正；并排保真预览仍待补；Markdown/HTML已提供实际原件/转换结果标签预览和源码，Office并排仍待补"
+      "status": "done",
+      "note": "保留结构/可编辑正文/整页外观模式及实际损失说明；任务/结果/批量可打开真实原件与结果对照，Office两侧独立排版、PDF直接读取、图像/正文标明表示。大图/并排、同步缩放拖动、独立跳页和缺页提示，横竖屏画布对齐，持久预览/缓存及资源ID清单。真实DOCX→ODT、原始/实际结果不同的PDF与PNG/WebP小样、独立MuPDF及实际UI通过，见 conversion-preview-summary.json。结构包和表格使用已有真实结果工作台。"
     },
     {
       "id": "CVT08",
@@ -595,8 +595,8 @@
     }
   ],
   "counts": {
-    "done": 74,
-    "partial": 13,
+    "done": 75,
+    "partial": 12,
     "planned": 11
   },
   "releaseHold": true,

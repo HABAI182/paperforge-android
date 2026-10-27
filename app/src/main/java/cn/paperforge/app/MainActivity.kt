@@ -397,7 +397,9 @@ class MainActivity : ComponentActivity() {
                             screen in listOf("annotations", "pdf-pages", "pdf-diagnostics") ->
                                 "reader"
                             screen == "conversion-batch" -> "convert"
-                            screen == "text-compose" || screen == "markup-review" -> vm.conversionReturn.value
+                            screen == "conversion-preview" -> vm.conversionPreviewReturn.value
+                            screen == "text-compose" || screen == "markup-review" ->
+                                vm.conversionReturn.value
                             screen == "ocr-models" -> vm.ocrModelsReturn.value
                             screen == "storage" -> "settings"
                             screen == "profiles" -> vm.profileReturn.value
@@ -435,6 +437,7 @@ class MainActivity : ComponentActivity() {
                                 }
                         }
                         "conversion-batch" -> ConversionBatchScreen(vm)
+                        "conversion-preview" -> ConversionPreviewScreen(vm)
                         "text-compose" -> TextConversionScreen(vm)
                         "long-image-compose" -> LongImageComposeScreen(vm.longImages)
                         "tables" -> TableReviewScreen(vm)
@@ -588,6 +591,13 @@ class MainActivity : ComponentActivity() {
                         }
                 }
                 output?.let { file ->
+                    val tasks by vm.localTasks.collectAsState()
+                    val compareTask =
+                        tasks.firstOrNull { row ->
+                            row.resourceEntries().any {
+                                it.id == "result" && it.path == file.path
+                            } && cn.paperforge.app.pdf.ConversionPreviews.files(row) != null
+                        }
                     val fileNotice =
                         outputNotice?.takeIf { it.first == file.path }?.second.orEmpty()
                     AlertDialog(
@@ -616,6 +626,10 @@ class MainActivity : ComponentActivity() {
                                 TextButton(onClick = { exportDirectory.launch(destination?.uri) }) {
                                     Text(if (destination == null) "选择并记住保存目录" else "重新选择保存目录")
                                 }
+                                if (!locked && compareTask != null)
+                                    TextButton(onClick = { vm.compareConversion(compareTask) }) {
+                                        Text("原件 / 结果对照")
+                                    }
                             }
                         },
                         confirmButton = {
