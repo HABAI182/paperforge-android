@@ -25,7 +25,7 @@ fun TextConversionScreen(vm: MainViewModel) {
             TopAppBar(
                 title = { Text("正文转 PDF") },
                 navigationIcon = {
-                    IconButton(onClick = { vm.screen.value = "convert" }) {
+                    IconButton(onClick = { vm.screen.value = vm.conversionReturn.value }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回转换中心")
                     }
                 },

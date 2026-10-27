@@ -320,8 +320,8 @@
     {
       "id": "CVT06",
       "title": "批量转换与失败重试",
-      "status": "partial",
-      "note": "图片批量持久任务、逐项输出/失败报告/缓存检查点及只重试失败项已接入，修复后复用好项且旧ZIP保持不变；PDF多任务可各自重试，Office/复杂转换批量和中间阶段仍待统一。"
+      "status": "done",
+      "note": "统一批量工作台覆盖正文、PDF工具、图片、Office、OFD/DjVu、结构文档/EPUB和表格分析，共用预设与逐项覆盖、保留原件、单独结果和只重试失败项；重选仍保留旧原件，OCR请求冻结。表格校对/导出关联与恢复批次/任务ID重映射、实际多选/参数/预览返回和55.747秒集中流程通过，见 batch-conversion-summary.json。多对一合并/拼接仍使用专用工作台。"
     },
     {
       "id": "CVT07",
@@ -595,8 +595,8 @@
     }
   ],
   "counts": {
-    "done": 73,
-    "partial": 14,
+    "done": 74,
+    "partial": 13,
     "planned": 11
   },
   "releaseHold": true,

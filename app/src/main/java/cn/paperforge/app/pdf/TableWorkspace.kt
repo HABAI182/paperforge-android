@@ -39,6 +39,7 @@ class TableWorkspace(
         name: String,
         options: JSONObject,
         notify: Boolean = true,
+        parent: LocalTaskRow? = null,
     ): UUID {
         val work =
             DocumentJobs.enqueue(
@@ -51,6 +52,7 @@ class TableWorkspace(
                         .put("inputs", JSONArray(listOf(source.path)))
                         .put("names", JSONArray(listOf(name)))
                         .put("options", options.toString())
+                        .also { if (parent != null) BatchConversions.copyGroup(parent, it) }
                 ),
             )
         if (notify) withContext(Dispatchers.Main.immediate) { queued(work) }
@@ -106,6 +108,7 @@ class TableWorkspace(
                                     listOf(input.optString("name", "原件"), "table-review.pftables")
                                 ),
                             )
+                            .also { BatchConversions.copyGroup(row, it) }
                     ),
                 )
             repo.dao.putTask(next.copy(state = LocalTaskState.PARTIAL, detail = "表格待校对"))
@@ -207,6 +210,7 @@ class TableWorkspace(
                             "region",
                             JSONArray(listOf(region.left, region.top, region.right, region.bottom)),
                         ),
+                    parent = repo.dao.task(model.taskId),
                 )
             } catch (error: Exception) {
                 message(error.message ?: "选区未能开始识别")
@@ -242,6 +246,11 @@ class TableWorkspace(
                                     JSONArray(listOf(model.name, "frozen-review.pftables")),
                                 )
                                 .put("options", options.json().toString())
+                                .also { input ->
+                                    repo.dao.task(model.taskId)?.let {
+                                        BatchConversions.copyGroup(it, input)
+                                    }
+                                }
                         ),
                     )
                 withContext(Dispatchers.Main.immediate) { queued(work) }
@@ -254,7 +263,11 @@ class TableWorkspace(
     fun close() {
         scope.launch {
             persist()
-            navigate("convert")
+            val row = draft.value?.taskId?.let { repo.dao.task(it) }
+            navigate(
+                if (row != null && BatchConversions.batchId(row).isNotBlank()) "conversion-batch"
+                else "convert"
+            )
         }
     }
 }

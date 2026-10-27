@@ -76,6 +76,7 @@ fun ConversionScreen(
             "pdf-diff" -> vm.screen.value = "pdf-diff"
             "workflows" -> vm.screen.value = "workflows"
             "auto-export" -> vm.screen.value = "auto-export"
+            "conversion-batch" -> vm.screen.value = "conversion-batch"
             "ofd-pdf",
             "djvu-pdf",
             "layout-images" -> {
@@ -129,6 +130,13 @@ fun ConversionScreen(
             contentPadding = PaddingValues(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            item {
+                OutlinedButton(onClick = { vm.screen.value = "conversion-batch" }, modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Default.LibraryBooks, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("批量转换 · 共用预设 / 单项重试")
+                }
+            }
             item {
                 OutlinedTextField(
                     query,

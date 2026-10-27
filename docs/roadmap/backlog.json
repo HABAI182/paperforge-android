@@ -676,7 +676,7 @@
       ],
       "scope": "多文件同预设，逐项覆盖，只重试失败项",
       "acceptance": "一个文件失败不丢其他输出",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "CVT07",
@@ -1252,8 +1252,8 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 73,
-    "partial": 14,
+    "done": 74,
+    "partial": 13,
     "planned": 11
   },
   "updated": "2026-10-27"

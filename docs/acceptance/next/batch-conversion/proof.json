@@ -1,0 +1,39 @@
+{
+  "batch": "be04629e-1b2a-4d13-bbd5-0517f16af173",
+  "sourceRetentionFailureIsolated": true,
+  "perItemOverride": true,
+  "completedMembersUnchangedOnRetry": true,
+  "frozenOcrRequestPreserved": true,
+  "priorBadOriginalRetained": true,
+  "modes": {
+    "OFFICE": {
+      "task": "3047f298-beb7-4727-a403-7429c1f49781",
+      "result": "\/data\/user\/0\/cn.paperforge.app\/files\/batch-proof-67beaa25-79d7-4b08-b032-09fb41306473\/OFFICE.pdf",
+      "bytes": 79489
+    },
+    "LAYOUT": {
+      "task": "f2bf6f74-504b-43a4-98e2-101dfcdee6c5",
+      "result": "\/data\/user\/0\/cn.paperforge.app\/files\/batch-proof-67beaa25-79d7-4b08-b032-09fb41306473\/LAYOUT.pdf",
+      "bytes": 6878
+    },
+    "TABLE_ANALYZE": {
+      "task": "530e68fa-5bcd-4832-8621-115b1ceac042",
+      "result": "\/data\/user\/0\/cn.paperforge.app\/files\/batch-proof-67beaa25-79d7-4b08-b032-09fb41306473\/TABLE_ANALYZE.pftables",
+      "bytes": 2689
+    },
+    "PDF_TOOL": {
+      "task": "1af21293-2e8f-464c-91e7-ac1ef8d68df8",
+      "result": "\/data\/user\/0\/cn.paperforge.app\/files\/batch-proof-67beaa25-79d7-4b08-b032-09fb41306473\/PDF_TOOL.txt",
+      "bytes": 74
+    },
+    "IMAGES": {
+      "task": "52fcb707-b936-4230-b2b6-08a75157d9b6",
+      "result": "\/data\/user\/0\/cn.paperforge.app\/files\/batch-proof-67beaa25-79d7-4b08-b032-09fb41306473\/IMAGES.png",
+      "bytes": 88327
+    }
+  },
+  "tableExport": "\/data\/user\/0\/cn.paperforge.app\/files\/batch-proof-67beaa25-79d7-4b08-b032-09fb41306473\/table-export.xlsx",
+  "restoredBatch": "6813a663-5147-447b-a8e0-6b5e03b880cf",
+  "restoredMembers": 12,
+  "relatedTaskIdsRemapped": true
+}

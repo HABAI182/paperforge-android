@@ -394,7 +394,26 @@ object BackupStore {
                             }
                             ?.let { pageIds[old.id] = it.id }
                     }
-                val taskIds = mutableMapOf<String, String>()
+                val archivedTasks = metadata.optJSONArray("tasks")
+                val taskIds =
+                    (0 until (archivedTasks?.length() ?: 0))
+                        .associate {
+                            archivedTasks!!.getJSONObject(it).getString("id") to
+                                UUID.randomUUID().toString()
+                        }
+                        .toMutableMap()
+                val batchIds =
+                    (0 until (archivedTasks?.length() ?: 0))
+                        .mapNotNull {
+                            archivedTasks!!
+                                .getJSONObject(it)
+                                .optJSONObject("payload")
+                                ?.optJSONObject("input")
+                                ?.optString("batchId")
+                                ?.takeIf { id -> id.isNotBlank() }
+                        }
+                        .distinct()
+                        .associateWith { UUID.randomUUID().toString() }
                 val files = mutableMapOf<Pair<String, String>, String>()
                 fun copy(entry: String, docId: String): String =
                     files.getOrPut(entry to docId) {
@@ -597,7 +616,7 @@ object BackupStore {
                                             payload =
                                                 DocumentJobs.remapPayload(
                                                     payload,
-                                                    paths + ids + pageIds,
+                                                    paths + ids + pageIds + taskIds + batchIds,
                                                 )
                                             resources
                                                 .firstOrNull { it.id == "auto-snapshot" }

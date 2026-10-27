@@ -22,6 +22,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val query = MutableStateFlow("")
     val homeTab = MutableStateFlow(0)
     val conversionEntry = MutableStateFlow("")
+    val conversionReturn = MutableStateFlow("convert")
 
     fun openConversion(mode: String) {
         conversionEntry.value = mode
@@ -486,6 +487,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun retryTask(row: LocalTaskRow) {
         if (
+            BatchConversions.batchId(row).isNotBlank() &&
+                !BatchConversions.input(row).optBoolean("draft")
+        ) {
+            batches.retry(row.id)
+            return
+        }
+        if (
             row.type == "CONVERT" &&
                 org.json.JSONObject(row.payload).optJSONObject("input")?.optBoolean("draft") == true
         ) {
@@ -537,6 +545,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun loadConversionDraft(row: LocalTaskRow) {
         when (org.json.JSONObject(row.payload).getJSONObject("input").optString("kind")) {
+            "BATCH_ITEM" -> {
+                batches.selected.value = BatchConversions.batchId(row)
+                screen.value = "conversion-batch"
+            }
             "LONG_IMAGES" -> longImages.open(row)
             "TABLE_REVIEW" -> perform("打开表格草稿") { tableWorkspace.open(row) }
             else -> loadTextConversion(row)
@@ -544,6 +556,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun openTask(row: LocalTaskRow, retake: Boolean = false) {
+        conversionReturn.value =
+            if (BatchConversions.batchId(row).isNotBlank()) "conversion-batch" else "convert"
+        if (BatchConversions.batchId(row).isNotBlank())
+            batches.selected.value = BatchConversions.batchId(row)
+        if (BatchConversions.member(row) && row.resourceEntries().none { it.id == "result" }) {
+            batches.selected.value = BatchConversions.batchId(row)
+            screen.value = "conversion-batch"
+            return
+        }
         if (
             row.type == "CONVERT" &&
                 org.json.JSONObject(row.payload).optJSONObject("input")?.optBoolean("draft") == true
@@ -1229,6 +1250,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             publishOutput(file)
         }
 
+    val batches = ConversionBatches(repo, viewModelScope) { messages.send(it) }
+
     val tableWorkspace =
         TableWorkspace(
             repo,
@@ -1778,6 +1801,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
 
     private fun openMarkupResult(row: LocalTaskRow) {
+        conversionReturn.value =
+            if (BatchConversions.batchId(row).isNotBlank()) "conversion-batch" else "convert"
         val input = org.json.JSONObject(row.payload).getJSONObject("input")
         markupReview.value =
             MarkupReview(
@@ -1861,6 +1886,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun convertText(uri: Uri, options: TextPdfOptions) =
         perform("读取正文与保留原件") {
+            conversionReturn.value = "convert"
             val retained = ConversionInputs.retain(repo, listOf(uri)).single()
             val text =
                 LocalConversions.readText(
@@ -2164,6 +2190,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                             "jobs",
                             "auto-export",
                             "pdf-redaction",
+                            "conversion-batch",
                         )
                 }
             val doc = repo.registerPdf(file, file.nameWithoutExtension)

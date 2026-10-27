@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
 import cn.paperforge.app.data.*
+import cn.paperforge.app.pdf.BatchConversions
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -99,7 +100,7 @@ fun TaskCenterScreen(vm: MainViewModel) {
                                     .optJSONObject("input")
                                     ?.optBoolean("draft") == true
                         val available =
-                            textDraft ||
+                            BatchConversions.member(row) || textDraft ||
                                 row.documentId != null ||
                                 row.resourceEntries().any {
                                     it.id in setOf("result", "save-source") && File(it.path).isFile

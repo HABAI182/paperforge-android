@@ -1,0 +1,41 @@
+{
+  "checked": "2026-10-27",
+  "cards": ["CVT06"],
+  "implemented": [
+    "Batch workspace for independent text-PDF, PDF tools, image, Office, OFD/DjVu, markup/EPUB and table-analysis conversions",
+    "Common preset, per-item overrides, multi-file Android picker and separately retained originals/results",
+    "One child per durable existing worker; failed provider input or conversion does not discard other inputs or completed outputs",
+    "Submit pending items or retry only failed/stopped items, preserving the original frozen OCR request and existing checkpoints",
+    "Replace an unavailable or invalid original while retaining prior originals/checkpoints as referenced history resources",
+    "Table analysis is shown as awaiting review; review, region analysis and explicit exports remain linked to the source item",
+    "Results stay in their group without automatic navigation; task-center and search entries open the actual batch workspace",
+    "Restore remaps batch identifiers and related task identifiers so imported groups remain independent"
+  ],
+  "focusedCheck": {
+    "test": "ConversionBatchFlowTest.independentMembersOverridesFailedOnlyRetryAndRestoredGroups",
+    "result": "passed",
+    "seconds": 55.747,
+    "log": "batch-conversion-android.log",
+    "cases": ["missing URI isolated", "retained input survives provider content change", "per-file A5 landscape/18pt override", "malformed EPUB fails independently", "only failed worker requeued; successful work IDs/output hashes unchanged", "OCR request unchanged after settings change", "replacement preserves bad original bytes", "actual workers for seven conversion kinds", "table review then real XLSX export", "12 restored tasks retain paths and remapped group/parent associations"]
+  },
+  "independentReadback": {
+    "report": "batch-conversion/independent-readback.json",
+    "engines": ["PyMuPDF / MuPDF", "Pillow", "openpyxl"],
+    "checked": ["both text PDFs retain expected numbers", "override is a real landscape output and excludes later provider edits", "Office and DjVu outputs each have two pages", "PNG is 512 by 384", "PDF text output is nonempty", "XLSX has five rows, three columns, merged heading and exact 00123/00456 values"]
+  },
+  "actualUI": {
+    "androidMultiPicker": "Two files selected together",
+    "perItemOverride": "First file 18 pt, second file retains 12 pt",
+    "bothOutputsCompletedWithoutResultOverwrite": true,
+    "previewReturnsToBatch": true,
+    "batchRecoveredFromMenuAfterAppRecreation": true,
+    "screenshot": "batch-conversion-ui.png"
+  },
+  "limits": [
+    "Combining many inputs into one document or stitched image retains its own dedicated workspace",
+    "Batching reuses the previously documented engine capabilities; this is not a new Office/OCR fidelity benchmark",
+    "Office and layout conversions require their existing optional on-phone engines",
+    "Original table analysis is a review result, not a finished spreadsheet; export remains explicit",
+    "No old broad test suite rerun and no new version, tag or release"
+  ]
+}

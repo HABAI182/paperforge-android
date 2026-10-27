@@ -94,6 +94,7 @@ object ToolCatalog {
                 ToolCapability("压缩 PDF", "优化嵌入图片并保留文字和链接", "整理", "compress"),
                 ToolCapability("PDF 差异比较", "原生文字与外观、并排同步查看、区域定位与报告", "整理", "pdf-diff"),
                 ToolCapability("工作流配方", "按顺序处理，保存步骤；调整目录复用 OCR 与排版", "整理", "workflows"),
+                ToolCapability("批量转换", "共用预设、逐项参数、单独结果与失败重试", "整理", "conversion-batch"),
                 ToolCapability("自动导出", "按文件夹和标签触发，结果与失败记录可继续", "整理", "auto-export"),
             )
             .map { entry ->
@@ -116,6 +117,14 @@ object ToolCatalog {
                             parameters = "规则启停、等待稳定时间、命名配方副本、目录、扫描导出参数、手动运行及重试",
                             boundary = "默认关闭；失败后保留结果并等待手动处理，不循环重试。已有 PDF 保留原页，自动结果只进入导出记录。",
                             aliases = "自动 归档 条件 规则 标签 文件夹 自动化 automation export",
+                        )
+                    "conversion-batch" ->
+                        entry.copy(
+                            input = "多份 PDF、文字、图片、Office、OFD / DjVu 或结构文档",
+                            output = "各文件独立结果；表格识别后继续校对并导出",
+                            parameters = "共用预设、逐项输出与排版设置、失败项重试、原件重选",
+                            boundary = "只重试选定的失败项；Office / OFD / DjVu 使用对应可选手机引擎。合并、拼接等多对一操作仍使用各自工作台。",
+                            aliases = "batch 批处理 批量 失败 重试 多文件 convert",
                         )
                     "workflows" ->
                         entry.copy(

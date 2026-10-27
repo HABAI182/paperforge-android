@@ -396,7 +396,8 @@ class MainActivity : ComponentActivity() {
                                 else "reader".also { vm.selected.value = vm.redactionSource.value }
                             screen in listOf("annotations", "pdf-pages", "pdf-diagnostics") ->
                                 "reader"
-                            screen == "text-compose" || screen == "markup-review" -> "convert"
+                            screen == "conversion-batch" -> "convert"
+                            screen == "text-compose" || screen == "markup-review" -> vm.conversionReturn.value
                             screen == "ocr-models" -> vm.ocrModelsReturn.value
                             screen == "storage" -> "settings"
                             screen == "profiles" -> vm.profileReturn.value
@@ -433,6 +434,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                         }
+                        "conversion-batch" -> ConversionBatchScreen(vm)
                         "text-compose" -> TextConversionScreen(vm)
                         "long-image-compose" -> LongImageComposeScreen(vm.longImages)
                         "tables" -> TableReviewScreen(vm)

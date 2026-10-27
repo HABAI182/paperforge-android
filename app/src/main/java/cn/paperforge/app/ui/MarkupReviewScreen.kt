@@ -121,7 +121,7 @@ fun MarkupReviewScreen(vm: MainViewModel) {
             TopAppBar(
                 title = { Text("文档转换结果", maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 navigationIcon = {
-                    IconButton(onClick = { vm.screen.value = "convert" }) {
+                    IconButton(onClick = { vm.screen.value = vm.conversionReturn.value }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回")
                     }
                 },

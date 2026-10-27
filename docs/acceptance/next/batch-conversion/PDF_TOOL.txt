@@ -1,0 +1,7 @@
+Code Amount Region
+
+00123 120.50 East
+
+00456 80.00 West
+
+00789 40.25 South
