@@ -48,6 +48,8 @@ fun ConversionScreen(
                 org.json.JSONObject(it.payload).optJSONObject("input")?.optBoolean("draft") == true
         }
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+    val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
     var help by remember { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
     var group by rememberSaveable { mutableStateOf("全部") }
@@ -75,6 +77,8 @@ fun ConversionScreen(
     var bookCover by rememberSaveable { mutableStateOf(true) }
     var bookColumns by rememberSaveable { mutableIntStateOf(0) }
     fun launch(entry: ToolCapability) {
+        focusManager.clearFocus()
+        keyboard?.hide()
         when (entry.mode) {
             "pdf-diff" -> vm.screen.value = "pdf-diff"
             "workflows" -> vm.screen.value = "workflows"
@@ -82,6 +86,10 @@ fun ConversionScreen(
             "conversion-batch" -> vm.screen.value = "conversion-batch"
             "ofd-pdf",
             "djvu-pdf",
+            "native-format-pdf",
+            "email-pdf",
+            "caj-pdf",
+            "latex-pdf",
             "layout-images" -> {
                 vm.formatTarget.value = if (entry.mode == "layout-images") "IMAGES" else "PDF"
                 vm.screen.value = "format-conversion"
@@ -92,6 +100,7 @@ fun ConversionScreen(
             "epub-md" -> onMarkup("MD", org.json.JSONObject())
             "epub-txt" -> onMarkup("TXT", org.json.JSONObject())
             "epub-create" -> options = entry.mode
+            "dxf-pdf" -> onDesktop("office-pdf", org.json.JSONObject())
             "text-pdf",
             "image-format",
             "office-options",
@@ -129,7 +138,7 @@ fun ConversionScreen(
         }
     ) { padding ->
         LazyColumn(
-            Modifier.fillMaxSize().padding(padding).testTag("conversion-list"),
+            Modifier.fillMaxSize().padding(padding).imePadding().testTag("conversion-list"),
             contentPadding = PaddingValues(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {

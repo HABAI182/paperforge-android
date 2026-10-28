@@ -34,7 +34,9 @@ object OfficeJobs {
         val checkpointKey =
             if (destination == null) "office-output"
             else "office-output-${destination.parentFile!!.name}"
-        val signature = "office-rpc1|${PdfAssembly.sha256(source)}|$format"
+        val signature =
+            "office-rpc1|${PdfAssembly.sha256(source)}|$format" +
+                if (source.extension.equals("dxf", true)) "|${DxfPreflight.VERSION}" else ""
         val cached =
             JSONObject(checkNotNull(repo.dao.task(job.row.id)).payload)
                 .getJSONObject("checkpoint")

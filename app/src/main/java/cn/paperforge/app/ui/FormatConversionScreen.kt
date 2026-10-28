@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
@@ -30,6 +31,11 @@ fun FormatConversionScreen(vm: MainViewModel) {
     val tasks by vm.localTasks.collectAsState()
     val target by vm.formatTarget.collectAsState()
     val dpi by vm.formatDpi.collectAsState()
+    var bookFont by rememberSaveable { mutableIntStateOf(12) }
+    var bookPaper by rememberSaveable { mutableStateOf("A4") }
+    var showBookOptions by rememberSaveable { mutableStateOf(false) }
+    var includeHeaders by rememberSaveable { mutableStateOf(true) }
+    var mathSource by rememberSaveable { mutableStateOf(false) }
     var installed by remember { mutableStateOf(FormatJobs.installed(context)) }
     val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current
     DisposableEffect(lifecycle) {
@@ -43,7 +49,19 @@ fun FormatConversionScreen(vm: MainViewModel) {
     }
     val picker =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-            uri?.let { vm.convertLayout(it, JSONObject().put("target", target).put("dpi", dpi)) }
+            uri?.let {
+                vm.convertLayout(
+                    it,
+                    JSONObject()
+                        .put("target", target)
+                        .put("dpi", dpi)
+                        .put("fontSize", bookFont)
+                        .put("includeHeaders", includeHeaders)
+                        .put("mathSource", mathSource)
+                        .put("widthPt", if (bookPaper == "A5") 420 else 595)
+                        .put("heightPt", if (bookPaper == "A5") 595 else 842),
+                )
+            }
         }
     val history =
         tasks.filter {
@@ -54,7 +72,7 @@ fun FormatConversionScreen(vm: MainViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("OFD / DjVu 转换") },
+                title = { Text("特殊文档转换") },
                 navigationIcon = {
                     IconButton(onClick = { vm.screen.value = "convert" }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回转换中心")
@@ -69,7 +87,17 @@ fun FormatConversionScreen(vm: MainViewModel) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item { Text("手机本机转换版面", style = MaterialTheme.typography.headlineSmall) }
-            item { Text("保留纸张尺寸、页序、图像与可用的原始文字坐标。OFD 嵌入字体优先，DjVu 按原始方向解码；转换后可直接阅读或导出逐页图片。") }
+            item {
+                Text(
+                    "OFD · DjVu · XPS / OXPS · SVG · CBZ · FB2 · EML · CAJ / KDH · TeX",
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+            }
+            item {
+                Text(
+                    "保留纸张尺寸、页序与可见版面。XPS、SVG、FB2 使用原生 PDF 设备，尽量保留文字与基础矢量；OFD / DjVu 保留原始文字坐标。转换后可阅读、对照或导出逐页图片。"
+                )
+            }
             item {
                 Card {
                     Column(
@@ -120,13 +148,63 @@ fun FormatConversionScreen(vm: MainViewModel) {
                 }
             }
             item {
+                TextButton(onClick = { showBookOptions = !showBookOptions }) {
+                    Text(if (showBookOptions) "收起文字排版" else "电子书、邮件与 TeX 排版")
+                }
+                if (showBookOptions)
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            "FB2、EML、TeX 使用所选纸张与字号；固定版式文档保持原始纸张。",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text("包含邮件头", Modifier.weight(1f))
+                            Switch(includeHeaders, { includeHeaders = it })
+                        }
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text("LaTeX 公式附原文", Modifier.weight(1f))
+                            Switch(mathSource, { mathSource = it })
+                        }
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf("A4", "A5").forEach { value ->
+                                FilterChip(
+                                    bookPaper == value,
+                                    { bookPaper = value },
+                                    label = { Text(value) },
+                                )
+                            }
+                        }
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf(10, 12, 16, 20).forEach { value ->
+                                FilterChip(
+                                    bookFont == value,
+                                    { bookFont = value },
+                                    label = { Text("$value pt") },
+                                )
+                            }
+                        }
+                    }
+            }
+            item {
                 Button(
                     onClick = { picker.launch(arrayOf("*/*")) },
                     enabled = !busy,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text("选择 OFD / DjVu 文件")
+                    Text("选择文件或 TeX 项目 ZIP")
                 }
+            }
+            item {
+                Text(
+                    "CAJ 仅支持内含 PDF 的容器；HN / C8 暂不支持。TeX 为常用正文与数学排版，未支持的宏包与内容会保留原文并列入报告。二维 DXF 请在转换中心选择 CAD 入口。",
+                    style = MaterialTheme.typography.bodySmall,
+                )
             }
             item {
                 Text(
@@ -151,10 +229,10 @@ fun FormatConversionScreen(vm: MainViewModel) {
                         )
                         if ((checkpoint?.optInt("warningCount") ?: 0) > 0)
                             Text(
-                                "有 ${checkpoint!!.optInt("warningCount")} 项字体提示，请核对版面",
+                                "有 ${checkpoint!!.optInt("warningCount")} 项转换提示，请核对报告",
                                 color = MaterialTheme.colorScheme.tertiary,
                             )
-                        Row {
+                        FlowRow {
                             if (task.state == cn.paperforge.app.data.LocalTaskState.SUCCEEDED)
                                 TextButton(onClick = { vm.openTask(task) }) { Text("打开结果") }
                             TextButton(onClick = { vm.screen.value = "jobs" }) { Text("任务与结果") }
@@ -213,9 +291,11 @@ private fun layoutSummary(report: JSONObject) = buildString {
     appendLine("${report.optString("name")} · ${pages.length()} 页 · ${report.getInt("dpi")} DPI")
     appendLine("保留原件，转换只复制可见版面；签名与证书未迁移或验签。")
     val warnings = report.optJSONArray("warnings")
-    if (warnings == null || warnings.length() == 0) appendLine("未发现字体提示。")
+    appendLine("引擎：${report.optString("adapter")}")
+    appendLine(if (report.has("nativePdf")) "输出保留引擎可映射的文字、图像与基础矢量。" else "输出保留可见版面与可用的原始文字坐标。")
+    if (warnings == null || warnings.length() == 0) appendLine("未记录转换提示，请在对照中检查实际结果。")
     else {
-        appendLine("字体提示：请核对对应的页面")
+        appendLine("转换提示：请核对对应的页面")
         for (i in 0 until warnings.length()) appendLine(
             warnings
                 .getString(i)

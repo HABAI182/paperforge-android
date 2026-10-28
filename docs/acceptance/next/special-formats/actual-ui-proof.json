@@ -1,0 +1,11 @@
+{
+  "source": "PaperForge-XPS-Proof.xps",
+  "sourceSha256": "0d578dcba662e63d5fbe36acf3d20ddabe628f9e0fb2b52f543160867c5d85f3",
+  "result": "PaperForge-XPS-Proof.pdf",
+  "resultBytes": 140901,
+  "searchHasNoUnrelatedOfdResult": true,
+  "systemPickerUsed": true,
+  "nativeReaderOpened": true,
+  "engineAdapter": "mupdf-1.28.5-layout5",
+  "note": "XPS output unchanged by later CFF-only wrapper adaptation"
+}

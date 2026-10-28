@@ -795,10 +795,19 @@ class MainActivity : ComponentActivity() {
                     AlertDialog(
                         onDismissRequest = { about = false },
                         title = {
-                            Text(
-                                "纸匠 PaperForge · " +
-                                    packageManager.getPackageInfo(packageName, 0).versionName
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                androidx.compose.foundation.Image(
+                                    androidx.compose.ui.res.painterResource(R.drawable.ic_launcher),
+                                    null,
+                                    Modifier.size(48.dp),
+                                )
+                                Spacer(Modifier.width(12.dp))
+                                Text(
+                                    "纸匠 PaperForge · " +
+                                        packageManager.getPackageInfo(packageName, 0).versionName,
+                                    Modifier.weight(1f),
+                                )
+                            }
                         },
                         text = {
                             Column(Modifier.verticalScroll(rememberScrollState())) {

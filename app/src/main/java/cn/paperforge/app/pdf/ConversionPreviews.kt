@@ -34,11 +34,12 @@ data class ConversionPreview(
  */
 object ConversionPreviews {
     private val office =
-        setOf("doc", "docx", "xls", "xlsx", "ppt", "pptx", "odt", "ods", "odp", "rtf")
+        setOf("doc", "docx", "xls", "xlsx", "ppt", "pptx", "odt", "ods", "odp", "rtf", "dxf")
     private val images = setOf("jpg", "jpeg", "png", "webp", "bmp")
     private val text = setOf("txt", "md", "csv", "tsv")
 
-    fun supported(file: File) = file.extension.lowercase() in office + images + text + "pdf"
+    fun supported(file: File) =
+        file.extension.lowercase() in office + images + text + "pdf" || FormatJobs.supported(file)
 
     fun files(row: LocalTaskRow): Pair<File, File>? {
         if (row.type !in setOf("PDF", "CONVERT")) return null
@@ -51,7 +52,9 @@ object ConversionPreviews {
                 ?: return null
         val result = resources.firstOrNull { it.id == "result" }?.path?.let(::File) ?: return null
         val imagePackage =
-            input.optString("kind") == "OFFICE_IMAGES" ||
+            input.optString("kind") == "LAYOUT" &&
+                JSONObject(input.optString("options", "{}")).optString("target") == "IMAGES" ||
+                input.optString("kind") == "OFFICE_IMAGES" ||
                 input.optString("mode") in
                     setOf("images-jpg", "images-png", "images-webp", "extract-images")
         return if (
@@ -95,6 +98,12 @@ object ConversionPreviews {
                             .put("parentTask", parent.id)
                             .put("name", parent.title)
                             .put("operation", parent.title)
+                            .put(
+                                "layoutOptions",
+                                JSONObject(parent.payload)
+                                    .optJSONObject("input")
+                                    ?.optString("options", "{}") ?: "{}",
+                            )
                             .put("signature", signature)
                             .put("inputs", JSONArray(listOf(source.path, result.path)))
                             .put("hashes", JSONArray(hashes)),
@@ -123,9 +132,12 @@ object ConversionPreviews {
             val representation =
                 when (type) {
                     "pdf" -> "原始 PDF 页面"
+                    in FormatJobs.types -> "手机格式引擎实际版面预览"
                     in office -> "手机 Office 引擎排版预览"
                     in images -> "实际图像预览（最长边 2400 px）"
-                    "zip" -> "实际图片包静态预览（最长边 2400 px）"
+                    "zip" ->
+                        if (FormatJobs.texBundle(source)) "TeX 项目实际排版预览"
+                        else "实际图片包静态预览（最长边 2400 px）"
                     else -> "实际正文的排版预览"
                 }
             val signature = "render-r1|${expected[index]}|$type|${PdfTextLayer.VERSION}"
@@ -148,7 +160,33 @@ object ConversionPreviews {
                             index * 45 + 5,
                             "${if(index == 0) "原件" else "结果"} · $representation",
                         )
-                        if (type in office) {
+                        if (FormatJobs.supported(source)) {
+                            val rendered =
+                                FormatJobs.convert(
+                                    repo,
+                                    job.copy(
+                                        input =
+                                            JobInput(
+                                                JSONObject(job.input.json.toString())
+                                                    .put("inputs", JSONArray(listOf(source.path)))
+                                                    .put("name", key)
+                                                    .put(
+                                                        "options",
+                                                        JSONObject(
+                                                                job.input.getString("layoutOptions")
+                                                                    ?: "{}"
+                                                            )
+                                                            .put("target", "PDF")
+                                                            .put("dpi", 150)
+                                                            .toString(),
+                                                    )
+                                            )
+                                    ),
+                                ) { percent, detail ->
+                                    progress(index * 45 + percent * 40 / 100, detail)
+                                }
+                            rendered.copyTo(destination, overwrite = true)
+                        } else if (type in office) {
                             val atomic = android.util.AtomicFile(destination)
                             val stream = atomic.startWrite()
                             try {

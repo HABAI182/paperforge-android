@@ -1,0 +1,38 @@
+{
+  "checked": "2026-10-28",
+  "packaging": "Optional on-phone formats APK; unmodified upstream binaries, selected ABI",
+  "mupdf": {
+    "version": "1.28.5",
+    "artifactSha256": "e6887a242882cdd2dce062430bb46b6727513e3eb94e222255cc1a37db7a7d8e",
+    "artifact": "https://maven.ghostscript.com/com/artifex/mupdf/fitz/1.28.5/fitz-1.28.5.aar",
+    "source": "https://github.com/ArtifexSoftware/mupdf/tree/1.28.5",
+    "tagObject": "8ad45e92f0935d3d87f1db3f873086472a5e1b24",
+    "license": "AGPL-3.0",
+    "adapter": "mupdf-1.28.5-layout6"
+  },
+  "mime4j": {
+    "version": "0.8.15",
+    "artifact": "org.apache.james:apache-mime4j-dom:0.8.15",
+    "license": "Apache-2.0",
+    "jarSha256": "2a71d7f42bb5b7022adfd8597a7db38cec46dd8fb25fe8839dea8d42aa6eeb7b"
+  },
+  "jlatexmathAndroid": {
+    "version": "0.2.0",
+    "artifact": "ru.noties:jlatexmath-android:0.2.0; ru.noties:jlatexmath-android-font-greek:0.2.0",
+    "sourceCommit": "cc2a83dcf695028b5588f91a90734d94eb5bd02b",
+    "source": "https://github.com/noties/jlatexmath-android/tree/v0.2.0",
+    "license": "GPL-2.0-or-later with upstream linking exception",
+    "aarSha256": "b16824328d45ed86892f7f8aa74a542fc361b8a94004de8ca5ae86113b78a89f"
+  },
+  "cajContainerReference": {
+    "source": "https://github.com/caj2pdf/caj2pdf",
+    "commit": "6c4bc32b15ce748d211f45d536f5d5511ef9f368",
+    "fileSha256": "1487fcac3d952997a9978771543e3204637ea2b65ca917924a179391b07fd575",
+    "license": "GLWT Public License",
+    "scope": "PDF-based CAJ header offsets, missing page trees and KDH container scheme; own Kotlin adapter, not the HN/C8 image codecs"
+  },
+  "jsoup": {
+    "version": "1.23.2",
+    "license": "MIT"
+  }
+}

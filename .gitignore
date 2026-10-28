@@ -16,3 +16,10 @@ __pycache__/
 office-engine/runtime/
 desktop/.venv/
 desktop/runtime/
+# Large reproducible CFF sample outputs remain local; hashes and rendered frames are tracked.
+docs/acceptance/next/special-formats/fb2.pdf
+docs/acceptance/next/special-formats/source-email.pdf
+docs/acceptance/next/special-formats/gb18030-email.pdf
+docs/acceptance/next/special-formats/latex-project-container.pdf
+docs/acceptance/next/special-formats/subset-xps-diagnostic.png
+docs/acceptance/next/special-formats/latex-page-1.png

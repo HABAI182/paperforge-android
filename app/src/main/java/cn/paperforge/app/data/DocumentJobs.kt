@@ -60,7 +60,7 @@ object DocumentJobs {
  "TABLE_REVIEW" -> "表格草稿"
  "BATCH_ITEM" -> "批量转换待提交"
  "CONVERSION_PREVIEW" -> "原件 / 结果对照"
- "LAYOUT" -> "OFD / DjVu 转换"
+ "LAYOUT" -> "特殊文档转换"
                             "MARKUP" -> if (JSONObject(input.getString("options") ?: "{}").optString("target") == "EPUB") "生成 EPUB 电子书" else "文档结构转换"
  else -> "图片转换" }}"
             else -> "$source · ${modeName(input.getString("mode"))}"

@@ -15,6 +15,20 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 object FormatJobs {
+    val types =
+        setOf("ofd", "djvu", "djv", "xps", "oxps", "svg", "cbz", "fb2", "eml", "caj", "kdh", "tex")
+
+    fun texBundle(file: File) =
+        file.extension.equals("zip", true) &&
+            runCatching {
+                    ZipFile(file).use { zip ->
+                        zip.entries().asSequence().any { it.name.endsWith(".tex", true) }
+                    }
+                }
+                .getOrDefault(false)
+
+    fun supported(file: File) = file.extension.lowercase() in types || texBundle(file)
+
     @Suppress("DEPRECATION")
     fun installed(context: android.content.Context) =
         runCatching {
@@ -32,12 +46,16 @@ object FormatJobs {
         progress: suspend (Int, String) -> Unit,
     ): File {
         val source = File(job.input.getStringArray("inputs")!!.single())
-        val type = source.extension.lowercase()
-        require(type in setOf("ofd", "djvu", "djv")) { "请选择 OFD 或 DjVu 文件" }
+        val type = if (texBundle(source)) "tex" else source.extension.lowercase()
+        require(type in types) { "请选择支持的版式文档或电子书" }
         val options = JSONObject(job.input.getString("options") ?: "{}")
         val dpi = options.optInt("dpi", 200).coerceIn(72, 600)
         val hash = PdfAssembly.sha256(source)
-        val signature = "format-rpc1|$hash|$dpi"
+        val native = type !in setOf("ofd", "djvu", "djv")
+        val signature =
+            if (native)
+                "mupdf-1.28.5-layout6|$type|$hash|$dpi|${options.optDouble("widthPt",595.0)}|${options.optDouble("heightPt",842.0)}|${options.optDouble("fontSize",12.0)}|${options.optBoolean("includeHeaders",true)}|${options.optBoolean("mathSource",false)}"
+            else "format-rpc1|$hash|$dpi"
         fun version(value: String) =
             java.security.MessageDigest.getInstance("SHA-256")
                 .digest(value.toByteArray())
@@ -69,7 +87,7 @@ object FormatJobs {
                     job.row.workId ?: job.row.id,
                     source,
                     output,
-                    JSONObject().put("type", type).put("dpi", dpi).toString(),
+                    JSONObject(options.toString()).put("type", type).put("dpi", dpi).toString(),
                 ) { percent, detail ->
                     progress(percent * 85 / 100, detail)
                 }
@@ -120,6 +138,7 @@ object FormatJobs {
                 )
             require(report.getString("sourceSha256") == hash) { "版面结果与原件不匹配" }
             val pages = report.getJSONArray("pages")
+            val nativePdf = report.optString("nativePdf").takeIf { it.isNotBlank() }
             val warnings = JSONArray()
             for (index in 0 until pages.length()) pages
                 .getJSONObject(index)
@@ -137,13 +156,16 @@ object FormatJobs {
                 .put(
                     "output",
                     if (images) "PNG page package"
+                    else if (nativePdf != null)
+                        "Native appearance PDF with mapped text and basic vectors"
                     else "Raster appearance PDF with original text zones where available",
                 )
                 .put(
                     "signatureStatus",
-                    "Appearance copy only; original OFD signatures/certificates are retained in the unchanged source, not transferred or validated",
+                    "Appearance copy only; original package signatures/certificates, links and interactive behavior are retained in the unchanged source, not transferred or validated",
                 )
                 .put("warnings", warnings)
+            if (images) report.remove("nativePdf")
             val reportFile = File(outputFolder, "layout-report.json")
             reportFile.writeText(report.toString(2))
             DocumentJobs.checkpointFile(
@@ -180,6 +202,19 @@ object FormatJobs {
                         finish()
                         flush()
                     }
+                    atomic.finishWrite(stream)
+                } catch (error: Throwable) {
+                    atomic.failWrite(stream)
+                    throw error
+                }
+            } else if (nativePdf != null) {
+                val atomic = android.util.AtomicFile(output)
+                val stream = atomic.startWrite()
+                try {
+                    zip.getInputStream(requireNotNull(zip.getEntry(nativePdf))).use {
+                        it.copyTo(stream)
+                    }
+                    currentCoroutineContext().ensureActive()
                     atomic.finishWrite(stream)
                 } catch (error: Throwable) {
                     atomic.failWrite(stream)

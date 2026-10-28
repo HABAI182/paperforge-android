@@ -1,0 +1,138 @@
+{
+  "emails": [
+    {
+      "adapter": "mupdf-1.28.5-layout6",
+      "type": "eml",
+      "sourceSha256": "f6ca6d4f733362b4c1acfc234cb7072aeb8666407ededfb1c06ea28e848204bb",
+      "dpi": 150,
+      "pages": [
+        {
+          "image": "page-1.png",
+          "width": 1240,
+          "height": 1755,
+          "widthPt": 595,
+          "heightPt": 842,
+          "zones": [
+            {
+              "text": "纸匠邮件 00123",
+              "left": 0.0605042,
+              "top": 0.054698337,
+              "right": 0.34519663,
+              "bottom": 0.09625654
+            },
+            {
+              "text": "发件人：[author@example.invalid]",
+              "left": 0.0605042,
+              "top": 0.1115772,
+              "right": 0.36901513,
+              "bottom": 0.13224228
+            },
+            {
+              "text": "收件人：[reader@example.invalid]",
+              "left": 0.0605042,
+              "top": 0.13224229,
+              "right": 0.37012437,
+              "bottom": 0.15290737
+            },
+            {
+              "text": "日期：Tue Oct 27 04:30:00 GMT 2026",
+              "left": 0.0605042,
+              "top": 0.15290737,
+              "right": 0.40576136,
+              "bottom": 0.17357244
+            },
+            {
+              "text": "中文邮件正文 00123",
+              "left": 0.0605042,
+              "top": 0.2014038,
+              "right": 0.33452773,
+              "bottom": 0.23257245
+            },
+            {
+              "text": "金额200.50",
+              "left": 0.06554622,
+              "top": 0.25015205,
+              "right": 0.17427899,
+              "bottom": 0.27081713
+            },
+            {
+              "text": "[图片未载入：远程图]",
+              "left": 0.2621849,
+              "top": 0.3100095,
+              "right": 0.45491093,
+              "bottom": 0.33067462
+            },
+            {
+              "text": "附件保留在 EML 原件：attachment.txt",
+              "left": 0.0605042,
+              "top": 0.33851305,
+              "right": 0.40120336,
+              "bottom": 0.35917816
+            }
+          ],
+          "warnings": [
+            "1 项外部图片未离线载入；内嵌 CID 图片保留",
+            "附件名称列于正文，附件原始数据保留在 EML 原件，未转成页面"
+          ]
+        }
+      ],
+      "nativePdf": "native.pdf",
+      "pdfBeforeFontSubsetting": 20136488,
+      "pdfBytes": 19801583,
+      "pdfOptimization": "Embedded font subsets; original text and vector page content retained",
+      "reflowable": true,
+      "attachments": [
+        "attachment.txt"
+      ],
+      "formulas": [],
+      "contentMode": "Mapped text, images and basic vectors through MuPDF PDF device; unsupported effects follow the renderer",
+      "extractedText": "纸匠邮件 00123发件人：[author@example.invalid]收件人：[reader@example.invalid]日期：Tue Oct 27 04:30:00 GMT 2026中文邮件正文 00123金额200.50[图片未载入：远程图]附件保留在 EML 原件：attachment.txt",
+      "originalUnchanged": true
+    },
+    {
+      "adapter": "mupdf-1.28.5-layout6",
+      "type": "eml",
+      "sourceSha256": "8008edb6c6d8537a8cfb5fe6c4832571ebf79d2fa94ee6bb97e06cfc6fd0606b",
+      "dpi": 150,
+      "pages": [
+        {
+          "image": "page-1.png",
+          "width": 1240,
+          "height": 1755,
+          "widthPt": 595,
+          "heightPt": 842,
+          "zones": [
+            {
+              "text": "Plain email 00123",
+              "left": 0.0605042,
+              "top": 0.057007127,
+              "right": 0.39460838,
+              "bottom": 0.09625654
+            },
+            {
+              "text": "中文邮件正文 00123 金额 200.50",
+              "left": 0.0605042,
+              "top": 0.12701662,
+              "right": 0.39126047,
+              "bottom": 0.14793825
+            }
+          ],
+          "warnings": []
+        }
+      ],
+      "nativePdf": "native.pdf",
+      "pdfBeforeFontSubsetting": 20139658,
+      "pdfBytes": 19794710,
+      "pdfOptimization": "Embedded font subsets; original text and vector page content retained",
+      "reflowable": true,
+      "attachments": [],
+      "formulas": [],
+      "contentMode": "Mapped text, images and basic vectors through MuPDF PDF device; unsupported effects follow the renderer",
+      "extractedText": "Plain email 00123中文邮件正文 00123 金额 200.50",
+      "originalUnchanged": true
+    }
+  ],
+  "dxfText": "PaperForge DXF 00123",
+  "dxfSourceSha256": "26af4f298351b3ffe52045c4a6bc1dbc738163d09fe94cb53028326f53844c6d",
+  "originalUnchanged": true
+}

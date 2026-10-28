@@ -27,7 +27,7 @@ data class BatchPreset(val kind: String = "TEXT_PDF", val options: String = "{}"
             "OFFICE_IMAGES" ->
                 "幻灯片 / Office → ${j.optString("format", "png").uppercase()} 页包 · ${j.optInt("edge",2200)} px"
             "LAYOUT" ->
-                "OFD / DjVu → ${if(j.optString("target", "PDF") == "IMAGES") "PNG 页包" else "PDF"} · ${j.optInt("dpi", 200)} DPI"
+                "特殊文档 → ${if(j.optString("target", "PDF") == "IMAGES") "PNG 页包" else "PDF"} · ${j.optInt("dpi", 200)} DPI"
             "MARKUP" -> "结构文本 → ${j.optString("target", "HTML")}"
             "TABLE_ANALYZE" -> "表格 → 校对 → ${if(j.optBoolean("outputCsv")) "CSV" else "Excel"}"
             "PDF_TOOL" -> "PDF → ${pdfModes[j.optString("mode", "txt")] ?: "文字"}"
@@ -46,7 +46,7 @@ data class BatchPreset(val kind: String = "TEXT_PDF", val options: String = "{}"
                 "IMAGES" to "图片转换",
                 "OFFICE" to "Office",
                 "OFFICE_IMAGES" to "幻灯片图片包",
-                "LAYOUT" to "OFD / DjVu",
+                "LAYOUT" to "特殊文档 / 漫画",
                 "MARKUP" to "结构文本 / EPUB",
                 "TABLE_ANALYZE" to "表格识别",
             )

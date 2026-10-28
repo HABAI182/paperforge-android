@@ -1,0 +1,10 @@
+MuPDF Fitz 1.28.5 — Copyright Artifex Software, Inc. and contributors.
+License: GNU Affero General Public License version 3 (AGPL-3.0).
+Optional PaperForge Formats APK only; not linked into the offline main APK.
+The upstream AAR is used without binary modifications; ABI packaging selects arm64-v8a or x86_64.
+Source: https://github.com/ArtifexSoftware/mupdf/tree/1.28.5
+Tag object: 8ad45e92f0935d3d87f1db3f873086472a5e1b24
+Artifact: https://maven.ghostscript.com/com/artifex/mupdf/fitz/1.28.5/fitz-1.28.5.aar
+SHA-256: e6887a242882cdd2dce062430bb46b6727513e3eb94e222255cc1a37db7a7d8e
+PaperForge adapter source: format-engine/src/main/java/cn/paperforge/formats/NativeFormats.kt
+Full license, upstream third-party listing and bundled font notices are beside this file.

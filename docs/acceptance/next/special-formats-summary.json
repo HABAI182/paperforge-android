@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-28",
+  "card": "CVT16",
+  "status": "implemented within declared per-engine scope",
+  "adapter": "mupdf-1.28.5-layout6",
+  "routes": ["XPS / OXPS", "basic SVG", "CBZ", "FB2", "EML MIME email", "PDF-backed CAJ / KDH", "common LaTeX structures and mathematics / project ZIP", "2D DXF through phone LibreOffice Draw"],
+  "phoneProof": ["special-formats/android-native-proof.json", "special-formats/email-dxf-proof.json", "special-formats/caj-latex-proof.json"],
+  "independent": ["special-formats/host-native-proof.json", "special-formats/host-extra-proof.json"],
+  "instrumentation": "25.801s OK (3 focused new tests); no old scanner/OCR/certificate suite repeated",
+  "pixelEvidence": "All pages in five basic formats equal phone-rendered PNGs pixel for pixel; four PDF-backed container outputs equal original PDF pixels. Native text, vectors, page dimensions and inline image counts checked independently.",
+  "actualUi": "special-formats/actual-ui-proof.json",
+  "actualUiAdapter": "adapter5 XPS through actual system picker, clean visible filename and native large-page reader; later adapter6 CFF-only change checked in focused tests",
+  "scope": ["source retained; durable queue, source-bound reports, PDF / PNG targets and cached page archives", "actual original/result preview including layout image packages and TeX source projects", "FB2 / EML / TeX paper and font-size settings; email header and formula-source toggles", "mapped native text and basic vectors; formulas use explicit 300 DPI image representation", "explicit TeX page breaks use internal EPUB spine chapters", "DXF missing model extents repaired on a work copy so text is not clipped", "canonical UTF-16BE bfchar fixes phone CMap range-carry loss after subsetting"],
+  "sizeEvidence": {"twoPageXpsBeforeBytes": 6327580, "twoPageXpsAfterBytes": 140901, "caveat": "Some CFF CJK programs still retain large embedded data; no universal size-reduction claim", "largeLocalOutputHashes": "special-formats/large-output-files.json"},
+  "boundaries": ["HN / C8 / TEB image CAJ unsupported and reported explicitly", "DXF does not imply DWG, DGN, full 3D CAD or external-reference compatibility", "LaTeX common structure subset, not full TeX / macro-package / TikZ / BibTeX execution; unsupported content retained and reported", "basic SVG only; rendering depends on MuPDF's SVG/CSS subset", "email attachments remain in original EML, external images are not fetched", "source package signatures, certificates, links, interactive behavior and outlines are not migrated or verified", "API35 x86_64 emulator and independent files; no physical ARM64 performance claim"],
+  "licenses": "format-engine/src/main/assets/native/UPSTREAM.json; AGPL-3.0-or-later optional engine with complete third-party notices",
+  "releaseHold": true
+}

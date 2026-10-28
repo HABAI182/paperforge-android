@@ -157,9 +157,9 @@ class FormatService : Service() {
             return
         }
         val type = options.optString("type").lowercase()
-        require(type in setOf("ofd", "djvu", "djv")) { "请选择 OFD 或 DjVu 文件" }
+        require(type in setOf("ofd", "djvu", "djv") + NativeFormats.types) { "请选择支持的版式文档或电子书" }
         val dpi = options.optInt("dpi", 200).coerceIn(72, 600)
-        val copy = File(cacheDir, "input-${activeId.replace(Regex("[^A-Za-z0-9_-]"),"_")}.source")
+        val copy = File(cacheDir, "input-${activeId.replace(Regex("[^A-Za-z0-9_-]"),"_")}.$type")
         val hash =
             withContext(Dispatchers.IO) {
                 val digest = MessageDigest.getInstance("SHA-256")
@@ -177,9 +177,35 @@ class FormatService : Service() {
                 }
                 digest.digest().joinToString("") { "%02x".format(it.toInt() and 255) }
             }
-        val folder = File(cacheDir, "pages/$ADAPTER-$hash-$dpi").apply { mkdirs() }
+        val native = type in NativeFormats.types
+        val style =
+            listOf(
+                    options.optDouble("widthPt", 595.0),
+                    options.optDouble("heightPt", 842.0),
+                    options.optDouble("fontSize", 12.0),
+                    options.optBoolean("includeHeaders", true),
+                    options.optBoolean("mathSource", false),
+                )
+                .joinToString("|")
+        val styleHash =
+            MessageDigest.getInstance("SHA-256")
+                .digest(style.toByteArray())
+                .joinToString("") { "%02x".format(it.toInt() and 255) }
+                .take(24)
+        val folder =
+            File(
+                    cacheDir,
+                    if (native) "pages/${NativeFormats.VERSION}-$type-$hash-$dpi-$styleHash"
+                    else "pages/$ADAPTER-$hash-$dpi",
+                )
+                .apply { mkdirs() }
         val manifest = File(folder, "document.json")
-        var document = if (manifest.exists()) JSONObject(manifest.readText()) else null
+        var document =
+            if (native)
+                withContext(Dispatchers.IO) {
+                    NativeFormats.render(copy, folder, hash, type, dpi, options, progress)
+                }
+            else if (manifest.exists()) JSONObject(manifest.readText()) else null
         if (
             document?.getJSONArray("pages")?.let { pages ->
                 (0 until pages.length()).all {
@@ -346,6 +372,14 @@ class FormatService : Service() {
                 zip.putNextEntry(ZipEntry("document.json"))
                 zip.write(requireNotNull(document).toString().toByteArray(Charsets.UTF_8))
                 zip.closeEntry()
+                requireNotNull(document)
+                    .optString("nativePdf")
+                    .takeIf { it.isNotBlank() }
+                    ?.let { name ->
+                        zip.putNextEntry(ZipEntry(name))
+                        File(folder, name).inputStream().use { it.copyTo(zip) }
+                        zip.closeEntry()
+                    }
                 val pages = requireNotNull(document).getJSONArray("pages")
                 for (index in 0 until pages.length()) {
                     ensureActive()

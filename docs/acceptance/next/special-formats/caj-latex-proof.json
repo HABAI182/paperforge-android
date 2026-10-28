@@ -1,0 +1,410 @@
+{
+  "formats": [
+    {
+      "adapter": "mupdf-1.28.5-layout6",
+      "type": "caj",
+      "sourceSha256": "2dda3fd8dc14a1ac26b0fd9ae27dc9b77b47607af2456d59712306666f137f9e",
+      "dpi": 150,
+      "pages": [
+        {
+          "image": "page-1.png",
+          "width": 1275,
+          "height": 1650,
+          "widthPt": 612,
+          "heightPt": 792,
+          "zones": [
+            {
+              "text": "PaperForge CAJ 00123 page 1",
+              "left": 0.04901961,
+              "top": 0.06647728,
+              "right": 0.4561078,
+              "bottom": 0.09770455
+            }
+          ],
+          "warnings": [
+            "CAJ\/KDH 仅转换内含 PDF 的容器；目录与原始签章保留在原件，未迁移。HN \/ C8 \/ TEB 图像容器尚不支持。"
+          ]
+        },
+        {
+          "image": "page-2.png",
+          "width": 1275,
+          "height": 1650,
+          "widthPt": 612,
+          "heightPt": 792,
+          "zones": [
+            {
+              "text": "PaperForge CAJ 00123 page 2",
+              "left": 0.04901961,
+              "top": 0.06647728,
+              "right": 0.4561078,
+              "bottom": 0.09770455
+            }
+          ],
+          "warnings": [
+            "CAJ\/KDH 仅转换内含 PDF 的容器；目录与原始签章保留在原件，未迁移。HN \/ C8 \/ TEB 图像容器尚不支持。"
+          ]
+        }
+      ],
+      "nativePdf": "native.pdf",
+      "pdfBeforeFontSubsetting": 31936,
+      "pdfBytes": 10607,
+      "pdfOptimization": "Embedded font subsets; original text and vector page content retained",
+      "reflowable": false,
+      "attachments": [],
+      "formulas": [],
+      "contentMode": "Mapped text, images and basic vectors through MuPDF PDF device; unsupported effects follow the renderer",
+      "name": "complete-pages.caj",
+      "extractedText": "PaperForge CAJ 00123 page 1\nPaperForge CAJ 00123 page 2",
+      "originalUnchanged": true
+    },
+    {
+      "adapter": "mupdf-1.28.5-layout6",
+      "type": "caj",
+      "sourceSha256": "d2dc9b9088f4bf5b573ddbeceb504e21380d7d8bf22ddf75e800a99a91b5c1f3",
+      "dpi": 150,
+      "pages": [
+        {
+          "image": "page-1.png",
+          "width": 1275,
+          "height": 1650,
+          "widthPt": 612,
+          "heightPt": 792,
+          "zones": [
+            {
+              "text": "PaperForge CAJ 00123 page 1",
+              "left": 0.04901961,
+              "top": 0.06647728,
+              "right": 0.4561078,
+              "bottom": 0.09770455
+            }
+          ],
+          "warnings": [
+            "CAJ\/KDH 仅转换内含 PDF 的容器；目录与原始签章保留在原件，未迁移。HN \/ C8 \/ TEB 图像容器尚不支持。"
+          ]
+        },
+        {
+          "image": "page-2.png",
+          "width": 1275,
+          "height": 1650,
+          "widthPt": 612,
+          "heightPt": 792,
+          "zones": [
+            {
+              "text": "PaperForge CAJ 00123 page 2",
+              "left": 0.04901961,
+              "top": 0.06647728,
+              "right": 0.4561078,
+              "bottom": 0.09770455
+            }
+          ],
+          "warnings": [
+            "CAJ\/KDH 仅转换内含 PDF 的容器；目录与原始签章保留在原件，未迁移。HN \/ C8 \/ TEB 图像容器尚不支持。"
+          ]
+        }
+      ],
+      "nativePdf": "native.pdf",
+      "pdfBeforeFontSubsetting": 31936,
+      "pdfBytes": 10607,
+      "pdfOptimization": "Embedded font subsets; original text and vector page content retained",
+      "reflowable": false,
+      "attachments": [],
+      "formulas": [],
+      "contentMode": "Mapped text, images and basic vectors through MuPDF PDF device; unsupported effects follow the renderer",
+      "name": "missing-pages.caj",
+      "extractedText": "PaperForge CAJ 00123 page 1\nPaperForge CAJ 00123 page 2",
+      "originalUnchanged": true
+    },
+    {
+      "adapter": "mupdf-1.28.5-layout6",
+      "type": "kdh",
+      "sourceSha256": "476da87cf801f66642fd365a7b8e32a87a6467fa88ff8f4be1e8a8cd9986c46c",
+      "dpi": 150,
+      "pages": [
+        {
+          "image": "page-1.png",
+          "width": 1275,
+          "height": 1650,
+          "widthPt": 612,
+          "heightPt": 792,
+          "zones": [
+            {
+              "text": "PaperForge CAJ 00123 page 1",
+              "left": 0.04901961,
+              "top": 0.06647728,
+              "right": 0.4561078,
+              "bottom": 0.09770455
+            }
+          ],
+          "warnings": [
+            "CAJ\/KDH 仅转换内含 PDF 的容器；目录与原始签章保留在原件，未迁移。HN \/ C8 \/ TEB 图像容器尚不支持。"
+          ]
+        },
+        {
+          "image": "page-2.png",
+          "width": 1275,
+          "height": 1650,
+          "widthPt": 612,
+          "heightPt": 792,
+          "zones": [
+            {
+              "text": "PaperForge CAJ 00123 page 2",
+              "left": 0.04901961,
+              "top": 0.06647728,
+              "right": 0.4561078,
+              "bottom": 0.09770455
+            }
+          ],
+          "warnings": [
+            "CAJ\/KDH 仅转换内含 PDF 的容器；目录与原始签章保留在原件，未迁移。HN \/ C8 \/ TEB 图像容器尚不支持。"
+          ]
+        }
+      ],
+      "nativePdf": "native.pdf",
+      "pdfBeforeFontSubsetting": 31936,
+      "pdfBytes": 10607,
+      "pdfOptimization": "Embedded font subsets; original text and vector page content retained",
+      "reflowable": false,
+      "attachments": [],
+      "formulas": [],
+      "contentMode": "Mapped text, images and basic vectors through MuPDF PDF device; unsupported effects follow the renderer",
+      "name": "source.kdh",
+      "extractedText": "PaperForge CAJ 00123 page 1\nPaperForge CAJ 00123 page 2",
+      "originalUnchanged": true
+    },
+    {
+      "adapter": "mupdf-1.28.5-layout6",
+      "type": "caj",
+      "sourceSha256": "9d395c0b4a03b1e13a02973063d040a919fdbe352e3da9cf959e920b459a610f",
+      "dpi": 150,
+      "pages": [
+        {
+          "image": "page-1.png",
+          "width": 1275,
+          "height": 1650,
+          "widthPt": 612,
+          "heightPt": 792,
+          "zones": [
+            {
+              "text": "PaperForge CAJ 00123 page 1",
+              "left": 0.04901961,
+              "top": 0.06647728,
+              "right": 0.4561078,
+              "bottom": 0.09770455
+            }
+          ],
+          "warnings": [
+            "CAJ\/KDH 仅转换内含 PDF 的容器；目录与原始签章保留在原件，未迁移。HN \/ C8 \/ TEB 图像容器尚不支持。"
+          ]
+        },
+        {
+          "image": "page-2.png",
+          "width": 1275,
+          "height": 1650,
+          "widthPt": 612,
+          "heightPt": 792,
+          "zones": [
+            {
+              "text": "PaperForge CAJ 00123 page 2",
+              "left": 0.04901961,
+              "top": 0.06647728,
+              "right": 0.4561078,
+              "bottom": 0.09770455
+            }
+          ],
+          "warnings": [
+            "CAJ\/KDH 仅转换内含 PDF 的容器；目录与原始签章保留在原件，未迁移。HN \/ C8 \/ TEB 图像容器尚不支持。"
+          ]
+        }
+      ],
+      "nativePdf": "native.pdf",
+      "pdfBeforeFontSubsetting": 31936,
+      "pdfBytes": 10607,
+      "pdfOptimization": "Embedded font subsets; original text and vector page content retained",
+      "reflowable": false,
+      "attachments": [],
+      "formulas": [],
+      "contentMode": "Mapped text, images and basic vectors through MuPDF PDF device; unsupported effects follow the renderer",
+      "name": "renamed.caj",
+      "extractedText": "PaperForge CAJ 00123 page 1\nPaperForge CAJ 00123 page 2",
+      "originalUnchanged": true
+    },
+    {
+      "adapter": "mupdf-1.28.5-layout6",
+      "type": "tex",
+      "sourceSha256": "a3a0587efcc296d042dc3dbffe9361ec67d7b1db18c70ba60bb443e9ae4bb26e",
+      "dpi": 150,
+      "pages": [
+        {
+          "image": "page-1.png",
+          "width": 1240,
+          "height": 1755,
+          "widthPt": 595,
+          "heightPt": 842,
+          "zones": [
+            {
+              "text": "纸匠 LaTeX 00123",
+              "left": 0.0605042,
+              "top": 0.054698337,
+              "right": 0.3967865,
+              "bottom": 0.09625654
+            },
+            {
+              "text": "PaperForge",
+              "left": 0.0605042,
+              "top": 0.11266033,
+              "right": 0.16699159,
+              "bottom": 0.13224228
+            },
+            {
+              "text": "中文正文",
+              "left": 0.0605042,
+              "top": 0.1446342,
+              "right": 0.18151261,
+              "bottom": 0.17535391
+            },
+            {
+              "text": "保留中文段落、金额 200.50，以及加粗文字。 内联公式 ",
+              "left": 0.0605042,
+              "top": 0.19694537,
+              "right": 0.5625277,
+              "bottom": 0.21761045
+            },
+            {
+              "text": "a^2+b^2=c^2。",
+              "left": 0.6746622,
+              "top": 0.19694537,
+              "right": 0.77748907,
+              "bottom": 0.21742518
+            },
+            {
+              "text": "\\frac{1}{2}+\\sqrt{x}+\\alpha+\\int_0^1 x^2\\,dx",
+              "left": 0.0605042,
+              "top": 0.27830166,
+              "right": 0.32687595,
+              "bottom": 0.29200903
+            },
+            {
+              "text": "\\begin{aligned}x+y&=3\\\\ x-y&=1\\end{aligned}",
+              "left": 0.0605042,
+              "top": 0.35554633,
+              "right": 0.3403018,
+              "bottom": 0.36925367
+            },
+            {
+              "text": "•  第一项",
+              "left": 0.0926521,
+              "top": 0.3799382,
+              "right": 0.17142858,
+              "bottom": 0.4006033
+            },
+            {
+              "text": "•  第二项",
+              "left": 0.0926521,
+              "top": 0.39704034,
+              "right": 0.17142858,
+              "bottom": 0.41770545
+            },
+            {
+              "text": "项目金额",
+              "left": 0.06739496,
+              "top": 0.4332636,
+              "right": 0.1610084,
+              "bottom": 0.45374343
+            },
+            {
+              "text": "甲",
+              "left": 0.06739496,
+              "top": 0.45951065,
+              "right": 0.08756302,
+              "bottom": 0.47999048
+            },
+            {
+              "text": "200.50",
+              "left": 0.12067227,
+              "top": 0.4605938,
+              "right": 0.18234621,
+              "bottom": 0.48017576
+            },
+            {
+              "text": " [1] \\unknownmacro未支持内容要保留",
+              "left": 0.2621849,
+              "top": 0.5371294,
+              "right": 0.59570336,
+              "bottom": 0.55885744
+            }
+          ],
+          "warnings": [
+            "LaTeX 常用正文与数学排版，非完整 TeX 引擎；不运行宏包、TikZ、外部命令或参考文献工具。未支持的内容保留原文并列入报告。",
+            "命令保留原文：\\unknownmacro"
+          ]
+        },
+        {
+          "image": "page-2.png",
+          "width": 1240,
+          "height": 1755,
+          "widthPt": 595,
+          "heightPt": 842,
+          "zones": [
+            {
+              "text": "第二页",
+              "left": 0.0605042,
+              "top": 0.055133015,
+              "right": 0.15126051,
+              "bottom": 0.085852735
+            },
+            {
+              "text": "结束 00123。",
+              "left": 0.0605042,
+              "top": 0.10031829,
+              "right": 0.18268235,
+              "bottom": 0.12098337
+            },
+            {
+              "text": "[1] 中文脚注",
+              "left": 0.0605042,
+              "top": 0.13998574,
+              "right": 0.16921009,
+              "bottom": 0.16065082
+            }
+          ],
+          "warnings": [
+            "LaTeX 常用正文与数学排版，非完整 TeX 引擎；不运行宏包、TikZ、外部命令或参考文献工具。未支持的内容保留原文并列入报告。",
+            "命令保留原文：\\unknownmacro"
+          ]
+        }
+      ],
+      "nativePdf": "native.pdf",
+      "pdfBeforeFontSubsetting": 20153582,
+      "pdfBytes": 19819613,
+      "pdfOptimization": "Embedded font subsets; original text and vector page content retained",
+      "reflowable": true,
+      "attachments": [],
+      "formulas": [
+        {
+          "latex": "a^2+b^2=c^2",
+          "renderedAs": "300 DPI PNG embedded in native PDF",
+          "widthPt": 66.72,
+          "heightPt": 18
+        },
+        {
+          "latex": "\\frac{1}{2}+\\sqrt{x}+\\alpha+\\int_0^1 x^2\\,dx",
+          "renderedAs": "300 DPI PNG embedded in native PDF",
+          "widthPt": 131.76,
+          "heightPt": 35.76
+        },
+        {
+          "latex": "\\begin{aligned}x+y&=3\\\\ x-y&=1\\end{aligned}",
+          "renderedAs": "300 DPI PNG embedded in native PDF",
+          "widthPt": 55.44,
+          "heightPt": 35.76
+        }
+      ],
+      "contentMode": "Mapped text, images and basic vectors through MuPDF PDF device; unsupported effects follow the renderer",
+      "name": "latex-project.zip",
+      "extractedText": "纸匠 LaTeX 00123PaperForge中文正文保留中文段落、金额 200.50，以及加粗文字。 内联公式a^2+b^2=c^2。\\frac{1}{2}+\\sqrt{x}+\\alpha+\\int_0^1 x^2\\,dx\\begin{aligned}x+y&=3\\\\ x-y&=1\\end{aligned}•  第一项•  第二项项目金额甲200.50[1] \\unknownmacro未支持内容要保留\n第二页结束 00123。[1] 中文脚注",
+      "originalUnchanged": true
+    }
+  ],
+  "unsupportedHn": "此 CAJ 属于 HN \/ C8 \/ TEB 或未知容器，当前引擎不能转换；原件保留",
+  "originalUnchanged": true
+}

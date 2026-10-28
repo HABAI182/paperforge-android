@@ -1,0 +1,11 @@
+{
+  "date": "2026-10-28",
+  "request": "More designed app icon and logo",
+  "design": "Original folded-paper P, deep evergreen gradient, warm paper, mint fold and brass underside",
+  "resources": ["legacy vector", "API26 adaptive icon", "round adaptive icon", "API33 monochrome", "about-dialog brand mark"],
+  "preview": "brand-icon/mask-preview.png",
+  "nativeAndroid": "brand-icon/android-app-info.png",
+  "source": "assets/branding/",
+  "validation": "Native Android API35 app-info icon visually inspected; same paths used for static SVG / small-size mask previews. API33 monochrome layer supplied, no claim of a separate physical themed-launcher test.",
+  "tests": "Resource build and visual inspection only; no new repetitive functional test suite"
+}

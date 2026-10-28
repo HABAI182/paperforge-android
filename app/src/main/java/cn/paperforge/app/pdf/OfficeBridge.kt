@@ -22,13 +22,32 @@ object OfficeBridge {
     ) = coroutineScope {
         val updates = Channel<Pair<Int, String>>(Channel.CONFLATED)
         val reporter = launch { for ((percent, detail) in updates) progress(percent, detail) }
+        var prepared = source
         try {
-            request(context, id, source, output, format) { percent, detail ->
+            prepared =
+                withContext(Dispatchers.IO) {
+                    DxfPreflight.prepare(
+                        source,
+                        File(
+                            context.cacheDir,
+                            "office-dxf/${java.util.UUID.randomUUID()}/input.dxf",
+                        ),
+                    )
+                }
+            if (prepared != source) progress(5, "已补齐 DXF 图纸范围，原件保留")
+            request(context, id, prepared, output, format) { percent, detail ->
                 updates.trySend(percent to detail)
             }
         } finally {
-            updates.close()
-            reporter.cancelAndJoin()
+            withContext(NonCancellable) {
+                updates.close()
+                reporter.cancelAndJoin()
+                if (prepared != source)
+                    withContext(Dispatchers.IO) {
+                        prepared.delete()
+                        prepared.parentFile?.delete()
+                    }
+            }
         }
     }
 

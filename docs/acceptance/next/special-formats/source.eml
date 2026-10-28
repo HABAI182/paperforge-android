@@ -1,0 +1,36 @@
+From: =?UTF-8?B?57q45Yyg6YKu5Lu2IDAwMTIz?= <author@example.invalid>
+To: Reader <reader@example.invalid>
+Subject: =?UTF-8?B?57q45Yyg6YKu5Lu2IDAwMTIz?=
+Date: Tue, 27 Oct 2026 12:30:00 +0800
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mixed-proof"
+
+--mixed-proof
+Content-Type: multipart/related; boundary="related-proof"
+
+--related-proof
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: base64
+
+PGh0bWw+PGJvZHk+PGgyPuS4reaWh+mCruS7tuato+aWhyAwMDEyMzwvaDI+PHRhYmxlIGJvcmRl
+cj0nMSc+PHRyPjx0ZD7ph5Hpop08L3RkPjx0ZD4yMDAuNTA8L3RkPjwvdHI+PC90YWJsZT48aW1n
+IHNyYz0nY2lkOmJsdWUnIGFsdD0n5YaF5bWM6JOd5Zu+Jy8+PGltZyBzcmM9J2h0dHBzOi8vaW52
+YWxpZC5leGFtcGxlL3BpeGVsLnBuZycgYWx0PSfov5znqIvlm74nLz48L2JvZHk+PC9odG1sPg==
+--related-proof
+Content-Type: image/png
+Content-ID: <blue>
+Content-Transfer-Encoding: base64
+
+iVBORw0KGgoAAAANSUhEUgAAAKAAAAA8CAYAAADha7EVAAAAAXNSR0IArs4c6QAAAARzQklUCAgI
+CHwIZIgAAACzSURBVHic7dIxAQAgDMCwgX/PQ0YPEgU9emZ2ByK3DuBvBiRlQFIGJGVAUgYkZUBS
+BiRlQFIGJGVAUgYkZUBSBiRlQFIGJGVAUgYkZUBSBiRlQFIGJGVAUgYkZUBSBiRlQFIGJGVAUgYk
+ZUBSBiRlQFIGJGVAUgYkZUBSBiRlQFIGJGVAUgYkZUBSBiRlQFIGJGVAUgYkZUBSBiRlQFIGJGVA
+UgYkZUBSBiRlQFIGJGVAUg8kfAJ2uC9m3gAAAABJRU5ErkJggg==
+--related-proof--
+--mixed-proof
+Content-Type: text/plain; charset=UTF-8
+Content-Disposition: attachment; filename="attachment.txt"
+Content-Transfer-Encoding: base64
+
+T3JpZ2luYWwgYXR0YWNobWVudCBieXRlcw==
+--mixed-proof--

@@ -1,0 +1,25 @@
+{
+  "note": "Large embedded-CFF PDF outputs retained locally and reproducible by SpecialFormatsFlowTest; their frames, structured text and hashes are committed. CFF font subsetting is not guaranteed to reduce size.",
+  "files": [
+    {
+      "file": "fb2.pdf",
+      "bytes": 19790222,
+      "sha256": "dc1d4eb64809a646579875c445ba0e273f08eb4a179b8593694128bd809c8553"
+    },
+    {
+      "file": "source-email.pdf",
+      "bytes": 19801583,
+      "sha256": "46965b316422799eab6e0e37b834c9566993bd6f0937a164e4baff0ad6ce6387"
+    },
+    {
+      "file": "gb18030-email.pdf",
+      "bytes": 19794710,
+      "sha256": "781e0dad887be2042231ffc97b8602878c5ac2891e099feb50d8a943495e6029"
+    },
+    {
+      "file": "latex-project-container.pdf",
+      "bytes": 19819613,
+      "sha256": "960b10bc6a4d9383952a9cefc72729e3283b50429c98c5c7d667cda332a40386"
+    }
+  ]
+}

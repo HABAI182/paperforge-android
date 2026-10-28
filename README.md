@@ -23,7 +23,7 @@
 
 Office 手机转换现接入持久任务中心：保留原件后在独立引擎进程排版，支持后台继续、取消、失败重试与完成结果复用。主应用和 Office 引擎需要安装同一签名渠道的新构建。
 
-OFD / DjVu 可在手机离线转为 PDF 或逐页 PNG 包，保留纸张尺寸、方向及可用的原始文字区域。需同签名的独立「格式引擎」APK；嵌入字体优先，系统字体匹配会记录在版面报告中。转换复制可见外观，不迁移或验证原文件证书。来源与协议见 [format-engine/UPSTREAM.md](format-engine/UPSTREAM.md)。
+OFD / DjVu、XPS / OXPS、基础 SVG、CBZ、FB2、EML、PDF 容器 CAJ / KDH、常用 LaTeX 正文与数学可在手机离线转为 PDF / PNG 页包；DXF 使用手机 Office 引擎。原件、逐页缓存、实际结果对照和能力边界见 [特殊格式转换](docs/development/SPECIAL-FORMATS.md)，来源与协议见 [format-engine/UPSTREAM.md](format-engine/UPSTREAM.md)。
 
 [版本记录](CHANGELOG.md) · [98 项计划实际状态](docs/roadmap/implementation-status.json) · [本轮范围和验证](docs/quality/SCAN-EXPERIENCE-0.6.1.md)
 
@@ -88,4 +88,4 @@ macOS/Linux 使用 `./gradlew`。首次构建需下载依赖，已安装应用�
 
 构建可选 Office 手机引擎：先运行 `python tools/fetch_office_runtime.py`（从固定来源下载并校验运行时），再执行 `gradlew.bat :office-engine:assembleDebug -PpaperforgeAbis=arm64-v8a`。主应用独立构建不需要该运行时。运行时目录不进入源码包。
 
-构建可选格式引擎：`gradlew.bat :format-engine:assembleDebug`。已提交固定版本的浏览器解析资源，普通 APK 构建无需 Node；重新生成资源的方法与 GPL/Apache 来源说明见该模块文档。独立模块使用 GPL-3.0-or-later，不改变主应用许可证。
+构建可选格式引擎：`gradlew.bat :format-engine:assembleDebug`。已提交固定版本的浏览器解析资源，普通 APK 构建无需 Node；原生 MuPDF AAR 固定 1.28.5，来源、SHA256 与重新构建方法见该模块文档。独立模块使用 AGPL-3.0-or-later，不改变主应用许可证。

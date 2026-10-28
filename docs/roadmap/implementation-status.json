@@ -380,8 +380,8 @@
     {
       "id": "CVT16",
       "title": "特殊格式扩展",
-      "status": "planned",
-      "note": "完整目标保留，未在本版标记完成"
+      "status": "done",
+      "note": "已逐项接入XPS/OXPS/基础SVG/CBZ/FB2、EML MIME邮件、PDF容器CAJ/KDH、常用LaTeX正文/数学与项目ZIP，以及手机Draw二维DXF。原件、任务/逐页复用、PNG包、报告与实际结果对照接通；26秒集中、独立页面像素/文字/矢量复读及真实系统选件到大页面阅读通过。按实际引擎范围交付，不宣称HN/C8/TEB、DWG/DGN、完整TeX宏包或任意SVG效果；较大CFF字体仍可能保留。见special-formats-summary.json。"
     },
     {
       "id": "LIB01",
@@ -595,9 +595,9 @@
     }
   ],
   "counts": {
-    "done": 86,
+    "done": 87,
     "partial": 6,
-    "planned": 6
+    "planned": 5
   },
   "releaseHold": true,
   "publishedBaseline": "0.6.0"

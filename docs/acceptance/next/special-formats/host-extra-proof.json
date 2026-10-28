@@ -1,0 +1,163 @@
+{
+  "engine": "2.0",
+  "files": [
+    {
+      "file": "source-email.pdf",
+      "pages": [
+        {
+          "sizePt": [
+            595.0,
+            842.0
+          ],
+          "vectors": 1,
+          "images": 1,
+          "text": "纸匠邮件 00123\n发件人：[author@example.invalid]\n收件人：[reader@example.invalid]\n日期：Tue Oct 27 04:30:00 GMT 2026\n中文邮件正文 00123\n金额200.50\n[图片未载入：远程图]\n附件保留在 EML 原件：attachment.txt\n"
+        }
+      ]
+    },
+    {
+      "file": "gb18030-email.pdf",
+      "pages": [
+        {
+          "sizePt": [
+            595.0,
+            842.0
+          ],
+          "vectors": 1,
+          "images": 0,
+          "text": "Plain email 00123\n中文邮件正文 00123 金额 200.50\n"
+        }
+      ]
+    },
+    {
+      "file": "dxf.pdf",
+      "pages": [
+        {
+          "sizePt": [
+            612.0,
+            792.0
+          ],
+          "vectors": 3,
+          "images": 0,
+          "text": "PaperForge DXF 00123\n"
+        }
+      ]
+    },
+    {
+      "file": "complete-pages-container.pdf",
+      "pages": [
+        {
+          "sizePt": [
+            612.0,
+            792.0
+          ],
+          "vectors": 1,
+          "images": 0,
+          "text": "PaperForge CAJ 00123 page 1\n"
+        },
+        {
+          "sizePt": [
+            612.0,
+            792.0
+          ],
+          "vectors": 1,
+          "images": 0,
+          "text": "PaperForge CAJ 00123 page 2\n"
+        }
+      ]
+    },
+    {
+      "file": "missing-pages-container.pdf",
+      "pages": [
+        {
+          "sizePt": [
+            612.0,
+            792.0
+          ],
+          "vectors": 1,
+          "images": 0,
+          "text": "PaperForge CAJ 00123 page 1\n"
+        },
+        {
+          "sizePt": [
+            612.0,
+            792.0
+          ],
+          "vectors": 1,
+          "images": 0,
+          "text": "PaperForge CAJ 00123 page 2\n"
+        }
+      ]
+    },
+    {
+      "file": "source-container.pdf",
+      "pages": [
+        {
+          "sizePt": [
+            612.0,
+            792.0
+          ],
+          "vectors": 1,
+          "images": 0,
+          "text": "PaperForge CAJ 00123 page 1\n"
+        },
+        {
+          "sizePt": [
+            612.0,
+            792.0
+          ],
+          "vectors": 1,
+          "images": 0,
+          "text": "PaperForge CAJ 00123 page 2\n"
+        }
+      ]
+    },
+    {
+      "file": "renamed-container.pdf",
+      "pages": [
+        {
+          "sizePt": [
+            612.0,
+            792.0
+          ],
+          "vectors": 1,
+          "images": 0,
+          "text": "PaperForge CAJ 00123 page 1\n"
+        },
+        {
+          "sizePt": [
+            612.0,
+            792.0
+          ],
+          "vectors": 1,
+          "images": 0,
+          "text": "PaperForge CAJ 00123 page 2\n"
+        }
+      ]
+    },
+    {
+      "file": "latex-project-container.pdf",
+      "pages": [
+        {
+          "sizePt": [
+            595.0,
+            842.0
+          ],
+          "vectors": 12,
+          "images": 4,
+          "text": "纸匠 LaTeX 00123\nPaperForge\n中文正文\n保留中文段落、金额 200.50，以及加粗文字。 内联公式 \na^2+b^2=c^2。\n\\frac{1}{2}+\\sqrt{x}+\\alpha+\\int_0^1 x^2\\,dx\n\\begin{aligned}x+y&=3\\\\ x-y&=1\\end{aligned}\n•  第一项\n•  第二项\n项目金额\n甲\n200.50\n [1] \\unknownmacro未支持内容要保留\n"
+        },
+        {
+          "sizePt": [
+            595.0,
+            842.0
+          ],
+          "vectors": 1,
+          "images": 0,
+          "text": "第二页\n结束 00123。\n[1] 中文脚注\n"
+        }
+      ]
+    }
+  ],
+  "cajOriginalPixelsIdentical": true
+}

@@ -80,7 +80,28 @@ object ToolCatalog {
                 ),
                 ToolCapability("OFD → PDF", "嵌入字体、页序、图片与印章外观；原件保留", "版式文档", "ofd-pdf"),
                 ToolCapability("DjVu → PDF", "多页与旋转方向，保留可用的原始文字坐标", "版式文档", "djvu-pdf"),
-                ToolCapability("OFD / DjVu → PNG 页包", "逐页无损图片、纸张尺寸和版面报告", "版式文档", "layout-images"),
+                ToolCapability(
+                    "CAJ / KDH → PDF",
+                    "PDF 容器、保留原件；不支持的 HN / C8 会明确说明",
+                    "版式文档",
+                    "caj-pdf",
+                ),
+                ToolCapability("CAD DXF → PDF", "手机 Draw 引擎解析二维线条、图形与文字", "版式文档", "dxf-pdf"),
+                ToolCapability(
+                    "LaTeX 正文与公式 → PDF",
+                    "常用标题、段落、表格与数学；支持带图片的 TeX 项目 ZIP",
+                    "版式文档",
+                    "latex-pdf",
+                ),
+                ToolCapability("邮件 EML → PDF", "中文主题、正文、内嵌图片与邮件头；附件保留在原件", "版式文档", "email-pdf"),
+                ToolCapability(
+                    "XPS / SVG / 漫画 / FB2 → PDF",
+                    "XPS、OXPS、SVG、CBZ、FB2；文字与基础矢量保留",
+                    "版式文档",
+                    "native-format-pdf",
+                    "email-pdf",
+                ),
+                ToolCapability("特殊文档 → PNG 页包", "逐页无损图片、纸张尺寸和版面报告", "版式文档", "layout-images"),
                 ToolCapability(
                     "文字 / DOCX → PDF",
                     "TXT、Markdown、HTML、DOCX 正文，中文分页排版",
@@ -111,16 +132,69 @@ object ToolCatalog {
             )
             .map { entry ->
                 when (entry.mode) {
+                    "dxf-pdf" ->
+                        entry.copy(
+                            input = "DXF 二维图纸",
+                            output = "PDF；可用实际手机 Office 排版对照",
+                            parameters = "保留原件、任务重试；也可通过 Office 图片包导出逐页图像",
+                            boundary =
+                                "按手机 LibreOffice Draw 的导入能力；不读取 DWG/DGN，不保证外部字体、三维实体或全部 CAD 专有对象。",
+                            engine = "可选手机 Office 引擎 · 离线",
+                            aliases = "CAD DXF 图纸 工程图 二维 绘图 Draw",
+                        )
+                    "caj-pdf" ->
+                        entry.copy(
+                            input = "内含 PDF 的 CAJ、KDH，或改名为 CAJ 的 PDF",
+                            output = "PDF / PNG 页包与读取报告",
+                            parameters = "分辨率、原件保留、逐页缓存、实际结果对照",
+                            boundary = "仅 PDF 容器；HN / C8 / TEB 图像型 CAJ 尚不支持。目录、证书和交互内容保留在原件，未迁移。",
+                            engine = "可选手机格式引擎 · 离线",
+                            aliases = "CAJ KDH HN C8 知网 论文",
+                        )
+                    "latex-pdf" ->
+                        entry.copy(
+                            input = "UTF-8 .tex，或包含 main.tex / 单一主文件与图片的项目 ZIP",
+                            output = "PDF / PNG 页包、公式原文与不支持内容报告",
+                            parameters = "纸张、字号、DPI、公式附原文、原件保留与结果对照",
+                            boundary =
+                                "常用正文结构加 JLaTeXMath 数学，公式为 300 DPI 图像；不是完整 TeX 编译器。宏包、TikZ、BibTeX 和未知命令保留原文并提示。",
+                            engine = "可选手机格式引擎 · MuPDF / JLaTeXMath · 离线",
+                            aliases = "tex latex 数学 公式 矩阵 分数 根式 论文 排版 项目 zip",
+                        )
                     "ofd-pdf",
                     "djvu-pdf",
+                    "native-format-pdf",
                     "layout-images" ->
                         entry.copy(
-                            input = "OFD、DjVu / DJV 原文件",
-                            output = "PDF 或 PNG 页面包；存在原始文字坐标时保留文字层",
-                            parameters = "150 / 200 / 300 DPI、输出类型、原件保留、转换报告",
-                            boundary = "固定版面副本，需要独立手机格式引擎；复杂字体回退见报告。签章仅复制外观，原件证书与签名不迁移或验签。",
+                            input =
+                                when (entry.mode) {
+                                    "ofd-pdf" -> "OFD 版式文档"
+                                    "djvu-pdf" -> "DjVu / DJV 多页文档"
+                                    "native-format-pdf" -> "XPS / OXPS、基础 SVG、CBZ 漫画、FB2 电子书"
+                                    "email-pdf" -> "EML 邮件，MIME 正文与内嵌图片"
+                                    else -> "格式引擎支持的特殊文档"
+                                },
+                            output =
+                                if (entry.mode in setOf("ofd-pdf", "djvu-pdf")) "PDF；页面图像加可用的原始文字层"
+                                else "PDF 或 PNG 页包；引擎可映射的文字与基础矢量保留",
+                            parameters =
+                                "150 / 200 / 300 DPI、输出类型、原件保留、实际结果对照、转换报告" +
+                                    if (entry.mode in setOf("native-format-pdf", "email-pdf"))
+                                        "；重排纸张与字号"
+                                    else "",
+                            boundary =
+                                if (entry.mode == "email-pdf")
+                                    "静态邮件正文，CID 图片离线读取；外部图片不联网加载，附件数据留在原件。"
+                                else "需要独立手机格式引擎，支持范围依对应解析器。复杂效果请核对实际版面；源签名与证书未迁移或验证。",
                             engine = "可选手机格式引擎 · 离线",
-                            aliases = "ofd djvu djv 版式 电子发票 票据 图片 印章 convert",
+                            aliases =
+                                when (entry.mode) {
+                                    "ofd-pdf" -> "ofd 版式 电子发票 票据 印章"
+                                    "djvu-pdf" -> "djvu djv 书刊"
+                                    "native-format-pdf" -> "xps oxps svg cbz fb2 漫画 电子书"
+                                    "email-pdf" -> "eml email mime 邮件"
+                                    else -> "ofd djvu xps svg cbz fb2 eml caj kdh tex PNG 图片 页包"
+                                },
                         )
                     "auto-export" ->
                         entry.copy(

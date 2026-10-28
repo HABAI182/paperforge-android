@@ -7,6 +7,7 @@ import android.webkit.WebView
 class FormatApp : Application() {
     override fun onCreate() {
         super.onCreate()
+        ru.noties.jlatexmath.JLatexMathAndroid.init(this)
         if (Build.VERSION.SDK_INT >= 28 && getProcessName().endsWith(":worker")) {
             WebView.setDataDirectorySuffix("format-worker")
         }

@@ -806,7 +806,7 @@
       ],
       "scope": "CAJ/XPS/邮件/LaTeX/CAD按实际引擎逐项接",
       "acceptance": "每条路线有样例和真实能力声明",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "LIB01",
@@ -1252,9 +1252,9 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 86,
+    "done": 87,
     "partial": 6,
-    "planned": 6
+    "planned": 5
   },
   "updated": "2026-10-28"
 }
