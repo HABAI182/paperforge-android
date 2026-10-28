@@ -116,6 +116,8 @@
 
 58. 外部所有者密钥统一签名主包/手机引擎，ABI/通道候选带真实证书、SHA、权限、ZIP/ELF与包体条目清单；x86_64 R8实际覆盖安装保留原文档/设置，ARM64三包签名一致。补齐JPEG-2000源码模块后，实际JPX提取PNG与独立原图逐像素一致。私有编译CI与手动同证书手机候选工作流已配置，远端首次结果及进一步原生裁剪继续；说明见 `docs/development/DISTRIBUTION.md`，此组未提前宣布发布完成。
 
+59. OpenCV 按实际导入裁为 core/imgproc/imgcodecs/photo/Java 固定源码构建；七种增强独立像素、经典/神经四角及实际 Paddle 文字均与改动前一致。ARM64 Release 主包减少 15.33%，原证书、离线权限与所有 ELF/ZIP 16KiB 核对通过，独立模型/脚本字体和手机引擎继续按需安装。见 `docs/acceptance/next/distribution-summary.json`；这里不把包体精简说成实拍质量或实体 ARM64 性能提升。REL03 据实际包体与能力记录完成。
+
 ## 后续执行顺序
 
 页序历史补充：重排只记录页面ID，删页/分割仅记录内容差异；新旧可读快照的撤销保留后来新增的扫描页和与操作无关的新OCR。备份对独立页序ID重映射，集中检查见 `docs/acceptance/next/sparse-history-summary.json`。不将此修复重复计为新完成的计划卡。

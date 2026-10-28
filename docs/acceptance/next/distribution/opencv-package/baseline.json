@@ -1,0 +1,340 @@
+{
+  "purpose": "same authored fixture; package\/API equivalence only",
+  "phase": "baseline",
+  "classicalQuad": "0.2433936,0.077922076;0.76216966,0.10018553;0.837274,0.9128015;0.17941585,0.9833024",
+  "neuralQuad": "0.23849373,0.07531381;0.76987445,0.09623431;0.84518826,0.92050207;0.17573221,0.9916318",
+  "images": [
+    {
+      "mode": "ORIGINAL",
+      "width": 623,
+      "height": 640
+    },
+    {
+      "mode": "AUTO",
+      "width": 623,
+      "height": 640
+    },
+    {
+      "mode": "CLEAN",
+      "width": 623,
+      "height": 640
+    },
+    {
+      "mode": "BW",
+      "width": 623,
+      "height": 640
+    },
+    {
+      "mode": "TEXT",
+      "width": 623,
+      "height": 640
+    },
+    {
+      "mode": "COLOR",
+      "width": 623,
+      "height": 640
+    },
+    {
+      "mode": "WHITEBOARD",
+      "width": 623,
+      "height": 640
+    }
+  ],
+  "comparison": [],
+  "actualPaddle": {
+    "schema": 4,
+    "ir": {
+      "format": "paperforge-ocr-ir",
+      "version": 1,
+      "page": {
+        "width": 1500,
+        "height": 260,
+        "coordinateSystem": "processed-page-normalized-top-left",
+        "sourceRevision": -1
+      },
+      "engine": {
+        "id": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1",
+        "version": "official-onnx-v5-mobile|f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd|sdk.dab3fe3.pf1",
+        "request": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1|true|FAST|false|AUTO|columns-vertical-baselines-2"
+      },
+      "readingOrder": [
+        "line-0"
+      ],
+      "blocks": [
+        {
+          "id": "block-0",
+          "kind": "text",
+          "bounds": [
+            [
+              0.038666666,
+              0.33846155
+            ],
+            [
+              0.56666666,
+              0.33846155
+            ],
+            [
+              0.56666666,
+              0.6846154
+            ],
+            [
+              0.038666666,
+              0.6846154
+            ]
+          ],
+          "paragraphs": [
+            {
+              "id": "block-0-paragraph-0",
+              "bounds": [
+                [
+                  0.038666666,
+                  0.33846155
+                ],
+                [
+                  0.56666666,
+                  0.33846155
+                ],
+                [
+                  0.56666666,
+                  0.6846154
+                ],
+                [
+                  0.038666666,
+                  0.6846154
+                ]
+              ],
+              "lines": [
+                {
+                  "id": "line-0",
+                  "index": 0,
+                  "text": "PaperForge 00123 文档测试",
+                  "corners": [
+                    [
+                      0.038666666,
+                      0.34615386
+                    ],
+                    [
+                      0.56666666,
+                      0.33846155
+                    ],
+                    [
+                      0.56666666,
+                      0.6730769
+                    ],
+                    [
+                      0.039333332,
+                      0.6846154
+                    ]
+                  ],
+                  "confidence": 0.97880864,
+                  "corrected": false,
+                  "words": []
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "tables": []
+    },
+    "width": 1500,
+    "height": 260,
+    "engineId": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1",
+    "engineVersion": "official-onnx-v5-mobile|f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd|sdk.dab3fe3.pf1",
+    "requestSignature": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1|true|FAST|false|AUTO|columns-vertical-baselines-2",
+    "engineMetrics": {
+      "detectionMs": 169,
+      "recognitionMs": 51,
+      "pipelineMs": 226,
+      "modelLoadMs": 384
+    },
+    "sourceRevision": -1,
+    "orientationCorrection": 0,
+    "deskewDegrees": 0,
+    "warnings": [],
+    "recognitionMode": "FAST",
+    "attempts": [
+      "paddle-original"
+    ],
+    "rawRecognition": {
+      "schema": 4,
+      "ir": {
+        "format": "paperforge-ocr-ir",
+        "version": 1,
+        "page": {
+          "width": 1500,
+          "height": 260,
+          "coordinateSystem": "processed-page-normalized-top-left",
+          "sourceRevision": -1
+        },
+        "engine": {
+          "id": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1",
+          "version": "official-onnx-v5-mobile|f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd|sdk.dab3fe3.pf1",
+          "request": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1|true|FAST|false|AUTO|columns-vertical-baselines-2"
+        },
+        "readingOrder": [
+          "line-0"
+        ],
+        "blocks": [
+          {
+            "id": "block-0",
+            "kind": "text",
+            "bounds": [
+              [
+                0.038666666,
+                0.33846155
+              ],
+              [
+                0.56666666,
+                0.33846155
+              ],
+              [
+                0.56666666,
+                0.6846154
+              ],
+              [
+                0.038666666,
+                0.6846154
+              ]
+            ],
+            "paragraphs": [
+              {
+                "id": "block-0-paragraph-0",
+                "bounds": [
+                  [
+                    0.038666666,
+                    0.33846155
+                  ],
+                  [
+                    0.56666666,
+                    0.33846155
+                  ],
+                  [
+                    0.56666666,
+                    0.6846154
+                  ],
+                  [
+                    0.038666666,
+                    0.6846154
+                  ]
+                ],
+                "lines": [
+                  {
+                    "id": "line-0",
+                    "index": 0,
+                    "text": "PaperForge 00123 文档测试",
+                    "corners": [
+                      [
+                        0.038666666,
+                        0.34615386
+                      ],
+                      [
+                        0.56666666,
+                        0.33846155
+                      ],
+                      [
+                        0.56666666,
+                        0.6730769
+                      ],
+                      [
+                        0.039333332,
+                        0.6846154
+                      ]
+                    ],
+                    "confidence": 0.97880864,
+                    "corrected": false,
+                    "words": []
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "tables": []
+      },
+      "width": 1500,
+      "height": 260,
+      "engineId": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1",
+      "engineVersion": "official-onnx-v5-mobile|f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd|sdk.dab3fe3.pf1",
+      "requestSignature": "paddle:paddle-ppocrv5-mobile-f1d703cc:f1d703cc481d8f559afdc1869855db6a80a9f25c1e973aa4c0e25944a5d913cd:pf1|true|FAST|false|AUTO|columns-vertical-baselines-2",
+      "engineMetrics": {
+        "detectionMs": 169,
+        "recognitionMs": 51,
+        "pipelineMs": 226,
+        "modelLoadMs": 384
+      },
+      "sourceRevision": -1,
+      "orientationCorrection": 0,
+      "deskewDegrees": 0,
+      "warnings": [],
+      "recognitionMode": "FAST",
+      "attempts": [
+        "paddle-original"
+      ],
+      "rawRecognition": null,
+      "lines": [
+        {
+          "text": "PaperForge 00123 文档测试",
+          "corners": [
+            [
+              0.038666666,
+              0.34615386
+            ],
+            [
+              0.56666666,
+              0.33846155
+            ],
+            [
+              0.56666666,
+              0.6730769
+            ],
+            [
+              0.039333332,
+              0.6846154
+            ]
+          ],
+          "confidence": 0.97880864,
+          "angle": -0.8346696,
+          "block": 0,
+          "paragraph": 0,
+          "variant": "paddle-original",
+          "corrected": false,
+          "hypotheses": [],
+          "elements": []
+        }
+      ]
+    },
+    "lines": [
+      {
+        "text": "PaperForge 00123 文档测试",
+        "corners": [
+          [
+            0.038666666,
+            0.34615386
+          ],
+          [
+            0.56666666,
+            0.33846155
+          ],
+          [
+            0.56666666,
+            0.6730769
+          ],
+          [
+            0.039333332,
+            0.6846154
+          ]
+        ],
+        "confidence": 0.97880864,
+        "angle": -0.8346696,
+        "block": 0,
+        "paragraph": 0,
+        "variant": "paddle-original",
+        "corrected": false,
+        "hypotheses": [],
+        "elements": []
+      }
+    ]
+  },
+  "paddleText": "PaperForge 00123 文档测试"
+}

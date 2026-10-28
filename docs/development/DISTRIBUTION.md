@@ -46,6 +46,8 @@ python scripts/build_distribution.py --abi universal --channel development
 
 按 ABI 交付去掉另一架构的全部 native 库；R8 和资源收缩用于可安装的 Release 候选。CPU 扫描保留当前实际算子，MNN 的 GPU、转换器、示例和工具未加入应用；没有为体积盲删识别所需算子。离线中文/拉丁 ML Kit、扫描模型和基础 CJK 字体继续随主包安装，保证无网络首开可用；Paddle 权重、韩文/天城文/Latin 导出字体、Office 与格式引擎独立按需安装。
 
-每次候选提供按真实 ZIP 条目归类的体积清单。更细的 OpenCV/ORT CPU 算子与语言字体裁剪应以该清单及实际调用测量推进，不能只比较不同签名/不同构建模式而宣称算法精简成功。ARM64 APK 的结构核验与 ARM64 实体手机体验分别记录。
+OpenCV 4.12.0 改为固定源码与 SHA256 构建，仅保留实际使用的 core / imgproc / imgcodecs / photo / Java；JPEG、PNG、WebP、去阴影修复和基线 NEON 保留。官方 Java API JAR 未修改，来源与模块边界见 `opencv-mobile/UPSTREAM.json` 和 README。关闭可选 KleidiCV/ADE 下载，避免网络成功与否改变构建。ORT 继续保留现有 CPU 算子；更细裁剪可作为后续改进。
 
-CI 固定的 Actions 提交来自各自官方仓库，版本核对日期 2026-10-27；工作流默认只编译，不重复执行整套设备测试。必要的功能验证由改动本身决定。
+同为 ARM64 Release 的主包由 99,720,804 降到 84,434,456 字节，减少 15.33%；这是原生模块精简的单独对比。此前通用 Release 的 203,088,347 字节与 ARM64 的 99,720,804 字节用于说明 ABI 去重，分别记录。七种增强独立逐像素一致、两路四角与实际 Paddle 输出相同，证据见 `docs/acceptance/next/distribution-summary.json`。ARM64 APK 的结构核验与 ARM64 实体手机体验分别记录。
+
+CI 固定的 Actions 提交来自各自官方仓库，版本核对日期 2026-10-27；检查 APK 固定使用 build-tools 35.0.0，并保留公开证书报告。工作流默认只编译，不重复执行整套设备测试。必要的功能验证由改动本身决定。

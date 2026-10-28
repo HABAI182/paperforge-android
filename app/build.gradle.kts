@@ -92,7 +92,7 @@ dependencies {
     implementation("androidx.room:room-ktx:2.7.1")
     ksp("androidx.room:room-compiler:2.7.1")
     implementation("androidx.work:work-runtime-ktx:2.10.1")
-    implementation("org.opencv:opencv:4.12.0")
+    implementation(project(":opencv-mobile"))
     implementation("com.microsoft.onnxruntime:onnxruntime-android:1.24.1")
     implementation("com.tom-roush:pdfbox-android:2.0.27.0")
     implementation(project(":jpeg2000"))

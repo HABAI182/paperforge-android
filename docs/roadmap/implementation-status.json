@@ -1,6 +1,6 @@
 {
   "version": "next-development",
-  "updated": "2026-10-27",
+  "updated": "2026-10-28",
   "defaultExecution": "Android-local",
   "officeRequiresOptionalPhoneEngine": true,
   "computerRequired": false,
@@ -590,13 +590,13 @@
     {
       "id": "REL03",
       "title": "按需包体裁剪",
-      "status": "partial",
-      "note": "按ABI签名候选与R8/资源收缩、独立OCR权重/语言字体、Office/格式引擎已接通；提供真实ZIP/ELF/体积条目清单，ARM64主包约95.1MiB。CPU算子/OpenCV/ORT进一步裁剪及同模式通用包对比仍在继续"
+      "status": "done",
+      "note": "按ABI/R8候选、独立OCR模型/脚本字体与手机引擎；OpenCV改为固定源码构建core/imgproc/imgcodecs/photo/Java，保留JPEG/PNG/WebP与基线NEON。ARM64同Release主包99,720,804降到84,434,456字节（15.33%），全部native ELF/ZIP 16KiB及原证书核对；七种增强独立像素完全一致、两路四角和实际Paddle文字相同。见 distribution-summary.json；ORT更细裁剪仍可后续改进，未宣称ARM64实体性能。"
     }
   ],
   "counts": {
-    "done": 81,
-    "partial": 8,
+    "done": 82,
+    "partial": 7,
     "planned": 9
   },
   "releaseHold": true,

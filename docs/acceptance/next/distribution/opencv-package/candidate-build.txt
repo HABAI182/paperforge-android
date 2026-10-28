@@ -1,0 +1,91 @@
+
+General configuration for OpenCV 4.12.0 =====================================
+  Version control:               unknown
+
+  Platform:
+    Timestamp:                   2026-10-28T03:10:16Z
+    Host:                        Windows 10.0.26300 AMD64
+    Target:                      Android 1 x86_64
+    CMake:                       3.22.1-g37088a8-dirty
+    CMake generator:             Ninja
+    CMake build tool:            E:\CodexWorkspaces\2026-10-23\new-chat\work\toolchain\android-sdk\cmake\3.22.1\bin\ninja.exe
+    Configuration:               Debug
+    Algorithm Hint:              ALGO_HINT_ACCURATE
+
+  CPU/HW features:
+    Baseline:                    SSE SSE2 SSE3
+      requested:                 SSE3
+
+  C/C++:
+    Built as dynamic libs?:      NO
+    C++ standard:                11
+    C++ Compiler:                C:/Users/18769/Documents/Codex/2026-10-23/new-chat/work/toolchain/android-sdk/ndk/28.2.13676358/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe  (ver 19.0.1)
+    C++ flags (Release):         -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security     -fsigned-char -W -Wall -Wreturn-type -Wnon-virtual-dtor -Waddress -Wsequence-point -Wformat -Wformat-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wshadow -Wsign-promo -Wuninitialized -Winconsistent-missing-override -Wno-delete-non-virtual-dtor -Wno-unnamed-type-template-args -Wno-comment -Wno-deprecated-enum-enum-conversion -Wno-deprecated-anon-enum-enum-conversion -fdiagnostics-show-option -Qunused-arguments  -fvisibility=hidden -fvisibility-inlines-hidden -O3 -DNDEBUG   -DNDEBUG
+    C++ flags (Debug):           -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security     -fsigned-char -W -Wall -Wreturn-type -Wnon-virtual-dtor -Waddress -Wsequence-point -Wformat -Wformat-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wshadow -Wsign-promo -Wuninitialized -Winconsistent-missing-override -Wno-delete-non-virtual-dtor -Wno-unnamed-type-template-args -Wno-comment -Wno-deprecated-enum-enum-conversion -Wno-deprecated-anon-enum-enum-conversion -fdiagnostics-show-option -Qunused-arguments  -fvisibility=hidden -fvisibility-inlines-hidden -fno-limit-debug-info   -O0 -DDEBUG -D_DEBUG
+    C Compiler:                  C:/Users/18769/Documents/Codex/2026-10-23/new-chat/work/toolchain/android-sdk/ndk/28.2.13676358/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe
+    C flags (Release):           -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security    -fsigned-char -W -Wall -Wreturn-type -Wnon-virtual-dtor -Waddress -Wsequence-point -Wformat -Wformat-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wshadow -Wsign-promo -Wuninitialized -Winconsistent-missing-override -Wno-delete-non-virtual-dtor -Wno-unnamed-type-template-args -Wno-comment -Wno-deprecated-enum-enum-conversion -Wno-deprecated-anon-enum-enum-conversion -fdiagnostics-show-option -Qunused-arguments  -fvisibility=hidden -fvisibility-inlines-hidden -O3 -DNDEBUG   -DNDEBUG
+    C flags (Debug):             -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security    -fsigned-char -W -Wall -Wreturn-type -Wnon-virtual-dtor -Waddress -Wsequence-point -Wformat -Wformat-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wshadow -Wsign-promo -Wuninitialized -Winconsistent-missing-override -Wno-delete-non-virtual-dtor -Wno-unnamed-type-template-args -Wno-comment -Wno-deprecated-enum-enum-conversion -Wno-deprecated-anon-enum-enum-conversion -fdiagnostics-show-option -Qunused-arguments  -fvisibility=hidden -fvisibility-inlines-hidden -fno-limit-debug-info   -O0 -DDEBUG -D_DEBUG
+    Linker flags (Release):      -static-libstdc++ -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--no-undefined-version -Wl,--fatal-warnings -Wl,--no-undefined -Qunused-arguments   -Wl,--as-needed -Wl,--no-undefined -Wl,--gc-sections  
+    Linker flags (Debug):        -static-libstdc++ -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--no-undefined-version -Wl,--fatal-warnings -Wl,--no-undefined -Qunused-arguments   -Wl,--as-needed -Wl,--no-undefined  
+    ccache:                      NO
+    Precompiled headers:         NO
+    Extra dependencies:          z dl m log
+    3rdparty dependencies:       libcpufeatures libjpeg-turbo libwebp libpng libjasper
+
+  OpenCV modules:
+    To be built:                 core imgcodecs imgproc java photo
+    Disabled:                    world
+    Disabled by dependency:      calib3d dnn features2d flann gapi highgui js_bindings_generator ml objc_bindings_generator objdetect stitching video videoio
+    Unavailable:                 python2 python3 ts
+    Applications:                -
+    Documentation:               NO
+    Non-free algorithms:         NO
+
+  Android NDK:                   C:/Users/18769/Documents/Codex/2026-10-23/new-chat/work/toolchain/android-sdk/ndk/28.2.13676358 (ver 28.2.13676358)
+    Android ABI:                 x86_64
+    NDK toolchain:               x86_64-linux-android-clang
+    STL type:                    c++_static
+    Native API level:            26
+  Android SDK:                   not used, projects are not built
+
+  GUI: 
+
+  Media I/O: 
+    ZLib:                        z (ver 1.3.0.1)
+    JPEG:                        build-libjpeg-turbo (ver 3.1.0-70)
+      SIMD Support Request:      YES
+      SIMD Support:              YES
+    WEBP:                        build (ver decoder: 0x0209, encoder: 0x020f, demux: 0x0107)
+    AVIF:                        NO
+    PNG:                         build (ver 1.6.43)
+      SIMD Support Request:      YES
+      SIMD Support:              YES (Intel SSE)
+    JPEG 2000:                   build Jasper (ver 1.900.1)
+    GIF:                         YES
+    HDR:                         YES
+    SUNRASTER:                   YES
+    PXM:                         YES
+    PFM:                         YES
+
+  Video I/O:
+   MEDIANDK:                     YES
+   NDK Camera:                   YES
+
+  Parallel framework:            pthreads
+
+  Trace:                         YES (built-in)
+
+  Other third-party libraries:
+    Custom HAL:                  NO
+    Flatbuffers:                 builtin/3rdparty (23.5.9)
+
+  Python (for build):            D:/python/python.exe
+
+  Java:                          export all functions
+    ant:                         NO
+    Java wrappers:               YES ()
+    Java tests:                  NO
+
+  Install to:                    C:/Users/18769/Documents/Codex/2026-10-23/new-chat/outputs/PaperForge/opencv-mobile/.cxx/Debug/4511x6q3/x86_64/install
+-----------------------------------------------------------------
+

@@ -1,0 +1,103 @@
+{
+  "date": "2026-10-28",
+  "scope": "AOSP API35 x86_64; identical authored fixture and actual installed Paddle model; dependency equivalence, not real-photo quality",
+  "comparisons": [
+    {
+      "mode": "ORIGINAL",
+      "width": 623,
+      "height": 640,
+      "independentPixelsIdentical": true,
+      "baselineSha256": "7b1872ca92f38e989d92a5617dfb8737873d790dae85ffc769364e62f934dc63",
+      "candidateSha256": "7b1872ca92f38e989d92a5617dfb8737873d790dae85ffc769364e62f934dc63"
+    },
+    {
+      "mode": "AUTO",
+      "width": 623,
+      "height": 640,
+      "independentPixelsIdentical": true,
+      "baselineSha256": "4cef6b3aa0acee0ba274d3edfc6a2ef843fd7fb500ee7bef32555c5ca741fd73",
+      "candidateSha256": "4cef6b3aa0acee0ba274d3edfc6a2ef843fd7fb500ee7bef32555c5ca741fd73"
+    },
+    {
+      "mode": "CLEAN",
+      "width": 623,
+      "height": 640,
+      "independentPixelsIdentical": true,
+      "baselineSha256": "38a7ef8fe839e85e7d3af6ffe067f32744a19bc510f9c21566c4dd42a0287cee",
+      "candidateSha256": "38a7ef8fe839e85e7d3af6ffe067f32744a19bc510f9c21566c4dd42a0287cee"
+    },
+    {
+      "mode": "BW",
+      "width": 623,
+      "height": 640,
+      "independentPixelsIdentical": true,
+      "baselineSha256": "30cced7d25efb9f97d3967735758fc79ac9603399c3747c7fef1294723566c97",
+      "candidateSha256": "30cced7d25efb9f97d3967735758fc79ac9603399c3747c7fef1294723566c97"
+    },
+    {
+      "mode": "TEXT",
+      "width": 623,
+      "height": 640,
+      "independentPixelsIdentical": true,
+      "baselineSha256": "ec1e851105742fa94285d01cc5a6272136347d59985a26001c36ba952a156b1f",
+      "candidateSha256": "ec1e851105742fa94285d01cc5a6272136347d59985a26001c36ba952a156b1f"
+    },
+    {
+      "mode": "COLOR",
+      "width": 623,
+      "height": 640,
+      "independentPixelsIdentical": true,
+      "baselineSha256": "b0aa737ef9d5cdcb80b2fbb3c33e68a34d3a5c830a0b77a2669c4810fbc95309",
+      "candidateSha256": "b0aa737ef9d5cdcb80b2fbb3c33e68a34d3a5c830a0b77a2669c4810fbc95309"
+    },
+    {
+      "mode": "WHITEBOARD",
+      "width": 623,
+      "height": 640,
+      "independentPixelsIdentical": true,
+      "baselineSha256": "38a7ef8fe839e85e7d3af6ffe067f32744a19bc510f9c21566c4dd42a0287cee",
+      "candidateSha256": "38a7ef8fe839e85e7d3af6ffe067f32744a19bc510f9c21566c4dd42a0287cee"
+    }
+  ],
+  "classicalQuadIdentical": true,
+  "neuralQuadIdentical": true,
+  "actualPaddleText": "PaperForge 00123 文档测试",
+  "actualPaddleTextIdentical": true,
+  "baselineSeconds": 2.983,
+  "candidateSeconds": 6.375,
+  "timingNote": "One functional run each; these timings are not a performance benchmark",
+  "nativeModules": [
+    "core",
+    "imgcodecs",
+    "imgproc",
+    "java",
+    "photo"
+  ],
+  "offlineModelsRemoved": false,
+  "fontOrLanguageRemovedFromDefault": false,
+  "sizeComparison": {
+    "abi": "arm64-v8a",
+    "variant": "release",
+    "previousBytes": 99720804,
+    "candidateBytes": 84434456,
+    "savedBytes": 15286348,
+    "savedPercent": 15.329146363480984,
+    "previousOpenCvBytes": 23465088,
+    "candidateOpenCvBytes": 9485216,
+    "sameCertificate": true,
+    "nativeElf16KiBCompatible": true,
+    "candidateSha256": "c9b8f83f1b71be97fa68f249da876d85ab4f33d8ce0b707f9cc3c12b631c35bd",
+    "notPublished": true
+  },
+  "abiPackagingBaseline": {
+    "universalBytes": 203088347,
+    "arm64BeforeNativePruning": 99720804,
+    "note": "Both earlier Release candidates; do not conflate ABI removal with native module pruning"
+  },
+  "buildStability": {
+    "kleidiCv": false,
+    "ade": false,
+    "neon": "baseline intrinsic retained on ARM64",
+    "apiJarUnmodified": true
+  }
+}

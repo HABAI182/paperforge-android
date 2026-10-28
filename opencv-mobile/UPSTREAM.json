@@ -1,0 +1,17 @@
+{
+  "version": "4.12.0",
+  "sourceCommit": "cbee6841638edb6fbc8110df7cd52bb8e3d66211",
+  "sourceArchive": "https://codeload.github.com/opencv/opencv/zip/cbee6841638edb6fbc8110df7cd52bb8e3d66211",
+  "sourceArchiveSha256": "a62159403e81cef2e924a0cf9feb35244237e88b46607a4eb59f71df64ad665a",
+  "javaApiFrom": "https://repo.maven.apache.org/maven2/org/opencv/opencv/4.12.0/opencv-4.12.0.aar",
+  "upstreamAarSha256": "f71846a313388d9da667a59be1e921669fcf792d1ba264b3898253ca789bc3f0",
+  "javaJarSha256": "60b7be2b59393bc1689b840d7b60fd75b811bb06477bdd03abee6fbc17afa5cf",
+  "nativeModules": [
+    "core",
+    "imgproc",
+    "imgcodecs",
+    "photo",
+    "java"
+  ],
+  "extraCpuDispatchVariants": false
+}
