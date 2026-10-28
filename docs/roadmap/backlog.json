@@ -1234,7 +1234,7 @@
       ],
       "scope": "开发签名延续，正式版迁移方案与稳定/预发布",
       "acceptance": "覆盖更新不丢文档，证书不进仓库",
-      "status": "partial"
+      "status": "done"
     },
     {
       "id": "REL03",
@@ -1252,8 +1252,8 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 82,
-    "partial": 7,
+    "done": 83,
+    "partial": 6,
     "planned": 9
   },
   "updated": "2026-10-28"

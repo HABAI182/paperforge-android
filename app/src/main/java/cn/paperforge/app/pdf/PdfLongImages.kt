@@ -16,14 +16,17 @@ object PdfLongImages {
         output: File,
         range: String = "",
         options: LongImageOptions = LongImageOptions(),
+        stages: JobFileStages? = null,
         progress: suspend (Int) -> Unit = {},
     ): JSONObject {
         options.validate()
         val temporary = File(output.path + ".part")
+        val signature =
+            if (stages == null) "" else "pdf|${PdfAssembly.sha256(input)}|$range|${options.json()}"
         try {
             var report: JSONObject? = null
             ZipOutputStream(temporary.outputStream().buffered()).use { zip ->
-                LongImageWriter(zip, options).use { writer ->
+                LongImageWriter(zip, options, stages, signature).use { writer ->
                     ParcelFileDescriptor.open(input, ParcelFileDescriptor.MODE_READ_ONLY).use { fd
                         ->
                         PdfRenderer(fd).use { renderer ->

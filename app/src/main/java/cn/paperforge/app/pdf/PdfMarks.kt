@@ -69,6 +69,7 @@ object PdfMarks {
         output: File,
         marks: List<PdfMark>,
         editable: Boolean = false,
+        stages: JobFileStages? = null,
         progress: suspend (Int) -> Unit = {},
     ) {
         if (marks.any { it.kind == "redact" }) {
@@ -78,8 +79,47 @@ object PdfMarks {
                     "marks-redaction-preview-${java.util.UUID.randomUUID()}.pdf",
                 )
             try {
-                PdfNativeMarks.preview(input, preview)
-                raster(preview, output, marks, progress)
+                if (stages == null) {
+                    PdfNativeMarks.preview(input, preview)
+                    raster(preview, output, marks, progress)
+                } else {
+                    val appearance =
+                        stages.file(
+                            "raster-appearance",
+                            "native-mark-preview-r1|${PdfAssembly.sha256(input)}",
+                            "pdf",
+                        ) {
+                            PdfNativeMarks.preview(input, it)
+                        }
+                    RasterPageStages.convert(
+                        appearance,
+                        output,
+                        stages,
+                        "redaction-r1",
+                        2400,
+                        rounded = true,
+                        encode = { doc, bitmap -> JPEGFactory.createFromImage(doc, bitmap, .98f) },
+                        draw = { bitmap, index ->
+                            val canvas = Canvas(bitmap)
+                            marks
+                                .filter { it.page == index }
+                                .forEach {
+                                    draw(
+                                        canvas,
+                                        bitmap.width.toFloat(),
+                                        bitmap.height.toFloat(),
+                                        it,
+                                    )
+                                }
+                        },
+                        pageSignature = { index ->
+                            marks
+                                .filter { it.page == index }
+                                .joinToString("|") { it.json().apply { remove("id") }.toString() }
+                        },
+                        progress = progress,
+                    )
+                }
             } finally {
                 preview.delete()
             }

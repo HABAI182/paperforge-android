@@ -189,6 +189,7 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                             file,
                             LongImageOptions.decode(options),
                             LongImageDraft.decode(job.row).orderedSeams(),
+                            stages = JobFileStages(repo, job),
                         ) { percent ->
                             DocumentJobs.progress(repo, job, percent, "正在拼接长图")
                             setProgress(workDataOf("progress" to percent))

@@ -1,0 +1,26 @@
+{
+  "rasterAfterNewWorkId": {
+    "reused": 1,
+    "generated": 2
+  },
+  "pdfLongAfterNewWorkId": {
+    "reused": 1,
+    "generated": 5,
+    "renderedStrips": 7,
+    "reusedStrips": 1
+  },
+  "imageLongAfterNewWorkId": {
+    "reused": 1,
+    "generated": 5,
+    "reusedStrips": 1
+  },
+  "redactionAfterNewWorkId": {
+    "reused": 2,
+    "generated": 2
+  },
+  "onePageRedactionChanged": {
+    "reused": 3,
+    "generated": 1
+  },
+  "sourceUnchanged": true
+}

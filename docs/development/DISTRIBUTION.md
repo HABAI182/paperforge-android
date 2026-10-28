@@ -10,6 +10,8 @@
 
 自动提交 CI 名称是 **Android compile and isolated candidate**。它编译 `cn.paperforge.app.ci` 隔离包及格式引擎源码，使用临时开发证书；这个产物用于编译核对，不是主应用的覆盖更新包。主应用更新使用上面的 owner signed 工作流。
 
+所有者签名 CI 的首次完整成功为 [40625859722](https://github.com/HABAI182/paperforge-android/actions/runs/40625859722)，实际 ZIP/APK 已下载并独立核对 SHA、历史证书、离线权限和 ELF；归档清单见 `docs/acceptance/next/distribution/ci-owner-proof.json`。该次候选基于 `0a22ae0`，用于证明远端签名链路；之后的原生精简和页级续跑按各自提交及验证记录追踪。
+
 ## 现有身份
 
 历史开发包及当前候选使用的证书 SHA256：

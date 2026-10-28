@@ -17,6 +17,25 @@ class JobFileStages(private val repo: Repository, private val job: JobHandle) {
     var generated = 0
         private set
 
+    /** Read without recording consumption, so a renderer can skip an already encoded segment. */
+    suspend fun cached(key: String, signature: String): File? = verified(key, signature)?.first
+
+    private suspend fun verified(key: String, signature: String): Pair<File, String>? {
+        currentCoroutineContext().ensureActive()
+        DocumentJobs.checkCurrent(repo, job)
+        val checkpointKey = "page-stage-${digest("$key|$signature").take(32)}"
+        val record =
+            JSONObject(checkNotNull(repo.dao.task(job.row.id)).payload)
+                .getJSONObject("checkpoint")
+                .optJSONObject(checkpointKey)
+                ?.takeIf { it.optString("signature") == signature } ?: return null
+        val path = record.optString("path").takeIf { it.isNotBlank() } ?: return null
+        val file = File(path)
+        if (!file.isFile || file.length() != record.getLong("bytes")) return null
+        val hash = PdfAssembly.sha256(file)
+        return if (hash == record.getString("sha256")) file to hash else null
+    }
+
     suspend fun file(
         key: String,
         signature: String,
@@ -27,26 +46,9 @@ class JobFileStages(private val repo: Repository, private val job: JobHandle) {
         DocumentJobs.checkCurrent(repo, job)
         val version = digest("$key|$signature")
         val checkpointKey = "page-stage-${version.take(32)}"
-        val cached =
-            JSONObject(checkNotNull(repo.dao.task(job.row.id)).payload)
-                .getJSONObject("checkpoint")
-                .optJSONObject(checkpointKey)
-        var hash = ""
-        val ready =
-            cached
-                ?.takeIf { it.optString("signature") == signature }
-                ?.let { record ->
-                    record
-                        .optString("path")
-                        .takeIf { it.isNotBlank() }
-                        ?.let(::File)
-                        ?.takeIf {
-                            it.isFile &&
-                                it.length() == record.getLong("bytes") &&
-                                PdfAssembly.sha256(it).also { value -> hash = value } ==
-                                    record.getString("sha256")
-                        }
-                }
+        val found = verified(key, signature)
+        var hash = found?.second.orEmpty()
+        val ready = found?.first
         val output =
             ready
                 ?: File(

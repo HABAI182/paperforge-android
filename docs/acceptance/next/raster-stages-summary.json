@@ -1,0 +1,111 @@
+{
+  "rasterAfterNewWorkId": {
+    "reused": 1,
+    "generated": 2
+  },
+  "pdfLongAfterNewWorkId": {
+    "reused": 1,
+    "generated": 5,
+    "renderedStrips": 7,
+    "reusedStrips": 1
+  },
+  "imageLongAfterNewWorkId": {
+    "reused": 1,
+    "generated": 5,
+    "reusedStrips": 1
+  },
+  "redactionAfterNewWorkId": {
+    "reused": 2,
+    "generated": 2
+  },
+  "onePageRedactionChanged": {
+    "reused": 3,
+    "generated": 1
+  },
+  "sourceUnchanged": true,
+  "scope": "AOSP API35 x86_64, authored three-page native PDF and authored colored image strips, new attempt work IDs with the current Room checkpoint",
+  "androidSeconds": 2.795,
+  "independentPdfPixels": [
+    {
+      "kind": "raster",
+      "page": 1,
+      "textEmpty": true,
+      "annotations": 0,
+      "pixelsIdentical90Dpi": true
+    },
+    {
+      "kind": "raster",
+      "page": 2,
+      "textEmpty": true,
+      "annotations": 0,
+      "pixelsIdentical90Dpi": true
+    },
+    {
+      "kind": "raster",
+      "page": 3,
+      "textEmpty": true,
+      "annotations": 0,
+      "pixelsIdentical90Dpi": true
+    },
+    {
+      "kind": "redacted",
+      "page": 1,
+      "textEmpty": true,
+      "annotations": 0,
+      "pixelsIdentical90Dpi": true
+    },
+    {
+      "kind": "redacted",
+      "page": 2,
+      "textEmpty": true,
+      "annotations": 0,
+      "pixelsIdentical90Dpi": true
+    },
+    {
+      "kind": "redacted",
+      "page": 3,
+      "textEmpty": true,
+      "annotations": 0,
+      "pixelsIdentical90Dpi": true
+    }
+  ],
+  "redactionChangedPages": [
+    false,
+    true,
+    false
+  ],
+  "independentLongImages": [
+    {
+      "kind": "pdf",
+      "segmentsIdentical": 6,
+      "mappingIdentical": true,
+      "logicalRows": 1458,
+      "reusedStrips": 1
+    },
+    {
+      "kind": "image",
+      "segmentsIdentical": 6,
+      "mappingIdentical": true,
+      "logicalRows": 1301,
+      "reusedStrips": 1
+    }
+  ],
+  "sourceSha256": "403e6e17395453a4bc6810f9be3915d234fea1516ee7ecf48f209909892ce329",
+  "pdfPixelComparisonDpi": 90,
+  "releaseHold": true,
+  "limitations": [
+    "Final PDF/ZIP containers are reassembled; no partial final archive is treated as a result.",
+    "Native object-preserving PDF rewrites and whole-document compression still restart their unfinished operation."
+  ],
+  "arm64Release": {
+    "bytes": 84434456,
+    "sha256": "05bbbdca365055a50584a327e09a258e63e2413a5e3bbe14699c5d68724bb3b5",
+    "certificatesSha256": [
+      "d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e"
+    ],
+    "nativeElf16KiBCompatible": true,
+    "versionName": "0.6.1-dev",
+    "versionCode": 7,
+    "unpublished": true
+  }
+}

@@ -258,8 +258,21 @@ object PdfEngine {
         input: File,
         output: File,
         quality: Int,
+        stages: JobFileStages? = null,
         progress: suspend (Int) -> Unit = {},
     ) {
+        if (stages != null) {
+            RasterPageStages.convert(
+                input,
+                output,
+                stages,
+                "flatten|$quality",
+                if (quality < 60) 1100 else 1800,
+                encode = { doc, bitmap -> PdfImageEncoder.jpeg(doc, bitmap, false, quality, 150) },
+                progress = progress,
+            )
+            return
+        }
         // Explicit destructive conversion, separate from normal image-only compression.
         atomic(output) { tmp ->
             ParcelFileDescriptor.open(input, ParcelFileDescriptor.MODE_READ_ONLY).use { fd ->

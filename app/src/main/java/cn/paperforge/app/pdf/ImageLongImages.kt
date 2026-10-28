@@ -15,6 +15,7 @@ object ImageLongImages {
         output: File,
         options: LongImageOptions = LongImageOptions(),
         seams: List<StitchSeam> = emptyList(),
+        stages: JobFileStages? = null,
         progress: suspend (Int) -> Unit = {},
     ): JSONObject {
         require(inputs.isNotEmpty()) { "请选择要拼接的图片" }
@@ -26,11 +27,16 @@ object ImageLongImages {
         val canvasWidth = options.width + shifts.max() - left
         require(canvasWidth in 128..8192) { "水平偏移过大，请减小偏移或分组拼接" }
         val part = File(output.path + ".part")
+        val signature =
+            if (stages == null) ""
+            else
+                "images|${inputs.map { PdfAssembly.sha256(it) }.joinToString("|")}|${options.json()}|${seams.joinToString("|") { it.json().toString() }}"
         try {
             var report: JSONObject? = null
             val joins = JSONArray()
             ZipOutputStream(part.outputStream().buffered()).use { zip ->
-                LongImageWriter(zip, options.copy(width = canvasWidth)).use { writer ->
+                LongImageWriter(zip, options.copy(width = canvasWidth), stages, signature).use {
+                    writer ->
                     inputs.forEachIndexed { index, file ->
                         currentCoroutineContext().ensureActive()
                         OrientedImageRegion(file, options.width).use { source ->

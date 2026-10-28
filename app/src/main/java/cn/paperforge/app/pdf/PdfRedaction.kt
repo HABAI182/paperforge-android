@@ -302,6 +302,7 @@ object PdfRedaction {
         top: Float,
         right: Float,
         bottom: Float,
+        stages: JobFileStages? = null,
         progress: suspend (Int) -> Unit = {},
     ): Report {
         require(input.canonicalFile != output.canonicalFile && !output.exists()) { "请选择新的输出文件" }
@@ -328,6 +329,7 @@ object PdfRedaction {
             input,
             output,
             listOf(PdfMark(page, "redact", listOf(PointN(left, top), PointN(right, bottom)))),
+            stages = stages,
             progress = progress,
         )
         return Report("整份栅格脱敏", "所有页面重绘为图像；原生文字、矢量、表单、批注、附件与元数据不保留。请目视检查遮盖范围。")

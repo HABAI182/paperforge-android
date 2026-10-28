@@ -1,0 +1,362 @@
+{
+  "format": 1,
+  "candidateOnly": true,
+  "releaseHold": true,
+  "channel": "development",
+  "abi": "arm64-v8a",
+  "commit": "0a22ae055e2f5e349d1fd6ff8c2421a6efb4f987",
+  "workingTreeDirty": false,
+  "versionCode": 7,
+  "versionName": "0.6.1-dev",
+  "isolatedCi": false,
+  "artifacts": [
+    {
+      "applicationId": "cn.paperforge.app",
+      "versionCode": 7,
+      "versionName": "0.6.1-dev",
+      "certificatesSha256": [
+        "d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e"
+      ],
+      "certificateReport": "Signer #1 certificate DN: C=US, O=Android, CN=Android Debug\nSigner #1 certificate SHA-256 digest: d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e\nSigner #1 certificate SHA-1 digest: bea4323eb8bc8dbce599217239a68de9638098cb\nSigner #1 certificate MD5 digest: ba611759fac2050d4691f7b4ce18b4d5",
+      "buildToolsVersion": "35.0.0",
+      "abis": [
+        "arm64-v8a"
+      ],
+      "permissions": [
+        "android.permission.CAMERA",
+        "cn.paperforge.office.permission.CONVERT",
+        "cn.paperforge.formats.permission.CONVERT",
+        "android.permission.WAKE_LOCK",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.FOREGROUND_SERVICE",
+        "cn.paperforge.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+      ],
+      "zipAlignment16KiB": true,
+      "bytes": 99720024,
+      "sha256": "021b7505ea67d77e9544ea049c357ff2350bee8966fa93af773f3dbbeca1bff9",
+      "groups": {
+        "META-INF": {
+          "zipBytes": 22884,
+          "unpackedBytes": 62857
+        },
+        "assets": {
+          "zipBytes": 26576145,
+          "unpackedBytes": 34877591
+        },
+        "dex": {
+          "zipBytes": 3785280,
+          "unpackedBytes": 8158504
+        },
+        "native/arm64-v8a": {
+          "zipBytes": 64369736,
+          "unpackedBytes": 64369736
+        },
+        "DebugProbesKt.bin": {
+          "zipBytes": 780,
+          "unpackedBytes": 1733
+        },
+        "common.properties": {
+          "zipBytes": 38,
+          "unpackedBytes": 52
+        },
+        "firebase-annotations.properties": {
+          "zipBytes": 51,
+          "unpackedBytes": 78
+        },
+        "firebase-components.properties": {
+          "zipBytes": 50,
+          "unpackedBytes": 76
+        },
+        "firebase-encoders-json.properties": {
+          "zipBytes": 53,
+          "unpackedBytes": 82
+        },
+        "firebase-encoders.properties": {
+          "zipBytes": 48,
+          "unpackedBytes": 72
+        },
+        "image.properties": {
+          "zipBytes": 41,
+          "unpackedBytes": 58
+        },
+        "kotlin-tooling-metadata.json": {
+          "zipBytes": 283,
+          "unpackedBytes": 625
+        },
+        "kotlin": {
+          "zipBytes": 11134,
+          "unpackedBytes": 32063
+        },
+        "org": {
+          "zipBytes": 4161705,
+          "unpackedBytes": 8281477
+        },
+        "play-services-base.properties": {
+          "zipBytes": 50,
+          "unpackedBytes": 74
+        },
+        "play-services-basement.properties": {
+          "zipBytes": 53,
+          "unpackedBytes": 82
+        },
+        "play-services-mlkit-text-recognition-chinese.properties": {
+          "zipBytes": 75,
+          "unpackedBytes": 126
+        },
+        "play-services-mlkit-text-recognition-common.properties": {
+          "zipBytes": 74,
+          "unpackedBytes": 124
+        },
+        "play-services-mlkit-text-recognition.properties": {
+          "zipBytes": 67,
+          "unpackedBytes": 110
+        },
+        "play-services-tasks.properties": {
+          "zipBytes": 51,
+          "unpackedBytes": 76
+        },
+        "text-recognition-bundled-common.properties": {
+          "zipBytes": 62,
+          "unpackedBytes": 100
+        },
+        "text-recognition-chinese.properties": {
+          "zipBytes": 55,
+          "unpackedBytes": 86
+        },
+        "text-recognition.properties": {
+          "zipBytes": 47,
+          "unpackedBytes": 70
+        },
+        "transport-api.properties": {
+          "zipBytes": 44,
+          "unpackedBytes": 62
+        },
+        "transport-backend-cct.properties": {
+          "zipBytes": 52,
+          "unpackedBytes": 78
+        },
+        "transport-runtime.properties": {
+          "zipBytes": 48,
+          "unpackedBytes": 70
+        },
+        "vision-common.properties": {
+          "zipBytes": 42,
+          "unpackedBytes": 64
+        },
+        "vision-interfaces.properties": {
+          "zipBytes": 47,
+          "unpackedBytes": 72
+        },
+        "AndroidManifest.xml": {
+          "zipBytes": 4476,
+          "unpackedBytes": 20936
+        },
+        "res": {
+          "zipBytes": 136432,
+          "unpackedBytes": 204340
+        },
+        "resources.arsc": {
+          "zipBytes": 467180,
+          "unpackedBytes": 467180
+        }
+      },
+      "largestFiles": [
+        {
+          "file": "lib/arm64-v8a/libonnxruntime.so",
+          "zipBytes": 25763824,
+          "unpackedBytes": 25763824
+        },
+        {
+          "file": "lib/arm64-v8a/libopencv_java4.so",
+          "zipBytes": 23465088,
+          "unpackedBytes": 23465088
+        },
+        {
+          "file": "assets/docquad/docquadnet256.ort",
+          "zipBytes": 13404960,
+          "unpackedBytes": 13404960
+        },
+        {
+          "file": "lib/arm64-v8a/libmlkit_google_ocr_pipeline.so",
+          "zipBytes": 11064544,
+          "unpackedBytes": 11064544
+        },
+        {
+          "file": "assets/fonts/PaperForgeCJK-Regular.ttf",
+          "zipBytes": 6316740,
+          "unpackedBytes": 10591172
+        },
+        {
+          "file": "classes.dex",
+          "zipBytes": 3784529,
+          "unpackedBytes": 8157212
+        },
+        {
+          "file": "lib/arm64-v8a/libpaperforge_scan.so",
+          "zipBytes": 2249944,
+          "unpackedBytes": 2249944
+        },
+        {
+          "file": "assets/scan/border.mnn",
+          "zipBytes": 1584816,
+          "unpackedBytes": 1584816
+        },
+        {
+          "file": "assets/scan/dewarp.mnn",
+          "zipBytes": 1584744,
+          "unpackedBytes": 1584744
+        },
+        {
+          "file": "org/bouncycastle/pqc/crypto/picnic/lowmc.properties",
+          "zipBytes": 1570443,
+          "unpackedBytes": 3640348
+        },
+        {
+          "file": "lib/arm64-v8a/libc++_shared.so",
+          "zipBytes": 1292904,
+          "unpackedBytes": 1292904
+        },
+        {
+          "file": "org/bouncycastle/pqc/crypto/sike/p751.properties",
+          "zipBytes": 1107749,
+          "unpackedBytes": 1939925
+        },
+        {
+          "file": "org/bouncycastle/pqc/crypto/sike/p610.properties",
+          "zipBytes": 645762,
+          "unpackedBytes": 1154869
+        },
+        {
+          "file": "assets/mlkit-google-ocr-models/gocr/gocr_models/line_recognition_legacy_mobile/Hani_ctc/optical/lstm_model.fb",
+          "zipBytes": 599499,
+          "unpackedBytes": 891872
+        },
+        {
+          "file": "resources.arsc",
+          "zipBytes": 467180,
+          "unpackedBytes": 467180
+        },
+        {
+          "file": "org/bouncycastle/pqc/crypto/sike/p503.properties",
+          "zipBytes": 437407,
+          "unpackedBytes": 765399
+        },
+        {
+          "file": "lib/arm64-v8a/libopenjpeg.so",
+          "zipBytes": 406064,
+          "unpackedBytes": 406064
+        },
+        {
+          "file": "org/bouncycastle/pqc/crypto/sike/p434.properties",
+          "zipBytes": 376709,
+          "unpackedBytes": 663990
+        },
+        {
+          "file": "assets/mlkit-google-ocr-models/taser/detector/rpn_text_detector_mobile_space_to_depth_quantized_mbv2_v1.tflite",
+          "zipBytes": 340760,
+          "unpackedBytes": 340760
+        },
+        {
+          "file": "assets/mlkit-google-ocr-models/gocr/gocr_models/line_recognition_legacy_mobile/tflite_langid.tflite",
+          "zipBytes": 315520,
+          "unpackedBytes": 315520
+        }
+      ],
+      "nativeElf": [
+        {
+          "file": "lib/arm64-v8a/libandroidx.graphics.path.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libc++_shared.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libimage_processing_util_jni.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libmlkit_google_ocr_pipeline.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libonnxruntime.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libonnxruntime4j_jni.so",
+          "loadAlignments": [
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libopencv_java4.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libopenjpeg.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libpaperforge_scan.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libsurface_util_jni.so",
+          "loadAlignments": [
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        }
+      ],
+      "nativeElf16KiBCompatible": true,
+      "file": "PaperForge-0.6.1-dev-arm64-v8a-development.apk",
+      "module": "app",
+      "variant": "release"
+    }
+  ]
+}

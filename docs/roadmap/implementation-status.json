@@ -501,7 +501,7 @@
       "id": "JOB01",
       "title": "持久任务中心",
       "status": "partial",
-      "note": "持久队列覆盖PDF/扫描/整本文字OCR/外部保存及Phone Office/表格；扫描PDF逐页/证件成对、图片ZIP编码、PDF补文字层逐页检查点与配方接通，实际备份恢复复用1页仅生成2页，原件/实际ZIP对照正常。最终容器重组仍重新执行；其余原生PDF重写与栅格/长图工具检查点继续补齐，未提前结卡"
+      "note": "Room持久任务、取消/重试/部分结果及原子发布，Phone Office/表格/配方/扫描/OCR与图片ZIP已有检查点。补齐长图完整分段缓存并跳过对应渲染；PDF栅格化与栅格脱敏逐页复用，外观预览单独保存，单页遮盖变化仅重建该页。新workId续跑2.795秒集中检查、六页MuPDF像素和12段PNG独立一致，见 raster-stages-summary.json；最终容器重组、保留原生对象的PDF重写与整份压缩仍重新执行，保持partial。"
     },
     {
       "id": "JOB02",
@@ -584,8 +584,8 @@
     {
       "id": "REL02",
       "title": "签名与发布渠道整理",
-      "status": "partial",
-      "note": "根构建统一外部所有者签名；主包及两个手机引擎ARM64 Release均与历史证书一致，真实x86_64 R8覆盖安装保留旧文档/设置，并走通实际JPX提取与另存。三通道候选清单/哈希、正式身份迁移方案及私有CI已准备；待首次远端CI结果确认"
+      "status": "done",
+      "note": "同一外部所有者证书签名主包及两个可选引擎，实际R8覆盖安装保留文档/设置；渠道/ABI/版本/哈希/权限/16KiB清单、正式身份迁移方案和手机Actions流程齐备。远端签名CI 40625859722成功，下载实际APK独立核对SHA/证书/离线权限/ELF，见 distribution/ci-owner-proof.json。保持releaseHold，不创建tag/Release。"
     },
     {
       "id": "REL03",
@@ -595,8 +595,8 @@
     }
   ],
   "counts": {
-    "done": 82,
-    "partial": 7,
+    "done": 83,
+    "partial": 6,
     "planned": 9
   },
   "releaseHold": true,

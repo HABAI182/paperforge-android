@@ -118,6 +118,10 @@
 
 59. OpenCV 按实际导入裁为 core/imgproc/imgcodecs/photo/Java 固定源码构建；七种增强独立像素、经典/神经四角及实际 Paddle 文字均与改动前一致。ARM64 Release 主包减少 15.33%，原证书、离线权限与所有 ELF/ZIP 16KiB 核对通过，独立模型/脚本字体和手机引擎继续按需安装。见 `docs/acceptance/next/distribution-summary.json`；这里不把包体精简说成实拍质量或实体 ARM64 性能提升。REL03 据实际包体与能力记录完成。
 
+60. 长图按完整分段持久保存，续跑跳过已完成条带的原始渲染与编码；PDF栅格化和栅格脱敏逐页保存，原生批注外观预览单独复用，遮盖只改一页时仅重建该页。新workId续跑集中2.795秒、独立MuPDF六页像素与两类长图12段逐像素一致，来源未改写，见 `docs/acceptance/next/raster-stages-summary.json`。最终PDF/ZIP仍重组，原生对象保留的整份重写/压缩继续推进，JOB01保持部分完成。
+
+61. 私有所有者签名CI `40625859722` 完整成功；下载实际ZIP/APK独立核对公开证书、SHA、离线权限和所有ELF/ZIP 16KiB。固定检查工具版本并保存公开证书报告，手机Actions获取/同证书覆盖更新流程齐备，见 `docs/acceptance/next/distribution/ci-owner-proof.json`。REL02完成；当前仍为内部候选，保持releaseHold，不创建tag/Release。
+
 ## 后续执行顺序
 
 页序历史补充：重排只记录页面ID，删页/分割仅记录内容差异；新旧可读快照的撤销保留后来新增的扫描页和与操作无关的新OCR。备份对独立页序ID重映射，集中检查见 `docs/acceptance/next/sparse-history-summary.json`。不将此修复重复计为新完成的计划卡。

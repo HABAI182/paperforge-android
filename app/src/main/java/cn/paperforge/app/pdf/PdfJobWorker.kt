@@ -111,6 +111,7 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                                     p.getDouble("top").toFloat(),
                                     p.getDouble("right").toFloat(),
                                     p.getDouble("bottom").toFloat(),
+                                    stages = JobFileStages(repo, job),
                                 ) {
                                     report(it.coerceAtLeast(5))
                                 }
@@ -209,7 +210,13 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                             report(it)
                         }
                     "long-image" ->
-                        PdfLongImages.convert(input, file, range, LongImageOptions.decode(p)) {
+                        PdfLongImages.convert(
+                            input,
+                            file,
+                            range,
+                            LongImageOptions.decode(p),
+                            stages = JobFileStages(repo, job),
+                        ) {
                             report(it)
                         }
                     "extract-images" -> PdfTools.extractImages(input, file)
@@ -295,7 +302,14 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                         originRole = "compression-report"
                     }
                     "flatten" ->
-                        PdfEngine.flatten(input, file, p.optInt("quality", 75)) { report(it) }
+                        PdfEngine.flatten(
+                            input,
+                            file,
+                            p.optInt("quality", 75),
+                            stages = JobFileStages(repo, job),
+                        ) {
+                            report(it)
+                        }
                     "split-each" -> PdfTools.splitEach(input, file)
                     "marks" -> {
                         val data = File(p.getString("marksFile"))
@@ -306,6 +320,7 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                                 file,
                                 PdfMark.decode(org.json.JSONArray(data.readText())),
                                 editable = p.optBoolean("editable", true),
+                                stages = JobFileStages(repo, job),
                             ) {
                                 report(it)
                             }
