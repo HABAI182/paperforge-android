@@ -99,5 +99,11 @@
     "ade": false,
     "neon": "baseline intrinsic retained on ARM64",
     "apiJarUnmodified": true
+  },
+  "freshSourceCi": {
+    "runId": 40626173281,
+    "head": "a5b9da20f857cdc6e1555faab5058314ca24ac9c",
+    "conclusion": "success",
+    "proof": "distribution/ci-opencv-source-proof.json"
   }
 }

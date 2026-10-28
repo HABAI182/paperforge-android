@@ -122,6 +122,8 @@
 
 61. 私有所有者签名CI `40625859722` 完整成功；下载实际ZIP/APK独立核对公开证书、SHA、离线权限和所有ELF/ZIP 16KiB。固定检查工具版本并保存公开证书报告，手机Actions获取/同证书覆盖更新流程齐备，见 `docs/acceptance/next/distribution/ci-owner-proof.json`。REL02完成；当前仍为内部候选，保持releaseHold，不创建tag/Release。
 
+62. 排队PDF工具优先读取提交时保留的source资源，避免等待期间文档换成另一PDF后混用新来源。真实WorkManager等待/替换/提取6.55秒与独立MuPDF文字回读确认读取原件、保留库中替换文件，见 `docs/acceptance/next/queued-pdf-source/proof.json`。固定源码OpenCV在Linux全新构建、隔离x86_64主包/格式引擎CI `40626173281` 通过，见 `docs/acceptance/next/distribution/ci-opencv-source-proof.json`；未为这组Kotlin修复重复执行旧设备套件。
+
 ## 后续执行顺序
 
 页序历史补充：重排只记录页面ID，删页/分割仅记录内容差异；新旧可读快照的撤销保留后来新增的扫描页和与操作无关的新OCR。备份对独立页序ID重映射，集中检查见 `docs/acceptance/next/sparse-history-summary.json`。不将此修复重复计为新完成的计划卡。

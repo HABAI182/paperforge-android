@@ -1,0 +1,10 @@
+{
+  "actualText": "QUEUED_ORIGINAL\n",
+  "libraryReplacementPreserved": true,
+  "taskRetainedOriginal": true,
+  "workManager": "SUCCEEDED",
+  "seconds": 6.55,
+  "scope": "Actual WorkManager PDF extract queued behind the background resource slot; library source path replaced while waiting; only authored fixtures used.",
+  "independentMuPdfText": "QUEUED_ORIGINAL\n",
+  "independentTextConfirmed": true
+}

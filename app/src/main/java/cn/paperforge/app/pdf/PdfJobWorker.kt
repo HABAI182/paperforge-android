@@ -44,7 +44,9 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 }
                 val mode = data.getString("mode") ?: error("缺少工具")
                 val doc = repo.dao.document(data.getString("document") ?: "")
-                val source = doc?.pdfPath?.let { File(it) }
+                val source =
+                    job.row.resourceEntries().firstOrNull { it.id == "source" }?.path?.let(::File)
+                        ?: doc?.pdfPath?.let(::File)
                 val p = JSONObject(data.getString("options") ?: "{}")
                 val extension =
                     when (mode) {
