@@ -31,7 +31,11 @@ def inspect(apk, tools, java):
     if not package:
         raise RuntimeError('APK package metadata is missing')
     signature = run([java, '-jar', tools / 'lib/apksigner.jar', 'verify', '--print-certs', apk], True)
-    certificates = re.findall(r'Signer #\d+ certificate SHA-256 digest: ([0-9a-f]+)', signature)
+    # New SDK tools label v3/v3.1 signers by minSdkVersion instead of ordinal.
+    # The same identity may appear for multiple signing schemes; retain every distinct signer.
+    certificates = sorted({digest.lower() for digest in re.findall(
+        r'^Signer (?:#\d+|\(minSdkVersion=[^)]+\)) certificate SHA-256 digest: ([0-9a-f]{64})\s*$',
+        signature, re.MULTILINE | re.IGNORECASE)})
     if not certificates:
         raise RuntimeError('APK certificate could not be verified')
     alignment = run([tools / ('zipalign.exe' if os.name == 'nt' else 'zipalign'), '-c', '-P', '16', '4', apk], True)
