@@ -1,0 +1,10 @@
+{
+  "conclusion": "",
+  "createdAt": "2026-10-28T13:06:15Z",
+  "databaseId": 40693413379,
+  "headSha": "718c1e745bcad98c58fa8aed85f9ce5303c6fbe8",
+  "status": "in_progress",
+  "updatedAt": "2026-10-28T13:06:19Z",
+  "url": "https://github.com/HABAI182/paperforge-android/actions/runs/40693413379",
+  "note": "Status at evidence capture; local owner-signed ARM64 build and focused device tests completed independently. This remote source compilation may still be running."
+}
