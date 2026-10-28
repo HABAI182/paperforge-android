@@ -1,0 +1,65 @@
+name: Owner signed phone candidate
+on:
+  workflow_dispatch:
+    inputs:
+      abi:
+        type: choice
+        options: [arm64-v8a, x86_64, universal]
+        default: arm64-v8a
+        description: Phone architecture
+      channel:
+        type: choice
+        options: [development, prerelease, stable]
+        default: development
+        description: Candidate channel (does not publish a release)
+      include_engines:
+        type: boolean
+        default: true
+        description: Also build the optional Office and format APKs
+permissions:
+  contents: read
+concurrency:
+  group: owner-signed-${{ github.ref }}-${{ inputs.abi }}
+  cancel-in-progress: true
+jobs:
+  candidate:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@4c125117fe7c5aed11272ec4213f602f012f89f2 # v5
+      - name: Install pinned Android toolchain
+        run: sdkmanager 'platforms;android-36' 'build-tools;35.0.0' 'ndk;28.2.13676358' 'cmake;3.22.1'
+      - name: Restore the existing owner identity outside the checkout
+        env:
+          OWNER_KEY: ${{ secrets.PAPERFORGE_SIGNING_STORE_BASE64 }}
+        run: |
+          test -n "$OWNER_KEY"
+          printf '%s' "$OWNER_KEY" | base64 --decode > "$RUNNER_TEMP/paperforge-owner.keystore"
+          chmod 600 "$RUNNER_TEMP/paperforge-owner.keystore"
+      - name: Build and verify matching certificates and package hashes
+        env:
+          PAPERFORGE_SIGNING_STORE: ${{ runner.temp }}/paperforge-owner.keystore
+          PAPERFORGE_STORE_PASSWORD: ${{ secrets.PAPERFORGE_STORE_PASSWORD }}
+          PAPERFORGE_KEY_ALIAS: ${{ secrets.PAPERFORGE_KEY_ALIAS }}
+          PAPERFORGE_KEY_PASSWORD: ${{ secrets.PAPERFORGE_KEY_PASSWORD }}
+          CANDIDATE_ABI: ${{ inputs.abi }}
+          CANDIDATE_CHANNEL: ${{ inputs.channel }}
+          INCLUDE_ENGINES: ${{ inputs.include_engines }}
+        run: |
+          extra=()
+          if [ "$INCLUDE_ENGINES" = true ]; then extra+=(--include-engines); fi
+          python3 scripts/build_distribution.py --abi "$CANDIDATE_ABI" --channel "$CANDIDATE_CHANNEL" "${extra[@]}"
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: PaperForge-owner-${{ inputs.abi }}-${{ inputs.channel }}-${{ github.sha }}
+          path: build/distributions/${{ inputs.channel }}/${{ inputs.abi }}/
+          retention-days: 14
+          if-no-files-found: error
