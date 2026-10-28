@@ -34,10 +34,10 @@ def inspect(apk, tools, java):
     # New SDK tools label v3/v3.1 signers by minSdkVersion instead of ordinal.
     # The same identity may appear for multiple signing schemes; retain every distinct signer.
     certificates = sorted({digest.lower() for digest in re.findall(
-        r'^Signer (?:#\d+|\(minSdkVersion=[^)]+\)) certificate SHA-256 digest: ([0-9a-f]{64})\s*$',
+        r'^Signer[^\r\n]* certificate SHA-256 digest: ([0-9a-f]{64})',
         signature, re.MULTILINE | re.IGNORECASE)})
     if not certificates:
-        raise RuntimeError('APK certificate could not be verified')
+        raise RuntimeError(f'APK certificate report was not recognized ({tools}): {signature[:5000]!r}')
     alignment = run([tools / ('zipalign.exe' if os.name == 'nt' else 'zipalign'), '-c', '-P', '16', '4', apk], True)
     permissions = re.findall(r"uses-permission[^:]*: name='([^']+)'", badging)
     with zipfile.ZipFile(apk) as archive:
@@ -69,7 +69,8 @@ def inspect(apk, tools, java):
         largest = [{'file': x.filename, 'zipBytes': x.compress_size, 'unpackedBytes': x.file_size}
                    for x in sorted(files, key=lambda x: x.compress_size, reverse=True)[:20]]
     return {'applicationId': package[1], 'versionCode': int(package[2]), 'versionName': package[3],
-            'certificatesSha256': certificates, 'abis': native, 'permissions': permissions,
+            'certificatesSha256': certificates, 'certificateReport': signature.strip(),
+            'buildToolsVersion': tools.name, 'abis': native, 'permissions': permissions,
             'zipAlignment16KiB': True, 'bytes': apk.stat().st_size, 'sha256': sha(apk),
             'groups': groups, 'largestFiles': largest, 'nativeElf': elf,
             'nativeElf16KiBCompatible': all(x['compatible16KiB'] for x in elf)}
@@ -84,12 +85,11 @@ def main():
     parser.add_argument('--output', type=Path)
     args = parser.parse_args()
     sdk = Path(os.environ.get('ANDROID_HOME') or os.environ.get('ANDROID_SDK_ROOT') or '')
-    tool_versions = sorted((sdk / 'build-tools').glob('*'), key=lambda p: [int(n) for n in re.findall(r'\d+', p.name)])
-    if not tool_versions:
-        raise SystemExit('Set ANDROID_HOME to an installed Android SDK')
-    tools = tool_versions[-1]
     java = Path(os.environ['JAVA_HOME']) / 'bin' / ('java.exe' if os.name == 'nt' else 'java')
     policy = json.loads((ROOT / 'docs/development/distribution-policy.json').read_text(encoding='utf-8'))
+    tools = sdk / 'build-tools' / policy['buildToolsVersion']
+    if not tools.is_dir():
+        raise SystemExit('Install Android SDK build-tools;' + policy['buildToolsVersion'])
     if not args.isolated_ci:
         key = Path(os.environ.get('PAPERFORGE_SIGNING_STORE', ''))
         if not key.is_file() or key.resolve().is_relative_to(ROOT):

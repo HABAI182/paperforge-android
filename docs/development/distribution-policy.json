@@ -1,5 +1,6 @@
 {
   "format": 1,
+  "buildToolsVersion": "35.0.0",
   "applicationId": "cn.paperforge.app",
   "ownerDevelopmentCertificateSha256": "d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e",
   "developmentIdentity": "Continues the installed personal development identity; private key is external to Git",
