@@ -576,6 +576,21 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun openTask(row: LocalTaskRow, retake: Boolean = false) {
         if (
             row.type == "CONVERT" &&
+                org.json.JSONObject(row.payload).optJSONObject("input")?.optString("kind") ==
+                    "SCAN_RETOUCH" &&
+                row.state == LocalTaskState.SUCCEEDED
+        ) {
+            viewModelScope.launch {
+                try {
+                    open(withContext(Dispatchers.IO) { RetouchJobs.resultDocument(repo, row) })
+                } catch (e: Exception) {
+                    messages.send(e.message ?: "无法打开修复副本")
+                }
+            }
+            return
+        }
+        if (
+            row.type == "CONVERT" &&
                 org.json.JSONObject(row.payload).getJSONObject("input").optString("kind") ==
                     "CONVERSION_PREVIEW"
         ) {
@@ -1062,6 +1077,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                                 val file =
                                     File(info.outputData.getString("path") ?: error("任务没有本地结果"))
                                 when (info.outputData.getString("mode")) {
+                                    "SCAN_RETOUCH" -> {
+                                        repo.dao
+                                            .task(info.outputData.getString("taskId") ?: "")
+                                            ?.let { row ->
+                                                repo.dao
+                                                    .document(RetouchJobs.publishedDocument(row))
+                                                    ?.let(::open)
+                                            }
+                                        messages.send("修复副本已保存，原文档保持完整")
+                                    }
                                     "OCR" -> {
                                         ocrPage = null
                                         ocrVersions.value = emptyList()
@@ -1430,6 +1455,27 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     throw cancel
                 } catch (error: Exception) {
                     messages.send(error.message ?: "版式转换未能开始")
+                } finally {
+                    busy.value = false
+                    progress.value = ""
+                }
+                queued?.let(::watchExport)
+            }
+    }
+
+    fun retouch(page: PageRow, request: cn.paperforge.app.imaging.RetouchRequest) {
+        if (!busy.compareAndSet(false, true)) return
+        progress.value = "保留修复原图与选区"
+        task =
+            viewModelScope.launch {
+                var queued: UUID? = null
+                try {
+                    queued =
+                        withContext(Dispatchers.IO) { RetouchJobs.enqueue(repo, page, request) }
+                } catch (cancel: CancellationException) {
+                    throw cancel
+                } catch (e: Exception) {
+                    messages.send(e.message ?: "修复未能开始")
                 } finally {
                     busy.value = false
                     progress.value = ""

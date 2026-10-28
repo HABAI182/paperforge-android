@@ -74,14 +74,14 @@
     {
       "id": "SCN07",
       "title": "去手指和手写恢复试验",
-      "status": "planned",
-      "note": "完整目标保留，未在本版标记完成"
+      "status": "done",
+      "note": "清理修复工作台：手动涂抹/擦除/撤销、Telea和彩笔筛选、可选MI-GAN专用填补模型、强度/实际预览/原图对照/全屏缩放；草稿资源及任务快照/检查点可保留，另存新扫描与来源，不覆盖原件。实际Android推理、选区外0像素变化、完整区域模拟遮挡填补与真实界面保存通过，见scan-retouch-summary.json；不宣称恢复遮挡下的原文字。"
     },
     {
       "id": "SCN08",
       "title": "反光去噪超分试验",
-      "status": "planned",
-      "note": "完整目标保留，未在本版标记完成"
+      "status": "partial",
+      "note": "已接入分块NLM去噪、亮部局部对比和真实Sub-Pixel CNN 3×超分（4096边长上限），可选区、强度、原图对照与另存。公开数独照片固定噪声MSE64.17→19.52，实际模型及内容大图/界面通过；强反光、淡字和机主手机样张仍待专项核对，不把公开照片对照当作全部实拍质量验收。"
     },
     {
       "id": "R01",
@@ -595,9 +595,9 @@
     }
   ],
   "counts": {
-    "done": 87,
-    "partial": 6,
-    "planned": 5
+    "done": 88,
+    "partial": 7,
+    "planned": 3
   },
   "releaseHold": true,
   "publishedBaseline": "0.6.0"

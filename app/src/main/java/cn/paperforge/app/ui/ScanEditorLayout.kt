@@ -316,6 +316,15 @@ fun ScanEditorLayout(
                         }
                         TextButton(onClick = { enhance = false }) { Text("收起") }
                     }
+                    TextButton(
+                        onClick = { onAction("retouch") },
+                        enabled = !busy,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Icon(Icons.Default.AutoFixHigh, null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("清理与修复 · 涂抹、去噪、超分")
+                    }
                 }
         }
     }

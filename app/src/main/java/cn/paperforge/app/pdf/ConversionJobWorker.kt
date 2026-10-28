@@ -34,6 +34,7 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                                     "TABLE_ANALYZE" -> "TABLE_REVIEW"
                                     "MARKUP" -> "MARKUP"
                                     "PDF_DIFF" -> "PDF_DIFF"
+                                    "SCAN_RETOUCH" -> "SCAN_RETOUCH"
                                     else -> "CONVERT"
                                 },
                             "taskId" to job.row.id,
@@ -51,6 +52,14 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                 var completed = 0
                 val file: File
                 when (job.input.getString("kind")) {
+                    "SCAN_RETOUCH" -> {
+                        file =
+                            RetouchJobs.run(repo, job) { percent, detail ->
+                                DocumentJobs.progress(repo, job, percent, detail)
+                                setProgress(workDataOf("progress" to percent))
+                            }
+                        completed = 1
+                    }
                     "CONVERSION_PREVIEW" -> {
                         file =
                             ConversionPreviews.run(repo, job) { percent, detail ->
@@ -364,6 +373,8 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                 withContext(NonCancellable) {
                     repo.database.withTransaction {
                         DocumentJobs.checkCurrent(repo, job)
+                        if (job.input.getString("kind") == "SCAN_RETOUCH")
+                            RetouchJobs.publish(repo, job, file)
                         if (file.extension == "pdf") {
                             val registered =
                                 repo.registerPdf(
@@ -404,6 +415,7 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                                 "TABLE_ANALYZE" -> "TABLE_REVIEW"
                                 "MARKUP" -> "MARKUP"
                                 "PDF_DIFF" -> "PDF_DIFF"
+                                "SCAN_RETOUCH" -> "SCAN_RETOUCH"
                                 else -> "CONVERT"
                             },
                         "taskId" to job.row.id,

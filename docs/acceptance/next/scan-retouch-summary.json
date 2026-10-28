@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-28",
+  "releaseHold": true,
+  "status": {
+    "SCN07": "done",
+    "SCN08": "partial"
+  },
+  "proofDirectory": "scan-retouch",
+  "android": {
+    "abi": "x86_64",
+    "api": 35,
+    "tests": 3,
+    "seconds": 11.168,
+    "result": "OK"
+  },
+  "denoiseMse": {
+    "before": 64.17338477366255,
+    "after": 19.52499742798354
+  },
+  "unselectedPixelsChanged": 0,
+  "sourcePreserved": true,
+  "uiWorkflow": {
+    "sourceDocument": "285dedb8-d8fe-4260-85ff-5452a3b35a39",
+    "strokesAfterCloseAndReopen": 2,
+    "previewGenerated": true,
+    "fullscreenHidesTools": true,
+    "originalToggle": true,
+    "savedCopyOpenedInEditor": true,
+    "titles": [
+      "扫描 10-28 13.51 · 修复副本",
+      "修复副本已保存，原文档保持完整"
+    ],
+    "fontScale": 1.25
+  },
+  "limitations": [
+    "Synthetic obstruction, not owner finger photograph",
+    "No erased-text ground truth",
+    "No strong-glare/faint-letter quality acceptance",
+    "No owner ARM64 performance measurement"
+  ]
+}

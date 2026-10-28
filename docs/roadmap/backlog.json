@@ -152,7 +152,7 @@
       ],
       "scope": "专用模型、区域预览与强度，结果另存副本",
       "acceptance": "不覆盖原件，失败不显示虚构成功",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "SCN08",
@@ -165,7 +165,7 @@
       ],
       "scope": "对真实问题区域比较内容完整性，验证后才开放",
       "acceptance": "恢复后没有新增假字，原图可回看",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "R01",
@@ -1252,9 +1252,9 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 87,
-    "partial": 6,
-    "planned": 5
+    "done": 88,
+    "partial": 7,
+    "planned": 3
   },
   "updated": "2026-10-28"
 }

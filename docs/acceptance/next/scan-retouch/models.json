@@ -1,0 +1,81 @@
+[
+  {
+    "file": "migan_pipeline_v2.onnx",
+    "bytes": 28079181,
+    "sha256": "6f1f3530a1a2324b19752018ce756088b07973cda8d7d890034ace5c8a48c40b",
+    "inputs": [
+      [
+        "image",
+        "tensor(uint8)",
+        [
+          "batch_size",
+          3,
+          "height",
+          "width"
+        ]
+      ],
+      [
+        "mask",
+        "tensor(uint8)",
+        [
+          "batch_size",
+          1,
+          "height",
+          "width"
+        ]
+      ]
+    ],
+    "outputs": [
+      [
+        "result",
+        "tensor(uint8)",
+        [
+          "ScatterNDresult_dim_0",
+          3,
+          "ScatterNDresult_dim_2",
+          "ScatterNDresult_dim_3"
+        ]
+      ]
+    ],
+    "sourceRepository": "https://github.com/Picsart-AI-Research/MI-GAN",
+    "sourceRevision": "2b793c5ece43f4253e32d4afc257120a5deed6f5",
+    "weightsRevision": "406830d0fa60666da0071c342ad2fbc8f30c5c64",
+    "license": "MIT",
+    "bundled": false,
+    "url": "https://huggingface.co/andraniksargsyan/migan/resolve/406830d0fa60666da0071c342ad2fbc8f30c5c64/migan_pipeline_v2.onnx"
+  },
+  {
+    "file": "super-resolution-10.onnx",
+    "bytes": 240078,
+    "sha256": "85f36ff88cc504a24af5e0602148bc56a8aa09a58eca8c0da2756f3e8186035e",
+    "inputs": [
+      [
+        "input",
+        "tensor(float)",
+        [
+          "batch_size",
+          1,
+          224,
+          224
+        ]
+      ]
+    ],
+    "outputs": [
+      [
+        "output",
+        "tensor(float)",
+        [
+          "batch_size",
+          1,
+          672,
+          672
+        ]
+      ]
+    ],
+    "sourceRepository": "https://github.com/onnx/models",
+    "sourceRevision": "c5cae0f1942c8d7727372c7b1f6b485aa39e4421",
+    "license": "Apache-2.0",
+    "bundled": true,
+    "url": "https://media.githubusercontent.com/media/onnx/models/c5cae0f1942c8d7727372c7b1f6b485aa39e4421/validated/vision/super_resolution/sub_pixel_cnn_2016/model/super-resolution-10.onnx"
+  }
+]

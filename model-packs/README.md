@@ -40,3 +40,8 @@ YAML 指定 BGR 与字典，适配按配置执行；检测和逐行识别共用 
 ## 实际验证
 
 先前中英及一张实拍路牌的有限对比见 [第二引擎记录](../docs/acceptance/next/paddle-ocr-summary.json)。竖排、三栏顺序、日/韩/印地/法/捷样本、固定任务配置、PDF 搜索/复制和独立 MuPDF 外观复读见 [脚本与顺序记录](../docs/acceptance/next/ocr-writing-summary.json)。清晰排印样本不能代表手写、任意实拍或全部字典字符准确率；竖排样本中的「紙→纸」等真实识别差异保留在记录中。
+
+
+## 扫描智能填补模型
+
+扫描编辑页 → 增强 / 更多 → 清理与修复 → 智能填补 → 模型说明，可在手机浏览器下载[固定 MI-GAN pipeline v2](https://huggingface.co/andraniksargsyan/migan/resolve/406830d0fa60666da0071c342ad2fbc8f30c5c64/migan_pipeline_v2.onnx)，然后直接“导入”该 `.onnx`。28,079,181字节，SHA256 `6f1f3530a1a2324b19752018ce756088b07973cda8d7d890034ace5c8a48c40b`。它与OCR模型包独立，模型说明可移除；文档备份保留原图、配方和结果，不重复打包权重。无模型时局部修补/彩笔/去噪/高光/3×超分仍可用。

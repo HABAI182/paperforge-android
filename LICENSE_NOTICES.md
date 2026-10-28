@@ -62,3 +62,6 @@ JPEG-2000 / PDF JPX 解码使用 [ThalesGroup/JP2ForAndroid 1.1.0](https://githu
 ## 手机 PDF/A 校验引擎
 
 独立格式引擎新增 veraPDF 1.30.3（选择 MPL-2.0）、Rhino 1.7.15.1、Xerces 2.12.2 / XML APIs 1.4.01 及上游固定的 XML / JAXB 依赖。完整随包声明在 archive-core/src/main/assets/archive/，来源与四个移植源码在 archive-core/UPSTREAM.json 和 src/main/java/org/verapdf/。主包不包含这些校验内核依赖。sRGB ICC 由 Pillow / LittleCMS 生成，未复制外部 ICC 文件。
+
+
+扫描清理与修复使用 Picsart AI Research 的 MI-GAN pipeline v2（MIT，模型由用户单独导入），以及 ONNX Model Zoo 的 Sub-Pixel CNN 3× 超分模型（Apache-2.0，240,078 字节随包）。固定来源、版本、输入输出与 SHA256 位于 app/src/main/assets/retouch/models.json；完整许可随包保存在 retouch/LICENSE-MIGAN、retouch/LICENSE-SR。两者均在本机推理。

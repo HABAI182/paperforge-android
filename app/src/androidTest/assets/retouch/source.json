@@ -1,0 +1,6 @@
+{
+  "url": "https://raw.githubusercontent.com/opencv/opencv/4.12.0/samples/data/sudoku.png",
+  "sha256": "3cd9ab173f7178c0a16bba9f867062b58b5d60918d5aeb8ced85cba0b24c353a",
+  "bytes": 250720,
+  "description": "OpenCV public photographed printed sudoku page; natural uneven illumination, not owner phone capture"
+}

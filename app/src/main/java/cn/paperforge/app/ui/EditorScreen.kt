@@ -116,6 +116,20 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
     var dewarp by remember { mutableStateOf(false) }
     var trace by remember { mutableStateOf(false) }
     var origins by remember { mutableStateOf(false) }
+    var retouch by remember(doc?.id) { mutableStateOf<PageRow?>(null) }
+    val repairPage = retouch
+    if (repairPage != null) {
+        ScanRetouchScreen(
+            vm.repo,
+            repairPage,
+            onBack = { retouch = null },
+            onSubmit = { request ->
+                retouch = null
+                vm.retouch(repairPage, request)
+            },
+        )
+        return
+    }
     ScanEditorLayout(
         pages,
         pager,
@@ -133,6 +147,7 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                 "redo" -> vm.redo()
                 "crop" -> crop = true
                 "adjust" -> adjust = true
+                "retouch" -> retouch = active
                 "more" -> more = true
                 "applyAll" -> active?.let(vm::applyAll)
                 "ocr" -> active?.let(vm::openOcr)
@@ -334,6 +349,14 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
             title = { Text("扫描页面工具") },
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
+                    TextButton(
+                        onClick = {
+                            more = false
+                            retouch = active
+                        }
+                    ) {
+                        Text("清理与修复 · 另存副本")
+                    }
                     OcrOptionsControl()
                     if (active.origins().isNotEmpty())
                         TextButton(
