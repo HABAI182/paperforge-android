@@ -1,0 +1,17 @@
+{
+  "repository": "https://github.com/ThalesGroup/JP2ForAndroid",
+  "revision": "8ad43abb5d8e2caf2147162d3bfe5569581b5d1f",
+  "version": "1.1.0",
+  "archive": "https://codeload.github.com/ThalesGroup/JP2ForAndroid/zip/8ad43abb5d8e2caf2147162d3bfe5569581b5d1f",
+  "archiveSha256": "b7b0e490aebcd10d0f9522af225f387a185426b802ffc7a6032d56624eb01699",
+  "integration": "Native upstream CMake fetched at this archive hash; PaperForge API36 / NDK28.2 module, native upstream 16KiB flags retained",
+  "upstreamRawJavaSha256": {
+    "JP2Decoder.java": "1ca011bc3560da2d7a723a918b29bbdf980c23e059060af9771ab260be2a8750",
+    "JP2Encoder.java": "3a9ab7d4d6a114944a741dddeb42e4c0b288103fda710a56c7530f73e67a43f4"
+  },
+  "vendoredLfJavaSha256": {
+    "JP2Decoder.java": "15a74a5f784081771caf27a911c4e3c19b30e3aaea5354ed110135d623bdf883",
+    "JP2Encoder.java": "c64d623fda02dff340f0b4afbc1a28cd837d5436146aba883816ee457ce95307"
+  },
+  "sourceChanges": "Java line endings normalized to LF; no Java/native logic changes"
+}

@@ -12,7 +12,7 @@ if (root/'.git').exists() and shutil.which('git'):
     subprocess.run(['git','archive','--format=zip','--prefix=PaperForge/','--output='+str(output),'HEAD'],cwd=root,check=True)
     print(output)
     raise SystemExit(0)
-excluded={'.git','.gradle','.kotlin','.idea','build','captures','__pycache__'}
+excluded={'.git','.gradle','.kotlin','.idea','.cxx','.venv','build','runtime','captures','__pycache__'}
 with zipfile.ZipFile(output,'w',zipfile.ZIP_DEFLATED) as archive:
     for p in sorted(root.rglob('*')):
         rel=p.relative_to(root)

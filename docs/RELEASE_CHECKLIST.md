@@ -1,5 +1,9 @@
 # 发布检查
 
+## 当前大版本开发
+
+当前仓库为私有，统一大版本前不新增 tag / Release。构建、同证书延续、开发/预发布/稳定通道、手机 Actions 获取方式及正式身份迁移方案见 [DISTRIBUTION.md](development/DISTRIBUTION.md)。候选包附真实 ABI / 证书 / SHA256 / 包体清单，不等同已发布版本。以下内容是历史交付记录，不能覆盖当前 releaseHold。
+
 0.5.0使用固定官方MNN3.6.1源码与两份恢复模型，随包来源不等于模型开源许可。只验证本轮扫描链路，详细结果见acceptance/v050。发布流程继续生成同证书通用/ARM64/x86_64包、源码ZIP、报告及SHA256；逐附件回读后公开新预发布。新v0.5.0 tag保留旧版本不变，最终以上传目录release-0.5.0-verification.json为准。
 
 0.4.0新增定位模型与ONNX Runtime：完整许可/固定来源/模型及AAR哈希保存在assets。通用、ARM64、x86_64分别检查签名、权限和16KB结构对齐，source.zip按原始Git blob验证；新tag和预发布不覆盖历史。最终Release上传结果以交付目录release-0.4.0-verification.json为准。

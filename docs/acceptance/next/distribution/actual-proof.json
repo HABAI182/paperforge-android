@@ -1,0 +1,18 @@
+{
+  "device": "API35 AOSP x86_64 emulator",
+  "apk": "R8/minified same-owner signed release variant 0.6.1-dev code7",
+  "actualUi": [
+    "Existing document library and appearance settings remain after install -r",
+    "Imported authored JPX image PDF",
+    "Embedded image extraction via real WorkManager",
+    "Saved actual ZIP via retained Android directory permission"
+  ],
+  "codec": "Unmodified JP2ForAndroid 1.1.0 bindings and pinned OpenJPEG 2.5.4 source",
+  "actualExtractedImage": "page-1-image-1.png",
+  "pixelsMatchIndependentPillowSource": true,
+  "dimensions": [
+    512,
+    512
+  ],
+  "sha256": "ec9d7f69cf6824f86e30e973cd829662d6546b36f5fc50308b3985cfbb82c232"
+}

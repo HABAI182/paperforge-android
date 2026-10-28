@@ -1,0 +1,315 @@
+package com.gemalto.jp2;
+
+import android.annotation.SuppressLint;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
+import android.graphics.BitmapFactory;
+import android.graphics.Rect;
+import android.os.Build;
+import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+/**
+ * JPEG-2000 bitmap decoder. The supported data formats are: <ul>
+ *     <li>JP2 (standard JPEG-2000 file format)</li>
+ *     <li>J2K (JPEG-2000 codestream)</li>
+ *     <li>JPH (High-Throughput JPEG-2000 file format)</li>
+ *     <li>JHC (High-Throughput JPEG-2000 codestream)</li>
+ *  </ul>
+ *  Only RGB(A) and grayscale(A) colorspaces are supported.
+ */
+public class JP2Decoder {
+    private static final String TAG = "JP2Decoder";
+
+    static {
+        System.loadLibrary("openjpeg");
+    }
+
+    public static class Header {
+        public int width;
+        public int height;
+        public boolean hasAlpha;
+        public int numResolutions;
+        public int numQualityLayers;
+    }
+
+    private static final byte[] JP2_RFC3745_MAGIC = new byte[]{(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x0c, (byte)0x6a, (byte)0x50, (byte)0x20, (byte)0x20, (byte)0x0d, (byte)0x0a, (byte)0x87, (byte)0x0a};
+    private static final byte[] JP2_MAGIC = new byte[]{(byte)0x0d, (byte)0x0a, (byte)0x87, (byte)0x0a};
+    private static final byte[] J2K_CODESTREAM_MAGIC = new byte[]{(byte)0xff, (byte)0x4f, (byte)0xff, (byte)0x51};
+
+    private byte[] data = null;
+    private String fileName = null;
+    private InputStream is = null;
+    private int skipResolutions = 0;
+    private int layersToDecode = 0;
+    private boolean premultiplication = true;
+    private Rect decodingArea = null;
+
+    /**
+     * Decode a JPEG-2000 image from a byte array.
+     * @param data the JPEG-2000 image
+     */
+    public JP2Decoder(byte[] data) {
+        this.data = data;
+    }
+
+    /**
+     * Decode a JPEG-2000 image file.
+     * @param fileName the name of the JPEG-2000 file
+     */
+    public JP2Decoder(final String fileName) {
+        this.fileName = fileName;
+    }
+
+    /**
+     * Decode a JPEG-2000 image from a stream.
+     * @param is the stream containing the JPEG-2000 image<br>
+     *           <strong>Note: the whole content of the stream will be read. The end of image data is not detected.</strong>
+     */
+    public JP2Decoder(final InputStream is) {
+        this.is = is;
+    }
+
+    /**
+     * Set the number of highest resolution levels to be discarded. The image resolution is effectively divided
+     * by 2 to the power of the number of discarded levels. The reduce factor is limited by the number of stored
+     * resolutions in the file. The number of existing resolutions can be detected using the {@link #readHeader()}
+     * method.<br><br>
+     *
+     * At least one (the lowest) resolution is always decoded, no matter how high a number you set here.<br><br>
+     *
+     * Default value: 0 (the image is decoded up to the highest resolution)
+     * @param skipResolutions the number of resolutions to skip
+     * @return this instance of {@code JP2Decoder}
+     */
+    public JP2Decoder setSkipResolutions(final int skipResolutions) {
+        if (skipResolutions < 0) throw new IllegalArgumentException("skipResolutions cannot be a negative number!");
+        validateDecodingAreaAndSkipResolutions(decodingArea, skipResolutions);
+        this.skipResolutions = skipResolutions;
+        return this;
+    }
+
+    /**
+     * Set the maximum number of quality layers to decode. If there are less quality layers than the specified number,
+     * all the quality layers are decoded. The available number of quality layers can be detected using the
+     * {@link #readHeader()} method. Special value 0 indicates all layers.<br><br>
+     *
+     * Default value: 0 (all layers are decoded)
+     * @param layersToDecode number of quality layers to decode
+     * @return this instance of {@code JP2Decoder}
+     */
+    public JP2Decoder setLayersToDecode(final int layersToDecode) {
+        if (layersToDecode < 0) throw new IllegalArgumentException("layersToDecode cannot be a negative number!");
+        this.layersToDecode = layersToDecode;
+        return this;
+    }
+
+    /**
+     * Sets the region of the source image that will be decoded. The region must not extend outside the boundaries of the image.
+     * By default, the whole image is decoded.<br/><br/>
+     *
+     * If {@link #setSkipResolutions(int)} is used together with {@code setDecodingArea}, the decoding
+     * area's resolution will be reduced along with the whole image. I.e. if you set
+     * {@code setDecodingArea(Rect(0, 0, 200, 200))} and {@code setSkipResolutions(3)}, you will get a 25x25 px image
+     * (200x200 divided by 2^3) which contains the 200x200 px top left area of the original image, 8x shrunken.<br><br>
+     *
+     * The decoding area's width and height must be at least {@code 2^skipResolutions} in this case. I.e.
+     * if {@code skipResolutions} is 3, both the decoding area's width and height must be at least 8.
+     * @param decodingArea The region of the image to decode, or {@code null} if the entire image should be decoded.
+     */
+    public JP2Decoder setDecodingArea(Rect decodingArea)
+    {
+        if (decodingArea != null && !(decodingArea.left == 0 && decodingArea.right == 0 && decodingArea.top == 0 && decodingArea.bottom == 0)) {
+            if (decodingArea.left < 0) throw new IllegalArgumentException("negative decodingArea.left");
+            if (decodingArea.top < 0) throw new IllegalArgumentException("negative decodingArea.top");
+            if (decodingArea.right - decodingArea.left <= 0) throw new IllegalArgumentException("decodingArea width must be positive");
+            if (decodingArea.bottom - decodingArea.top <= 0) throw new IllegalArgumentException("decodingArea height must be positive");
+        }
+        validateDecodingAreaAndSkipResolutions(decodingArea, skipResolutions);
+        this.decodingArea = decodingArea;
+        return this;
+    }
+
+    /**
+     * This allows you to turn off alpha pre-multiplication in the output bitmap. Normally Android bitmaps with alpha
+     * channel have their RGB component pre-multiplied by the normalized alpha channel. This improves performance when
+     * displaying the bitmap, but it leads to loss of precision. This is no problem when you only want to display
+     * the bitmap, but it can be a problem when you want to further process the bitmap's raw data.<br><br>
+     *
+     * This pre-multiplication can be turned off since API 19 (KitKat). The loss of precision doesn't occur then, but the system
+     * won't be able to draw the output bitmap. On API &lt; 19, calling this method will raise an exception.<br><br>
+     *
+     * In most cases you should not use this.
+     * @return this instance of {@code JP2Decoder}
+     * @see Bitmap#setPremultiplied(boolean)
+     * @see BitmapFactory.Options#inPremultiplied
+     * @throws UnsupportedOperationException if this method is called on API &lt; 19
+     */
+    @SuppressLint("ObsoleteSdkInt")
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    public JP2Decoder disableBitmapPremultiplication() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            this.premultiplication = false;
+        } else {
+            throw new UnsupportedOperationException("Pre-multiplication cannot be disabled on API < 19");
+        }
+        return this;
+    }
+
+    /**
+     * Returns true if the byte array starts with values typical for a JPEG-2000 header.
+     * @param data the byte array to check
+     * @return {@code true} if the beginning looks like a JPEG-2000 header; {@code false} otherwise
+     */
+    public static boolean isJPEG2000(byte[] data) {
+        if (data == null) return false;
+        if (startsWith(data, JP2_RFC3745_MAGIC)) return true;
+        if (startsWith(data, JP2_MAGIC)) return true;
+        if (startsWith(data, J2K_CODESTREAM_MAGIC)) return true;
+        return false;
+    }
+
+    /**
+     * @return the decoded image; {@code null} in case of an error
+     */
+    public Bitmap decode() {
+        int regionLeft = 0, regionRight = 0, regionTop = 0, regionBottom = 0;
+        if  (decodingArea != null){
+            regionLeft = decodingArea.left;
+            regionRight = decodingArea.right;
+            regionTop = decodingArea.top;
+            regionBottom = decodingArea.bottom;
+        }
+        int[] res = null;
+        if (fileName != null) {
+            res = decodeJP2File(fileName, skipResolutions, layersToDecode, regionLeft, regionTop, regionRight, regionBottom);
+        } else {
+            if (data == null && is != null) {
+                data = readInputStream(is);
+            }
+            if (data == null) {
+                Log.e(TAG, "Data is null, nothing to decode");
+            } else {
+                res = decodeJP2ByteArray(data, skipResolutions, layersToDecode, regionLeft, regionTop, regionRight, regionBottom);
+            }
+        }
+        return nativeToBitmap(res);
+    }
+
+    /**
+     * Decodes the file header information and returns it in a {@link Header} object.
+     * @return file header information
+     */
+    public Header readHeader() {
+        int[] res = null;
+        if (fileName != null) {
+            res = readJP2HeaderFile(fileName);
+        } else {
+            if (data == null && is != null) {
+                data = readInputStream(is);
+            }
+            if (data == null) {
+                Log.e(TAG, "Data is null, nothing to decode");
+            } else {
+                res = readJP2HeaderByteArray(data);
+            }
+        }
+
+        return nativeToHeader(res);
+    }
+
+    private static byte[] readInputStream(InputStream in) {
+        //sanity check
+        if (in == null) {
+            Log.e(TAG, "input stream is null!");
+            return null;
+        }
+
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream(in.available());
+            byte[] buffer = new byte[16 * 1024];
+            int bytesRead = in.read(buffer);
+            while (bytesRead >= 0) {
+                out.write(buffer, 0, bytesRead);
+                bytesRead = in.read(buffer);
+            }
+            return out.toByteArray();
+        } catch (IOException e) {
+            Log.e(TAG, "Error reading input stream", e);
+            return null;
+        }
+    }
+
+    /*
+        Get the decoded data from the native code and create a Bitmap object.
+     */
+    private Bitmap nativeToBitmap(int[] data) {
+        if (data == null || data.length < 3) return null;
+        int width = data[0];
+        int height = data[1];
+        int alpha = data[2];
+
+        Bitmap bmp = Bitmap.createBitmap(width, height, Config.ARGB_8888);
+        if (!premultiplication && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            bmp.setPremultiplied(false);
+        }
+        bmp.setPixels(data, 3, width, 0, 0, width, height);
+        bmp.setHasAlpha(alpha != 0);
+
+        return bmp;
+    }
+
+    /*
+        Get the header data from the native code
+     */
+    private static Header nativeToHeader(int[] data) {
+        if (data == null || data.length < 5) return null;
+        Header ret = new Header();
+        ret.width = data[0];
+        ret.height = data[1];
+        ret.hasAlpha = data[2] != 0;
+        ret.numResolutions = data[3];
+        ret.numQualityLayers = data[4];
+        return ret;
+    }
+
+    //does array1 start with contents of array2?
+    private static boolean startsWith(@NonNull byte[] array1, @NonNull byte[] array2) {
+        if (array1.length < array2.length) return false;
+        for (int i = 0; i < array2.length; i++) {
+            if (array1[i] != array2[i]) return false;
+        }
+        return true;
+    }
+
+    /*
+     skipping resolutions reduces both dimensions of the decoding area by 2^skipResolutions. This
+     could lead to either the width or height of the decoding area to become 0, in which case the
+     image could not be decoded. OpenJPEG actually doesn't check this and the decode simply fails,
+     but we check it here so that we can fail early.
+     */
+    private static void validateDecodingAreaAndSkipResolutions(Rect decodingArea, int skipResolutions) {
+        if (decodingArea == null || (decodingArea.left == 0 && decodingArea.top == 0 && decodingArea.right == 0 && decodingArea.bottom == 0)) {
+            //decoding area is not specified; nothing to check
+            return;
+        }
+        int reductionFactor = 1 << skipResolutions;
+        if (decodingArea.width() < reductionFactor) {
+            throw new IllegalArgumentException("Decoding area width too small for skipResolutions=" + skipResolutions + "; it would become effectively zero.");
+        }
+        if (decodingArea.height() < reductionFactor) {
+            throw new IllegalArgumentException("Decoding area height too small for skipResolutions=" + skipResolutions + "; it would become effectively zero.");
+        }
+    }
+
+    private static native int[] decodeJP2File(String filename, int reduce, int layers, int left, int top, int right, int bottom);
+    private static native int[] decodeJP2ByteArray(byte[] data, int reduce, int layers, int left, int top, int right, int bottom);
+    private static native int[] readJP2HeaderFile(String filename);
+    private static native int[] readJP2HeaderByteArray(byte[] data);
+}

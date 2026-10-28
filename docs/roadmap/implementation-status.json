@@ -584,20 +584,20 @@
     {
       "id": "REL02",
       "title": "签名与发布渠道整理",
-      "status": "planned",
-      "note": "完整目标保留，未在本版标记完成"
+      "status": "partial",
+      "note": "根构建统一外部所有者签名；主包及两个手机引擎ARM64 Release均与历史证书一致，真实x86_64 R8覆盖安装保留旧文档/设置，并走通实际JPX提取与另存。三通道候选清单/哈希、正式身份迁移方案及私有CI已准备；待首次远端CI结果确认"
     },
     {
       "id": "REL03",
       "title": "按需包体裁剪",
-      "status": "planned",
-      "note": "完整目标保留，未在本版标记完成"
+      "status": "partial",
+      "note": "按ABI签名候选与R8/资源收缩、独立OCR权重/语言字体、Office/格式引擎已接通；提供真实ZIP/ELF/体积条目清单，ARM64主包约95.1MiB。CPU算子/OpenCV/ORT进一步裁剪及同模式通用包对比仍在继续"
     }
   ],
   "counts": {
     "done": 81,
-    "partial": 6,
-    "planned": 11
+    "partial": 8,
+    "planned": 9
   },
   "releaseHold": true,
   "publishedBaseline": "0.6.0"

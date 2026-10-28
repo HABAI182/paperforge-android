@@ -1234,7 +1234,7 @@
       ],
       "scope": "开发签名延续，正式版迁移方案与稳定/预发布",
       "acceptance": "覆盖更新不丢文档，证书不进仓库",
-      "status": "planned"
+      "status": "partial"
     },
     {
       "id": "REL03",
@@ -1247,14 +1247,14 @@
       ],
       "scope": "ABI、算子、语言字体和可选模型包",
       "acceptance": "包体减少有清单，首开离线主能力不退化",
-      "status": "planned"
+      "status": "partial"
     }
   ],
   "statusSource": "implementation-status.json",
   "counts": {
     "done": 81,
-    "partial": 6,
-    "planned": 11
+    "partial": 8,
+    "planned": 9
   },
   "updated": "2026-10-27"
 }

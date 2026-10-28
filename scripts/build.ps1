@@ -1,6 +1,7 @@
 param(
     [string]$SdkRoot = $env:ANDROID_HOME,
     [string]$JavaHome = $env:JAVA_HOME,
+    [switch]$Checks,
     [switch]$DeviceTests
 )
 $ErrorActionPreference = 'Stop'
@@ -18,7 +19,9 @@ $env:ANDROID_HOME = $SdkRoot
 Set-Content -LiteralPath (Join-Path $projectRoot 'local.properties') -Value ('sdk.dir=' + $SdkRoot.Replace('\','/').Replace(':','\:')) -Encoding utf8
 Push-Location $projectRoot
 try {
-    & .\gradlew.bat assembleDebug testDebugUnitTest lintDebug --console=plain
+    $buildTasks = @(':app:assembleDebug')
+    if ($Checks) { $buildTasks += @(':app:testDebugUnitTest', ':app:lintDebug') }
+    & .\gradlew.bat @buildTasks --console=plain
     if ($LASTEXITCODE -ne 0) { throw 'Build or local checks failed.' }
     if ($DeviceTests) {
         & .\gradlew.bat connectedDebugAndroidTest --console=plain
