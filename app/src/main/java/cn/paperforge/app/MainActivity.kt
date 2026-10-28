@@ -835,13 +835,8 @@ class MainActivity : ComponentActivity() {
                                     }
                                     TextButton(
                                         onClick = {
-                                            startActivity(
-                                                Intent(
-                                                    Intent.ACTION_VIEW,
-                                                    Uri.parse(
-                                                        "https://github.com/HABAI182/paperforge-android/releases"
-                                                    ),
-                                                )
+                                            cn.paperforge.app.system.NetworkTools.updates(
+                                                this@MainActivity
                                             )
                                         }
                                     ) {
@@ -849,7 +844,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                                 Text(
-                                    "更新页会在浏览器中打开，包含预发布版本。当前版本见上方标题。",
+                                    "可选联网工具支持渠道检查、断点下载和签名校验；未安装时打开发布页。",
                                     style = MaterialTheme.typography.bodySmall,
                                 )
                                 SecuritySettings()

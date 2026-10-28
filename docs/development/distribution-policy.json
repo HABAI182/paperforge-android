@@ -4,8 +4,19 @@
   "applicationId": "cn.paperforge.app",
   "ownerDevelopmentCertificateSha256": "d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e",
   "developmentIdentity": "Continues the installed personal development identity; private key is external to Git",
-  "channels": ["development", "prerelease", "stable"],
-  "supportedAbis": ["arm64-v8a", "x86_64"],
-  "optionalPackages": ["cn.paperforge.office", "cn.paperforge.formats"],
+  "channels": [
+    "development",
+    "prerelease",
+    "stable"
+  ],
+  "supportedAbis": [
+    "arm64-v8a",
+    "x86_64"
+  ],
+  "optionalPackages": [
+    "cn.paperforge.office",
+    "cn.paperforge.formats",
+    "cn.paperforge.network"
+  ],
   "releaseHold": true
 }

@@ -548,8 +548,8 @@
     {
       "id": "SET04",
       "title": "可选在线更新",
-      "status": "planned",
-      "note": "完整目标保留，未在本版标记完成"
+      "status": "done",
+      "note": "独立默认关闭的联网工具：正式/预发布/开发渠道、清单versionCode与旧版SemVer、ABI筛选；私有GitHub只读token本机加密，分页读取/错误状态分开。持久队列/HTTP范围续传/暂停、SHA256及完整apksig核验/同源证书/包名版本ABI，交给系统安装。2.174秒集中通过；主应用入口、125%深色界面和实际私有库无凭据错误验证通过，见updates-summary.json。主应用仍无INTERNET，版本发布暂停。"
     },
     {
       "id": "SET05",
@@ -595,9 +595,9 @@
     }
   ],
   "counts": {
-    "done": 88,
+    "done": 89,
     "partial": 7,
-    "planned": 3
+    "planned": 2
   },
   "releaseHold": true,
   "publishedBaseline": "0.6.0"

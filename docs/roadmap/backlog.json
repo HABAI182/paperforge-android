@@ -1158,7 +1158,7 @@
       ],
       "scope": "渠道过滤版本比较、ABI、下载取消、签名哈希",
       "acceptance": "预发布不漏报，失败不说没有更新",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "SET05",
@@ -1252,9 +1252,9 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 88,
+    "done": 89,
     "partial": 7,
-    "planned": 3
+    "planned": 2
   },
   "updated": "2026-10-28"
 }

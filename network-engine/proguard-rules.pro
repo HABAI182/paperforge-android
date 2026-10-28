@@ -1,0 +1,1 @@
+-keep class cn.paperforge.network.UpdateDownloadWorker { public <init>(...); }

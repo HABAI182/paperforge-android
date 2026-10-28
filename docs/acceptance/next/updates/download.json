@@ -1,0 +1,20 @@
+{
+  "bytesBeforePause": 311296,
+  "requestsStartingAt": [
+    0,
+    311296
+  ],
+  "verified": {
+    "packageName": "cn.paperforge.fixture.update",
+    "versionCode": 2,
+    "versionName": "2.0.0",
+    "sha256": "8d61b54629aed7d79433ec97e9dd423dd79be57fb032971013e63ab963401957",
+    "certificatesSha256": [
+      "d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e"
+    ],
+    "signatureVerified": true,
+    "abis": []
+  },
+  "alteredApkRejected": true,
+  "tokenEncryptedRoundtrip": true
+}

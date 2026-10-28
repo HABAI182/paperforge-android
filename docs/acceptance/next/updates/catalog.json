@@ -1,0 +1,7 @@
+{
+  "stableReleases": 1,
+  "previewVersionCode": 8,
+  "wrongAbiExcluded": true,
+  "httpFailureIsNotNoUpdate": true,
+  "failure": "仓库或附件不存在，私有仓库请配置 Contents 只读令牌"
+}

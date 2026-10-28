@@ -1,0 +1,22 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <queries>
+        <package android:name="cn.paperforge.app" />
+        <package android:name="cn.paperforge.office" />
+        <package android:name="cn.paperforge.formats" />
+    </queries>
+    <application android:label="纸匠 · 联网工具" android:theme="@android:style/Theme.Material.Light.NoActionBar"
+        android:icon="@drawable/ic_launcher" android:allowBackup="false" android:usesCleartextTraffic="true">
+        <activity android:name=".UpdatesActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.files" android:exported="false" android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/update_paths" />
+        </provider>
+    </application>
+</manifest>

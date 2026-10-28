@@ -65,3 +65,8 @@ JPEG-2000 / PDF JPX 解码使用 [ThalesGroup/JP2ForAndroid 1.1.0](https://githu
 
 
 扫描清理与修复使用 Picsart AI Research 的 MI-GAN pipeline v2（MIT，模型由用户单独导入），以及 ONNX Model Zoo 的 Sub-Pixel CNN 3× 超分模型（Apache-2.0，240,078 字节随包）。固定来源、版本、输入输出与 SHA256 位于 app/src/main/assets/retouch/models.json；完整许可随包保存在 retouch/LICENSE-MIGAN、retouch/LICENSE-SR。两者均在本机推理。
+
+
+## 可选联网工具
+
+`network-engine`使用AOSP apksig 8.13.2（Apache-2.0）验证完整APK签名。工具独立拥有网络与系统安装请求权限，基础应用没有新增这些权限。依赖来源与哈希见 network-engine/UPSTREAM.json，许可随工具在assets/licenses/中提供。

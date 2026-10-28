@@ -1,0 +1,7 @@
+{
+  "artifact": "com.android.tools.build:apksig:8.13.2",
+  "license": "Apache-2.0",
+  "jarSha256": "c070ed1394629d74641aa0906f60b2ffa1ee77e6366a1f93437f59717b1aeb89",
+  "source": "https://android.googlesource.com/platform/tools/apksig/",
+  "purpose": "Full APK signature verification on Android; same-certificate and version/ABI checks are PaperForge code"
+}

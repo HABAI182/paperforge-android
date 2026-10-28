@@ -5,7 +5,7 @@
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
     <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
-    <queries><package android:name="cn.paperforge.office" /><package android:name="cn.paperforge.formats" /><intent><action android:name="android.intent.action.TTS_SERVICE" /></intent></queries>
+    <queries><package android:name="cn.paperforge.office" /><package android:name="cn.paperforge.formats" /><package android:name="cn.paperforge.network" /><intent><action android:name="android.intent.action.TTS_SERVICE" /></intent></queries>
     <application android:name=".PaperForgeApp" android:allowBackup="false" android:fullBackupContent="false" android:dataExtractionRules="@xml/data_extraction_rules" android:label="纸匠" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:theme="@style/Theme.PaperForge" android:supportsRtl="true">
         <activity android:name=".MainActivity" android:exported="true" android:windowSoftInputMode="adjustResize">
             <intent-filter>

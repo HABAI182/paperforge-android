@@ -99,7 +99,7 @@ def main():
                 raise SystemExit('Missing external signing setting: ' + field)
     output = (args.output or ROOT / 'build/distributions' / args.channel / args.abi).resolve()
     output.mkdir(parents=True, exist_ok=True)
-    modules = ['app'] + (['office-engine', 'format-engine'] if args.include_engines else [])
+    modules = ['app'] + (['office-engine', 'format-engine', 'network-engine'] if args.include_engines else [])
     selected_abis = policy['supportedAbis'] if args.abi == 'universal' else [args.abi]
     if args.include_engines:
         run([sys.executable, '-X', 'utf8', 'tools/fetch_office_runtime.py',
@@ -127,7 +127,7 @@ def main():
                 raise RuntimeError('Main package identity/offline permission contract changed')
         if record['abis'] and record['abis'] != sorted(selected_abis):
             raise RuntimeError('Unexpected native architectures: ' + str(record['abis']))
-        label = {'app': 'PaperForge', 'office-engine': 'PaperForge-Office', 'format-engine': 'PaperForge-Formats'}[module]
+        label = {'app': 'PaperForge', 'office-engine': 'PaperForge-Office', 'format-engine': 'PaperForge-Formats', 'network-engine': 'PaperForge-Network'}[module]
         filename = f'{label}-{record["versionName"]}-{args.abi}-{args.channel}{"-isolated-ci" if args.isolated_ci else ""}.apk'
         target = output / filename
         shutil.copy2(apk, target)

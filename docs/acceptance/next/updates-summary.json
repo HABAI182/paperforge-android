@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-28",
+  "releaseHold": true,
+  "status": "done",
+  "card": "SET04",
+  "optionalApplicationId": "cn.paperforge.network",
+  "defaultEnabled": false,
+  "mainRemainsOffline": true,
+  "android": {
+    "api": 35,
+    "abi": "x86_64",
+    "tests": 2,
+    "seconds": 2.174,
+    "result": "OK"
+  },
+  "proofDirectory": "updates",
+  "resumeOffset": 311296,
+  "apkSignatureVerified": true,
+  "modifiedApkRejected": true,
+  "sameOwnerCertificate": [
+    "d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e"
+  ],
+  "ui": {
+    "entry": "Main about dialog -> Check updates -> same-signer optional package",
+    "defaultDisabled": true,
+    "mainFontScale": 1.25,
+    "theme": "DARK",
+    "configurationCollapsed": true,
+    "manualCheckFailedWithoutFalseUpToDate": true,
+    "observedFailure": [
+      "仓库或附件不存在，私有仓库请配置 Contents 只读令牌"
+    ],
+    "disabledPersistedAfterForceStop": true,
+    "installerNotLaunched": true
+  },
+  "limitations": [
+    "Private repository requires a user-supplied read-only token; no token is distributed",
+    "Large files use WorkManager network constraints; installer remains a system user action",
+    "Physical ARM64 network-loss/background behavior remains separate device acceptance"
+  ]
+}
