@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-28",
+  "card": "PDF10",
+  "status": "implemented",
+  "proof": "certificates-forms/proof.json",
+  "instrumentation": "13.295 s OK (1 test), focused new flow only",
+  "independent": "certificates-forms/independent.json",
+  "r8": "certificates-forms/r8-build.json",
+  "uiR8Result": "certificates-forms/actual-r8-signed.pdf",
+  "scope": [
+    "AndroidKeyStore RSA personal keys; PKCS12 RSA/EC import with ephemeral password",
+    "detached CMS SHA-256 incremental signing; original byte prefix preserved; existing empty signature field selection",
+    "offline cryptographic integrity, current/historical revision coverage, validity dates and system/local trust labels",
+    "typed AcroForm controls, real PDF preview, background form save; original untouched",
+    "portable form resource drafts and source-hash binding; certificate private keys excluded from document backups",
+    "XFA structure assessment and explicit AcroForm-only compatible copy; original retained"
+  ],
+  "limits": [
+    "No online revocation, TSA/LTV or DocMDP/FieldMDP change-policy verification",
+    "No dynamic XFA rendering or XFA JavaScript/data-binding engine",
+    "PDFBox legacy forms API remains for existing callers; the new product flow uses PdfForms"
+  ],
+  "sources": [
+    "https://www.bouncycastle.org/resources/new-release-bouncy-castle-java-1-86/",
+    "https://repo.maven.apache.org/maven2/org/bouncycastle/bcpkix-jdk15to18/1.86/",
+    "https://github.com/TomRoush/PdfBox-Android/tree/v2.0.27.0",
+    "https://github.com/apache/pdfbox/tree/2.0.27/examples/src/main/java/org/apache/pdfbox/examples/signature"
+  ],
+  "visiblePreservation": "All original bytes form a prefix of the signed PDF; independent MuPDF pixels outside the selected signature widget are identical.",
+  "formUi": "certificates-forms/actual-form-ui-proof.json",
+  "formDraft": "Actual document reopen restored 3 changed fields; queued output and true preview pixels match"
+}

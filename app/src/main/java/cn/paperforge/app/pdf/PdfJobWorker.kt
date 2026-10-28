@@ -83,6 +83,28 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 var redaction: PdfRedaction.Report? = null
                 var conversionNotice = ""
                 when (mode) {
+                    "certificate-sign" -> {
+                        origin = PdfCertificates.sign(input, file, p)
+                        originRole = "certificate-report"
+                        report(100)
+                    }
+                    "forms-fill" -> {
+                        val requestFile =
+                            job.row
+                                .resourceEntries()
+                                .firstOrNull { it.id == "form-request" }
+                                ?.path
+                                ?.let(::File) ?: File(p.getString("formFile"))
+                        origin =
+                            PdfForms.fill(
+                                applicationContext,
+                                input,
+                                file,
+                                JSONObject(requestFile.readText()),
+                            )
+                        originRole = "form-fill-report"
+                        report(100)
+                    }
                     "native-edit" -> {
                         val requestFile =
                             job.row

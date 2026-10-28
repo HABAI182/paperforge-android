@@ -277,7 +277,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val mergeSources = MutableStateFlow<List<DocumentRow>>(emptyList())
     val passwordRequest = MutableStateFlow<Uri?>(null)
     val outputLocked = MutableStateFlow(false)
-    val formFields = MutableStateFlow<List<Pair<String, String>>?>(null)
     val searchHits = MutableStateFlow<List<cn.paperforge.app.pdf.PdfSearch.Hit>>(emptyList())
     val annotationPage = MutableStateFlow(0)
     val readerTarget = MutableStateFlow<Pair<String, Int>?>(null)
@@ -2221,6 +2220,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                             "auto-export",
                             "pdf-redaction",
                             "pdf-native-edit",
+                            "pdf-certificates",
+                            "pdf-forms",
                             "conversion-batch",
                         )
                 }
@@ -2232,6 +2233,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     val redactionSource = MutableStateFlow<DocumentRow?>(null)
     val nativeEditSource = MutableStateFlow<DocumentRow?>(null)
+    val certificateSource = MutableStateFlow<DocumentRow?>(null)
+    val formSource = MutableStateFlow<DocumentRow?>(null)
 
     fun queueNativeEdit(request: org.json.JSONObject) {
         val source = nativeEditSource.value ?: return
@@ -2282,6 +2285,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun queueTool(mode: String, options: org.json.JSONObject = org.json.JSONObject()) {
         if (busy.value) return
+        if (mode == "certificates") {
+            certificateSource.value = selected.value
+            screen.value = "pdf-certificates"
+            return
+        }
+        if (mode == "forms") {
+            formSource.value = selected.value
+            screen.value = "pdf-forms"
+            return
+        }
         if (mode == "native-edit") {
             nativeEditSource.value = selected.value
             screen.value = "pdf-native-edit"
@@ -2321,14 +2334,50 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             publishOutput(file, doc)
         }
 
-    fun forms() =
-        perform("读取表单") {
-            formFields.value = PdfTools.forms(File(selected.value!!.pdfPath!!))
-            if (formFields.value!!.isEmpty()) {
-                formFields.value = null
-                messages.send("这份 PDF 没有可填写的 AcroForm 字段")
+    fun forms() = queueTool("forms")
+
+    fun queueCertificate(options: org.json.JSONObject) {
+        val doc = certificateSource.value ?: return
+        selected.value = doc
+        queueTool("certificate-sign", options)
+    }
+
+    fun queueFormFill(request: org.json.JSONObject) {
+        val doc = formSource.value ?: return
+        viewModelScope.launch {
+            try {
+                val file =
+                    withContext(Dispatchers.IO) {
+                        File(
+                                repo.folder(doc.id),
+                                "form-request-${java.util.UUID.randomUUID()}.json",
+                            )
+                            .also {
+                                cn.paperforge.app.pdf.TableJobs.atomic(it, request)
+                                DocumentResources.register(repo, doc.id, "form-fill-request", it)
+                            }
+                    }
+                selected.value = doc
+                enqueueJob(
+                    "PDF",
+                    JobInput(
+                        org.json
+                            .JSONObject()
+                            .put("mode", "forms-fill")
+                            .put("document", doc.id)
+                            .put(
+                                "options",
+                                org.json.JSONObject().put("formFile", file.path).toString(),
+                            )
+                    ),
+                )
+            } catch (cancel: CancellationException) {
+                throw cancel
+            } catch (error: Exception) {
+                messages.send(error.message ?: "表单任务未能创建")
             }
         }
+    }
 
     fun exportPdfDiagnostics(report: PdfDiagnosticsReport) =
         perform("保存诊断报告") {
@@ -2340,17 +2389,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             file.writeText(report.json().toString(2), Charsets.UTF_8)
             outputLocked.value = false
             publishOutput(file, selected.value)
-        }
-
-    fun fillForms(values: Map<String, String>) =
-        perform("保存表单") {
-            val doc = selected.value!!
-            val file = File(repo.exports, "表单-${System.currentTimeMillis()}.pdf")
-            PdfTools.fillForms(File(doc.pdfPath!!), file, values, getApplication())
-            selected.value = repo.registerPdf(file, doc.title + " · 表单", listed = false)
-            outputLocked.value = false
-            publishOutput(file, doc)
-            formFields.value = null
         }
 
     fun searchPdf(text: String) =

@@ -4,3 +4,8 @@
 -dontwarn org.bouncycastle.**
 -dontwarn javax.naming.**
 -dontwarn javax.xml.stream.**
+
+# JCA resolves provider implementations by class name and public constructors.
+-keep class org.bouncycastle.jcajce.provider.** { public <init>(...); }
+-keep class org.bouncycastle.jce.provider.** { public <init>(...); }
+-keep class org.bouncycastle.pqc.jcajce.provider.** { public <init>(...); }

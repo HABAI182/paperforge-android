@@ -132,7 +132,6 @@ class MainActivity : ComponentActivity() {
                 val canCorrectOcr by vm.canCorrectOcr.collectAsState()
                 val locked by vm.outputLocked.collectAsState()
                 val passwordRequest by vm.passwordRequest.collectAsState()
-                val formFields by vm.formFields.collectAsState()
                 val snackbar = remember { SnackbarHostState() }
                 val scope = rememberCoroutineScope()
                 var about by remember { mutableStateOf(false) }
@@ -401,6 +400,10 @@ class MainActivity : ComponentActivity() {
                     }
                     vm.screen.value =
                         when {
+                            screen == "pdf-certificates" ->
+                                "reader".also { vm.selected.value = vm.certificateSource.value }
+                            screen == "pdf-forms" ->
+                                "reader".also { vm.selected.value = vm.formSource.value }
                             screen == "pdf-native-edit" ->
                                 if (vm.nativeEditSource.value?.pdfPath == null) "home"
                                 else "reader".also { vm.selected.value = vm.nativeEditSource.value }
@@ -431,6 +434,8 @@ class MainActivity : ComponentActivity() {
                             "reader" -> ReaderScreen(vm, share)
                             "pdf-diagnostics" -> PdfDiagnosticsScreen(vm)
                             "pdf-native-edit" -> NativePdfEditorScreen(vm)
+                            "pdf-certificates" -> PdfCertificatesScreen(vm)
+                            "pdf-forms" -> PdfFormsScreen(vm)
                             "pdf-redaction" -> {
                                 val source by vm.redactionSource.collectAsState()
                                 val path = source?.pdfPath
@@ -777,36 +782,6 @@ class MainActivity : ComponentActivity() {
                         },
                         dismissButton = {
                             TextButton(onClick = { vm.passwordRequest.value = null }) { Text("取消") }
-                        },
-                    )
-                }
-                formFields?.let { fields ->
-                    var values by remember(fields) { mutableStateOf(fields.toMap()) }
-                    AlertDialog(
-                        onDismissRequest = { vm.formFields.value = null },
-                        title = { Text("填写 PDF 表单") },
-                        text = {
-                            Column(
-                                Modifier.heightIn(max = 420.dp)
-                                    .verticalScroll(rememberScrollState()),
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                fields.forEach { (name, _) ->
-                                    OutlinedTextField(
-                                        values[name] ?: "",
-                                        { values = values + (name to it) },
-                                        label = { Text(name) },
-                                    )
-                                }
-                            }
-                        },
-                        confirmButton = {
-                            TextButton(enabled = !busy, onClick = { vm.fillForms(values) }) {
-                                Text("保存副本")
-                            }
-                        },
-                        dismissButton = {
-                            TextButton(onClick = { vm.formFields.value = null }) { Text("取消") }
                         },
                     )
                 }

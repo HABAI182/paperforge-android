@@ -494,8 +494,8 @@
     {
       "id": "PDF10",
       "title": "证书签名与高级表单",
-      "status": "planned",
-      "note": "完整目标保留，未在本版标记完成"
+      "status": "done",
+      "note": "本机 AndroidKeyStore 个人证书与P12/PFX导入、SHA256 detached CMS增量签署、已有签名字段及独立核验；摘要/修订覆盖/证书有效期与系统信任分开。表单按文本/勾选/单选/可编辑下拉/多选/只读显示，真实预览和队列副本，XFA按字段结构评估并显式另存AcroForm兼容副本。集中13.295秒、OpenSSL独立核验、实际R8创建/导入/签署/核验通过，见 certificates-forms-summary.json。离线不核验吊销、可信时间戳或追加修订的DocMDP/FieldMDP合法性，不运行XFA脚本。"
     },
     {
       "id": "JOB01",
@@ -595,9 +595,9 @@
     }
   ],
   "counts": {
-    "done": 84,
+    "done": 85,
     "partial": 6,
-    "planned": 8
+    "planned": 7
   },
   "releaseHold": true,
   "publishedBaseline": "0.6.0"

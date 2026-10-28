@@ -1,0 +1,213 @@
+{
+  "originalSha256": "b116763e28b731883845bce422ffb83229b905eab21d78e67e11046214e149c3",
+  "first": {
+    "schema": 1,
+    "fileName": "signed.pdf",
+    "sourceSha256": "a7689b292bf1cf12b018333fc80cad7e91b64b84273d609b3a4e71714c9c7eee",
+    "checkedAt": 1793165418836,
+    "docMdpPermission": 0,
+    "signatures": [
+      {
+        "index": 1,
+        "field": "certificate",
+        "name": "CN=PaperForge Device Proof",
+        "reason": "Personal offline proof",
+        "location": "Android emulator",
+        "claimedSigningTime": 1793165418000,
+        "subFilter": "adbe.pkcs7.detached",
+        "integrity": "valid",
+        "signedRevisionBytes": 72244,
+        "fileBytes": 72244,
+        "coversCurrentFile": true,
+        "byteRange": [
+          0,
+          6368,
+          71906,
+          338
+        ],
+        "signers": [
+          {
+            "subject": "CN=PaperForge Device Proof",
+            "issuer": "CN=PaperForge Device Proof",
+            "serial": "c44cc2cfdd454f2df3838b0db78c57cf",
+            "sha256": "a77f8a1cb3b239a421b44edb47588c29cfe6bd4086ac450511cdd72de256756f",
+            "validFrom": 1793165354000,
+            "validUntil": 1856323814000,
+            "validity": "valid-now",
+            "trust": "local-private-key",
+            "trustDetail": "unable to find valid certification path to requested target",
+            "digestAndSignatureValid": true,
+            "digestAlgorithmOid": "2.16.840.1.101.3.4.2.1",
+            "signatureAlgorithmOid": "1.2.840.113549.1.1.11"
+          }
+        ]
+      }
+    ],
+    "offline": true,
+    "revocationChecked": false,
+    "timestampValidated": false,
+    "originalSha256": "b116763e28b731883845bce422ffb83229b905eab21d78e67e11046214e149c3"
+  },
+  "tampered": {
+    "schema": 1,
+    "fileName": "tampered.pdf",
+    "sourceSha256": "e98017290b6617eaad6f6b74dd215cef502b33cf6c60bdd90e13f3c833f896f0",
+    "checkedAt": 1793165419002,
+    "docMdpPermission": 0,
+    "signatures": [
+      {
+        "index": 1,
+        "field": "certificate",
+        "name": "CN=PaperForge Device Proof",
+        "reason": "Personal offline proof",
+        "location": "Android emulator",
+        "claimedSigningTime": 1793165418000,
+        "subFilter": "adbe.pkcs7.detached",
+        "integrity": "invalid",
+        "signedRevisionBytes": 72244,
+        "fileBytes": 72244,
+        "coversCurrentFile": true,
+        "byteRange": [
+          0,
+          6368,
+          71906,
+          338
+        ],
+        "signers": [
+          {
+            "subject": "CN=PaperForge Device Proof",
+            "issuer": "CN=PaperForge Device Proof",
+            "serial": "c44cc2cfdd454f2df3838b0db78c57cf",
+            "sha256": "a77f8a1cb3b239a421b44edb47588c29cfe6bd4086ac450511cdd72de256756f",
+            "validFrom": 1793165354000,
+            "validUntil": 1856323814000,
+            "validity": "valid-now",
+            "trust": "local-private-key",
+            "trustDetail": "unable to find valid certification path to requested target",
+            "digestAndSignatureValid": false,
+            "digestAlgorithmOid": "2.16.840.1.101.3.4.2.1",
+            "signatureAlgorithmOid": "1.2.840.113549.1.1.11"
+          }
+        ]
+      }
+    ],
+    "offline": true,
+    "revocationChecked": false,
+    "timestampValidated": false
+  },
+  "formFill": {
+    "sourceSha256": "a7689b292bf1cf12b018333fc80cad7e91b64b84273d609b3a4e71714c9c7eee",
+    "changedFields": 5,
+    "removedStaticXfa": false,
+    "previousSignatures": 1,
+    "signaturePolicyRevalidated": false
+  },
+  "final": {
+    "schema": 1,
+    "fileName": "表单证书验收.pdf",
+    "sourceSha256": "99104714989399d9b2fad571515d33ab09d0a2121f9d05fcc0b8bf318889bbe4",
+    "checkedAt": 1793165422945,
+    "docMdpPermission": 0,
+    "signatures": [
+      {
+        "index": 1,
+        "field": "certificate",
+        "name": "CN=PaperForge Device Proof",
+        "reason": "Personal offline proof",
+        "location": "Android emulator",
+        "claimedSigningTime": 1793165418000,
+        "subFilter": "adbe.pkcs7.detached",
+        "integrity": "valid",
+        "signedRevisionBytes": 72244,
+        "fileBytes": 12806488,
+        "coversCurrentFile": false,
+        "byteRange": [
+          0,
+          6368,
+          71906,
+          338
+        ],
+        "signers": [
+          {
+            "subject": "CN=PaperForge Device Proof",
+            "issuer": "CN=PaperForge Device Proof",
+            "serial": "c44cc2cfdd454f2df3838b0db78c57cf",
+            "sha256": "a77f8a1cb3b239a421b44edb47588c29cfe6bd4086ac450511cdd72de256756f",
+            "validFrom": 1793165354000,
+            "validUntil": 1856323814000,
+            "validity": "valid-now",
+            "trust": "local-private-key",
+            "trustDetail": "unable to find valid certification path to requested target",
+            "digestAndSignatureValid": true,
+            "digestAlgorithmOid": "2.16.840.1.101.3.4.2.1",
+            "signatureAlgorithmOid": "1.2.840.113549.1.1.11"
+          }
+        ]
+      },
+      {
+        "index": 2,
+        "field": "Signature1",
+        "name": "CN=PaperForge Imported EC Proof",
+        "reason": "Personal offline proof",
+        "location": "Android emulator",
+        "claimedSigningTime": 1793165421000,
+        "subFilter": "adbe.pkcs7.detached",
+        "integrity": "valid",
+        "signedRevisionBytes": 12806488,
+        "fileBytes": 12806488,
+        "coversCurrentFile": true,
+        "byteRange": [
+          0,
+          12740432,
+          12805970,
+          518
+        ],
+        "signers": [
+          {
+            "subject": "CN=PaperForge Imported EC Proof",
+            "issuer": "CN=PaperForge Imported EC Proof",
+            "serial": "1a180fccff5",
+            "sha256": "716f64ddf9eec8ac464777ef89175d246abf928613dcde2f639532d3e775e727",
+            "validFrom": 1793165354000,
+            "validUntil": 1793251814000,
+            "validity": "valid-now",
+            "trust": "local-private-key",
+            "trustDetail": "unable to find valid certification path to requested target",
+            "digestAndSignatureValid": true,
+            "digestAlgorithmOid": "2.16.840.1.101.3.4.2.1",
+            "signatureAlgorithmOid": "1.2.840.10045.4.3.2"
+          }
+        ]
+      }
+    ],
+    "offline": true,
+    "revocationChecked": false,
+    "timestampValidated": false
+  },
+  "workManager": "SUCCEEDED",
+  "originalPrefixPreserved": true,
+  "formValues": {
+    "name": [
+      "中文表单 Alice"
+    ],
+    "readonly": [
+      "READ_ONLY"
+    ],
+    "checked": [
+      "Yes"
+    ],
+    "radio": [
+      "Right"
+    ],
+    "single": [
+      "B"
+    ],
+    "multiple": [
+      "A",
+      "C"
+    ],
+    "certificate": [
+      "com.tom_roush.pdfbox.pdmodel.interactive.digitalsignature.PDSignature@ab6fd25"
+    ]
+  }
+}

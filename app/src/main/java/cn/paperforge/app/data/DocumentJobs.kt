@@ -169,6 +169,7 @@ object DocumentJobs {
                 }
             }
         resource("marks", options.optString("marksFile"))
+        resource("form-request", options.optString("formFile"))
         options
             .optString("editFile")
             .takeIf { it.isNotBlank() }

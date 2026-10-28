@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "baseline": "0.5.0",
-  "checked": "2026-10-27",
+  "checked": "2026-10-28",
   "estimates": "rough person-day ranges; cards may overlap and are not additive deadlines",
   "tasks": [
     {
@@ -1046,7 +1046,7 @@
       ],
       "scope": "签名核验/证书签署、字段类型、XFA适配评估",
       "acceptance": "手写签名与证书签名界面明确分开",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "JOB01",
@@ -1252,9 +1252,9 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 84,
+    "done": 85,
     "partial": 6,
-    "planned": 8
+    "planned": 7
   },
   "updated": "2026-10-28"
 }

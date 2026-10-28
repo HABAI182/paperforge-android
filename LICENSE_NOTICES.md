@@ -12,7 +12,7 @@
 | PdfBox-Android 2.0.27.0 | Apache-2.0；https://github.com/TomRoush/PdfBox-Android ，包括 Apache PDFBox / FontBox、Adobe glyph lists、Unicode data、SIL Open Font License 字体等上游许可，见完整 LICENSE 与 NOTICE |
 | ML Kit Chinese / Latin Text Recognition 16.0.1 | Google ML Kit 与 Google APIs 服务条款下的 SDK/模型，并非开源模型；https://developers.google.com/ml-kit/terms |
 | PaperForge CJK Regular（由 Noto Sans SC 静态化并重命名的衍生字体） | SIL Open Font License 1.1；https://github.com/google/fonts/tree/main/ofl/notosanssc ；完整许可见 assets/licenses/NotoSansSC-OFL.txt |
-| Bouncy Castle bcprov / bcpkix / bcutil 1.72（PdfBox 传递依赖） | Bouncy Castle MIT-style license；https://www.bouncycastle.org/licence.html |
+| Bouncy Castle bcprov / bcpkix / bcutil 1.86（显式统一版本） | Bouncy Castle MIT-style license；https://www.bouncycastle.org/licence.html |
 | JUnit 4.13.2（仅测试） | EPL-1.0；https://github.com/junit-team/junit4 |
 
 完整已获取许可证保存在 `app/src/main/assets/licenses/` 并随 APK 打包。应用“关于与隐私”展示概要，源码提供完整文本。依赖传递清单由 Gradle 生成并保存在验收目录；未使用 MuPDF/iText 或第三方竞品视觉资产。

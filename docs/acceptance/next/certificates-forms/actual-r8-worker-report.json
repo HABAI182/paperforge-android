@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "fileName": "高级表单与证书 · 验收样例.pdf",
+  "sourceSha256": "8904d3751005aa03ebc3a6e33823d3390c9dcdd2321049487f4a1aa48ff4f215",
+  "checkedAt": 1793165932275,
+  "docMdpPermission": 0,
+  "signatures": [
+    {
+      "index": 1,
+      "field": "Signature1",
+      "name": "CN=PaperForge R8 Proof",
+      "reason": "",
+      "location": "",
+      "claimedSigningTime": 1793165932000,
+      "subFilter": "adbe.pkcs7.detached",
+      "integrity": "valid",
+      "signedRevisionBytes": 72385,
+      "fileBytes": 72385,
+      "coversCurrentFile": true,
+      "byteRange": [
+        0,
+        6336,
+        71874,
+        511
+      ],
+      "signers": [
+        {
+          "subject": "CN=PaperForge R8 Proof",
+          "issuer": "CN=PaperForge R8 Proof",
+          "serial": "4d9d6d5597c89fbeda488bd49bee615f72a35c53",
+          "sha256": "9dd3cac4109689708197c734c4085da977c87d6734239731d431fa3b20d250f9",
+          "validFrom": 1793165689000,
+          "validUntil": 1793338489000,
+          "validity": "valid-now",
+          "trust": "local-private-key",
+          "trustDetail": "unable to find valid certification path to requested target",
+          "digestAndSignatureValid": true,
+          "digestAlgorithmOid": "2.16.840.1.101.3.4.2.1",
+          "signatureAlgorithmOid": "1.2.840.10045.4.3.2"
+        }
+      ]
+    }
+  ],
+  "offline": true,
+  "revocationChecked": false,
+  "timestampValidated": false,
+  "originalSha256": "b116763e28b731883845bce422ffb83229b905eab21d78e67e11046214e149c3"
+}

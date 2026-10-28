@@ -1,0 +1,637 @@
+{
+  "openssl": "OpenSSL 3.5.7 9 Jun 2026 (Library: OpenSSL 3.5.7 9 Jun 2026)",
+  "files": {
+    "original.pdf": {
+      "sha256": "b116763e28b731883845bce422ffb83229b905eab21d78e67e11046214e149c3",
+      "bytes": 5817,
+      "pages": 1,
+      "widgets": [
+        {
+          "field": "name",
+          "value": "ORIGINAL",
+          "type": "Text",
+          "rect": [
+            45.0,
+            102.0,
+            285.0,
+            130.0
+          ]
+        },
+        {
+          "field": "readonly",
+          "value": "READ_ONLY",
+          "type": "Text",
+          "rect": [
+            45.0,
+            152.0,
+            285.0,
+            180.0
+          ]
+        },
+        {
+          "field": "checked",
+          "value": "Off",
+          "type": "CheckBox",
+          "rect": [
+            45.0,
+            207.0,
+            73.0,
+            235.0
+          ]
+        },
+        {
+          "field": "radio",
+          "value": "Left",
+          "type": "RadioButton",
+          "rect": [
+            45.0,
+            266.0,
+            69.0,
+            290.0
+          ]
+        },
+        {
+          "field": "radio",
+          "value": "Off",
+          "type": "RadioButton",
+          "rect": [
+            105.0,
+            266.0,
+            129.0,
+            290.0
+          ]
+        },
+        {
+          "field": "single",
+          "value": "A",
+          "type": "ComboBox",
+          "rect": [
+            45.0,
+            327.0,
+            285.0,
+            355.0
+          ]
+        },
+        {
+          "field": "multiple",
+          "value": "",
+          "type": "ListBox",
+          "rect": [
+            45.0,
+            402.0,
+            285.0,
+            430.0
+          ]
+        },
+        {
+          "field": "certificate",
+          "value": "",
+          "type": "Signature",
+          "rect": [
+            45.0,
+            512.0,
+            285.0,
+            540.0
+          ]
+        }
+      ]
+    },
+    "signed.pdf": {
+      "sha256": "a7689b292bf1cf12b018333fc80cad7e91b64b84273d609b3a4e71714c9c7eee",
+      "bytes": 72244,
+      "pages": 1,
+      "widgets": [
+        {
+          "field": "name",
+          "value": "ORIGINAL",
+          "type": "Text",
+          "rect": [
+            45.0,
+            102.0,
+            285.0,
+            130.0
+          ]
+        },
+        {
+          "field": "readonly",
+          "value": "READ_ONLY",
+          "type": "Text",
+          "rect": [
+            45.0,
+            152.0,
+            285.0,
+            180.0
+          ]
+        },
+        {
+          "field": "checked",
+          "value": "Off",
+          "type": "CheckBox",
+          "rect": [
+            45.0,
+            207.0,
+            73.0,
+            235.0
+          ]
+        },
+        {
+          "field": "radio",
+          "value": "Left",
+          "type": "RadioButton",
+          "rect": [
+            45.0,
+            266.0,
+            69.0,
+            290.0
+          ]
+        },
+        {
+          "field": "radio",
+          "value": "Off",
+          "type": "RadioButton",
+          "rect": [
+            105.0,
+            266.0,
+            129.0,
+            290.0
+          ]
+        },
+        {
+          "field": "single",
+          "value": "A",
+          "type": "ComboBox",
+          "rect": [
+            45.0,
+            327.0,
+            285.0,
+            355.0
+          ]
+        },
+        {
+          "field": "multiple",
+          "value": "",
+          "type": "ListBox",
+          "rect": [
+            45.0,
+            402.0,
+            285.0,
+            430.0
+          ]
+        },
+        {
+          "field": "certificate",
+          "value": "",
+          "type": "Signature",
+          "rect": [
+            45.0,
+            512.0,
+            285.0,
+            540.0
+          ]
+        }
+      ]
+    },
+    "filled.pdf": {
+      "sha256": "d3ef2cb0dbd32ca32c629b557aa8bf1d2869596b111aa054dd30da377bd70430",
+      "bytes": 12739866,
+      "pages": 1,
+      "widgets": [
+        {
+          "field": "name",
+          "value": "中文表单 Alice",
+          "type": "Text",
+          "rect": [
+            45.0,
+            102.0,
+            285.0,
+            130.0
+          ]
+        },
+        {
+          "field": "readonly",
+          "value": "READ_ONLY",
+          "type": "Text",
+          "rect": [
+            45.0,
+            152.0,
+            285.0,
+            180.0
+          ]
+        },
+        {
+          "field": "checked",
+          "value": "Yes",
+          "type": "CheckBox",
+          "rect": [
+            45.0,
+            207.0,
+            73.0,
+            235.0
+          ]
+        },
+        {
+          "field": "radio",
+          "value": "Off",
+          "type": "RadioButton",
+          "rect": [
+            45.0,
+            266.0,
+            69.0,
+            290.0
+          ]
+        },
+        {
+          "field": "radio",
+          "value": "Right",
+          "type": "RadioButton",
+          "rect": [
+            105.0,
+            266.0,
+            129.0,
+            290.0
+          ]
+        },
+        {
+          "field": "single",
+          "value": "B",
+          "type": "ComboBox",
+          "rect": [
+            45.0,
+            327.0,
+            285.0,
+            355.0
+          ]
+        },
+        {
+          "field": "multiple",
+          "value": "",
+          "type": "ListBox",
+          "rect": [
+            45.0,
+            402.0,
+            285.0,
+            430.0
+          ]
+        },
+        {
+          "field": "certificate",
+          "value": "",
+          "type": "Signature",
+          "rect": [
+            45.0,
+            512.0,
+            285.0,
+            540.0
+          ]
+        }
+      ]
+    },
+    "queued-signed.pdf": {
+      "sha256": "99104714989399d9b2fad571515d33ab09d0a2121f9d05fcc0b8bf318889bbe4",
+      "bytes": 12806488,
+      "pages": 1,
+      "widgets": [
+        {
+          "field": "name",
+          "value": "中文表单 Alice",
+          "type": "Text",
+          "rect": [
+            45.0,
+            102.0,
+            285.0,
+            130.0
+          ]
+        },
+        {
+          "field": "readonly",
+          "value": "READ_ONLY",
+          "type": "Text",
+          "rect": [
+            45.0,
+            152.0,
+            285.0,
+            180.0
+          ]
+        },
+        {
+          "field": "checked",
+          "value": "Yes",
+          "type": "CheckBox",
+          "rect": [
+            45.0,
+            207.0,
+            73.0,
+            235.0
+          ]
+        },
+        {
+          "field": "radio",
+          "value": "Off",
+          "type": "RadioButton",
+          "rect": [
+            45.0,
+            266.0,
+            69.0,
+            290.0
+          ]
+        },
+        {
+          "field": "radio",
+          "value": "Right",
+          "type": "RadioButton",
+          "rect": [
+            105.0,
+            266.0,
+            129.0,
+            290.0
+          ]
+        },
+        {
+          "field": "single",
+          "value": "B",
+          "type": "ComboBox",
+          "rect": [
+            45.0,
+            327.0,
+            285.0,
+            355.0
+          ]
+        },
+        {
+          "field": "multiple",
+          "value": "",
+          "type": "ListBox",
+          "rect": [
+            45.0,
+            402.0,
+            285.0,
+            430.0
+          ]
+        },
+        {
+          "field": "certificate",
+          "value": "",
+          "type": "Signature",
+          "rect": [
+            45.0,
+            512.0,
+            285.0,
+            540.0
+          ]
+        }
+      ]
+    },
+    "tampered.pdf": {
+      "sha256": "e98017290b6617eaad6f6b74dd215cef502b33cf6c60bdd90e13f3c833f896f0",
+      "bytes": 72244,
+      "pages": 1,
+      "widgets": [
+        {
+          "field": "name",
+          "value": "ORIGINAL",
+          "type": "Text",
+          "rect": [
+            45.0,
+            102.0,
+            285.0,
+            130.0
+          ]
+        },
+        {
+          "field": "readonly",
+          "value": "READ_ONLY",
+          "type": "Text",
+          "rect": [
+            45.0,
+            152.0,
+            285.0,
+            180.0
+          ]
+        },
+        {
+          "field": "checked",
+          "value": "Off",
+          "type": "CheckBox",
+          "rect": [
+            45.0,
+            207.0,
+            73.0,
+            235.0
+          ]
+        },
+        {
+          "field": "radio",
+          "value": "Left",
+          "type": "RadioButton",
+          "rect": [
+            45.0,
+            266.0,
+            69.0,
+            290.0
+          ]
+        },
+        {
+          "field": "radio",
+          "value": "Off",
+          "type": "RadioButton",
+          "rect": [
+            105.0,
+            266.0,
+            129.0,
+            290.0
+          ]
+        },
+        {
+          "field": "single",
+          "value": "A",
+          "type": "ComboBox",
+          "rect": [
+            45.0,
+            327.0,
+            285.0,
+            355.0
+          ]
+        },
+        {
+          "field": "multiple",
+          "value": "",
+          "type": "ListBox",
+          "rect": [
+            45.0,
+            402.0,
+            285.0,
+            430.0
+          ]
+        },
+        {
+          "field": "certificate",
+          "value": "",
+          "type": "Signature",
+          "rect": [
+            45.0,
+            512.0,
+            285.0,
+            540.0
+          ]
+        }
+      ]
+    },
+    "actual-r8-signed.pdf": {
+      "sha256": "8904d3751005aa03ebc3a6e33823d3390c9dcdd2321049487f4a1aa48ff4f215",
+      "bytes": 72385,
+      "pages": 1,
+      "widgets": [
+        {
+          "field": "name",
+          "value": "ORIGINAL",
+          "type": "Text",
+          "rect": [
+            45.0,
+            102.0,
+            285.0,
+            130.0
+          ]
+        },
+        {
+          "field": "readonly",
+          "value": "READ_ONLY",
+          "type": "Text",
+          "rect": [
+            45.0,
+            152.0,
+            285.0,
+            180.0
+          ]
+        },
+        {
+          "field": "checked",
+          "value": "Off",
+          "type": "CheckBox",
+          "rect": [
+            45.0,
+            207.0,
+            73.0,
+            235.0
+          ]
+        },
+        {
+          "field": "radio",
+          "value": "Left",
+          "type": "RadioButton",
+          "rect": [
+            45.0,
+            266.0,
+            69.0,
+            290.0
+          ]
+        },
+        {
+          "field": "radio",
+          "value": "Off",
+          "type": "RadioButton",
+          "rect": [
+            105.0,
+            266.0,
+            129.0,
+            290.0
+          ]
+        },
+        {
+          "field": "single",
+          "value": "A",
+          "type": "ComboBox",
+          "rect": [
+            45.0,
+            327.0,
+            285.0,
+            355.0
+          ]
+        },
+        {
+          "field": "multiple",
+          "value": "",
+          "type": "ListBox",
+          "rect": [
+            45.0,
+            402.0,
+            285.0,
+            430.0
+          ]
+        },
+        {
+          "field": "certificate",
+          "value": "",
+          "type": "Signature",
+          "rect": [
+            45.0,
+            512.0,
+            285.0,
+            540.0
+          ]
+        }
+      ]
+    }
+  },
+  "cms": [
+    {
+      "file": "signed.pdf",
+      "signature": 1,
+      "integrity": true,
+      "coversCurrent": true,
+      "detail": "CMS Verification successful"
+    },
+    {
+      "file": "filled.pdf",
+      "signature": 1,
+      "integrity": true,
+      "coversCurrent": false,
+      "detail": "CMS Verification successful"
+    },
+    {
+      "file": "queued-signed.pdf",
+      "signature": 1,
+      "integrity": true,
+      "coversCurrent": false,
+      "detail": "CMS Verification successful"
+    },
+    {
+      "file": "queued-signed.pdf",
+      "signature": 2,
+      "integrity": true,
+      "coversCurrent": true,
+      "detail": "CMS Verification successful"
+    },
+    {
+      "file": "tampered.pdf",
+      "signature": 1,
+      "integrity": false,
+      "coversCurrent": true,
+      "detail": "CMS Verification failure\n100000000A000000:error:1700009E:CMS routines:CMS_SignerInfo_verify_content:verification failure:crypto/cms/cms_sd.c:1083:\n100000000A000000:error:1700006D:CMS routines:CMS_verify:content verify error:crypto/cms/cms_smime.c:462:"
+    },
+    {
+      "file": "actual-r8-signed.pdf",
+      "signature": 1,
+      "integrity": true,
+      "coversCurrent": true,
+      "detail": "CMS Verification successful"
+    }
+  ],
+  "signedPixelsUnchanged": false,
+  "signatureWidgetPixelDifferenceBounds": [
+    45,
+    512,
+    66,
+    517
+  ],
+  "outsideSignatureWidgetPixelsUnchanged": true,
+  "actualFormPreviewAndQueuedResultPixelsEqual": true,
+  "actualFormValues": {
+    "name": "FORM_UI_EDIT",
+    "readonly": "READ_ONLY",
+    "checked": "Yes",
+    "radio": "Right",
+    "single": "A",
+    "multiple": "",
+    "certificate": ""
+  }
+}
