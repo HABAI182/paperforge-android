@@ -996,7 +996,7 @@
       ],
       "scope": "PDF/A目标等级、字体和元数据验证",
       "acceptance": "验证失败不标归档成功",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "PDF07",
@@ -1252,9 +1252,9 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 85,
+    "done": 86,
     "partial": 6,
-    "planned": 7
+    "planned": 6
   },
   "updated": "2026-10-28"
 }

@@ -49,6 +49,7 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 val p = JSONObject(data.getString("options") ?: "{}")
                 val extension =
                     when (mode) {
+                        "archive-check" -> "json"
                         "images-jpg",
                         "images-png",
                         "images-webp",
@@ -82,7 +83,62 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 var compression: JSONObject? = null
                 var redaction: PdfRedaction.Report? = null
                 var conversionNotice = ""
+                var archiveVerdict: Boolean? = null
                 when (mode) {
+                    "archive-check" -> {
+                        report(10)
+                        val result =
+                            PdfArchive.verify(
+                                applicationContext,
+                                input,
+                                file,
+                                p.optString("target", "2b"),
+                                id.toString(),
+                            )
+                        report(85)
+                        result.put("diagnostics", PdfDiagnostics.inspect(input).json())
+                        result.put("fileName", doc?.title ?: input.name)
+                        TableJobs.atomic(file, result)
+                        conversionNotice =
+                            if (result.getBoolean("compliant"))
+                                "完整校验通过 PDF/A-${result.getString("target")}"
+                            else "校验完成：不符合 PDF/A-${result.getString("target")}"
+                        report(100)
+                    }
+                    "archive-create" -> {
+                        PdfArchive.compatible(
+                            applicationContext,
+                            input,
+                            file,
+                            doc?.title ?: input.nameWithoutExtension,
+                            JobFileStages(repo, job),
+                        ) {
+                            report(it)
+                        }
+                        val temporaryReport =
+                            File(applicationContext.cacheDir, "archive-${job.row.id}.json")
+                        try {
+                            origin =
+                                PdfArchive.verify(
+                                        applicationContext,
+                                        file,
+                                        temporaryReport,
+                                        "2b",
+                                        id.toString(),
+                                    )
+                                    .put("originalSha256", PdfAssembly.sha256(input))
+                                    .put("appearanceOnly", true)
+                            archiveVerdict = origin!!.getBoolean("compliant")
+                            originRole = "archive-report"
+                            conversionNotice =
+                                if (archiveVerdict == true)
+                                    "归档副本已通过完整 PDF/A-2b 校验；保留外观，文字/表单/签名为静态图像"
+                                else "副本未通过 PDF/A-2b 校验，保留普通 PDF，未标记为归档成功"
+                        } finally {
+                            temporaryReport.delete()
+                        }
+                        report(100)
+                    }
                     "certificate-sign" -> {
                         origin = PdfCertificates.sign(input, file, p)
                         originRole = "certificate-report"
@@ -398,12 +454,21 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 withContext(NonCancellable) {
                     repo.database.withTransaction {
                         DocumentJobs.checkCurrent(repo, job)
+                        val archiveRejected = mode == "archive-create" && archiveVerdict != true
+                        if (mode == "archive-check" && doc != null)
+                            DocumentResources.register(repo, doc.id, "archive-report", file)
                         if (extension == "pdf") {
                             val registered =
                                 repo.registerPdf(
                                     file,
                                     if (mode == "assemble") p.optString("title", "组合文档")
-                                    else (doc?.title ?: "合并文档") + " · " + mode,
+                                    else if (mode == "archive-create")
+                                        (doc?.title ?: "文档") +
+                                            if (archiveRejected) " · 归档候选（未通过）" else " · PDF/A-2b"
+                                    else
+                                        (doc?.title ?: "合并文档") +
+                                            " · " +
+                                            DocumentJobs.modeName(mode),
                                     listed = doc == null,
                                 )
                             origin?.let { metadata ->
@@ -433,7 +498,8 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                             if (unmet) "未达到目标体积，已保留可用结果"
                             else if (conversionNotice.isNotBlank()) conversionNotice
                             else redaction?.let { "${it.mode}：${it.detail}" } ?: "已完成",
-                            if (unmet) cn.paperforge.app.data.LocalTaskState.PARTIAL
+                            if (unmet || archiveRejected)
+                                cn.paperforge.app.data.LocalTaskState.PARTIAL
                             else cn.paperforge.app.data.LocalTaskState.SUCCEEDED,
                         )
                     }

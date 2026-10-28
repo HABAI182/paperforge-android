@@ -66,8 +66,13 @@ object DocumentJobs {
             else -> "$source · ${modeName(input.getString("mode"))}"
         }
 
-    private fun modeName(mode: String?) =
+    internal fun modeName(mode: String?) =
         mapOf(
+            "native-edit" to "原生文字编辑",
+            "forms-fill" to "填写表单",
+            "certificate-sign" to "证书签署",
+            "archive-check" to "PDF/A 归档校验",
+            "archive-create" to "生成归档副本",
             "assemble" to "页面组合",
             "merge" to "合并 PDF",
             "extract" to "抽取页面",

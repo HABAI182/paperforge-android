@@ -1,0 +1,68 @@
+{
+  "schema": 1,
+  "kind": "paperforge-pdfa-report",
+  "engine": "verapdf-1.30.3-android1",
+  "target": "2b",
+  "sourceSha256": "3c814db3736ccc597ce04a247527cbb043a71962161fbed30f2db4e7ae19d9d9",
+  "profileSha256": "bae015161f0c9b4296481f11936c97728dfd12dffb2df48ea744f885794da382",
+  "profileRuleCount": 144,
+  "profileVariableCount": 1,
+  "checkedAt": 1793175282616,
+  "assertions": 499,
+  "jobEndStatus": "NORMAL",
+  "compliant": true,
+  "failedRules": [],
+  "failures": [],
+  "displayedFailuresLimitedTo": 500,
+  "offline": true,
+  "diagnostics": {
+    "format": 1,
+    "fileName": "PDF_A 归档 · 验收样例.pdf",
+    "bytes": 57976,
+    "sha256": "3c814db3736ccc597ce04a247527cbb043a71962161fbed30f2db4e7ae19d9d9",
+    "pdfVersion": "1.7",
+    "metadata": {
+      "标题": "PDF/A 归档 · 验收样例",
+      "创建程序": "PaperForge",
+      "生成引擎": "PaperForge PDF/A appearance copy"
+    },
+    "permissions": {
+      "打印": true,
+      "复制文字": true,
+      "修改": true,
+      "填写表单": true
+    },
+    "encrypted": false,
+    "pages": [
+      {
+        "page": 1,
+        "widthPoints": 500,
+        "heightPoints": 700,
+        "rotation": 0,
+        "characters": 0,
+        "imageResources": 1,
+        "annotations": 0
+      },
+      {
+        "page": 2,
+        "widthPoints": 440,
+        "heightPoints": 250,
+        "rotation": 0,
+        "characters": 0,
+        "imageResources": 1,
+        "annotations": 0
+      }
+    ],
+    "fonts": [],
+    "uniqueImageResources": 2,
+    "fieldTypes": {},
+    "xfa": false,
+    "annotationTypes": {},
+    "attachments": [],
+    "signatureRecords": [],
+    "warnings": [],
+    "signatureValidation": "not-performed",
+    "archiveValidation": "not-performed"
+  },
+  "fileName": "PDF/A 归档 · 验收样例 · PDF/A-2b"
+}

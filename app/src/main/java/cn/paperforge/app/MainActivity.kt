@@ -400,6 +400,10 @@ class MainActivity : ComponentActivity() {
                     }
                     vm.screen.value =
                         when {
+                            screen == "pdf-archive" ->
+                                if (vm.archiveSource.value?.pdfPath == null)
+                                    vm.archiveReportReturn.value
+                                else "reader".also { vm.selected.value = vm.archiveSource.value }
                             screen == "pdf-certificates" ->
                                 "reader".also { vm.selected.value = vm.certificateSource.value }
                             screen == "pdf-forms" ->
@@ -436,6 +440,7 @@ class MainActivity : ComponentActivity() {
                             "pdf-native-edit" -> NativePdfEditorScreen(vm)
                             "pdf-certificates" -> PdfCertificatesScreen(vm)
                             "pdf-forms" -> PdfFormsScreen(vm)
+                            "pdf-archive" -> PdfArchiveScreen(vm)
                             "pdf-redaction" -> {
                                 val source by vm.redactionSource.collectAsState()
                                 val path = source?.pdfPath
@@ -798,7 +803,7 @@ class MainActivity : ComponentActivity() {
                         text = {
                             Column(Modifier.verticalScroll(rememberScrollState())) {
                                 Text(
-                                    "非商用个人项目\n\n无需账户、无广告、无水印。扫描与识别在本机完成。应用没有网络权限，不上传文档。\n\n通过系统文件选择器导入副本；删除应用内文档不会删除外部原件。卸载会删除应用私有草稿，请先导出或备份重要文件。\n\n扫描自动裁边、去阴影、中英文 OCR、可搜索 PDF；阅读与搜索、页面整理、批注签名、安全脱敏、密码、表单、图片和文字导出、备份恢复。曲面校正支持预览与强度调整。Office 排版可通过手机引擎处理，表格识别在手机本机完成；原生文字原位编辑尚未提供。",
+                                    "非商用个人项目\n\n无需账户、无广告、无水印。扫描与识别在本机完成。应用没有网络权限，不上传文档。\n\n通过系统文件选择器导入副本；删除应用内文档不会删除外部原件。卸载会删除应用私有草稿，请先导出或备份重要文件。\n\n扫描自动裁边、去阴影、中英文 OCR、可搜索 PDF；阅读与搜索、页面整理、批注签名、安全脱敏、密码、表单、图片和文字导出、备份恢复。曲面校正支持预览与强度调整。Office 排版可通过手机引擎处理，表格识别在手机本机完成；支持限定原生文字对象编辑、类型化表单、证书签署与 PDF/A 归档校验。",
                                     style = MaterialTheme.typography.bodyMedium,
                                 )
                                 Row(

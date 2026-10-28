@@ -63,11 +63,26 @@ class FormatService : Service() {
                                     ) { percent, text ->
                                         send(reply, id, 2, text, percent)
                                     }
-                                    send(reply, id, 3, "版面转换完成", 100)
+                                    send(
+                                        reply,
+                                        id,
+                                        3,
+                                        if (options.optString("operation") == "validate-pdfa")
+                                            "PDF/A 校验完成"
+                                        else "版面转换完成",
+                                        100,
+                                    )
                                 } catch (cancel: CancellationException) {
                                     throw cancel
                                 } catch (error: Exception) {
                                     send(reply, id, 4, error.message ?: "版面转换未完成")
+                                } catch (error: LinkageError) {
+                                    android.util.Log.e(
+                                        "FormatService",
+                                        "Optional engine dependency failure",
+                                        error,
+                                    )
+                                    send(reply, id, 4, "格式引擎遇到兼容问题，请更新完整格式引擎；原件保留")
                                 } finally {
                                     runCatching { input?.close() }
                                     runCatching { output?.close() }
@@ -118,6 +133,29 @@ class FormatService : Service() {
         options: JSONObject,
         progress: (Int, String) -> Unit,
     ) {
+        if (options.optString("operation") == "validate-pdfa") {
+            val temporary =
+                File(cacheDir, "archive-${activeId.replace(Regex("[^A-Za-z0-9_-]"), "_")}.pdf")
+            try {
+                withContext(Dispatchers.IO) {
+                    ParcelFileDescriptor.AutoCloseInputStream(input).use { from ->
+                        temporary.outputStream().use { to -> from.copyTo(to) }
+                    }
+                    val report =
+                        cn.paperforge.archive.ArchiveValidator.validate(
+                            temporary,
+                            options.optString("target", "2b"),
+                        )
+                    ParcelFileDescriptor.AutoCloseOutputStream(output).use {
+                        it.write(report.toString(2).toByteArray(Charsets.UTF_8))
+                    }
+                }
+                progress(100, "PDF/A 校验完成")
+            } finally {
+                temporary.delete()
+            }
+            return
+        }
         val type = options.optString("type").lowercase()
         require(type in setOf("ofd", "djvu", "djv")) { "请选择 OFD 或 DjVu 文件" }
         val dpi = options.optInt("dpi", 200).coerceIn(72, 600)

@@ -17,3 +17,5 @@ dependencyResolutionManagement {
 rootProject.name = "PaperForge"
 
 include(":app", ":office-engine", ":ocr-paddle", ":format-engine", ":jpeg2000", ":opencv-mobile")
+
+include(":archive-core")

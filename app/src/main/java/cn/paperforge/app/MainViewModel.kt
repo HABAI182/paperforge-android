@@ -348,6 +348,25 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun reopenOutput(row: OutputRow) {
         if (File(row.path).exists()) {
+            if (row.path.endsWith(".json")) {
+                viewModelScope.launch {
+                    val archive =
+                        withContext(Dispatchers.IO) {
+                            runCatching {
+                                    org.json
+                                        .JSONObject(File(row.path).readText())
+                                        .optString("kind") == "paperforge-pdfa-report"
+                                }
+                                .getOrDefault(false)
+                        }
+                    if (archive) showArchiveReport(File(row.path), true)
+                    else {
+                        outputLocked.value = false
+                        output.value = File(row.path)
+                    }
+                }
+                return
+            }
             outputLocked.value = false
             output.value = File(row.path)
         } else viewModelScope.launch { messages.send("本地结果已移除，外部保存位置仍在记录中") }
@@ -612,6 +631,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                                 .optString("kind") == "PDF_DIFF"
                     ) {
                         openPdfDiffResult(row)
+                    } else if (
+                        row.type == "PDF" &&
+                            org.json
+                                .JSONObject(row.payload)
+                                .getJSONObject("input")
+                                .optString("mode") == "archive-check"
+                    ) {
+                        showArchiveReport(file, true)
                     } else if (row.type == "OCR") {
                         ocrPage = null
                         canCorrectOcr.value = false
@@ -1061,6 +1088,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                                                 )
                                             )
                                         openPdfDiffResult(row)
+                                    }
+                                    "archive-check" -> {
+                                        archiveReport.value =
+                                            withContext(Dispatchers.IO) {
+                                                org.json.JSONObject(file.readText())
+                                            }
+                                        archiveReportFile.value = file
+                                        screen.value = "pdf-archive"
                                     }
                                     "SAVE" -> messages.send("文件已保存并核对")
                                     else -> {
@@ -2083,9 +2118,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             textConversionSave?.join()
             val draft = textConversion.value ?: return@perform
             val output =
-                File(
-                    repo.exports,
-                    "${safeFileName(draft.name.substringBeforeLast('.'))}-edited-${System.currentTimeMillis()}.txt",
+                OutputNames.create(
+                    repo,
+                    UUID.randomUUID().toString(),
+                    OutputNames.sourceStem(draft.name),
+                    "txt",
                 )
             java.io.FileOutputStream(output).use { stream ->
                 draft.chunks.forEach { stream.write(it.toByteArray(Charsets.UTF_8)) }
@@ -2222,6 +2259,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                             "pdf-native-edit",
                             "pdf-certificates",
                             "pdf-forms",
+                            "pdf-archive",
                             "conversion-batch",
                         )
                 }
@@ -2235,6 +2273,33 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val nativeEditSource = MutableStateFlow<DocumentRow?>(null)
     val certificateSource = MutableStateFlow<DocumentRow?>(null)
     val formSource = MutableStateFlow<DocumentRow?>(null)
+    val archiveSource = MutableStateFlow<DocumentRow?>(null)
+    val archiveReport = MutableStateFlow<org.json.JSONObject?>(null)
+    val archiveReportFile = MutableStateFlow<File?>(null)
+    val archiveReportReturn = MutableStateFlow("home")
+
+    fun queueArchive(target: String, compatible: Boolean = false) {
+        val doc = archiveSource.value ?: return
+        selected.value = doc
+        queueTool(
+            if (compatible) "archive-create" else "archive-check",
+            org.json.JSONObject().put("target", target),
+        )
+    }
+
+    fun showArchiveReport(file: File, reportOnly: Boolean = false) =
+        perform("打开归档校验报告") {
+            val report = org.json.JSONObject(file.readText())
+            require(report.optString("kind") == "paperforge-pdfa-report")
+            if (reportOnly) {
+                archiveReportReturn.value = screen.value
+                archiveSource.value = null
+            }
+            archiveReport.value = report
+            archiveReportFile.value = file
+            output.value = null
+            screen.value = "pdf-archive"
+        }
 
     fun queueNativeEdit(request: org.json.JSONObject) {
         val source = nativeEditSource.value ?: return
@@ -2285,6 +2350,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun queueTool(mode: String, options: org.json.JSONObject = org.json.JSONObject()) {
         if (busy.value) return
+        if (mode == "archive") {
+            archiveSource.value = selected.value
+            archiveReport.value = null
+            archiveReportFile.value = null
+            screen.value = "pdf-archive"
+            return
+        }
         if (mode == "certificates") {
             certificateSource.value = selected.value
             screen.value = "pdf-certificates"
@@ -2324,11 +2396,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun encrypt(password: String, printing: Boolean, copying: Boolean) =
         perform("正在加密") {
             val doc = selected.value!!
-            val file =
-                File(
-                    repo.exports,
-                    "${safeFileName(doc.title)}-加密-${System.currentTimeMillis()}.pdf",
-                )
+            val file = OutputNames.create(repo, UUID.randomUUID().toString(), doc.title, "pdf")
             PdfTools.encrypt(File(doc.pdfPath!!), file, password, printing, copying)
             outputLocked.value = true
             publishOutput(file, doc)
@@ -2382,9 +2450,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun exportPdfDiagnostics(report: PdfDiagnosticsReport) =
         perform("保存诊断报告") {
             val file =
-                File(
-                    repo.exports,
-                    "${safeFileName(report.fileName.substringBeforeLast('.'))}-diagnostics-${System.currentTimeMillis()}.json",
+                OutputNames.create(
+                    repo,
+                    UUID.randomUUID().toString(),
+                    OutputNames.sourceStem(report.fileName),
+                    "json",
                 )
             file.writeText(report.json().toString(2), Charsets.UTF_8)
             outputLocked.value = false
@@ -2432,8 +2502,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         perform("导出扫描图片") {
             val doc = selected.value!!
             val all = repo.dao.pages(doc.id)
-            val file =
-                File(repo.exports, "${safeFileName(doc.title)}-${System.currentTimeMillis()}.zip")
+            val file = OutputNames.create(repo, UUID.randomUUID().toString(), doc.title, "zip")
             java.util.zip.ZipOutputStream(file.outputStream()).use { zip ->
                 all.forEachIndexed { index, page ->
                     currentCoroutineContext().ensureActive()

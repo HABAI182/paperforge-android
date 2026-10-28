@@ -58,3 +58,7 @@ PPTX 空模板由 python-pptx 1.0.2 生成，模板许可文本保留在 `app/sr
 可选 OCR 包新增官方 PaddleOCR v5 Korean / Devanagari / Latin ONNX 权重与字典，继续使用 Apache-2.0；中英 v5 Mobile 包补充已验证的日文能力说明，权重不变。韩文、天城文和拉丁文包分别包含 Google Fonts 的 Noto Sans KR / Noto Sans Devanagari / Noto Sans 静态化衍生字体，重命名为 PaperForge Korean / Devanagari / Latin；SIL OFL 1.1 全文、固定来源提交、原始与派生哈希均在包内 `font-LICENSE` / `provenance.json`。字体不加入基础 APK。具体版本和使用方式见 [model-packs/README.md](model-packs/README.md)。
 
 JPEG-2000 / PDF JPX 解码使用 [ThalesGroup/JP2ForAndroid 1.1.0](https://github.com/ThalesGroup/JP2ForAndroid/tree/8ad43abb5d8e2caf2147162d3bfe5569581b5d1f) 及其 OpenJPEG 2.5.4，BSD-2-Clause。Java 绑定保留原样，原生代码按固定归档哈希构建；为现有 API36 / NDK28.2 做独立构建模块适配，保留上游 16 KiB 链接选项。完整文本在 `assets/licenses/JP2ForAndroid-LICENSE.txt` / `OpenJPEG-LICENSE.txt`；文件哈希和适配说明在 `jpeg2000/UPSTREAM.json` / `README.md`。
+
+## 手机 PDF/A 校验引擎
+
+独立格式引擎新增 veraPDF 1.30.3（选择 MPL-2.0）、Rhino 1.7.15.1、Xerces 2.12.2 / XML APIs 1.4.01 及上游固定的 XML / JAXB 依赖。完整随包声明在 archive-core/src/main/assets/archive/，来源与四个移植源码在 archive-core/UPSTREAM.json 和 src/main/java/org/verapdf/。主包不包含这些校验内核依赖。sRGB ICC 由 Pillow / LittleCMS 生成，未复制外部 ICC 文件。

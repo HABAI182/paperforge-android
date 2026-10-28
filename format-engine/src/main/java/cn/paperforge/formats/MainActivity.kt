@@ -24,7 +24,8 @@ class MainActivity : Activity() {
                     TextView(this@MainActivity).apply {
                         gravity = Gravity.CENTER
                         textSize = 20f
-                        text = "PaperForge 格式引擎\n\nOFD / DjVu · 本机版面转换\n\n已安装，可回到纸匠选择文件。"
+                        text =
+                            "PaperForge 格式引擎\n\nOFD / DjVu · 本机版面转换\nPDF/A · veraPDF 完整规则校验\n\n已安装，可回到纸匠选择文件。"
                     }
                 )
                 addView(
@@ -51,7 +52,17 @@ class MainActivity : Activity() {
                                                         assets
                                                             .open("layout/licenses.txt")
                                                             .bufferedReader()
-                                                            .use { it.readText() }
+                                                            .use { it.readText() } +
+                                                            "\n\n" +
+                                                            assets
+                                                                .open("archive/notices.txt")
+                                                                .bufferedReader()
+                                                                .use { it.readText() } +
+                                                            "\n\n" +
+                                                            assets
+                                                                .open("archive/MPL-2.0.txt")
+                                                                .bufferedReader()
+                                                                .use { it.readText() }
                                                 }
                                             )
                                         },

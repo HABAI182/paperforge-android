@@ -1,0 +1,42 @@
+{
+  "version": "1.30.3",
+  "upstream": "https://github.com/veraPDF",
+  "licenseChoice": "MPL-2.0",
+  "modifiedClasses": [
+    "PDDeviceRGB: Android colour conversion",
+    "PDCIEDictionaryBased: Android XYZ D50 to sRGB",
+    "JavaScriptEvaluator: Rhino interpreter rather than unsupported JVM bytecode",
+    "SecureXML: explicit Xerces 2.12.2 factory, unchanged upstream security feature configuration"
+  ],
+  "profiles": "Unmodified XML bundled in pinned core JAR; DOM reader preserves rule/test/error/variable values",
+  "sourceJars": {
+    "core-1303-sources.jar": "acf33e82a7343e149247a4dae32c20514832cc4a98495b53dba3a17427051b7f",
+    "parser-1303-sources.jar": "3fda6615e2ee9c61319062e3aec3427d394413c581ab4780356a8ca11ba09834",
+    "validation-model-1303-sources.jar": "890f5797a04f3782291427f1e3452cd087a970a4a23068a7661c24abe4676f5d",
+    "xmp-1303-sources.jar": "71930b706b27687b81beabd907991d40ae861f5c49d844f9574966dd8d59b518"
+  },
+  "runtimePortedJarsSha256": {
+    "core-1.30.3.jar": "8e3502075a8ae600019efa984c13e332db008c21bec9c5001a58d30914006ceb",
+    "feature-reporting-1.30.3.jar": "bf94dc85aec1c464344e2238866eb29927da277749c946095575a5654d0dde01",
+    "jackson-annotations-2.22.jar": "21ddb598807d3a51a876704eb979d9296e1c6a6f47ab1826ff88c6d6a127a2d0",
+    "jackson-core-2.22.3.jar": "8a501126a385b25841915d839508f8a66e2a0dbc8a6709d055ef3b3e852b094c",
+    "jackson-databind-2.22.3.jar": "556db5439e206114346043f68d200497dc96a0bca62a360a81784092ebd0e0a9",
+    "javax.activation-api-1.2.0.jar": "43fdef0b5b6ceb31b0424b208b930c74ab58fac2ceeb7b3f6fd3aeb8b5ca4393",
+    "jaxb-api-2.4.0-b180830.0359.jar": "56b9e9702753763007435162ea788055efcfefc86ab920f032c0411dc547b836",
+    "jaxb-core-2.3.0.1.jar": "11482556adab24940d3dc60c61ade7ca69e82566d1e7dbc502abf51602bf8a38",
+    "jaxb-impl-2.3.2.jar": "b3a3d3aeaa5503cadc24dca9539b87efcd7bc3bd8c48018887a1489f2a77bdc0",
+    "metadata-fixer-1.30.3.jar": "89a9ed3757b8c9bb4091bf37d591f8fce3dbd9c26b454f6ac1f2268eeeaa2988",
+    "parser-1.30.3.jar": "14a553eeab40470ed6aa93b38195d6e1c7a9957c951fbd219189b7c915c1bf91",
+    "pdf-model-1.30.3.jar": "5678ba09f16d7c9f8e8c764f1706efb9f875ee066a0a9fe8d6b3fb5dceb691a5",
+    "rhino-1.7.15.1.jar": "f3520a0e2e22d550f1216a456be233eb5385bf08e3219407dece7a16369eb38f",
+    "Saxon-HE-12.8.jar": "58220adcb289dbebe0053e7a73ee70c97545c88f4886943d64241bf24701b72a",
+    "stax-utils-20070216.jar": "7c7fd0892cb3362ed2e43ce2f76c8f18f2d7ff1d371ed7490775b7368f3fee9a",
+    "validation-model-1.30.3.jar": "368de78a2143f62b871e2f5eb0bb27d26a04eff2883a44d426f840d87b7fc55c",
+    "verapdf-xmp-core-1.30.3.jar": "c6387ff9cfc690f6ee566fa24abfc8bfc9ddb67bbc4a2e827e7baae5e7501d7b",
+    "xercesImpl-2.12.2.jar": "6fc991829af1708d15aea50c66f0beadcd2cfeb6968e0b2f55c1b0909883fe16",
+    "xml-apis-1.4.01.jar": "3d214857351145fba30b7bcb7e74826997df592cd33a032aeb4ff573186bf0ff",
+    "xmlresolver-5.3.3-data.jar": "b0c487ad2f3e558be8d829c916d2458d10aca6a5bafa7a4d0524b70845e48a5c",
+    "xmlresolver-5.3.3.jar": "1fe4d5b92f708dcdb82dbce12919e0171e6b5ca62c6dca6220483625098feb5f"
+  },
+  "xmlApiPort": "Only XML API classes absent from the Android boot classpath are bundled; framework classes are not replaced"
+}

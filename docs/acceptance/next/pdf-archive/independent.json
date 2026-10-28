@@ -1,0 +1,35 @@
+{
+  "desktopEngine": "unmodified veraPDF 1.30.3",
+  "checks": {
+    "original.pdf": "compliant=false assertions=252 failedRules=3\nRuleId [specification=ISO 19005-2:2011, clause=6.6.2.1, testNumber=1] 1\nRuleId [specification=ISO 19005-2:2011, clause=6.2.4.3, testNumber=2] 8\nRuleId [specification=ISO 19005-2:2011, clause=6.2.11.4.1, testNumber=1] 1",
+    "archive-2b.pdf": "compliant=true assertions=499 failedRules=0"
+  },
+  "original.pdfGeometry": [
+    [
+      0.0,
+      0.0,
+      500.0,
+      700.0
+    ],
+    [
+      0.0,
+      0.0,
+      440.0,
+      250.0
+    ]
+  ],
+  "archive-2b.pdfGeometry": [
+    [
+      0.0,
+      0.0,
+      500.0,
+      700.0
+    ],
+    [
+      0.0,
+      0.0,
+      440.0,
+      250.0
+    ]
+  ]
+}

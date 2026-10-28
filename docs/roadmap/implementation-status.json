@@ -470,8 +470,8 @@
     {
       "id": "PDF06",
       "title": "PDF归档验证",
-      "status": "planned",
-      "note": "完整目标保留，未在本版标记完成"
+      "status": "done",
+      "note": "可选手机格式引擎内置 veraPDF 1.30.3 完整规则，支持11种PDF/A目标等级；DOM加载与官方JAXB全部配置值一致，四处Android运行时适配保留规则和XML解析要求。后台校验、失败规则/位置、字体与元数据、报告随文档保留；静态外观兼容副本自动验证，失败仅保留普通PDF候选，不标归档成功。集中7.06秒，Android与未修改桌面版均499次检查/零失败，普通PDF正确拒绝；实际界面创建及历史报告恢复通过。见 pdf-archive-summary.json。兼容副本为有损页面图像，不保留可编辑文字/链接/表单/证书签名，原件不变。"
     },
     {
       "id": "PDF07",
@@ -595,9 +595,9 @@
     }
   ],
   "counts": {
-    "done": 85,
+    "done": 86,
     "partial": 6,
-    "planned": 7
+    "planned": 6
   },
   "releaseHold": true,
   "publishedBaseline": "0.6.0"

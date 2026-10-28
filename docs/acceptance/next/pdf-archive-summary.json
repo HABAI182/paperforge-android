@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-28",
+  "card": "PDF06",
+  "status": "implemented",
+  "engine": "veraPDF 1.30.3 Android adapter 1, optional signed on-phone format engine",
+  "completeProfiles": [
+    "1b",
+    "2b",
+    "2u",
+    "3b",
+    "3u",
+    "4",
+    "4f",
+    "4e",
+    "1a",
+    "2a",
+    "3a"
+  ],
+  "profileTransport": "All eleven DOM-loaded profile objects equal the unmodified upstream JAXB profile objects, including rules, variables, details and hash",
+  "proof": "pdf-archive/proof.json",
+  "instrumentation": "7.06s OK (1 focused new test)",
+  "independent": "pdf-archive/independent.json",
+  "actualUi": "pdf-archive/actual-ui-proof.json",
+  "actualUiIndependent": "pdf-archive/actual-ui-independent.log",
+  "scope": [
+    "complete offline upstream rule evaluation; source hash and profile hash in report",
+    "persistent WorkManager checks and source-bound report resources; task/history reopening",
+    "font embedding inventory and metadata, failed-rule counts and object contexts",
+    "explicit raster appearance copy, full 2b validation before claiming compliance",
+    "incomplete or noncompliant candidate is not labeled archived; source remains unchanged"
+  ],
+  "boundaries": [
+    "raster compatibility copy loses native editable text, hyperlinks, forms and digital signatures; JPEG is lossy",
+    "PDF/A conformance does not verify certificate mathematical integrity, trust or revocation",
+    "only the listed upstream model/rules are claimed; no claim of ISO certification of the Android adapter",
+    "device evidence is API35 x86_64 emulator; physical ARM64 behaviour is separate"
+  ],
+  "sources": [
+    "https://docs.verapdf.org/develop/",
+    "https://github.com/veraPDF/veraPDF-library",
+    "https://repo.maven.apache.org/maven2/org/verapdf/validation-model/1.30.3/",
+    "https://repo.maven.apache.org/maven2/xerces/xercesImpl/2.12.2/"
+  ],
+  "signedCandidate": "pdf-archive/arm64-build.json",
+  "releaseEngineActualReport": "pdf-archive/release-engine-report.json",
+  "releaseEngineRuntime": "Signed release format engine was installed and performed a new complete check of the saved compatible copy: 499 assertions, compliant",
+  "candidateNote": "ARM64 main/Office/format candidate snapshot precedes the internal raster temporary-subdirectory adjustment; final publication remains on hold"
+}
