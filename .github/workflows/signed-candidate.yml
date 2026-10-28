@@ -15,7 +15,7 @@ on:
       include_engines:
         type: boolean
         default: true
-        description: Also build the optional Office and format APKs
+        description: Also build the optional Office, format and network APKs
 permissions:
   contents: read
 concurrency:
