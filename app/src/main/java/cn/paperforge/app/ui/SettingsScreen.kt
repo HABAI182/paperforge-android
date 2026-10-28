@@ -157,7 +157,7 @@ fun SettingsScreen(vm: MainViewModel) {
                         listOf("CHINESE" to "中文 + 英文", "LATIN" to "英文 / 拉丁字母"),
                     )
                 }
-                SettingToggle("扫描导出默认附带文字层", "searchable", true)
+                SettingToggle("扫描导出默认附带文字层", "searchable", false)
                 SettingChoices(
                     "默认纸张",
                     "paper",

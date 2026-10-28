@@ -1033,7 +1033,7 @@
       ],
       "scope": "文字对象和字体替换，局部编辑与历史",
       "acceptance": "不悄悄重排整页，复杂页可保留原件",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "PDF10",
@@ -1252,9 +1252,9 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 83,
+    "done": 84,
     "partial": 6,
-    "planned": 9
+    "planned": 8
   },
   "updated": "2026-10-28"
 }

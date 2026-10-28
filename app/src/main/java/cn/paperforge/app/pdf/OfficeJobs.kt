@@ -27,9 +27,8 @@ object OfficeJobs {
             destination
                 ?: File(
                     directory,
-                    safeFileName(
-                        (job.input.getString("name") ?: "Office").substringBeforeLast('.')
-                    ) + ".$format",
+                    safeFileName(OutputNames.sourceStem(job.input.getString("name") ?: "Office")) +
+                        ".$format",
                 )
         file.parentFile?.mkdirs()
         val checkpointKey =

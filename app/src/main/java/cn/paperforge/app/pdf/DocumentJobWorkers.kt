@@ -130,7 +130,7 @@ class SaveDocumentWorker(context: Context, params: WorkerParameters) :
                                 ExportDestinations.create(
                                     applicationContext,
                                     Uri.parse(tree),
-                                    file.name,
+                                    job.input.getString("displayName") ?: file.name,
                                     android.webkit.MimeTypeMap.getSingleton()
                                         .getMimeTypeFromExtension(file.extension.lowercase())
                                         ?: "application/octet-stream",

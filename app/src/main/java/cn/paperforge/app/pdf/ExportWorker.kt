@@ -47,18 +47,20 @@ class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 val file =
                     File(
                         File(repo.exports, job.row.id).apply { mkdirs() },
-                        "${safeFileName(data.getString("fileName") ?: doc.title)}.${if(format == "PDF") "pdf" else "zip"}",
+                        OutputNames.withExtension(
+                            data.getString("fileName") ?: doc.title,
+                            if (format == "PDF") "pdf" else "zip",
+                        ),
                     )
                 output = file
                 val request =
-                    cn.paperforge.app.ocr.OcrRequest.decode(
-                        data.json.optJSONObject("ocrRequest"),
-                        (applicationContext as PaperForgeApp).ocrEngine.id,
-                    )
-                val engine =
                     if (data.getBoolean("searchable", false))
-                        request.bind((applicationContext as PaperForgeApp).ocrEngine)
+                        cn.paperforge.app.ocr.OcrRequest.decode(
+                            data.json.optJSONObject("ocrRequest"),
+                            (applicationContext as PaperForgeApp).ocrEngine.id,
+                        )
                     else null
+                val engine = request?.bind((applicationContext as PaperForgeApp).ocrEngine)
                 if (data.getBoolean("searchable", false)) {
                     val pages = repo.dao.pages(doc.id)
                     pages.forEachIndexed { index, page ->
@@ -70,7 +72,7 @@ class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                         if (
                             cached == null ||
                                 !cached.matches(page) ||
-                                (cached.requestSignature != request.signature &&
+                                (cached.requestSignature != request!!.signature &&
                                     cached.lines.none { it.corrected })
                         )
                             repo.cacheOcr(
@@ -98,7 +100,7 @@ class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                             data.getInt("quality", 90),
                             data.getBoolean("searchable", false),
                             if (data.getBoolean("searchable", false)) PdfTextLayer.VERSION else "",
-                            if (data.getBoolean("searchable", false)) request.signature else "",
+                            request?.signature.orEmpty(),
                             pages.joinToString { JobFileStages.digest(it.ocrLayout.orEmpty()) },
                         )
                         .joinToString("|")

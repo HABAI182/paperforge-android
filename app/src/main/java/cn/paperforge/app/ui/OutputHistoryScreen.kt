@@ -11,10 +11,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
+import cn.paperforge.app.data.OutputNames
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,12 +47,16 @@ fun OutputHistoryScreen(vm: MainViewModel) {
             if (rows.isEmpty()) item { Text("这里会保留每次生成的结果、来源和外部保存位置。") }
             items(rows, key = { it.path }) { row ->
                 val file = File(row.path)
+                val displayName by
+                    produceState(file.name, row.path) {
+                        value = withContext(Dispatchers.IO) { OutputNames.display(vm.repo, file) }
+                    }
                 Card {
                     Column(
                         Modifier.fillMaxWidth().padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
-                        Text(file.name, style = MaterialTheme.typography.titleMedium)
+                        Text(displayName, style = MaterialTheme.typography.titleMedium)
                         Text(
                             "${row.format.uppercase()} · ${Formatter.formatFileSize(context,file.length())} · ${SimpleDateFormat("MM-dd HH:mm",Locale.getDefault()).format(Date(row.created))}",
                             style = MaterialTheme.typography.labelSmall,

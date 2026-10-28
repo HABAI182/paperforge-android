@@ -156,6 +156,7 @@ suspend fun Repository.renameBatch(changes: List<NameChange>, options: NamingOpt
             throw e
         }
         preferences.naming(options)
+        changes.forEach { OutputNames.remember(this@renameBatch, it.documentId, it.after) }
         changes.size
     }
 

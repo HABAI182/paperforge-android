@@ -5,7 +5,6 @@ import androidx.room.withTransaction
 import androidx.work.*
 import cn.paperforge.app.PaperForgeApp
 import cn.paperforge.app.data.*
-import cn.paperforge.app.model.safeFileName
 import java.io.File
 import kotlinx.coroutines.*
 import org.json.JSONObject
@@ -68,8 +67,12 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                     }
                 val file =
                     File(
-                        repo.exports,
-                        "${safeFileName(if(mode=="assemble") p.optString("title","组合文档") else doc?.title ?: "合并文档")}-$mode-${id.toString().take(8)}.$extension",
+                        File(repo.exports, job.row.id).apply { mkdirs() },
+                        OutputNames.withExtension(
+                            if (mode == "assemble") p.optString("title", "组合文档")
+                            else doc?.title ?: "合并文档",
+                            extension,
+                        ),
                     )
                 output = file
                 val input = source ?: file
@@ -80,6 +83,31 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 var redaction: PdfRedaction.Report? = null
                 var conversionNotice = ""
                 when (mode) {
+                    "native-edit" -> {
+                        val requestFile =
+                            job.row
+                                .resourceEntries()
+                                .firstOrNull { it.id == "native-edit" }
+                                ?.path
+                                ?.let(::File) ?: File(p.getString("editFile"))
+                        val fonts =
+                            job.row
+                                .resourceEntries()
+                                .filter { it.id.startsWith("native-font-") }
+                                .associate { it.id.removePrefix("native-font-") to File(it.path) }
+                        origin =
+                            NativePdfEditor.apply(
+                                applicationContext,
+                                input,
+                                file,
+                                JSONObject(requestFile.readText()),
+                                fonts,
+                            ) {
+                                report(it)
+                            }
+                        originRole = "native-edit-report"
+                        conversionNotice = "仅改写所选文字对象，原件与其他页面保留；修改记录随副本保存。"
+                    }
                     "redact-semantic",
                     "redact-raster" -> {
                         val sourceFile = requireNotNull(source) { "来源 PDF 已移除" }

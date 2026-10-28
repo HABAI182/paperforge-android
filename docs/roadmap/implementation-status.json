@@ -488,8 +488,8 @@
     {
       "id": "PDF09",
       "title": "原生内容编辑",
-      "status": "planned",
-      "note": "完整目标保留，未在本版标记完成"
+      "status": "done",
+      "note": "原生横排文字对象Tj/TJ/换行文字操作可局部改字、换字体/字号，恢复原文本状态并补偿后续推进，不重排其他对象；支持内置中英与导入TTF字体/Unicode子集。大纸面点选/实际修改预览、窄屏弹出参数/宽屏侧栏，草稿撤销重做与逻辑字体ID备份恢复。3.076秒集中、独立MuPDF后续锚点误差小于0.00002pt/共享未改页像素一致，真实界面任务生成副本见native-edit-summary.json。Form内文字/ActualText/竖排/复杂排字保留原件，不冒充全类型编辑。"
     },
     {
       "id": "PDF10",
@@ -595,9 +595,9 @@
     }
   ],
   "counts": {
-    "done": 83,
+    "done": 84,
     "partial": 6,
-    "planned": 9
+    "planned": 8
   },
   "releaseHold": true,
   "publishedBaseline": "0.6.0"

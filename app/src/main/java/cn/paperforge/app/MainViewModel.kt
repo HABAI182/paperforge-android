@@ -819,7 +819,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             require(docs.isNotEmpty()) { "请选择文档" }
             val sharePaper = UserSettings.string("paper", "Auto")
             val shareQuality = UserSettings.number("quality", 90f).toInt()
-            val shareSearchable = UserSettings.bool("searchable", true)
+            val shareSearchable = UserSettings.bool("searchable", false)
             val requestedResolution = UserSettings.string("resolution", "STANDARD")
             val shareResolution =
                 if (requestedResolution == "CUSTOM")
@@ -2220,6 +2220,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                             "jobs",
                             "auto-export",
                             "pdf-redaction",
+                            "pdf-native-edit",
                             "conversion-batch",
                         )
                 }
@@ -2230,6 +2231,48 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
 
     val redactionSource = MutableStateFlow<DocumentRow?>(null)
+    val nativeEditSource = MutableStateFlow<DocumentRow?>(null)
+
+    fun queueNativeEdit(request: org.json.JSONObject) {
+        val source = nativeEditSource.value ?: return
+        viewModelScope.launch {
+            try {
+                val file =
+                    withContext(Dispatchers.IO) {
+                        File(
+                                repo.folder(source.id),
+                                "native-request-${java.util.UUID.randomUUID()}.json",
+                            )
+                            .also {
+                                cn.paperforge.app.pdf.TableJobs.atomic(it, request)
+                                DocumentResources.register(
+                                    repo,
+                                    source.id,
+                                    "native-edit-request",
+                                    it,
+                                )
+                            }
+                    }
+                enqueueJob(
+                    "PDF",
+                    JobInput(
+                        org.json
+                            .JSONObject()
+                            .put("mode", "native-edit")
+                            .put("document", source.id)
+                            .put(
+                                "options",
+                                org.json.JSONObject().put("editFile", file.path).toString(),
+                            )
+                    ),
+                )
+            } catch (cancel: CancellationException) {
+                throw cancel
+            } catch (error: Exception) {
+                messages.send(error.message ?: "编辑任务未能创建")
+            }
+        }
+    }
 
     fun queueRedaction(mode: String, options: org.json.JSONObject) {
         val source = redactionSource.value ?: return
@@ -2239,6 +2282,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun queueTool(mode: String, options: org.json.JSONObject = org.json.JSONObject()) {
         if (busy.value) return
+        if (mode == "native-edit") {
+            nativeEditSource.value = selected.value
+            screen.value = "pdf-native-edit"
+            return
+        }
         if (mode == "redact") {
             redactionSource.value = selected.value
             screen.value = "pdf-redaction"

@@ -29,9 +29,9 @@ fun PdfToolsDialog(vm: MainViewModel, initialMode: String = "", onDismiss: () ->
     var copyAllowed by remember { mutableStateOf(true) }
     var preferEditable by remember { mutableStateOf(false) }
     var layoutMode by remember { mutableStateOf("editable") }
-    if (mode == "redact") {
+    if (mode == "redact" || mode == "native-edit") {
         LaunchedEffect(Unit) {
-            vm.queueTool("redact")
+            vm.queueTool(mode)
             onDismiss()
         }
         return

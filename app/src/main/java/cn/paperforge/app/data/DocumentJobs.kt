@@ -144,6 +144,10 @@ object DocumentJobs {
         }
         resource("source", doc?.pdfPath)
         resource("save-source", input.getString("path"))
+        if (type == "SAVE" && !input.json.has("displayName"))
+            input.getString("path")?.let {
+                input.json.put("displayName", OutputNames.display(repo, File(it)))
+            }
         input.getStringArray("inputs")?.forEachIndexed { index, path ->
             resource("input-$index", path)
         }
@@ -165,6 +169,27 @@ object DocumentJobs {
                 }
             }
         resource("marks", options.optString("marksFile"))
+        options
+            .optString("editFile")
+            .takeIf { it.isNotBlank() }
+            ?.let { path ->
+                resource("native-edit", path)
+                val request = JSONObject(File(path).readText())
+                cn.paperforge.app.pdf.NativePdfEditor.edits(request)
+                    .filter { it.fontSha256.isNotEmpty() }
+                    .distinctBy { it.fontSha256 }
+                    .forEach { edit ->
+                        resource(
+                            "native-font-${edit.fontSha256}",
+                            cn.paperforge.app.pdf.NativeEditFonts.resolve(
+                                    repo,
+                                    requireNotNull(doc) { "来源文档已移除" },
+                                    edit.fontSha256,
+                                )
+                                .path,
+                        )
+                    }
+            }
         val row =
             LocalTaskRow(
                 UUID.randomUUID().toString(),

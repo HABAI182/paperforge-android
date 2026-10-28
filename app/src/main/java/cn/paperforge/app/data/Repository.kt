@@ -605,7 +605,9 @@ class Repository(val context: Context, val database: PaperDatabase) {
     }
 
     suspend fun rename(doc: DocumentRow, title: String) {
-        dao.rename(doc.id, safeFileName(title), System.currentTimeMillis())
+        val name = safeFileName(title)
+        OutputNames.remember(this, doc.id, name)
+        dao.rename(doc.id, name, System.currentTimeMillis())
     }
 
     suspend fun saveOutput(file: File, uri: Uri) =

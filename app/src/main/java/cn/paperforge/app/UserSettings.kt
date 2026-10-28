@@ -38,7 +38,7 @@ object UserSettings {
             "ocrMode" to "BALANCED",
             "ocrVoting" to true,
             "ocrOrder" to "AUTO",
-            "searchable" to true,
+            "searchable" to false,
             "paper" to "Auto",
             "resolution" to "STANDARD",
             "customDpi" to 300f,
@@ -74,6 +74,12 @@ object UserSettings {
 
     fun initialize(context: Context) {
         prefs = context.getSharedPreferences("preferences", 0)
+        if (!prefs.getBoolean("scanExportOcrOptInV1", false))
+            prefs
+                .edit()
+                .putBoolean("searchable", false)
+                .putBoolean("scanExportOcrOptInV1", true)
+                .apply()
         if (!prefs.contains("autoShutter"))
             prefs
                 .edit()

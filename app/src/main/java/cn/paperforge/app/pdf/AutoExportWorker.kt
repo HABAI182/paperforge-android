@@ -66,12 +66,16 @@ class AutoExportWorker(context: Context, params: WorkerParameters) :
                     File(repo.context.filesDir, "job-items/${job.row.id}").apply { mkdirs() }
                 var source = document.pdfPath?.let(::File)
                 if (document.kind != "pdf") {
-                    val router = (applicationContext as PaperForgeApp).ocrEngine
+                    val searchable = rule.export.optBoolean("searchable", false)
+                    val router =
+                        if (searchable) (applicationContext as PaperForgeApp).ocrEngine else null
                     val request =
-                        OcrRequest.decode(job.input.json.optJSONObject("ocrRequest"), router.id)
+                        router?.let {
+                            OcrRequest.decode(job.input.json.optJSONObject("ocrRequest"), it.id)
+                        }
                     val baseSignature =
                         AutoExportRule.digest(
-                            "${job.input.getString("sourceFingerprint")}|${rule.export}|${request.signature}"
+                            "${job.input.getString("sourceFingerprint")}|${rule.export}|${request?.signature.orEmpty()}"
                         )
                     val cached =
                         JSONObject(checkNotNull(repo.dao.task(job.row.id)).payload)
@@ -97,9 +101,9 @@ class AutoExportWorker(context: Context, params: WorkerParameters) :
                             settings.optString("paper", "Auto"),
                             settings.optInt("quality", 90),
                             applicationContext,
-                            settings.optBoolean("searchable", true),
+                            searchable,
                             resolution,
-                            request.bind(router),
+                            request?.bind(checkNotNull(router)),
                         ) { percent ->
                             DocumentJobs.progress(repo, job, percent / 2, "生成扫描 PDF")
                             setProgress(workDataOf("progress" to percent / 2))

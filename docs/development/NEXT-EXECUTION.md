@@ -124,6 +124,10 @@
 
 62. 排队PDF工具优先读取提交时保留的source资源，避免等待期间文档换成另一PDF后混用新来源。真实WorkManager等待/替换/提取6.55秒与独立MuPDF文字回读确认读取原件、保留库中替换文件，见 `docs/acceptance/next/queued-pdf-source/proof.json`。固定源码OpenCV在Linux全新构建、隔离x86_64主包/格式引擎CI `40626173281` 通过，见 `docs/acceptance/next/distribution/ci-opencv-source-proof.json`；未为这组Kotlin修复重复执行旧设备套件。
 
+63. 原生横排文字对象可局部改字、替换字体/字号；恢复原文字状态与后续推进，支持Tj/TJ及两种换行文字操作、内置中英和导入TTF字体子集。原页点选、真正的PDF预览、默认大纸面/窄屏弹出参数/宽屏侧栏，草稿撤销重做及逻辑字体ID备份恢复齐备。集中3.076秒，独立MuPDF后续锚点误差小于0.00002pt、共享未编辑页与恢复后各页像素一致，真实界面提交生成修改副本，见 `docs/acceptance/next/native-edit-summary.json`。嵌套Form、ActualText、竖排和复杂排字保留原件；PDF09按限定原生对象编辑范围完成。
+
+64. 按使用反馈，扫描PDF默认关闭OCR，已有默认值升级时一次调整，显式开启仍保留；普通导出不绑定OCR引擎。PDF工具/文本转换/图片和Office页包去掉随机文件尾缀，唯一标识放内部目录；旧版已重命名文档的分享、另存和导出记录也使用现有名称，原始路径保留给任务/历史。自定义模板和用户自己输入的数字保留，同名结果不覆盖。实际两次无OCR导出、名称冻结/旧名兼容与独立无文字/无字体确认见 `docs/acceptance/next/export-names-summary.json`，未重复执行旧设备套件。
+
 ## 后续执行顺序
 
 页序历史补充：重排只记录页面ID，删页/分割仅记录内容差异；新旧可读快照的撤销保留后来新增的扫描页和与操作无关的新OCR。备份对独立页序ID重映射，集中检查见 `docs/acceptance/next/sparse-history-summary.json`。不将此修复重复计为新完成的计划卡。

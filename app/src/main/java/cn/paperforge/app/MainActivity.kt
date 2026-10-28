@@ -22,6 +22,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cn.paperforge.app.data.OutputNames
 import cn.paperforge.app.ui.*
 import java.io.File
 import kotlinx.coroutines.Dispatchers
@@ -314,9 +315,9 @@ class MainActivity : ComponentActivity() {
                         runCatching {
                                 val copy =
                                     withContext(Dispatchers.IO) {
-                                        File(cacheDir, "share")
+                                        File(cacheDir, "share/${java.util.UUID.randomUUID()}")
                                             .apply { mkdirs() }
-                                            .let { File(it, file.name) }
+                                            .let { File(it, OutputNames.display(vm.repo, file)) }
                                             .also { file.copyTo(it, overwrite = true) }
                                     }
                                 val uri =
@@ -330,6 +331,7 @@ class MainActivity : ComponentActivity() {
                                         Intent(Intent.ACTION_SEND)
                                             .setType(mime(file))
                                             .putExtra(Intent.EXTRA_STREAM, uri)
+                                            .putExtra(Intent.EXTRA_TITLE, copy.name)
                                             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
                                         "分享文件",
                                     )
@@ -399,6 +401,9 @@ class MainActivity : ComponentActivity() {
                     }
                     vm.screen.value =
                         when {
+                            screen == "pdf-native-edit" ->
+                                if (vm.nativeEditSource.value?.pdfPath == null) "home"
+                                else "reader".also { vm.selected.value = vm.nativeEditSource.value }
                             screen == "pdf-redaction" ->
                                 if (vm.redactionSource.value?.pdfPath == null) "home"
                                 else "reader".also { vm.selected.value = vm.redactionSource.value }
@@ -425,6 +430,7 @@ class MainActivity : ComponentActivity() {
                             "editor" -> EditorScreen(vm) { images.launch(arrayOf("image/*")) }
                             "reader" -> ReaderScreen(vm, share)
                             "pdf-diagnostics" -> PdfDiagnosticsScreen(vm)
+                            "pdf-native-edit" -> NativePdfEditorScreen(vm)
                             "pdf-redaction" -> {
                                 val source by vm.redactionSource.collectAsState()
                                 val path = source?.pdfPath
@@ -573,7 +579,7 @@ class MainActivity : ComponentActivity() {
                             )
                             .then(
                                 if (screen in setOf("reader", "editor"))
-                                        Modifier.statusBarsPadding().padding(top = 128.dp)
+                                    Modifier.statusBarsPadding().padding(top = 128.dp)
                                 else Modifier.navigationBarsPadding().padding(bottom = 88.dp)
                             ),
                     )
@@ -601,6 +607,11 @@ class MainActivity : ComponentActivity() {
                         }
                 }
                 output?.let { file ->
+                    val displayName by
+                        produceState(file.name, file) {
+                            value =
+                                withContext(Dispatchers.IO) { OutputNames.display(vm.repo, file) }
+                        }
                     val tasks by vm.localTasks.collectAsState()
                     val compareTask =
                         tasks.firstOrNull { row ->
@@ -623,7 +634,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             Column {
                                 Text(
-                                    "${file.name}\n${file.length()/1024} KB\n${if(fileNotice.isNotBlank()) fileNotice+"\n" else ""}已保存在应用中，可另存到系统文件夹。"
+                                    "${displayName}\n${file.length()/1024} KB\n${if(fileNotice.isNotBlank()) fileNotice+"\n" else ""}已保存在应用中，可另存到系统文件夹。"
                                 )
                                 destination?.let { folder ->
                                     OutlinedButton(
@@ -649,7 +660,7 @@ class MainActivity : ComponentActivity() {
                                         Intent(Intent.ACTION_CREATE_DOCUMENT)
                                             .addCategory(Intent.CATEGORY_OPENABLE)
                                             .setType(mime(file))
-                                            .putExtra(Intent.EXTRA_TITLE, file.name)
+                                            .putExtra(Intent.EXTRA_TITLE, displayName)
                                             .apply {
                                                 cn.paperforge.app.data
                                                     .ExportDestinations(this@MainActivity)

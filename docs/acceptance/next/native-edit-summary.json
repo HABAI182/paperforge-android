@@ -1,0 +1,374 @@
+{
+  "report": {
+    "sourceSha256": "087c495b5d46f0e8a3e3060c24b674be61887d80e60c6695b2f58d27a3944682",
+    "operation": "native-text-edit",
+    "edits": [
+      {
+        "page": 0,
+        "index": 0,
+        "before": "ORIGINAL",
+        "text": "A MUCH LONGER TITLE",
+        "font": "ORIGINAL",
+        "size": null,
+        "fit": true,
+        "fontSha256": "",
+        "actualFont": "Helvetica",
+        "originalAdvance": 90.02199,
+        "actualHorizontalScale": 36.97373
+      },
+      {
+        "page": 0,
+        "index": 2,
+        "before": "KERNED",
+        "text": "排版修改",
+        "font": "CJK",
+        "size": 22,
+        "fit": false,
+        "fontSha256": "",
+        "actualFont": "PaperForgeCJK-Regular",
+        "originalAdvance": 80.166,
+        "actualHorizontalScale": 90
+      },
+      {
+        "page": 0,
+        "index": 4,
+        "before": "QUOTE_OLD",
+        "text": "QUOTE_NEW",
+        "font": "ORIGINAL",
+        "size": null,
+        "fit": false,
+        "fontSha256": "",
+        "actualFont": "Helvetica",
+        "originalAdvance": 115.52399,
+        "actualHorizontalScale": 90
+      },
+      {
+        "page": 0,
+        "index": 5,
+        "before": "DOUBLE_OLD",
+        "text": "DOUBLE_NEW",
+        "font": "ORIGINAL",
+        "size": null,
+        "fit": true,
+        "fontSha256": "",
+        "actualFont": "Helvetica",
+        "originalAdvance": 131.032,
+        "actualHorizontalScale": 86.700874
+      },
+      {
+        "page": 0,
+        "index": 7,
+        "before": "ANGLED_OLD",
+        "text": "倾斜文字",
+        "font": "CJK",
+        "size": 20,
+        "fit": true,
+        "fontSha256": "",
+        "actualFont": "PaperForgeCJK-Regular",
+        "originalAdvance": 137.78,
+        "actualHorizontalScale": 90
+      },
+      {
+        "page": 1,
+        "index": 0,
+        "before": "ROTATED_OLD",
+        "text": "旋转字体",
+        "font": "96d9ba80c97eb715f5d9c1987f932e8abf628ab08b01eb9089be43083550ce85",
+        "size": 18,
+        "fit": true,
+        "fontSha256": "96d9ba80c97eb715f5d9c1987f932e8abf628ab08b01eb9089be43083550ce85",
+        "actualFont": "PaperForgeCJK-Regular",
+        "originalAdvance": 133.02,
+        "actualHorizontalScale": 100
+      }
+    ],
+    "outputBytes": 10292,
+    "originalRetained": true
+  },
+  "sourceUnchanged": true,
+  "text": "A MUCH LONGER TITLE RIGHT_FIXED\n排版修改 AFTER_TJ\nQUOTE_NEW\nDOUBLE_NEW END_FIXED\n倾斜文字\n旋转字体  ROTATION_FIXED\nORIGINAL RIGHT_FIXED\nKER NED AFTER_TJ\nQUOTE_OLD\nDOUBLE_OLD END_FIXED\nANGLED_OLD\n",
+  "originalObjects": [
+    {
+      "index": 0,
+      "text": "ORIGINAL",
+      "corners": [
+        [
+          0.1,
+          0.08867997
+        ],
+        [
+          0.2611396,
+          0.08867997
+        ],
+        [
+          0.2611396,
+          0.11246574
+        ],
+        [
+          0.1,
+          0.11246574
+        ]
+      ]
+    },
+    {
+      "index": 1,
+      "text": " RIGHT_FIXED",
+      "corners": [
+        [
+          0.26203957,
+          0.08867997
+        ],
+        [
+          0.49733558,
+          0.08867997
+        ],
+        [
+          0.49733558,
+          0.11246574
+        ],
+        [
+          0.26203957,
+          0.11246574
+        ]
+      ]
+    },
+    {
+      "index": 2,
+      "text": "KERNED",
+      "corners": [
+        [
+          0.1,
+          0.13153714
+        ],
+        [
+          0.2433988,
+          0.13153714
+        ],
+        [
+          0.2433988,
+          0.15532285
+        ],
+        [
+          0.1,
+          0.15532285
+        ]
+      ]
+    },
+    {
+      "index": 3,
+      "text": " AFTER_TJ",
+      "corners": [
+        [
+          0.24429882,
+          0.13153714
+        ],
+        [
+          0.42288405,
+          0.13153714
+        ],
+        [
+          0.42288405,
+          0.15532285
+        ],
+        [
+          0.24429882,
+          0.15532285
+        ]
+      ]
+    },
+    {
+      "index": 4,
+      "text": "QUOTE_OLD",
+      "corners": [
+        [
+          0.1,
+          0.17439425
+        ],
+        [
+          0.3070432,
+          0.17439425
+        ],
+        [
+          0.3070432,
+          0.19818002
+        ],
+        [
+          0.1,
+          0.19818002
+        ]
+      ]
+    },
+    {
+      "index": 5,
+      "text": "DOUBLE_OLD",
+      "corners": [
+        [
+          0.1,
+          0.21725142
+        ],
+        [
+          0.33405757,
+          0.21725142
+        ],
+        [
+          0.33405757,
+          0.24103719
+        ],
+        [
+          0.1,
+          0.24103719
+        ]
+      ]
+    },
+    {
+      "index": 6,
+      "text": " END_FIXED",
+      "corners": [
+        [
+          0.33585757,
+          0.21725142
+        ],
+        [
+          0.5482936,
+          0.21725142
+        ],
+        [
+          0.5482936,
+          0.24103719
+        ],
+        [
+          0.33585757,
+          0.24103719
+        ]
+      ]
+    },
+    {
+      "index": 7,
+      "text": "ANGLED_OLD",
+      "corners": [
+        [
+          0.1351089,
+          0.44931692
+        ],
+        [
+          0.38377932,
+          0.44931692
+        ],
+        [
+          0.38377932,
+          0.5060998
+        ],
+        [
+          0.1351089,
+          0.5060998
+        ]
+      ]
+    }
+  ],
+  "backupDraftUndoRestored": true,
+  "backupFontRelocated": true,
+  "backupRequestContainsPhysicalFontPath": false,
+  "uiDocument": "dbaf2586-b2fc-422b-b9d4-d8ab9ef2956e",
+  "independentText": "A MUCH LONGER TITLE RIGHT_FIXED\n排版修改 AFTER_TJ\nQUOTE_NEW\nDOUBLE_NEW END_FIXED\n倾斜文字\n旋转字体\n ROTATION_FIXED\nORIGINAL RIGHT_FIXED\nKERNED AFTER_TJ\nQUOTE_OLD\nDOUBLE_OLD END_FIXED\nANGLED_OLD\nFORM_VALUE\n",
+  "unchangedFollowingAnchors": [
+    {
+      "text": "RIGHT_FIXED",
+      "before": [
+        137.05340576171875,
+        55.650001525878906,
+        248.6678009033203,
+        80.38200378417969
+      ],
+      "after": [
+        137.0533905029297,
+        55.650001525878906,
+        248.6678009033203,
+        80.38200378417969
+      ],
+      "maxErrorPt": 1.52587890625e-05
+    },
+    {
+      "text": "AFTER_TJ",
+      "before": [
+        128.18299865722656,
+        85.6500015258789,
+        211.44203186035156,
+        110.38200378417969
+      ],
+      "after": [
+        128.18299865722656,
+        85.6500015258789,
+        211.44203186035156,
+        110.38200378417969
+      ],
+      "maxErrorPt": 0.0
+    },
+    {
+      "text": "END_FIXED",
+      "before": [
+        176.0323944091797,
+        145.64999389648438,
+        274.1468200683594,
+        170.3820037841797
+      ],
+      "after": [
+        176.03240966796875,
+        145.64999389648438,
+        274.1468200683594,
+        170.3820037841797
+      ],
+      "maxErrorPt": 1.52587890625e-05
+    }
+  ],
+  "sharedUneditedPagePixelsIdentical": true,
+  "backupRestoredAllPagesPixelsIdentical": true,
+  "rotatedPageCrop": [
+    20.0,
+    70.0,
+    420.0,
+    670.0
+  ],
+  "rotatedPageRotation": 90,
+  "outputFonts": [
+    [
+      25,
+      "n/a",
+      "Type1",
+      "Helvetica",
+      "F1",
+      "WinAnsiEncoding"
+    ],
+    [
+      27,
+      "n/a",
+      "Type1",
+      "Times-Italic",
+      "F2",
+      "WinAnsiEncoding"
+    ],
+    [
+      28,
+      "ttf",
+      "Type0",
+      "AAENWH+PaperForgeCJK-Regular",
+      "F3",
+      "Identity-H"
+    ]
+  ],
+  "sourceSha256": "087c495b5d46f0e8a3e3060c24b674be61887d80e60c6695b2f58d27a3944682",
+  "seconds": 3.076,
+  "scope": "Owned mixed PDF fixture, native Tj/TJ/single and double quote operators, Unicode/TTF replacement, rotated crop, shared stream, link/form retention, actual backup/history relocation.",
+  "actualUiSubmission": {
+    "text": "MODERN_EDIT RIGHT_FIXED\nKERNED AFTER_TJ\nQUOTE_OLD\nDOUBLE_OLD END_FIXED\nANGLED_OLD\nROTATED_OLD ROTATION_FIXED\nORIGINAL RIGHT_FIXED\nKERNED AFTER_TJ\nQUOTE_OLD\nDOUBLE_OLD END_FIXED\nANGLED_OLD\nFORM_VALUE\n",
+    "changedObject": "ORIGINAL -> MODERN_EDIT",
+    "font": "PaperForge 中英字体",
+    "nativeResultFileName": "原生编辑验收.pdf",
+    "throughWorkManager": true,
+    "textFieldAutoAppliedForPreviewAndSave": true
+  },
+  "boundaries": [
+    "Direct horizontal page text operators; existing images, paths, links, form fields and page geometry remain native.",
+    "Nested Form text, ActualText replacement spans, vertical fonts and complex shaping retain the original; unsupported objects are not silently rasterized.",
+    "The fit option shrinks overly wide replacements; shorter text is not stretched."
+  ]
+}

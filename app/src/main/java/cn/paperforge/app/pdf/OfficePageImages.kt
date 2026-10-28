@@ -49,7 +49,13 @@ object OfficePageImages {
             }
         val source = File(job.input.getStringArray("inputs")!!.first())
         val pages = JSONArray()
-        val output = File(repo.exports, "PaperForge-office-pages-${job.row.workId}.zip")
+        val output =
+            OutputNames.create(
+                repo,
+                job.row.id,
+                OutputNames.sourceStem(job.input.getString("name") ?: source.name),
+                "zip",
+            )
         val part = File(output.path + ".part")
         try {
             ParcelFileDescriptor.open(rendered, ParcelFileDescriptor.MODE_READ_ONLY).use {

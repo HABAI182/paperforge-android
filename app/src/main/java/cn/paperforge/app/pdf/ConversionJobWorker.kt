@@ -6,7 +6,6 @@ import androidx.room.withTransaction
 import androidx.work.*
 import cn.paperforge.app.PaperForgeApp
 import cn.paperforge.app.data.*
-import cn.paperforge.app.model.safeFileName
 import java.io.File
 import java.util.zip.*
 import kotlinx.coroutines.*
@@ -97,7 +96,7 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                         completed = 1
                     }
                     "PDF_DIFF" -> {
-                        file = File(repo.exports, "PaperForge-comparison-${job.row.workId}.zip")
+                        file = OutputNames.create(repo, job.row.id, "文档对照", "zip")
                         output = file
                         PdfComparison.run(repo, job, file) { percent, detail ->
                             DocumentJobs.progress(repo, job, percent, detail)
@@ -164,9 +163,11 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                     }
                     "TEXT_PDF" -> {
                         file =
-                            File(
-                                repo.exports,
-                                "${safeFileName(title.substringBeforeLast('.'))}-${id.toString().take(8)}.pdf",
+                            OutputNames.create(
+                                repo,
+                                job.row.id,
+                                OutputNames.sourceStem(title),
+                                "pdf",
                             )
                         output = file
                         val edited = File(job.input.getString("edited") ?: error("正文草稿缺失"))
@@ -181,7 +182,13 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                         completed = 1
                     }
                     "LONG_IMAGES" -> {
-                        file = File(repo.exports, "PaperForge-long-${id.toString().take(8)}.zip")
+                        file =
+                            OutputNames.create(
+                                repo,
+                                job.row.id,
+                                OutputNames.sourceStem(title),
+                                "zip",
+                            )
                         output = file
                         ImageLongImages.convert(
                             inputs,
@@ -305,9 +312,11 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                         completed = successes.size
                         val extension = if (inputs.size > 1) "zip" else settings.format
                         file =
-                            File(
-                                repo.exports,
-                                "PaperForge-images-${id.toString().take(8)}.$extension",
+                            OutputNames.create(
+                                repo,
+                                job.row.id,
+                                OutputNames.sourceStem(title),
+                                extension,
                             )
                         output = file
                         val part = File(file.path + ".part")
