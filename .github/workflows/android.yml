@@ -2,9 +2,9 @@ name: Android compile and isolated candidate
 on:
   push:
     branches: [main]
-    paths: ['app/**', 'ocr-paddle/**', 'jpeg2000/**', 'format-engine/**', 'office-engine/**', '*.kts', 'gradle*', 'gradle/**', 'scripts/**', '.github/workflows/**', 'docs/development/distribution-policy.json']
+    paths: ['app/**', 'ocr-paddle/**', 'jpeg2000/**', 'opencv-mobile/**', 'format-engine/**', 'office-engine/**', '*.kts', 'gradle*', 'gradle/**', 'scripts/**', '.github/workflows/**', 'docs/development/distribution-policy.json']
   pull_request:
-    paths: ['app/**', 'ocr-paddle/**', 'jpeg2000/**', 'format-engine/**', 'office-engine/**', '*.kts', 'gradle*', 'gradle/**', 'scripts/**', '.github/workflows/**', 'docs/development/distribution-policy.json']
+    paths: ['app/**', 'ocr-paddle/**', 'jpeg2000/**', 'opencv-mobile/**', 'format-engine/**', 'office-engine/**', '*.kts', 'gradle*', 'gradle/**', 'scripts/**', '.github/workflows/**', 'docs/development/distribution-policy.json']
   workflow_dispatch:
 permissions:
   contents: read
