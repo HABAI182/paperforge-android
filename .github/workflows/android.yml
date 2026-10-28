@@ -1,0 +1,39 @@
+name: Android compile and isolated candidate
+on:
+  push:
+    branches: [main]
+    paths: ['app/**', 'ocr-paddle/**', 'jpeg2000/**', 'format-engine/**', 'office-engine/**', '*.kts', 'gradle*', 'gradle/**', 'scripts/**', '.github/workflows/**', 'docs/development/distribution-policy.json']
+  pull_request:
+    paths: ['app/**', 'ocr-paddle/**', 'jpeg2000/**', 'format-engine/**', 'office-engine/**', '*.kts', 'gradle*', 'gradle/**', 'scripts/**', '.github/workflows/**', 'docs/development/distribution-policy.json']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: android-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  compile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@4c125117fe7c5aed11272ec4213f602f012f89f2 # v5
+      - name: Install pinned Android toolchain
+        run: sdkmanager 'platforms;android-36' 'build-tools;35.0.0' 'ndk;28.2.13676358' 'cmake;3.22.1'
+      - name: Compile an isolated x86_64 development package
+        run: python3 scripts/build_distribution.py --abi x86_64 --isolated-ci
+      - name: Compile the optional format engine
+        run: ./gradlew :format-engine:assembleDebug --console=plain --build-cache
+      - name: Retain candidate and exact package inventory
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: PaperForge-isolated-ci-${{ github.sha }}
+          path: build/distributions/development/x86_64/
+          retention-days: 7
+          if-no-files-found: error
