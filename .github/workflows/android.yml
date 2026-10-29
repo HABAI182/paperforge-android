@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     env:
-      CCACHE_DIR: ${{ runner.temp }}/paperforge-ccache
+      CCACHE_DIR: /tmp/paperforge-ccache
       CCACHE_MAXSIZE: 512M
       CCACHE_COMPILERCHECK: content
       CCACHE_BASEDIR: ${{ github.workspace }}
