@@ -29,6 +29,7 @@ class UpdatesActivity : ComponentActivity() {
 @Composable
 private fun UpdatesScreen(onBack: () -> Unit) {
     val context = LocalContext.current
+    val integrated = remember(context) { NetworkFiles.integrated(context) }
     val prefs = remember { NetworkPreferences(context) }
     val scope = rememberCoroutineScope()
     val manager = remember { WorkManager.getInstance(context) }
@@ -84,9 +85,19 @@ private fun UpdatesScreen(onBack: () -> Unit) {
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text("PaperForge · 联网工具", style = MaterialTheme.typography.headlineSmall)
+            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                if (integrated)
+                    TextButton(onClick = { (context as? android.app.Activity)?.finish() }) {
+                        Text("返回")
+                    }
+                Text(
+                    if (integrated) "更新与连接" else "PaperForge · 联网工具",
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+            }
             Text(
-                "按需检查与下载；文件校验通过后交给系统安装。PaperForge主应用保持离线。",
+                if (integrated) "所有功能已内置。更新由你手动发起，文件核对完成后交给系统安装。"
+                else "按需检查与下载；文件校验通过后交给系统安装。PaperForge主应用保持离线。",
                 style = MaterialTheme.typography.bodyMedium,
             )
             OutlinedButton(
@@ -140,7 +151,10 @@ private fun UpdatesScreen(onBack: () -> Unit) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text("启用可选更新", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            if (integrated) "允许手动检查更新" else "启用可选更新",
+                            style = MaterialTheme.typography.titleMedium,
+                        )
                         Text(
                             if (enabled) "仅手动检查，不自动安装" else "已关闭联网检查与下载",
                             style = MaterialTheme.typography.bodySmall,
@@ -260,7 +274,10 @@ private fun UpdatesScreen(onBack: () -> Unit) {
                                         prefs.repository = repository
                                         prefs.channel = channel
                                         prefs.token(token)
-                                        GitHubUpdates(prefs.token())
+                                        GitHubUpdates(
+                                                prefs.token(),
+                                                integrated = NetworkFiles.integrated(context),
+                                            )
                                             .check(
                                                 repository,
                                                 channel,
@@ -395,7 +412,7 @@ private fun UpdatesScreen(onBack: () -> Unit) {
                                                         val uri =
                                                             FileProvider.getUriForFile(
                                                                 context,
-                                                                context.packageName + ".files",
+                                                                NetworkFiles.authority(context),
                                                                 file,
                                                             )
                                                         context.startActivity(

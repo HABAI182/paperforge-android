@@ -81,6 +81,7 @@ def main():
     parser.add_argument('--abi', choices=['arm64-v8a', 'x86_64', 'universal'], default='arm64-v8a')
     parser.add_argument('--channel', choices=['development', 'prerelease', 'stable'], default='development')
     parser.add_argument('--include-engines', action='store_true')
+    parser.add_argument('--full', action='store_true', help='One APK containing Office, formats and network features')
     parser.add_argument('--engine', action='append', default=[],
                         choices=['office-engine', 'format-engine', 'network-engine'],
                         help='Include only the selected optional engine; repeat for multiple engines')
@@ -100,13 +101,16 @@ def main():
         for field in ['PAPERFORGE_STORE_PASSWORD', 'PAPERFORGE_KEY_ALIAS', 'PAPERFORGE_KEY_PASSWORD']:
             if not os.environ.get(field):
                 raise SystemExit('Missing external signing setting: ' + field)
-    output = (args.output or ROOT / 'build/distributions' / args.channel / args.abi).resolve()
+    if args.full and (args.include_engines or args.engine):
+        parser.error('--full already includes all engines; do not also select separate APKs')
+    full_directory = 'full-isolated-ci' if args.isolated_ci else 'full'
+    output = (args.output or ROOT / 'build/distributions' / (full_directory if args.full else args.channel) / args.abi).resolve()
     output.mkdir(parents=True, exist_ok=True)
     optional_modules = ['office-engine', 'format-engine', 'network-engine']
-    modules = ['app'] + [module for module in optional_modules
+    modules = ['full-app'] if args.full else ['app'] + [module for module in optional_modules
                          if args.include_engines or module in args.engine]
     selected_abis = policy['supportedAbis'] if args.abi == 'universal' else [args.abi]
-    if 'office-engine' in modules:
+    if args.full or 'office-engine' in modules:
         run([sys.executable, '-X', 'utf8', 'tools/fetch_office_runtime.py',
              *sum((['--abi', abi] for abi in selected_abis), [])])
     variant = 'debug' if args.isolated_ci else 'release'
@@ -125,15 +129,18 @@ def main():
         if not args.isolated_ci and record['certificatesSha256'] != [policy['ownerDevelopmentCertificateSha256']]:
             raise RuntimeError('Candidate does not continue the owner certificate; no artifact copied')
         expected_id = policy['applicationId'] + ('.ci' if args.isolated_ci else '')
-        if module == 'app':
+        if module in ['app', 'full-app']:
             if args.channel == 'stable' and '-' in record['versionName']:
                 raise RuntimeError('A development/prerelease version cannot be labeled as stable')
-            if record['applicationId'] != expected_id or 'android.permission.INTERNET' in record['permissions']:
+            if record['applicationId'] != expected_id or (module == 'app' and 'android.permission.INTERNET' in record['permissions']):
                 raise RuntimeError('Main package identity/offline permission contract changed')
+            if module == 'full-app' and 'android.permission.INTERNET' not in record['permissions']:
+                raise RuntimeError('Full distribution is missing its integrated network permission')
         if record['abis'] and record['abis'] != sorted(selected_abis):
             raise RuntimeError('Unexpected native architectures: ' + str(record['abis']))
-        label = {'app': 'PaperForge', 'office-engine': 'PaperForge-Office', 'format-engine': 'PaperForge-Formats', 'network-engine': 'PaperForge-Network'}[module]
-        filename = f'{label}-{record["versionName"]}-{args.abi}-{args.channel}{"-isolated-ci" if args.isolated_ci else ""}.apk'
+        label = {'app': 'PaperForge', 'full-app': 'PaperForge', 'office-engine': 'PaperForge-Office', 'format-engine': 'PaperForge-Formats', 'network-engine': 'PaperForge-Network'}[module]
+        filename = (f'{label}-{record["versionName"]}-full-{args.abi}{"-isolated-ci" if args.isolated_ci else ""}.apk' if module == 'full-app' else
+                    f'{label}-{record["versionName"]}-{args.abi}-{args.channel}{"-isolated-ci" if args.isolated_ci else ""}.apk')
         target = output / filename
         shutil.copy2(apk, target)
         record.update({'file': filename, 'module': module, 'variant': variant})
@@ -141,14 +148,16 @@ def main():
     main_app = results[0]
     revision = run(['git', 'rev-parse', 'HEAD'], True).strip()
     dirty = bool(run(['git', 'status', '--porcelain'], True).strip())
-    manifest = {'format': 1, 'candidateOnly': True, 'releaseHold': policy['releaseHold'],
+    candidate_only = args.channel != 'stable' or args.isolated_ci or policy['releaseHold']
+    manifest = {'format': 1, 'candidateOnly': candidate_only, 'releaseHold': policy['releaseHold'],
+                'distribution': 'full' if args.full else 'modular',
                 'channel': args.channel, 'abi': args.abi, 'commit': revision, 'workingTreeDirty': dirty,
                 'versionCode': main_app['versionCode'], 'versionName': main_app['versionName'],
                 'isolatedCi': args.isolated_ci, 'artifacts': results}
     (output / 'release-manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     checksums = ''.join(f'{record["sha256"]}  {record["file"]}\n' for record in results)
     (output / 'SHA256SUMS.txt').write_text(checksums, encoding='utf-8')
-    print(json.dumps({'directory': str(output), 'candidateOnly': True,
+    print(json.dumps({'directory': str(output), 'candidateOnly': candidate_only,
                       'artifacts': [{'file': x['file'], 'bytes': x['bytes'], 'sha256': x['sha256']} for x in results]}))
 
 

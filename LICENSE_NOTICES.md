@@ -15,7 +15,7 @@
 | Bouncy Castle bcprov / bcpkix / bcutil 1.86（显式统一版本） | Bouncy Castle MIT-style license；https://www.bouncycastle.org/licence.html |
 | JUnit 4.13.2（仅测试） | EPL-1.0；https://github.com/junit-team/junit4 |
 
-完整已获取许可证保存在 `app/src/main/assets/licenses/` 并随 APK 打包。应用“关于与隐私”展示概要，源码提供完整文本。依赖传递清单由 Gradle 生成并保存在验收目录；主包未链接 MuPDF/iText，未使用第三方竞品视觉资产。可选格式引擎从本次开发版起使用 MuPDF Fitz 1.28.5（AGPL-3.0），完整许可、字体与第三方声明在 `format-engine/src/main/assets/native/`；固定源代码及 AAR 哈希见 notices.txt。
+完整已获取许可证保存在 `app/src/main/assets/licenses/` 并随 APK 打包。应用“关于与隐私”展示概要，源码提供完整文本。依赖传递清单由 Gradle 生成并保存在验收目录；模块化离线主包未链接 MuPDF/iText；完整功能版在同一APK内集成MuPDF、LibreOfficeKit和联网工具，保留各自许可与来源声明。可选格式引擎从本次开发版起使用 MuPDF Fitz 1.28.5（AGPL-3.0），完整许可、字体与第三方声明在 `format-engine/src/main/assets/native/`；固定源代码及 AAR 哈希见 notices.txt。
 
 v0.3 adapts `OutlineTracker.kt` and `CaptureQualityPolicy.kt` from [phillip9933/open-android-doc-scanner](https://github.com/phillip9933/open-android-doc-scanner/tree/3ba5c50a64f9be8eaeec47d263b360488e58835b), commit `3ba5c50a64f9be8eaeec47d263b360488e58835b`, Apache-2.0. Changed files: PaperForge `model/OutlineTracker.kt`, `model/CaptureQualityPolicy.kt`; native Quad interfaces, explicit AF readiness, bounded scene references and first-frame blur handling. License: assets/licenses/Apache-2.0.txt; original notice: OpenAndroidDocScanner-NOTICE.txt. Imaging/OCR/PDF algorithms otherwise independently implemented, with technique references in docs/research/UPSTREAM_REFERENCE_MATRIX.md. No upstream runtime or model was imported.
 
@@ -49,7 +49,7 @@ implementation; display tracking and dense dewarp core adapt recovered logic.
 
 ## 0.6.0 Office 与转换
 
-Office 手机引擎使用 LibreOfficeKit 26.2.6.3，JNI 包装原文件保留 MPL-2.0 文件头。F-Droid 两个 ABI 构建、对应源码、固定 SHA256 与重建脚本见 [office-engine/UPSTREAM.md](office-engine/UPSTREAM.md)。主 APK 不链接该引擎，需按需安装独立手机 APK；均无 INTERNET 权限。
+Office 手机引擎使用 LibreOfficeKit 26.2.6.3，JNI 包装原文件保留 MPL-2.0 文件头。F-Droid 两个 ABI 构建、对应源码、固定 SHA256 与重建脚本见 [office-engine/UPSTREAM.md](office-engine/UPSTREAM.md)。模块化发行使用独立Office APK；完整功能版直接内置该引擎并在独立进程运行，完整包包含联网工具所需权限。
 
 PPTX 空模板由 python-pptx 1.0.2 生成，模板许可文本保留在 `app/src/main/assets/templates/LICENSE-python-pptx.txt`。Android 表格、结构 DOCX、PPTX 打包与调用逻辑为本轮实现，复用既有 PDFBox/OpenCV/内置 ML Kit。
 

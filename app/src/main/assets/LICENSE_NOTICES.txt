@@ -31,7 +31,9 @@ ML Kit Text Recognition Chinese and Latin 16.0.1:
 Google SDK and bundled proprietary models, governed by ML Kit / Google APIs
 Terms of Service: https://developers.google.com/ml-kit/terms
 They are not represented as Apache-licensed open-source models.
-The application removes Android INTERNET permission.
+The modular offline APK removes Android INTERNET permission. The full distribution
+bundles Office, MuPDF formats and network tools in one APK and declares INTERNET;
+network features are operated explicitly by the user.
 
 Full license copies are bundled in assets/licenses and the source package.
 

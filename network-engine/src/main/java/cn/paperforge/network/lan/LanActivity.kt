@@ -175,7 +175,7 @@ private fun LanScreen(back: () -> Unit) {
     fun uri(row: LanItem) =
         FileProvider.getUriForFile(
             context,
-            "${context.packageName}.files",
+            NetworkFiles.authority(context),
             ledger.file(row.id),
             row.name,
         )

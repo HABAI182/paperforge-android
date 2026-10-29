@@ -1,4 +1,5 @@
 <resources>
+    <string name="continue_reading_page">继续阅读 · 第 %1$d 页</string>
     <string name="app_name">PaperForge</string>
     <string name="shortcut_scan">扫描纸张</string>
     <string name="shortcut_ocr">图片识字</string>

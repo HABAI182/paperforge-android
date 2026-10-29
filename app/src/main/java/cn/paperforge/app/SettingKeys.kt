@@ -58,7 +58,7 @@ object SettingKeys {
             "AUTO",
             setOf("ORIGINAL", "AUTO", "TEXT", "CLEAN", "GRAY", "BW", "COLOR", "WHITEBOARD"),
         )
-    val EnhanceStrength = SettingKey.Number("enhanceStrength", 1f, 0f..1f)
+    val EnhanceStrength = SettingKey.Number("enhanceStrength", .85f, 0f..1f)
     val Brightness = SettingKey.Number("brightness", 0f, -0.5f..0.5f)
     val Contrast = SettingKey.Number("contrast", 1f, 0.5f..1.8f)
     val OcrLanguage = SettingKey.Text("ocrLanguage", "CHINESE", setOf("CHINESE", "LATIN"))

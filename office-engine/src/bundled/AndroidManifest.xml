@@ -1,0 +1,5 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <service android:name="cn.paperforge.office.OfficeJobService" android:process=":office" android:exported="false" />
+    </application>
+</manifest>

@@ -8,7 +8,7 @@ import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import kotlinx.coroutines.*
 import org.opencv.android.OpenCVLoader
 
-class PaperForgeApp : Application() {
+open class PaperForgeApp : Application() {
     val backgroundScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     val ocrModels by lazy { cn.paperforge.app.ocr.OcrModelPacks(this) }
     val ocrEngine by lazy { cn.paperforge.app.ocr.RoutingOcrEngine(this, ocrModels) }
@@ -17,6 +17,7 @@ class PaperForgeApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        if (currentProcessName() != packageName) return
         UserSettings.initialize(this)
         runCatching { cn.paperforge.app.system.SystemEntrypoints.register(this) }
             .onFailure {
@@ -58,4 +59,12 @@ class PaperForgeApp : Application() {
         }
         cn.paperforge.app.data.AutoExportCoordinator.start(repository, backgroundScope)
     }
+
+    protected fun currentProcessName(): String =
+        if (android.os.Build.VERSION.SDK_INT >= 28) getProcessName()
+        else
+            getSystemService(android.app.ActivityManager::class.java)
+                .runningAppProcesses
+                ?.firstOrNull { it.pid == android.os.Process.myPid() }
+                ?.processName ?: packageName
 }

@@ -166,7 +166,10 @@ object OfficeBridge {
                             Intent()
                                 .setComponent(
                                     ComponentName(
-                                        "cn.paperforge.office",
+                                        cn.paperforge.app.system.PhoneEngines.packageFor(
+                                            context,
+                                            "cn.paperforge.office",
+                                        ),
                                         "cn.paperforge.office.OfficeJobService",
                                     )
                                 ),

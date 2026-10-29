@@ -7,11 +7,12 @@ import java.security.KeyStore
 import javax.crypto.*
 import javax.crypto.spec.GCMParameterSpec
 
-/** Only this optional APK can use the network. Tokens are encrypted under its AndroidKeyStore. */
+/** Network features remain opt-in in both distributions. Tokens use AndroidKeyStore encryption. */
 class NetworkPreferences(context: Context) {
+    private val integrated = NetworkFiles.integrated(context)
     val store = context.getSharedPreferences("network-tools", 0)
     var enabled: Boolean
-        get() = store.getBoolean("updatesEnabled", false)
+        get() = store.getBoolean("updatesEnabled", integrated)
         set(value) {
             store.edit().putBoolean("updatesEnabled", value).commit()
         }

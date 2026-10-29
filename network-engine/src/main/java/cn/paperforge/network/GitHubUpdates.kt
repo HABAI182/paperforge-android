@@ -64,6 +64,7 @@ data class UpdateCheck(
 class GitHubUpdates(
     private val token: String,
     private val apiRoot: String = "https://api.github.com",
+    private val integrated: Boolean = false,
 ) {
     companion object {
         val packages =
@@ -76,7 +77,7 @@ class GitHubUpdates(
 
         @Suppress("DEPRECATION")
         fun installed(context: Context): Map<String, InstalledPackage> =
-            packages.keys
+            (if (NetworkFiles.integrated(context)) listOf(context.packageName) else packages.keys)
                 .mapNotNull { id ->
                     runCatching { context.packageManager.getPackageInfo(id, 0) }
                         .getOrNull()
@@ -232,6 +233,7 @@ class GitHubUpdates(
                 if (manifests.isNotEmpty()) {
                     for (manifest in manifests) {
                         val data = JSONObject(text(url(manifest), true))
+                        if (integrated && data.optString("distribution") != "full") continue
                         val groupChannel =
                             data.optString(
                                 "channel",
@@ -242,7 +244,7 @@ class GitHubUpdates(
                         for (j in 0 until items.length()) {
                             val item = items.getJSONObject(j)
                             val id = item.getString("applicationId")
-                            if (id !in packages) continue
+                            if (id !in packages || integrated && id != "cn.paperforge.app") continue
                             val code = item.getLong("versionCode")
                             if (code <= (installed[id]?.versionCode ?: 0)) continue
                             val abiArray = item.getJSONArray("abis")
@@ -280,6 +282,7 @@ class GitHubUpdates(
                     var sums: Map<String, String>? = null
                     for (asset in files.values.filter { it.getString("name").endsWith(".apk") }) {
                         val name = asset.getString("name")
+                        if (integrated && !name.contains("-full-")) continue
                         val id =
                             when {
                                 name.startsWith("PaperForge-Office") -> "cn.paperforge.office"

@@ -36,6 +36,8 @@ fun ConversionScreen(
     onDesktop: (String, org.json.JSONObject) -> Unit,
     onResult: () -> Unit,
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val integrated = remember(context) { cn.paperforge.app.system.PhoneEngines.integrated(context) }
     val busy by vm.busy.collectAsState()
     val settingsVersion by UserSettings.revision.collectAsState()
     val pinned = remember(settingsVersion) { UserSettings.pinnedTools() }
@@ -333,7 +335,10 @@ fun ConversionScreen(
                             style = MaterialTheme.typography.bodySmall,
                         )
                     } else if (options == "office-options") {
-                        Text("手机本机转换。首次需要安装 Office 手机引擎。请选择与源文件对应的目标类型。")
+                        Text(
+                            if (integrated) "Office 引擎已内置，在手机本机转换。请选择与源文件对应的目标类型。"
+                            else "手机本机转换。首次需要安装 Office 手机引擎。请选择与源文件对应的目标类型。"
+                        )
                         if (officeTarget == "csv")
                             Text(
                                 "CSV 仅导出当前/首个工作表的值，不保留合并单元格与样式；多表和长编号优先用 XLSX。",
@@ -480,16 +485,20 @@ fun ConversionScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     if (desktopJob.startsWith("office-")) {
-                        Text("在手机本机使用 LibreOfficeKit 排版。首次安装手机引擎后，无需电脑或网络。")
-                        TextButton(
-                            onClick = {
-                                uriHandler.openUri(
-                                    "https://github.com/HABAI182/paperforge-android/releases"
-                                )
+                        Text(
+                            if (integrated) "Office 排版引擎已内置，无需额外安装，在手机本机完成转换。"
+                            else "在手机本机使用 LibreOfficeKit 排版。首次安装手机引擎后，无需电脑或网络。"
+                        )
+                        if (!integrated)
+                            TextButton(
+                                onClick = {
+                                    uriHandler.openUri(
+                                        "https://github.com/HABAI182/paperforge-android/releases"
+                                    )
+                                }
+                            ) {
+                                Text("安装 / 更新手机 Office 引擎")
                             }
-                        ) {
-                            Text("安装 / 更新手机 Office 引擎")
-                        }
                     } else if (desktopJob.startsWith("tables-"))
                         Text("手机本机提取表格，完成后可逐格校正并导出 Excel 或 CSV。")
                     else Text("可选电脑扩展，通过任务 ZIP 交接；手机基础功能可以独立使用。")
@@ -585,7 +594,10 @@ fun ConversionScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text("手机转换：选格式、选文件，完成后预览、分享或另存。")
-                    Text("Office：先安装一次手机 Office 引擎，再回到转换中心选择文件。表格识别直接在PaperForge内部完成，可预览校正。")
+                    Text(
+                        if (integrated) "Office 与特殊格式引擎已内置。选择文件即可转换，表格识别可预览校正。"
+                        else "Office：先安装一次手机 Office 引擎，再回到转换中心选择文件。表格识别直接在PaperForge内部完成，可预览校正。"
+                    )
                     Text("Office 排版使用 LibreOffice；结构 Word 和表格会重建可编辑内容。实际字体和复杂版式可能影响结果，原件始终保留。")
                     TextButton(
                         onClick = {

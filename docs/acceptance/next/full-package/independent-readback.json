@@ -1,0 +1,12 @@
+{
+  "office.pdf": {
+    "pages": 2,
+    "text": "PaperForge · \n \n页眉Header\n \n离线转换/ Footer\n \n纸匠Office 排版验收\n中文、English\n \n、编号00123；保留段落、图片、分页与合并单元格。\n合并表头\n金额\n地区\n编号\n金额\n华东\n00123\n120.50\n华北\n00456\n80.00\n合计\n200.50\nPaperForge · \n \n页眉Header\n \n离线转换/ Footer\n \n第二页/ Page Two\n用于检查显式分页及页眉页脚。\n",
+    "number00123": true
+  },
+  "native.pdf": {
+    "pages": 1,
+    "text": "PaperForge FULL 00123\n",
+    "number00123": true
+  }
+}

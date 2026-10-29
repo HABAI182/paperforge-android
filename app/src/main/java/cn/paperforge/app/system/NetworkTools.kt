@@ -28,15 +28,13 @@ object NetworkTools {
         )
 
     private fun launch(context: Context, screen: String, source: Uri? = null) {
+        val targetPackage = PhoneEngines.packageFor(context, "cn.paperforge.network")
         val installed =
-            runCatching { context.packageManager.getPackageInfo("cn.paperforge.network", 0) }
-                .isSuccess
+            runCatching { context.packageManager.getPackageInfo(targetPackage, 0) }.isSuccess
         if (installed) {
             if (
-                context.packageManager.checkSignatures(
-                    context.packageName,
-                    "cn.paperforge.network",
-                ) != PackageManager.SIGNATURE_MATCH
+                context.packageManager.checkSignatures(context.packageName, targetPackage) !=
+                    PackageManager.SIGNATURE_MATCH
             ) {
                 Toast.makeText(context, "联网工具签名与PaperForge不一致，请使用同一来源的安装包", Toast.LENGTH_LONG)
                     .show()
@@ -53,9 +51,7 @@ object NetworkTools {
                     }
                     .putExtra("paperforgeTheme", UserSettings[SettingKeys.Theme])
                     .putExtra("paperforgeFontScale", UserSettings[SettingKeys.FontScale])
-                    .setComponent(
-                        ComponentName("cn.paperforge.network", "cn.paperforge.network.$screen")
-                    )
+                    .setComponent(ComponentName(targetPackage, "cn.paperforge.network.$screen"))
             )
         } else {
             context.startActivity(

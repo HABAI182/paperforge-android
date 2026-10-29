@@ -18,5 +18,18 @@
     "cn.paperforge.formats",
     "cn.paperforge.network"
   ],
-  "releaseHold": true
+  "releaseHold": false,
+  "fullDistribution": {
+    "module": "full-app",
+    "applicationId": "cn.paperforge.app",
+    "integrated": [
+      "Office",
+      "formats",
+      "network"
+    ],
+    "versionCodeOffset": 1,
+    "declaresInternet": true,
+    "oneLauncher": true
+  },
+  "ownerReleaseAuthorization": "2026-10-29: owner accepted current scope and requested publishing a single full-feature package"
 }

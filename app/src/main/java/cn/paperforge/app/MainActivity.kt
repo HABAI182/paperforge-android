@@ -818,7 +818,14 @@ class MainActivity : ComponentActivity() {
                             Column(Modifier.verticalScroll(rememberScrollState())) {
                                 var showNotices by remember { mutableStateOf(false) }
                                 Text(
-                                    "个人项目 · 扫描、阅读与文件转换\n\n扫描与 OCR 在手机运行。Office 与特殊格式使用可选本机引擎，文档、原图和编辑历史可完整备份。",
+                                    if (
+                                        cn.paperforge.app.system.PhoneEngines.integrated(
+                                            this@MainActivity
+                                        )
+                                    )
+                                        "完整功能版 · 扫描、阅读与文件转换\n\nOffice、特殊格式和联网工具均已内置。文档、原图和编辑历史可完整备份。"
+                                    else
+                                        "个人项目 · 扫描、阅读与文件转换\n\n扫描与 OCR 在手机运行。Office 与特殊格式使用可选本机引擎，文档、原图和编辑历史可完整备份。",
                                     style = MaterialTheme.typography.bodyMedium,
                                 )
                                 Row(
@@ -850,7 +857,13 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                                 Text(
-                                    "安装可选联网工具后，可在手机内检查和下载更新。",
+                                    if (
+                                        cn.paperforge.app.system.PhoneEngines.integrated(
+                                            this@MainActivity
+                                        )
+                                    )
+                                        "完整功能版：Office、特殊格式和联网工具已内置。扫描与文档处理在手机运行，联网功能按需开启。"
+                                    else "安装可选联网工具后，可在手机内检查和下载更新。",
                                     style = MaterialTheme.typography.bodySmall,
                                 )
                                 HorizontalDivider(Modifier.padding(vertical = 12.dp))

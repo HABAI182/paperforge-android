@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "versionCode": 10001,
+  "oneLauncher": true,
+  "samePackageOfficeAndFormats": true,
+  "officePages": 2,
+  "officeChineseAndNumericText": true,
+  "nativeSvgPages": 1,
+  "archiveJobEndStatus": "NORMAL",
+  "networkProvider": "cn.paperforge.app.network.files",
+  "sourceUnchanged": true,
+  "sourceSha256": "412d7fe8679edb32dcfebae97b8128f865cf2f6e5e094f8ec932ecca3db6ec9a",
+  "defaultPdfOcr": false,
+  "defaultEnhancement": 0.85
+}

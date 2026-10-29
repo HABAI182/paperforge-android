@@ -147,7 +147,10 @@ object FormatBridge {
                             Intent()
                                 .setComponent(
                                     ComponentName(
-                                        "cn.paperforge.formats",
+                                        cn.paperforge.app.system.PhoneEngines.packageFor(
+                                            context,
+                                            "cn.paperforge.formats",
+                                        ),
                                         "cn.paperforge.formats.FormatService",
                                     )
                                 ),

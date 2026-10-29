@@ -1,0 +1,844 @@
+{
+  "schema": 1,
+  "kind": "paperforge-pdfa-report",
+  "engine": "verapdf-1.30.3-android1",
+  "target": "2b",
+  "sourceSha256": "edd2be5321f8322e3f5faea7a6609a1a1553bd090104ae2079652b3c8b16720c",
+  "profileSha256": "bae015161f0c9b4296481f11936c97728dfd12dffb2df48ea744f885794da382",
+  "profileRuleCount": 144,
+  "profileVariableCount": 1,
+  "checkedAt": 1793258095337,
+  "assertions": 16652,
+  "jobEndStatus": "NORMAL",
+  "compliant": false,
+  "failedRules": [
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "count": 143,
+      "description": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "object": "PDDeviceRGB"
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.6.4",
+      "test": 1,
+      "count": 1,
+      "description": "The PDF\/A version and conformance level of a file shall be specified using the PDF\/A Identification extension schema",
+      "object": "MainXMPPackage"
+    }
+  ],
+  "failures": [
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.2.4.3",
+      "test": 2,
+      "status": "FAILED",
+      "message": "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF\/A OutputIntent that contains an RGB destination profile",
+      "context": ""
+    },
+    {
+      "specification": "ISO 19005-2:2011",
+      "clause": "6.6.4",
+      "test": 1,
+      "status": "FAILED",
+      "message": "The PDF\/A version and conformance level of a file shall be specified using the PDF\/A Identification extension schema",
+      "context": ""
+    }
+  ],
+  "displayedFailuresLimitedTo": 500,
+  "offline": true
+}

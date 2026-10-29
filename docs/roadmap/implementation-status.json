@@ -599,7 +599,8 @@
     "partial": 6,
     "planned": 0
   },
-  "releaseHold": true,
-  "publishedBaseline": "0.6.0",
-  "targetVersion": "1.0.0"
+  "releaseHold": false,
+  "publishedBaseline": "1.0.0",
+  "targetVersion": "1.0.0",
+  "releaseAcceptance": "Owner accepted current known limits and requested the full single-APK release on 2026-10-29; partial cards remain partial."
 }

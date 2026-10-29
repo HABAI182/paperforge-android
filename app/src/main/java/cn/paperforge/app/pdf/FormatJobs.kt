@@ -33,7 +33,13 @@ object FormatJobs {
     fun installed(context: android.content.Context) =
         runCatching {
                 context.packageManager
-                    .getPackageInfo("cn.paperforge.formats", 0)
+                    .getPackageInfo(
+                        cn.paperforge.app.system.PhoneEngines.packageFor(
+                            context,
+                            "cn.paperforge.formats",
+                        ),
+                        0,
+                    )
                     .versionName
                     .orEmpty()
             }

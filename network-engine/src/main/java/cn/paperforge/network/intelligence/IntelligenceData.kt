@@ -106,9 +106,10 @@ data class IntelligenceResult(
 
 class IntelligencePrefs(context: Context) {
     private val secure = NetworkPreferences(context)
+    private val integrated = cn.paperforge.network.NetworkFiles.integrated(context)
     val store = secure.store
     var enabled: Boolean
-        get() = store.getBoolean("intelligenceEnabled", false)
+        get() = store.getBoolean("intelligenceEnabled", integrated)
         set(value) {
             store.edit().putBoolean("intelligenceEnabled", value).commit()
         }

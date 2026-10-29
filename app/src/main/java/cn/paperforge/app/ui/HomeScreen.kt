@@ -920,6 +920,14 @@ fun HomeScreen(
                     )
                 }
             } else {
+                if (
+                    tab == 0 &&
+                        homeCollection == "RECENT" &&
+                        !inTrash &&
+                        !selecting &&
+                        search.isBlank()
+                )
+                    item(key = "continue-reading") { ContinueReadingCard(vm, docs, busy) }
                 item {
                     LibraryCollectionHeader(
                         title =

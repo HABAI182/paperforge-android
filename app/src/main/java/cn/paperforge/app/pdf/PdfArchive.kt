@@ -19,7 +19,13 @@ object PdfArchive {
     fun available(context: Context): Boolean =
         runCatching {
                 context.packageManager
-                    .getApplicationInfo("cn.paperforge.formats", PackageManager.GET_META_DATA)
+                    .getApplicationInfo(
+                        cn.paperforge.app.system.PhoneEngines.packageFor(
+                            context,
+                            "cn.paperforge.formats",
+                        ),
+                        PackageManager.GET_META_DATA,
+                    )
                     .metaData
                     ?.getString("paperforge.pdfa.validator") == ENGINE
             }

@@ -1,0 +1,7 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <meta-data android:name="paperforge.pdfa.validator" android:value="verapdf-1.30.3-android1" />
+        <meta-data android:name="paperforge.formats.native" android:value="mupdf-1.28.5-layout6" />
+        <service android:name="cn.paperforge.formats.FormatService" android:process=":formats" android:exported="false" />
+    </application>
+</manifest>

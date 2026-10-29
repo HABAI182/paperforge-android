@@ -1,8 +1,8 @@
 # PaperForge
 
-手机本地的扫描、阅读与文件转换工作台。无登录、广告或水印，应用不声明 INTERNET 权限。
+手机本地的扫描、阅读与文件转换工作台。无登录、广告或水印。完整功能版将Office、特殊格式和联网工具内置为一个安装包，更新、传输与智能工具按需使用。
 
-当前已发布版本 **0.6.0**；下一大版本按用户指定统一为 **1.0.0**，四包版本同步，收尾期间不创建 tag 或 Release。这是你的个人私有项目；[源码](https://github.com/HABAI182/paperforge-android)与[安装包](https://github.com/HABAI182/paperforge-android/releases)需登录有权限的 GitHub 账号访问。
+当前版本 **1.0.0 · 完整功能版**，普通ARM64手机只需安装一个APK，无需另装三个扩展。这是你的个人私有项目；[源码](https://github.com/HABAI182/paperforge-android)与[安装包](https://github.com/HABAI182/paperforge-android/releases)需登录有权限的 GitHub 账号访问。
 
 | 文档首页 | 扫描取景 | 扫描后检查 |
 |---|---|---|
@@ -19,13 +19,19 @@
 - 清晰滤镜通过亮度通道局部对比与细节增强处理文字；去阴影保留彩色内容。增强可对比同一裁切范围的原图。
 - 遇到坏例可从编辑页“更多 → 保存本页诊断包”导出原图、结果、裁边参数与耗时。仅在手机本地保存，由你决定是否分享。
 
-本节改动处于开发阶段，待完整计划收尾后统一发布。现有 Office 引擎仍可在手机离线运行。
+本节改动已纳入1.0.0完整功能版。扫描、OCR、Office排版与特殊格式处理在手机运行；翻译首次需下载相应语言包，可选OCR/修复模型按需导入。
 
-Office 手机转换现接入持久任务中心：保留原件后在独立引擎进程排版，支持后台继续、取消、失败重试与完成结果复用。主应用和 Office 引擎需要安装同一签名渠道的新构建。
+Office 手机转换现接入持久任务中心：保留原件后在独立引擎进程排版，支持后台继续、取消、失败重试与完成结果复用。完整功能版已内置Office引擎，无需另装；历史模块化发行仍保留同签名的独立构建方式。
 
 OFD / DjVu、XPS / OXPS、基础 SVG、CBZ、FB2、EML、PDF 容器 CAJ / KDH、常用 LaTeX 正文与数学可在手机离线转为 PDF / PNG 页包；DXF 使用手机 Office 引擎。原件、逐页缓存、实际结果对照和能力边界见 [特殊格式转换](docs/development/SPECIAL-FORMATS.md)，来源与协议见 [format-engine/UPSTREAM.md](format-engine/UPSTREAM.md)。
 
 [1.0.0 收尾状态](docs/quality/V1.0.0-STATUS.md) · [版本记录](CHANGELOG.md) · [98 项计划实际状态](docs/roadmap/implementation-status.json) · [本轮范围和验证](docs/quality/SCAN-EXPERIENCE-0.6.1.md)
+
+## 安装完整功能版
+
+在[1.0.0发布页](https://github.com/HABAI182/paperforge-android/releases/tag/v1.0.0)下载`PaperForge-1.0.0-full-arm64-v8a.apk`，可覆盖原主应用并保留文档。完整包只保留一个PaperForge桌面图标；旧的三个扩展已不再是运行依赖，若要卸载旧联网工具，先导出其中需要保留的翻译/问答结果。
+
+首页增加继续阅读，转换界面直接显示引擎就绪；默认左右翻页、自动增强85%、零倒计时连拍、PDF不做OCR、自动纸张比例和90%导出质量。已有个性化设置不重置，联网操作由用户主动触发。
 
 ## 从这里开始
 
