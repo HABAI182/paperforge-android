@@ -27,7 +27,7 @@
       "formats",
       "network"
     ],
-    "versionCodeOffset": 1,
+    "versionCodeOffset": 2,
     "declaresInternet": true,
     "oneLauncher": true
   },

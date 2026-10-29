@@ -12,7 +12,7 @@ android {
         applicationId = "cn.paperforge.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = providers.gradleProperty("paperforgeVersionCode").get().toInt() + 1
+        versionCode = providers.gradleProperty("paperforgeVersionCode").get().toInt() + 2
         versionName = providers.gradleProperty("paperforgeVersionName").get()
         externalNativeBuild {
             cmake {
