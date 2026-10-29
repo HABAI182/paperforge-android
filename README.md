@@ -2,7 +2,7 @@
 
 手机本地的扫描、阅读与文件转换工作台。无登录、广告或水印。完整功能版将Office、特殊格式和联网工具内置为一个安装包，更新、传输与智能工具按需使用。
 
-当前版本 **1.0.0 · 完整功能版**，普通ARM64手机只需安装一个APK，无需另装三个扩展。这是你的个人私有项目；[源码](https://github.com/HABAI182/paperforge-android)与[安装包](https://github.com/HABAI182/paperforge-android/releases)需登录有权限的 GitHub 账号访问。
+当前版本 **1.0.0 · 完整功能版**，安装包 **177.09 MB**，普通ARM64手机只需安装一个APK，无需另装三个扩展。这是你的个人私有项目；[源码](https://github.com/HABAI182/paperforge-android)与[安装包](https://github.com/HABAI182/paperforge-android/releases)需登录有权限的 GitHub 账号访问。
 
 | 文档首页 | 扫描取景 | 扫描后检查 |
 |---|---|---|
@@ -76,11 +76,12 @@ Android 8.0+（API26），target/compile36；JDK17、SDK Platform36、Build Tool
 git clone https://github.com/HABAI182/paperforge-android.git
 cd paperforge-android
 # 设置本机 JAVA_HOME、ANDROID_HOME，或由 Android Studio 创建 local.properties。
-.\gradlew.bat :app:assembleDebug :app:testDebugUnitTest :app:lintDebug
-.\gradlew.bat :app:connectedDebugAndroidTest
+python tools/fetch_office_runtime.py --abi arm64-v8a
+.\gradlew.bat :full-app:assembleDebug -PpaperforgeAbis=arm64-v8a
+# 仅构建历史模块化离线主包：.\gradlew.bat :app:assembleDebug
 ```
 
-macOS/Linux 使用 `./gradlew`。首次构建需下载依赖，已安装应用核心流程离线运行。默认 APK 包含 arm64-v8a 和 x86_64；可用 `-PpaperforgeAbis=arm64-v8a` 单独构建手机包。不支持仅32位 ARM。发布文件为开发签名的预发布包，可覆盖原开发签名版本；密钥不进入仓库。
+macOS/Linux 使用 `./gradlew`。首次构建需下载依赖，已安装应用核心流程离线运行。默认 APK 包含 arm64-v8a 和 x86_64；可用 `-PpaperforgeAbis=arm64-v8a` 单独构建手机包。不支持仅32位 ARM。正式发行沿用原有项目签名，可覆盖相同渠道版本；密钥不进入仓库。
 
 基准脚本与固定种子见 `scripts/bench/`；真实照片可通过本地诊断包收集；当前未获得真实纸张标注集，不把合成输入结果视作真实质量。格式化使用 `scripts/format.ps1` 和 ktfmt0.54，历史格式整理位于独立提交。
 
@@ -96,4 +97,4 @@ macOS/Linux 使用 `./gradlew`。首次构建需下载依赖，已安装应用�
 
 构建可选格式引擎：`gradlew.bat :format-engine:assembleDebug`。已提交固定版本的浏览器解析资源，普通 APK 构建无需 Node；原生 MuPDF AAR 固定 1.28.5，来源、SHA256 与重新构建方法见该模块文档。独立模块使用 AGPL-3.0-or-later，不改变主应用许可证。
 
-可选联网工具 `network-engine`：手机内更新下载与局域网互传均按需手动开启。工具页 → 局域网传输，手机/平板/电脑浏览器扫码配对；队列可离线准备、暂停/移除，断线保留续传。文件只取显式选择的副本，原件保留；主应用无网络权限。HTTP局域网传输不宣称加密。翻译与智能工具支持带页码原文快照、本地原句摘录、按需语言包本机翻译、局域网/自带密钥服务；可在阅读器、扫描页和工具页手动进入，默认关闭。结果与原文独立保存，可回查及导出Markdown。
+可选联网工具 `network-engine`：手机内更新下载与局域网互传均按需手动开启。工具页 → 局域网传输，手机/平板/电脑浏览器扫码配对；队列可离线准备、暂停/移除，断线保留续传。文件只取显式选择的副本，原件保留；模块化离线主包无网络权限；完整功能版内置这些能力并声明网络权限。HTTP局域网传输不宣称加密。翻译与智能工具支持带页码原文快照、本地原句摘录、按需语言包本机翻译、局域网/自带密钥服务；可在阅读器、扫描页和工具页手动进入；完整包可直接使用本地功能，历史独立包默认关闭。结果与原文独立保存，可回查及导出Markdown。
