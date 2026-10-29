@@ -26,6 +26,11 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+      - name: Free unused preinstalled toolchains
+        run: |
+          df -h /
+          sudo rm -rf -- /usr/share/dotnet /usr/local/.ghcup /opt/ghc /usr/local/lib/android/sdk/system-images
+          df -h /
       - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin
