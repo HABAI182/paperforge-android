@@ -2,9 +2,9 @@ name: Android compile and isolated candidate
 on:
   push:
     branches: [main]
-    paths: ['app/**', 'ocr-paddle/**', 'jpeg2000/**', 'opencv-mobile/**', 'format-engine/**', 'archive-core/**', 'office-engine/**', 'network-engine/**', '*.kts', 'gradle*', 'gradle/**', 'scripts/**', '.github/workflows/**', 'docs/development/distribution-policy.json']
+    paths: ['app/**', 'full-app/**', 'ocr-paddle/**', 'jpeg2000/**', 'opencv-mobile/**', 'format-engine/**', 'archive-core/**', 'office-engine/**', 'network-engine/**', '*.kts', 'gradle*', 'gradle/**', 'scripts/**', '.github/workflows/**', 'docs/development/distribution-policy.json']
   pull_request:
-    paths: ['app/**', 'ocr-paddle/**', 'jpeg2000/**', 'opencv-mobile/**', 'format-engine/**', 'archive-core/**', 'office-engine/**', 'network-engine/**', '*.kts', 'gradle*', 'gradle/**', 'scripts/**', '.github/workflows/**', 'docs/development/distribution-policy.json']
+    paths: ['app/**', 'full-app/**', 'ocr-paddle/**', 'jpeg2000/**', 'opencv-mobile/**', 'format-engine/**', 'archive-core/**', 'office-engine/**', 'network-engine/**', '*.kts', 'gradle*', 'gradle/**', 'scripts/**', '.github/workflows/**', 'docs/development/distribution-policy.json']
   workflow_dispatch:
 permissions:
   contents: read
@@ -51,11 +51,20 @@ jobs:
         run: python3 scripts/build_distribution.py --abi x86_64 --isolated-ci
       - name: Compile the optional format and network engines
         run: ./gradlew :format-engine:assembleDebug :network-engine:assembleDebug -PpaperforgeAbis=x86_64 --console=plain --build-cache
+      - name: Cache pinned Office runtime download
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: office-engine/runtime/downloads/
+          key: office-runtime-26.2.6.3-x86_64-129-cfaf9eea
+      - name: Compile an isolated full application
+        run: python3 scripts/build_distribution.py --abi x86_64 --full --isolated-ci --output build/distributions/development/full-x86_64
       - name: Retain candidate and exact package inventory
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: PaperForge-isolated-ci-${{ github.sha }}
-          path: build/distributions/development/x86_64/
+          path: |
+            build/distributions/development/x86_64/
+            build/distributions/development/full-x86_64/
           retention-days: 7
           if-no-files-found: error
       - name: Report native compiler cache statistics
