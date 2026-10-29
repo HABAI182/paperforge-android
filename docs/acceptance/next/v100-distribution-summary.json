@@ -1,0 +1,143 @@
+{
+  "date": "2026-10-29",
+  "version": "1.0.0",
+  "versionCode": 10000,
+  "candidateOnly": true,
+  "releaseHold": true,
+  "arm64Source": "7a4dd9fa59d7835270865d7a66f97a0b2e7d6a2d",
+  "x86Source": "c3f805fb24d71ece439bfb7f352428fe54c806cf",
+  "applicationSourceTreesEqual": true,
+  "arm64": {
+    "cleanSource": true,
+    "artifacts": [
+      {
+        "module": "app",
+        "file": "PaperForge-1.0.0-arm64-v8a-prerelease.apk",
+        "bytes": 83021036,
+        "sha256": "2ac93910052af090315679b88c9898effc8c833c7db99784e75363013fce4f7b",
+        "version": "1.0.0",
+        "versionCode": 10000
+      },
+      {
+        "module": "office-engine",
+        "file": "PaperForge-Office-1.0.0-arm64-v8a-prerelease.apk",
+        "bytes": 89842690,
+        "sha256": "49be0e3470a822f25d565d4b1b0eaaf3506d1a030254f094939978c01b91ba1d",
+        "version": "1.0.0",
+        "versionCode": 10000
+      },
+      {
+        "module": "format-engine",
+        "file": "PaperForge-Formats-1.0.0-arm64-v8a-prerelease.apk",
+        "bytes": 23160793,
+        "sha256": "0c838ff1baa93395f160dcf152f9c9f281cf5cda19034af9045076f3c0abb8aa",
+        "version": "1.0.0",
+        "versionCode": 10000
+      },
+      {
+        "module": "network-engine",
+        "file": "PaperForge-Network-1.0.0-arm64-v8a-prerelease.apk",
+        "bytes": 19455491,
+        "sha256": "97933019b6e4aacd237e8bd041f0b4ad946489da819e4aaabd84ece0bb05a547",
+        "version": "1.0.0",
+        "versionCode": 10000
+      }
+    ],
+    "allFourSameOwnerCertificate": true,
+    "zipAndElf16KiB": true,
+    "mainOfflinePermissionContract": true
+  },
+  "x86": {
+    "cleanSource": true,
+    "selectedModules": [
+      "app",
+      "network-engine"
+    ],
+    "sameCertificateUpgrade": true,
+    "r8ActualUI": [
+      "four sensitive candidate kinds",
+      "candidate selection returns to exact preview",
+      "PaperForge logo/display name/1.0.0 About",
+      "retained en+zh packs, airplane-mode translation with p1 reference"
+    ],
+    "intelligenceDisabledAgain": true,
+    "airplaneMode": true,
+    "wifi": false,
+    "retainedOriginalDocumentPage": 2
+  },
+  "ci": [
+    {
+      "conclusion": "success",
+      "databaseId": 40824417519,
+      "headSha": "90d1570d70840ba8c3f814240ec9e233369f29bd",
+      "jobs": [
+        {
+          "name": "compile",
+          "conclusion": "success",
+          "steps": [
+            {
+              "name": "Compile an isolated x86_64 development package",
+              "conclusion": "success",
+              "startedAt": "2026-10-29T05:39:09Z",
+              "completedAt": "2026-10-29T05:56:49Z"
+            },
+            {
+              "name": "Compile the optional format and network engines",
+              "conclusion": "success",
+              "startedAt": "2026-10-29T05:56:49Z",
+              "completedAt": "2026-10-29T05:57:16Z"
+            }
+          ]
+        }
+      ],
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 40826826124,
+      "headSha": "c3f805fb24d71ece439bfb7f352428fe54c806cf",
+      "jobs": [
+        {
+          "name": "compile",
+          "conclusion": "success",
+          "steps": [
+            {
+              "name": "Compile an isolated x86_64 development package",
+              "conclusion": "success",
+              "startedAt": "2026-10-29T06:03:46Z",
+              "completedAt": "2026-10-29T06:06:49Z"
+            },
+            {
+              "name": "Compile the optional format and network engines",
+              "conclusion": "success",
+              "startedAt": "2026-10-29T06:06:49Z",
+              "completedAt": "2026-10-29T06:07:02Z"
+            }
+          ]
+        }
+      ],
+      "status": "completed"
+    }
+  ],
+  "compilerCache": {
+    "coldCumulative": {
+      "hits": 3,
+      "misses": 911
+    },
+    "warmCumulative": {
+      "hits": 916,
+      "misses": 912
+    },
+    "secondRunDelta": {
+      "hits": 913,
+      "misses": 1
+    },
+    "note": "Counters were restored with cache; delta is relative to the previous restored snapshot, not the cumulative 50.11 percent"
+  },
+  "zip": {
+    "file": "PaperForge-1.0.0-arm64-v8a-candidate.zip",
+    "bytes": 215514087,
+    "sha256": "cfd1ed9c02c851d0964347ae6ae29ec02247240a699ee3a15b31137b00b85c3b"
+  },
+  "remaining": "92/98 done, 6 partial; full internationalization/feature ViewModel split/DataStore migration not claimed complete"
+}
