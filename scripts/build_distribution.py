@@ -11,7 +11,9 @@ import struct
 import sys
 import zipfile
 
-ROOT = Path(__file__).resolve().parents[1]
+# Keep the checkout spelling used by Gradle: resolving a Windows junction can mix C:/E:
+# incremental class paths in Android's dex transform. Canonicalize only security comparisons.
+ROOT = Path(os.path.abspath(__file__)).parents[1]
 
 
 def sha(path):
@@ -96,7 +98,7 @@ def main():
         raise SystemExit('Install Android SDK build-tools;' + policy['buildToolsVersion'])
     if not args.isolated_ci:
         key = Path(os.environ.get('PAPERFORGE_SIGNING_STORE', ''))
-        if not key.is_file() or key.resolve().is_relative_to(ROOT):
+        if not key.is_file() or key.resolve().is_relative_to(ROOT.resolve()):
             raise SystemExit('Set PAPERFORGE_SIGNING_STORE to the existing owner key outside this repository')
         for field in ['PAPERFORGE_STORE_PASSWORD', 'PAPERFORGE_KEY_ALIAS', 'PAPERFORGE_KEY_PASSWORD']:
             if not os.environ.get(field):
