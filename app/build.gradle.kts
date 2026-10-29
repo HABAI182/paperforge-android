@@ -12,8 +12,8 @@ android {
         applicationId = "cn.paperforge.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 7
-        versionName = "0.6.1-dev"
+        versionCode = providers.gradleProperty("paperforgeVersionCode").get().toInt()
+        versionName = providers.gradleProperty("paperforgeVersionName").get()
         externalNativeBuild {
             cmake {
                 arguments += "-DANDROID_STL=c++_static"
@@ -83,6 +83,8 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.0")
+    implementation("androidx.window:window:1.4.0")
+    androidTestImplementation("androidx.window:window-testing:1.4.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.0")
     implementation("androidx.camera:camera-camera2:1.4.2")
     implementation("androidx.camera:camera-lifecycle:1.4.2")

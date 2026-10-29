@@ -1,7 +1,7 @@
 PaperForge third-party notices
 
 AndroidX Compose, Material Icons, CameraX, Room, WorkManager, Activity,
-Lifecycle, ExifInterface: Copyright The Android Open Source Project.
+Lifecycle, ExifInterface, WindowManager: Copyright The Android Open Source Project.
 Licensed under the Apache License, Version 2.0.
 
 Kotlin and kotlinx.coroutines: Copyright JetBrains s.r.o. and contributors.

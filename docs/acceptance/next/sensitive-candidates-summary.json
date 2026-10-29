@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-29",
+  "reviewCard": "Claude F2",
+  "status": "implemented",
+  "android": {
+    "api": 35,
+    "abi": "x86_64",
+    "testSeconds": 3.426,
+    "tests": 1,
+    "result": "OK"
+  },
+  "proofDirectory": "sensitive-candidates",
+  "localOnly": true,
+  "types": [
+    "email",
+    "mobile phone",
+    "18-character identity-number format",
+    "13-19 digit Luhn bank-card format"
+  ],
+  "nativeAndOcrText": true,
+  "sourceUnchanged": true,
+  "fullwidthTextKept": true,
+  "geometry": "Original glyph/word ranges where available; explicit line-level selection otherwise",
+  "limits": [
+    "Format hints can miss or misclassify; no identity or bank-account verification",
+    "Candidate search does not redact anything automatically",
+    "Existing single-target semantic and explicit whole-document raster paths retain their documented limits"
+  ],
+  "scannedFixtureHasNoNativeText": true
+}

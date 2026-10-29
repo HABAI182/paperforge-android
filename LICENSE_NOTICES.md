@@ -6,7 +6,7 @@
 
 | 组件 / 固定版本 | 许可 / 上游 |
 |---|---|
-| AndroidX Compose BOM 2025.05.01、Material 3、Material Icons、Activity 1.10.1、Lifecycle 2.9.0、CameraX 1.4.2、Room 2.7.1、WorkManager 2.10.1、ExifInterface 1.4.1 | Apache-2.0；https://android.googlesource.com/platform/frameworks/support/ |
+| AndroidX Compose BOM 2025.05.01、Material 3、Material Icons、Activity 1.10.1、Lifecycle 2.9.0、CameraX 1.4.2、Room 2.7.1、WorkManager 2.10.1、ExifInterface 1.4.1、WindowManager 1.4.0 | Apache-2.0；https://android.googlesource.com/platform/frameworks/support/ |
 | Kotlin 2.1.20、Coroutines 1.10.2 | Apache-2.0；https://github.com/JetBrains/kotlin 、https://github.com/Kotlin/kotlinx.coroutines |
 | OpenCV 4.12.0 | Apache-2.0 及捆绑第三方声明；https://github.com/opencv/opencv/tree/4.12.0 |
 | PdfBox-Android 2.0.27.0 | Apache-2.0；https://github.com/TomRoush/PdfBox-Android ，包括 Apache PDFBox / FontBox、Adobe glyph lists、Unicode data、SIL Open Font License 字体等上游许可，见完整 LICENSE 与 NOTICE |

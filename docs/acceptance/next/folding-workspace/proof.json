@@ -1,0 +1,27 @@
+{
+  "sourceSha256": "ad951226b711d79abce8a26fb0541681a88e525ec4509b344953c20a04634b81",
+  "sourceUnchanged": true,
+  "actualReader": true,
+  "pageAfterUnfold": 2,
+  "injectedWindowManagerEvents": [
+    {
+      "name": "vertical",
+      "hinge": "853 0 885 1800",
+      "documentPane": "Rect.fromLTRB(885.0, 0.0, 2560.0, 1800.0)",
+      "page": 2
+    },
+    {
+      "name": "tabletop",
+      "hinge": "0 600 2560 628",
+      "documentPane": "Rect.fromLTRB(0.0, 628.0, 2560.0, 1800.0)",
+      "page": 2
+    },
+    {
+      "name": "zero-width-crease",
+      "hinge": "853 0 853 1800",
+      "documentPane": "Rect.fromLTRB(853.0, 0.0, 2560.0, 1800.0)",
+      "page": 2
+    }
+  ],
+  "physicalFoldable": false
+}

@@ -17,8 +17,12 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import cn.paperforge.app.PaperForgeApp
+import cn.paperforge.app.pdf.PageTextSource
 import cn.paperforge.app.pdf.PdfSearch
+import cn.paperforge.app.pdf.SensitiveTextCandidates
 import java.io.File
 import kotlin.math.*
 import kotlinx.coroutines.*
@@ -29,6 +33,9 @@ import org.json.JSONObject
 @Composable
 fun PdfRedactionScreen(input: File, onBack: () -> Unit, onSubmit: (String, JSONObject) -> Unit) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val scroll = rememberScrollState()
+    val candidateColor = MaterialTheme.colorScheme.tertiary
     var page by remember(input) { mutableIntStateOf(0) }
     var count by remember(input) { mutableIntStateOf(0) }
     var bitmap by remember(input, page) { mutableStateOf<Bitmap?>(null) }
@@ -38,6 +45,10 @@ fun PdfRedactionScreen(input: File, onBack: () -> Unit, onSubmit: (String, JSONO
     var b by remember(input, page) { mutableStateOf<Offset?>(null) }
     var busy by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf("") }
+    var candidates by
+        remember(input, page) {
+            mutableStateOf<List<SensitiveTextCandidates.Candidate>>(emptyList())
+        }
     LaunchedEffect(input, page) {
         var pending: Bitmap? = null
         try {
@@ -76,10 +87,7 @@ fun PdfRedactionScreen(input: File, onBack: () -> Unit, onSubmit: (String, JSONO
         }
     ) { padding ->
         Column(
-            Modifier.fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+            Modifier.fillMaxSize().padding(padding).verticalScroll(scroll).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Text("先搜索文字或拖框选择区域，预览后生成新副本。原文件不会改动。")
@@ -118,6 +126,16 @@ fun PdfRedactionScreen(input: File, onBack: () -> Unit, onSubmit: (String, JSONO
                             }
                         }
                     ) {
+                        candidates.forEach { candidate ->
+                            drawRect(
+                                candidateColor.copy(alpha = .22f),
+                                Offset(candidate.left * size.width, candidate.top * size.height),
+                                Size(
+                                    (candidate.right - candidate.left) * size.width,
+                                    (candidate.bottom - candidate.top) * size.height,
+                                ),
+                            )
+                        }
                         hits
                             .filter { it.page == page }
                             .forEach { h ->
@@ -139,6 +157,62 @@ fun PdfRedactionScreen(input: File, onBack: () -> Unit, onSubmit: (String, JSONO
                                 Size(abs(x.x - y.x) * size.width, abs(x.y - y.y) * size.height),
                             )
                     }
+                }
+            }
+            OutlinedButton(
+                enabled = !busy && count > 0,
+                onClick = {
+                    val requestedPage = page
+                    busy = true
+                    message = "正在本机查找敏感信息候选…"
+                    scope.launch {
+                        try {
+                            val blocks =
+                                PageTextSource.load(
+                                    context,
+                                    input,
+                                    requestedPage,
+                                    (context.applicationContext as PaperForgeApp)
+                                        .ocrEngine
+                                        .snapshot(),
+                                )
+                            val found =
+                                withContext(Dispatchers.Default) {
+                                    SensitiveTextCandidates.find(blocks)
+                                }
+                            if (page == requestedPage) {
+                                candidates = found
+                                message =
+                                    if (found.isEmpty()) "本页未发现匹配的格式。仍可搜索文字或手动拖框。"
+                                    else "本页找到 ${found.size} 个候选。点选后检查范围，再生成副本；格式匹配可能漏检或误检。"
+                            }
+                        } catch (cancel: CancellationException) {
+                            throw cancel
+                        } catch (error: Exception) {
+                            message = error.message ?: "候选查找失败"
+                        } finally {
+                            busy = false
+                        }
+                    }
+                },
+            ) {
+                Text("查找本页敏感信息")
+            }
+            candidates.forEach { candidate ->
+                OutlinedButton(
+                    enabled = !busy,
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        text = candidate.text
+                        a = Offset(candidate.left, candidate.top)
+                        b = Offset(candidate.right, candidate.bottom)
+                        hits = emptyList()
+                        message =
+                            "已选择${candidate.kind}候选。${if (candidate.precise) "请核对黑色选区。" else "这是行级选区，可拖框调整。"} 可搜索核对语义删除，或生成整份栅格脱敏副本。"
+                        scope.launch { scroll.animateScrollTo(0) }
+                    },
+                ) {
+                    Text("${candidate.kind} · ${candidate.text}")
                 }
             }
             OutlinedTextField(

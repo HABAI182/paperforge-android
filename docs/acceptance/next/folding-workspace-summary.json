@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-29",
+  "card": "UI08",
+  "status": "partial",
+  "windowManager": "1.4.0",
+  "android": {
+    "api": 35,
+    "abi": "x86_64",
+    "testSeconds": 6.542,
+    "tests": 1,
+    "result": "OK"
+  },
+  "proofDirectory": "folding-workspace",
+  "geometry": [
+    "vertical nonzero occlusion",
+    "horizontal tabletop occlusion",
+    "zero-width separating crease"
+  ],
+  "actualReaderPagePreserved": 2,
+  "sourceUnchanged": true,
+  "lifecycleAware": true,
+  "coordinateSystem": "Window pixels mapped to workspace origin; no spanning across separating boundary",
+  "limits": [
+    "Injected official WindowManager test events on emulator; no physical foldable or full TalkBack audit claimed"
+  ]
+}

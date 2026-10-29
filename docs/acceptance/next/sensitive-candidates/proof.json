@@ -1,0 +1,105 @@
+{
+  "native": [
+    {
+      "kind": "邮箱",
+      "text": "contact@example.invalid",
+      "source": "native",
+      "box": [
+        0.15001333,
+        0.061793327,
+        0.48391327,
+        0.08954334
+      ],
+      "unitMapped": true
+    },
+    {
+      "kind": "手机号",
+      "text": "18800000000",
+      "source": "native",
+      "box": [
+        0.16174331,
+        0.14512664,
+        0.34522325,
+        0.17287672
+      ],
+      "unitMapped": true
+    },
+    {
+      "kind": "身份证格式",
+      "text": "990000200001010011",
+      "source": "native",
+      "box": [
+        0.105013326,
+        0.22845995,
+        0.4052532,
+        0.25621003
+      ],
+      "unitMapped": true
+    },
+    {
+      "kind": "银行卡格式",
+      "text": "4111 1111 1111 1111",
+      "source": "native",
+      "box": [
+        0.14002332,
+        0.31179333,
+        0.4319232,
+        0.33954334
+      ],
+      "unitMapped": true
+    }
+  ],
+  "scannedOcr": [
+    {
+      "kind": "邮箱",
+      "text": "contact@example.invalid",
+      "source": "ocr",
+      "box": [
+        0.055833332,
+        0.054166667,
+        0.48708335,
+        0.090833336
+      ],
+      "unitMapped": false
+    },
+    {
+      "kind": "手机号",
+      "text": "18800000000",
+      "source": "ocr",
+      "box": [
+        0.055,
+        0.1375,
+        0.34708333,
+        0.17375
+      ],
+      "unitMapped": false
+    },
+    {
+      "kind": "身份证格式",
+      "text": "990000200001010011",
+      "source": "ocr",
+      "box": [
+        0.05625,
+        0.22125,
+        0.40708333,
+        0.25541666
+      ],
+      "unitMapped": false
+    },
+    {
+      "kind": "银行卡格式",
+      "text": "4111 1111 1111 1111",
+      "source": "ocr",
+      "box": [
+        0.055833332,
+        0.3025,
+        0.43291667,
+        0.34041667
+      ],
+      "unitMapped": false
+    }
+  ],
+  "originalsUnchanged": true,
+  "fullwidthPreservesOriginalText": true,
+  "automaticRedaction": false
+}

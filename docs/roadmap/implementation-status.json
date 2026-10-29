@@ -219,7 +219,7 @@
       "id": "UI08",
       "title": "平板折叠与大字号",
       "status": "partial",
-      "note": "新增宽屏文档侧栏与真实阅读/编辑详情，窗口变窄/全屏使用同一内容树并保留页码，逐文档切换后返回第2页；实际宽屏到窄屏、全屏和200%阅读/任务/设置关键动作可达。工具语义及页面读屏自定义动作已补；分离折痕几何和完整TalkBack/实体折叠机仍待。见 adaptive-workspace-summary.json"
+      "note": "宽屏文档侧栏、单内容树保留页码与125%/200%可达检查已落实；新增WindowManager生命周期订阅与窗口坐标映射，竖铰链、横向桌面折痕和零宽分隔均避让，实际阅读第2页在展开后保留，6.542秒集中通过。完整TalkBack与实体折叠机验收仍待，见folding-workspace-summary.json。"
     },
     {
       "id": "UI09",
@@ -600,5 +600,6 @@
     "planned": 0
   },
   "releaseHold": true,
-  "publishedBaseline": "0.6.0"
+  "publishedBaseline": "0.6.0",
+  "targetVersion": "1.0.0"
 }

@@ -11,8 +11,8 @@ android {
         applicationId = "cn.paperforge.network"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.6.1-dev"
+        versionCode = providers.gradleProperty("paperforgeVersionCode").get().toInt()
+        versionName = providers.gradleProperty("paperforgeVersionName").get()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk { abiFilters += providers.gradleProperty("paperforgeAbis").orNull?.split(',') ?: listOf("arm64-v8a", "x86_64") }
     }

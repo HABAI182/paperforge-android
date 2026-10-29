@@ -12,8 +12,8 @@ android {
         applicationId = "cn.paperforge.formats"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.6.1-dev"
+        versionCode = providers.gradleProperty("paperforgeVersionCode").get().toInt()
+        versionName = providers.gradleProperty("paperforgeVersionName").get()
         ndk {
             abiFilters +=
                 providers.gradleProperty("paperforgeAbis").orNull?.split(',')

@@ -460,7 +460,8 @@
       ],
       "scope": "列表详情、阅读侧栏、窗口变化恢复与系统insets",
       "acceptance": "窄屏/深色/200%字号关键动作可达",
-      "status": "partial"
+      "status": "partial",
+      "note": "宽屏文档侧栏、单内容树保留页码与125%/200%可达检查已落实；新增WindowManager生命周期订阅与窗口坐标映射，竖铰链、横向桌面折痕和零宽分隔均避让，实际阅读第2页在展开后保留，6.542秒集中通过。完整TalkBack与实体折叠机验收仍待，见folding-workspace-summary.json。"
     },
     {
       "id": "UI09",
@@ -1252,9 +1253,10 @@
   ],
   "statusSource": "implementation-status.json",
   "counts": {
-    "done": 89,
-    "partial": 7,
-    "planned": 2
+    "done": 92,
+    "partial": 6,
+    "planned": 0
   },
-  "updated": "2026-10-28"
+  "updated": "2026-10-29",
+  "targetVersion": "1.0.0"
 }

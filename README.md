@@ -2,7 +2,7 @@
 
 手机本地的扫描、阅读与文件转换工作台。无登录、广告或水印，应用不声明 INTERNET 权限。
 
-当前发布版本 **0.6.0**；下一代大版本开发中，暂不创建新 tag 或 Release。这是你的个人私有项目；[源码](https://github.com/HABAI182/paperforge-android)与[安装包](https://github.com/HABAI182/paperforge-android/releases)需登录有权限的 GitHub 账号访问。
+当前已发布版本 **0.6.0**；下一大版本按用户指定统一为 **1.0.0**，四包版本同步，收尾期间不创建 tag 或 Release。这是你的个人私有项目；[源码](https://github.com/HABAI182/paperforge-android)与[安装包](https://github.com/HABAI182/paperforge-android/releases)需登录有权限的 GitHub 账号访问。
 
 | 文档首页 | 扫描取景 | 扫描后检查 |
 |---|---|---|
@@ -25,7 +25,7 @@ Office 手机转换现接入持久任务中心：保留原件后在独立引擎�
 
 OFD / DjVu、XPS / OXPS、基础 SVG、CBZ、FB2、EML、PDF 容器 CAJ / KDH、常用 LaTeX 正文与数学可在手机离线转为 PDF / PNG 页包；DXF 使用手机 Office 引擎。原件、逐页缓存、实际结果对照和能力边界见 [特殊格式转换](docs/development/SPECIAL-FORMATS.md)，来源与协议见 [format-engine/UPSTREAM.md](format-engine/UPSTREAM.md)。
 
-[版本记录](CHANGELOG.md) · [98 项计划实际状态](docs/roadmap/implementation-status.json) · [本轮范围和验证](docs/quality/SCAN-EXPERIENCE-0.6.1.md)
+[1.0.0 收尾状态](docs/quality/V1.0.0-STATUS.md) · [版本记录](CHANGELOG.md) · [98 项计划实际状态](docs/roadmap/implementation-status.json) · [本轮范围和验证](docs/quality/SCAN-EXPERIENCE-0.6.1.md)
 
 ## 从这里开始
 

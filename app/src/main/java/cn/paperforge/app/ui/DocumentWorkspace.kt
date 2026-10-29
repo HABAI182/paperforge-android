@@ -2,6 +2,7 @@ package cn.paperforge.app.ui
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,13 +15,20 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
 import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
+import kotlin.math.roundToInt
 
 internal val LocalDocumentFocus = staticCompositionLocalOf<(Boolean) -> Unit> { {} }
 
@@ -34,15 +42,52 @@ fun DocumentWorkspace(vm: MainViewModel, screen: String, content: @Composable ()
     var focus by rememberSaveable { mutableStateOf(false) }
     val motion = LocalPaperMotion.current
     val font = LocalDensity.current.fontScale
+    val density = LocalDensity.current
+    val fold = rememberWorkspaceFold()
+    var origin by remember { mutableStateOf(Offset.Zero) }
     val requestFocus: (Boolean) -> Unit = remember { { focus = it } }
     CompositionLocalProvider(LocalDocumentFocus provides requestFocus) {
-        BoxWithConstraints(Modifier.fillMaxSize()) {
+        BoxWithConstraints(
+            Modifier.fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .onGloballyPositioned { origin = it.positionInWindow() }
+        ) {
+            val separated =
+                fold?.panes(
+                    constraints.maxWidth,
+                    constraints.maxHeight,
+                    origin.x.roundToInt(),
+                    origin.y.roundToInt(),
+                )
             val wide =
                 enabled &&
                     screen in setOf("reader", "editor") &&
                     maxWidth >= 1000.dp + ((font - 1).coerceAtLeast(0f) * 160).dp &&
                     maxHeight >= 460.dp
-            if (wide)
+            if (separated != null) {
+                val (first, second) = separated
+                // Keep the document in the larger pane, using the other only when useful.
+                val document =
+                    if (first.width.toLong() * first.height > second.width.toLong() * second.height)
+                        first
+                    else second
+                val sidebar = if (document === first) second else first
+                fun WorkspaceFold.Pane.modifier() =
+                    Modifier.absoluteOffset { IntOffset(x, y) }
+                        .size(with(density) { width.toDp() }, with(density) { height.toDp() })
+                        .clipToBounds()
+                if (
+                    enabled &&
+                        !focus &&
+                        fold?.vertical == true &&
+                        sidebar.width >=
+                            with(density) { (240 * font.coerceAtLeast(1f)).dp.roundToPx() } &&
+                        document.width >= with(density) { 360.dp.roundToPx() }
+                ) {
+                    DocumentSidebar(vm, sidebar.modifier().testTag("workspace-document-sidebar"))
+                }
+                Box(document.modifier().testTag("workspace-document-pane")) { pane() }
+            } else if (wide)
                 Row(Modifier.fillMaxSize()) {
                     AnimatedVisibility(
                         !focus,
@@ -118,7 +163,7 @@ private fun DocumentSidebar(vm: MainViewModel, modifier: Modifier) {
                 }
             }
             Text(
-                "${visible.size} 份 · 选择后在右侧打开",
+                "${visible.size} 份 · 选择后在阅读区打开",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(vertical = 8.dp),
