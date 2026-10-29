@@ -68,8 +68,8 @@ fun ConversionBatchScreen(vm: MainViewModel) {
             TopAppBar(
                 title = { Text("批量转换") },
                 navigationIcon = {
-                    IconButton(onClick = { vm.screen.value = "convert" }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回转换中心")
+                    IconButton(onClick = { vm.screen.value = vm.toolHubReturn.value }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回")
                     }
                 },
                 actions = {

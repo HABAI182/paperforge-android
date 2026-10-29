@@ -1,0 +1,36 @@
+{
+  "versionName": "1.0.0",
+  "versionCode": 10003,
+  "environment": "API35 x86_64 owner-signed integrated release; old extensions disabled; personal theme/font/cover preferences preserved",
+  "categories": [
+    "扫描与识字",
+    "格式转换",
+    "PDF 工具",
+    "文档整理",
+    "任务与流程",
+    "连接与智能"
+  ],
+  "navigation": "six categories, cross-category Word search, workflow/storage return, document multi-select/trash/collapsed filters, export/privacy settings passed before final settings-header refinement",
+  "largeFont": "200% connection category reachable; system font restored to 1.0",
+  "systemShare": "SEND resolved to integrated LAN activity; owned office.docx queued, server remained off; screenshot preserved",
+  "finalUiDelta": "settings GitHub entry opened and returned; one-click entry automatically started check; duplicate connection entries absent; documents restored",
+  "updateNetworkResult": [
+    "一键检查新版本、下载安装包并核对，随后在系统安装器确认。",
+    "一键更新",
+    "仅检查版本",
+    "暂时无法连接 GitHub，请检查网络后重试。",
+    "允许手动检查更新",
+    "由你点击发起，下载完成后交给系统确认",
+    "已安装",
+    "PaperForge  1.0.0",
+    "仓库与访问凭据",
+    "返回",
+    "应用更新"
+  ],
+  "updateDownloadInstall": "not executed against remote release in this offline emulator; existing verified download/identity/signature/install pipeline reused",
+  "nativeAlgorithmsRerun": false,
+  "firstRunTail": "initial proof stopped during final app restoration; subsequent device session was gone; final restoration completed in this run",
+  "friendlyOfflineMessage": "passed",
+  "finalX86Build": "release assemble + lintVital passed, 59 seconds",
+  "x86ApkSha256": "609ed613ec93e84c76f166926cddfe66b051d171355b561132a40560ccace7c7"
+}

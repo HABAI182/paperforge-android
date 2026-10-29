@@ -88,7 +88,7 @@ fun WorkflowScreen(vm: MainViewModel) {
             TopAppBar(
                 title = { Text("工作流配方") },
                 navigationIcon = {
-                    IconButton(onClick = { vm.screen.value = "convert" }) {
+                    IconButton(onClick = { vm.screen.value = vm.toolHubReturn.value }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回")
                     }
                 },

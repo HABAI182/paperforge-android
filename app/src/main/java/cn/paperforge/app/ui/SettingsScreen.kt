@@ -32,13 +32,21 @@ fun SettingsScreen(vm: MainViewModel) {
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             uri?.let(vm::importPreferences)
         }
-    fun visible(label: String) = query.isBlank() || label.contains(query, true)
+    val section by vm.settingsSection.collectAsState()
+    val sectionTitle = settingsSections.find { it.id == section }?.title ?: "设置"
+    fun visible(label: String, group: String) =
+        if (query.isNotBlank()) label.contains(query, true) else section == group
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("个性化设置") },
+                title = { Text(if (query.isBlank()) sectionTitle else "查找全部设置") },
                 navigationIcon = {
-                    IconButton(onClick = { vm.screen.value = "home" }) {
+                    IconButton(
+                        onClick = {
+                            vm.homeTab.value = 3
+                            vm.screen.value = "home"
+                        }
+                    ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回")
                     }
                 },
@@ -55,14 +63,14 @@ fun SettingsScreen(vm: MainViewModel) {
             OutlinedTextField(
                 query,
                 { query = it },
-                label = { Text("查找设置") },
+                placeholder = { Text("查找全部设置") },
                 leadingIcon = { Icon(Icons.Default.Search, null) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
             Text("修改自动保存，拍摄参数在下一次进入相机时生效。", style = MaterialTheme.typography.bodySmall)
-            if (visible("桌面 系统 快捷 扫描 识字 阅读 小组件")) SystemEntrypointsSettings()
-            if (visible("图像 内存 任务 后台 预算 大图")) {
+            if (visible("桌面 系统 快捷 扫描 识字 阅读 小组件", "advanced")) SystemEntrypointsSettings()
+            if (visible("图像 内存 任务 后台 预算 大图", "advanced")) {
                 Text("图像内存预算", style = MaterialTheme.typography.titleMedium)
                 val configured = UserSettings[SettingKeys.TaskMemoryMB]
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -79,39 +87,42 @@ fun SettingsScreen(vm: MainViewModel) {
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
-            if (visible("OCR 识字 识别 模型 语言包 Paddle"))
+            if (visible("OCR 识字 识别 模型 语言包 Paddle", "ocr"))
                 OutlinedButton(onClick = vm::openOcrModels, modifier = Modifier.fillMaxWidth()) {
                     Text("离线 OCR 与模型包")
                 }
-            if (visible("档案 配置 预设 扫描 默认"))
+            if (visible("档案 配置 预设 扫描 默认", "scan"))
                 OutlinedButton(
                     onClick = { vm.openProfiles("settings") },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text("配置档案与扫描模式")
                 }
-            if (visible("导出 预设 目录 命名 DPI 质量"))
+            if (visible("导出 预设 目录 命名 DPI 质量", "export"))
                 OutlinedButton(
                     onClick = { exportPresets = true },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text("导出预设与保存目录")
                 }
-            if (visible("任务 后台 进度 失败 重试"))
+            if (visible("任务 后台 进度 失败 重试", "advanced"))
                 OutlinedButton(
                     onClick = { vm.screen.value = "tasks" },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text("任务中心")
                 }
-            if (visible("存储 空间 缓存 原件 历史 清理"))
+            if (visible("存储 空间 缓存 原件 历史 清理", "advanced"))
                 OutlinedButton(
-                    onClick = { vm.screen.value = "storage" },
+                    onClick = {
+                        vm.storageReturn.value = "settings"
+                        vm.screen.value = "storage"
+                    },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text("存储空间与缓存")
                 }
-            if (visible("扫描 取景 相机 自动 裁边 纸张 定位 AI 照片 纸框 显示 模糊 亮度 稳定 等待 分析 间隔 JPEG 画质")) {
+            if (visible("扫描 取景 相机 自动 裁边 纸张 定位 AI 照片 纸框 显示 模糊 亮度 稳定 等待 分析 间隔 JPEG 画质", "scan")) {
                 Text("扫描与取景", style = MaterialTheme.typography.titleLarge)
                 SettingChoices(
                     "纸张定位",
@@ -136,7 +147,7 @@ fun SettingsScreen(vm: MainViewModel) {
                 SettingSlider("取景分析间隔", "analysisMs", 160f, 100f..500f, "ms")
                 SettingSlider("拍照 JPEG 画质", "cameraJpeg", 97f, 75f..100f, "")
             }
-            if (visible("增强 图片 滤镜 扫描")) {
+            if (visible("增强 图片 滤镜 扫描", "scan")) {
                 Text("默认增强", style = MaterialTheme.typography.titleLarge)
                 SettingChoices(
                     "导入与拍摄滤镜",
@@ -158,8 +169,8 @@ fun SettingsScreen(vm: MainViewModel) {
                 SettingSlider("默认对比度", "contrast", 1f, 0.5f..1.8f, "", 100f)
                 SettingSlider("默认曲面校正强度", "dewarpStrength", 1f, 0f..1f, "%", 100f)
             }
-            if (visible("导出 PDF OCR 文字 识别 DPI 竖排 多栏 排序 脚本 vertical order")) {
-                Text("导出与识别", style = MaterialTheme.typography.titleLarge)
+            if (visible("导出 PDF OCR 文字 识别 DPI 竖排 多栏 排序 脚本 vertical order", "ocr")) {
+                Text("文字识别", style = MaterialTheme.typography.titleLarge)
                 OcrOptionsControl()
                 if (UserSettings[SettingKeys.OcrBackend] == "PADDLE")
                     Text(
@@ -175,6 +186,9 @@ fun SettingsScreen(vm: MainViewModel) {
                         listOf("CHINESE" to "中文 + 英文", "LATIN" to "英文 / 拉丁字母"),
                     )
                 }
+            }
+            if (visible("导出 PDF 纸张 分辨率 画质 质量 DPI OCR 文字层 默认", "export")) {
+                Text("PDF 导出默认值", style = MaterialTheme.typography.titleLarge)
                 SettingToggle("扫描导出默认附带文字层", "searchable", false)
                 SettingChoices(
                     "默认纸张",
@@ -193,7 +207,8 @@ fun SettingsScreen(vm: MainViewModel) {
             }
             if (
                 visible(
-                    "外观 主题 颜色 字体 布局 密度 列表 封面 网格 列数 动效 动画 触感 振动 宽屏 侧栏 平板 theme font motion haptic sidebar"
+                    "外观 主题 颜色 字体 布局 密度 列表 封面 网格 列数 动效 动画 触感 振动 宽屏 侧栏 平板 theme font motion haptic sidebar",
+                    "appearance",
                 )
             ) {
                 Text("外观", style = MaterialTheme.typography.titleLarge)
@@ -229,11 +244,11 @@ fun SettingsScreen(vm: MainViewModel) {
                     listOf("AUTO" to "自动", "2" to "2列", "3" to "3列", "4" to "4列"),
                 )
                 Text("窄屏和大字号时自动减少列数，便于阅读和点选。", style = MaterialTheme.typography.bodySmall)
-                SettingSlider("首页最近文档数量", "recentCount", 6f, 4f..20f, "份")
+                SettingSlider("最近文档数量", "recentCount", 6f, 4f..20f, "份")
             }
-            if (visible("首页 筛选 收藏 收件箱 未识字 未导出")) {
+            if (visible("首页 筛选 收藏 收件箱 未识字 未导出", "appearance")) {
                 SettingChoices(
-                    "首页默认集合",
+                    "文档默认集合",
                     "homeCollection",
                     "RECENT",
                     listOf(
@@ -245,9 +260,9 @@ fun SettingsScreen(vm: MainViewModel) {
                     ),
                 )
             }
-            if (visible("首页 快捷 工具 入口 排序")) {
-                Text("首页快捷入口", style = MaterialTheme.typography.titleLarge)
-                Text("用上下按钮调整顺序；关闭后仍可从工具页进入。", style = MaterialTheme.typography.bodySmall)
+            if (visible("首页 快捷 工具 入口 排序", "appearance")) {
+                Text("工作台快捷入口", style = MaterialTheme.typography.titleLarge)
+                Text("最多显示前四项；已固定的常用工具优先。用上下按钮调整顺序。", style = MaterialTheme.typography.bodySmall)
                 val names =
                     linkedMapOf(
                         "images" to "相册导入",
@@ -255,7 +270,6 @@ fun SettingsScreen(vm: MainViewModel) {
                         "ocr" to "图片识字",
                         "merge" to "合并 PDF",
                         "compress" to "压缩 PDF",
-                        "tools" to "全部工具",
                     )
                 val order =
                     ((snapshot["homeTools"] as? String) ?: names.keys.joinToString(","))
@@ -301,27 +315,34 @@ fun SettingsScreen(vm: MainViewModel) {
                     }
                 }
             }
-            if (visible("隐私 安全 应用锁 截图")) {
+            if (visible("隐私 安全 应用锁 截图", "privacy")) {
                 Text("隐私", style = MaterialTheme.typography.titleLarge)
                 SecuritySettings()
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = vm::exportPreferences, modifier = Modifier.weight(1f)) {
-                    Text("导出设置")
+            if (visible("导出设置 导入设置 设置备份 JSON 恢复 默认 重置", "advanced")) {
+                HorizontalDivider()
+                Text("设置备份与重置", style = MaterialTheme.typography.titleMedium)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(
+                        onClick = vm::exportPreferences,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text("导出设置")
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            importSettings.launch(
+                                arrayOf("application/json", "application/octet-stream")
+                            )
+                        },
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text("导入并应用")
+                    }
                 }
-                OutlinedButton(
-                    onClick = {
-                        importSettings.launch(
-                            arrayOf("application/json", "application/octet-stream")
-                        )
-                    },
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text("导入并应用")
+                OutlinedButton(onClick = { reset = true }, modifier = Modifier.fillMaxWidth()) {
+                    Text("恢复个性化默认设置")
                 }
-            }
-            OutlinedButton(onClick = { reset = true }, modifier = Modifier.fillMaxWidth()) {
-                Text("恢复个性化默认设置")
             }
         }
     }
@@ -377,10 +398,7 @@ private fun SettingChoices(
         }
     Column {
         Text(title, style = MaterialTheme.typography.labelLarge)
-        Row(
-            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
+        FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             options.forEach { (value, label) ->
                 FilterChip(
                     current == value,

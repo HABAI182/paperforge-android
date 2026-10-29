@@ -40,7 +40,7 @@ fun AutoExportScreen(vm: MainViewModel) {
             TopAppBar(
                 title = { Text("自动导出") },
                 navigationIcon = {
-                    IconButton(onClick = { vm.screen.value = "convert" }) {
+                    IconButton(onClick = { vm.screen.value = vm.toolHubReturn.value }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回")
                     }
                 },

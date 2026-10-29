@@ -43,7 +43,7 @@ fun StorageScreen(vm: MainViewModel) {
             TopAppBar(
                 title = { Text("存储空间") },
                 navigationIcon = {
-                    IconButton(onClick = { vm.screen.value = "settings" }) {
+                    IconButton(onClick = { vm.screen.value = vm.storageReturn.value }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回")
                     }
                 },

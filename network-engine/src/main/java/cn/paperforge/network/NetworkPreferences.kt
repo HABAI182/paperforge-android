@@ -24,7 +24,7 @@ class NetworkPreferences(context: Context) {
         }
 
     var channel: String
-        get() = store.getString("channel", "prerelease")!!
+        get() = store.getString("channel", if (integrated) "stable" else "prerelease")!!
         set(value) {
             store.edit().putString("channel", value).apply()
         }

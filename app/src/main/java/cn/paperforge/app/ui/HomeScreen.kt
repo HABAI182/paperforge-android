@@ -5,6 +5,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
@@ -19,7 +20,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
@@ -66,9 +66,18 @@ fun HomeScreen(
     val docs by vm.documents.collectAsState()
     val busy by vm.busy.collectAsState()
     var tab by rememberSaveable { mutableIntStateOf(vm.homeTab.value) }
-    LaunchedEffect(tab) { vm.homeTab.value = tab }
-    var toolQuery by rememberSaveable { mutableStateOf("") }
-    var toolGroup by rememberSaveable { mutableStateOf("全部") }
+    LaunchedEffect(tab) {
+        vm.homeTab.value = tab
+        if (tab < 2) vm.documentTab.value = tab
+    }
+    val toolQuery by vm.workspaceQuery.collectAsState()
+    val toolGroup by vm.workspaceGroup.collectAsState()
+    var filtersExpanded by rememberSaveable { mutableStateOf(false) }
+    val recentScroll = rememberLazyListState()
+    val documentsScroll = rememberLazyListState()
+    val workspaceScroll = rememberLazyListState()
+    val settingsScroll = rememberLazyListState()
+    LaunchedEffect(toolGroup, toolQuery) { workspaceScroll.scrollToItem(0) }
     val pinnedTools = remember(settingsVersion) { UserSettings.pinnedTools() }
     var toolCapability by remember { mutableStateOf<cn.paperforge.app.model.ToolCapability?>(null) }
     toolCapability?.let { ToolCapabilityDialog(it) { toolCapability = null } }
@@ -203,6 +212,13 @@ fun HomeScreen(
     fun toggle(id: String) {
         selection = if (id in selection) selection - id else selection + id
     }
+    BackHandler(tab == 2 && (toolGroup.isNotBlank() || toolQuery.isNotBlank())) {
+        vm.workspaceGroup.value = ""
+        vm.workspaceQuery.value = ""
+    }
+    BackHandler(tab == 3 || (tab == 2 && toolGroup.isBlank() && toolQuery.isBlank())) {
+        tab = vm.documentTab.value
+    }
     BackHandler(inTrash && !selecting) { showTrash = false }
     BackHandler(selecting) { finishSelection() }
     LaunchedEffect(
@@ -304,8 +320,9 @@ fun HomeScreen(
                             if (inTrash) "回收站"
                             else
                                 when (tab) {
-                                    1 -> "我的文档"
-                                    2 -> "工具"
+                                    1 -> "文档"
+                                    2 -> "工作台"
+                                    3 -> "设置"
                                     else -> "PaperForge"
                                 }
                         )
@@ -317,10 +334,7 @@ fun HomeScreen(
                             }
                     },
                     actions = {
-                        IconButton(onClick = { vm.screen.value = "tasks" }) {
-                            Icon(Icons.Default.PendingActions, "任务中心")
-                        }
-                        if (!inTrash && fontScale > 1.3f)
+                        if (tab < 2 && !inTrash)
                             IconButton(
                                 onClick = {
                                     tab = 1
@@ -332,24 +346,6 @@ fun HomeScreen(
                             ) {
                                 Icon(Icons.Default.DeleteOutline, "回收站")
                             }
-                        if (!inTrash)
-                            if (fontScale <= 1.3f)
-                                TextButton(
-                                    onClick = {
-                                        tab = 1
-                                        showTrash = true
-                                        favoritesOnly = false
-                                        folder = ""
-                                        vm.query.value = ""
-                                    }
-                                ) {
-                                    Icon(Icons.Default.DeleteOutline, null, Modifier.size(18.dp))
-                                    Text("回收站")
-                                }
-                        IconButton(onClick = { vm.screen.value = "settings" }) {
-                            Icon(Icons.Default.Settings, "个性化设置")
-                        }
-                        IconButton(onClick = onAbout) { Icon(Icons.Default.Info, "关于与隐私") }
                     },
                 )
         },
@@ -476,23 +472,19 @@ fun HomeScreen(
             } else
                 NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
                     listOf(
-                            "首页" to Icons.Default.Home,
                             "文档" to Icons.AutoMirrored.Filled.Article,
-                            "转换" to Icons.Default.SwapHoriz,
-                            "工具" to Icons.Default.GridView,
+                            "工作台" to Icons.Default.GridView,
+                            "设置" to Icons.Default.Settings,
                         )
                         .forEachIndexed { i, (label, icon) ->
+                            val destination = if (i == 0) vm.documentTab.value else i + 1
                             NavigationBarItem(
-                                selected = tab == (if (i == 3) 2 else i) && i != 2,
+                                selected = if (i == 0) tab < 2 else tab == destination,
                                 onClick = {
-                                    if (i == 2) vm.screen.value = "convert"
-                                    else {
-                                        tab = if (i == 3) 2 else i
-                                        showTrash = false
-                                    }
-                                    if (i != 1) vm.query.value = ""
+                                    tab = destination
+                                    showTrash = false
                                 },
-                                icon = { Icon(icon, label) },
+                                icon = { Icon(icon, null) },
                                 label = { Text(label) },
                                 colors =
                                     NavigationBarItemDefaults.colors(
@@ -504,7 +496,7 @@ fun HomeScreen(
                 }
         },
         floatingActionButton = {
-            if (!selecting && !inTrash)
+            if (tab < 2 && !selecting && !inTrash)
                 ExtendedFloatingActionButton(
                     onClick = { if (!busy) vm.newScan() },
                     icon = { Icon(Icons.Default.DocumentScanner, null) },
@@ -513,12 +505,27 @@ fun HomeScreen(
         },
     ) { padding ->
         LazyColumn(
-            Modifier.padding(padding).fillMaxSize().testTag("document-list"),
+            Modifier.padding(padding)
+                .fillMaxSize()
+                .testTag(
+                    when (tab) {
+                        2 -> "workspace"
+                        3 -> "settings-hub"
+                        else -> "document-list"
+                    }
+                ),
+            state =
+                when (tab) {
+                    0 -> recentScroll
+                    1 -> documentsScroll
+                    2 -> workspaceScroll
+                    else -> settingsScroll
+                },
             contentPadding =
                 PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 100.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            if (tab != 2)
+            if (tab < 2)
                 item {
                     OutlinedTextField(
                         value = search,
@@ -535,20 +542,6 @@ fun HomeScreen(
                         singleLine = true,
                         trailingIcon = {
                             Row {
-                                IconButton(
-                                    onClick = {
-                                        UserSettings.set(
-                                            SettingKeys.DocumentLayout,
-                                            if (covers) "LIST" else "COVERS",
-                                        )
-                                    }
-                                ) {
-                                    Icon(
-                                        if (covers) Icons.Default.ViewList
-                                        else Icons.Default.GridView,
-                                        if (covers) "切换列表布局" else "切换封面布局",
-                                    )
-                                }
                                 Box {
                                     IconButton(onClick = { importMenu = true }, enabled = !busy) {
                                         Icon(Icons.Default.Add, "导入文件")
@@ -582,122 +575,97 @@ fun HomeScreen(
                         shape = RoundedCornerShape(14.dp),
                     )
                 }
-            if (tab == 0)
+            if (tab < 2 && !inTrash)
                 item {
                     Row(
-                        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                        Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        listOf(
-                                "RECENT" to "最近",
-                                "FAVORITES" to "收藏",
-                                "INBOX" to "未整理",
-                                "NO_OCR" to "未识字",
-                                "NEEDS_EXPORT" to "待导出",
+                        FilterChip(
+                            tab == 0,
+                            {
+                                tab = 0
+                                showTrash = false
+                            },
+                            label = {
+                                Text(
+                                    when (homeCollection) {
+                                        "FAVORITES" -> "收藏"
+                                        "INBOX" -> "未整理"
+                                        "NO_OCR" -> "未识字"
+                                        "NEEDS_EXPORT" -> "待导出"
+                                        else -> "最近"
+                                    }
+                                )
+                            },
+                        )
+                        FilterChip(
+                            tab == 1 && !favoritesOnly,
+                            {
+                                tab = 1
+                                collection = "ALL"
+                                favoritesOnly = false
+                                folder = ""
+                                tagQuery = ""
+                            },
+                            label = { Text("全部") },
+                        )
+                        if (homeCollection != "FAVORITES")
+                            FilterChip(
+                                tab == 1 && favoritesOnly,
+                                {
+                                    tab = 1
+                                    collection = "ALL"
+                                    favoritesOnly = true
+                                    folder = ""
+                                    tagQuery = ""
+                                },
+                                label = { Text("收藏") },
                             )
-                            .forEach { (key, label) ->
-                                FilterChip(
-                                    homeCollection == key,
-                                    { UserSettings.set(SettingKeys.HomeCollection, key) },
-                                    label = { Text(label) },
+                        Spacer(Modifier.weight(1f))
+                        if (tab == 1)
+                            IconButton(onClick = { filtersExpanded = !filtersExpanded }) {
+                                val active =
+                                    collection != "ALL" ||
+                                        folder.isNotBlank() ||
+                                        tagQuery.isNotBlank() ||
+                                        sort != "MODIFIED"
+                                Icon(
+                                    if (filtersExpanded) Icons.Default.ExpandLess
+                                    else Icons.Default.Tune,
+                                    if (filtersExpanded) "收起筛选与布局" else "筛选与布局",
+                                    tint =
+                                        if (active) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                     }
                 }
-            if (tab == 0) {
-                val shortcuts =
-                    UserSettings[SettingKeys.HomeTools].split(',')
-                        .filter {
-                            it in setOf("images", "pdf", "ocr", "merge", "compress", "tools")
-                        }
-                        .distinct()
+            if (tab == 3) {
                 item {
-                    Row(
-                        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        shortcuts.forEach { key ->
-                            val (label, icon, action) =
-                                when (key) {
-                                    "images" ->
-                                        Triple("相册导入", Icons.Default.AddPhotoAlternate, onImages)
-                                    "pdf" -> Triple("打开 PDF", Icons.Default.PictureAsPdf, onPdf)
-                                    "ocr" -> Triple("图片识字", Icons.Default.TextFields, onOcrImages)
-                                    "merge" -> Triple("合并 PDF", Icons.Default.Merge, onMerge)
-                                    "compress" ->
-                                        Triple(
-                                            "压缩 PDF",
-                                            Icons.Default.Compress,
-                                            { onPdfTool("compress") },
-                                        )
-                                    else -> Triple("全部工具", Icons.Default.Handyman, { tab = 2 })
-                                }
-                            AssistChip(
-                                onClick = action,
-                                label = { Text(label) },
-                                leadingIcon = { Icon(icon, null) },
-                                enabled = !busy,
-                                modifier = Modifier.heightIn(min = 48.dp),
-                            )
-                        }
+                    SettingsHub(vm, onAbout) {
+                        cn.paperforge.app.system.NetworkTools.updates(context, oneClick = true)
                     }
                 }
-            }
-            if (tab == 2) {
-                item {
-                    Text(
-                        "文档工具",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Text("搜索功能或格式，星标固定常用工具。", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                item {
-                    OutlinedTextField(
-                        toolQuery,
-                        { toolQuery = it },
-                        label = { Text("搜索工具，如 Word、OCR、图片") },
-                        leadingIcon = { Icon(Icons.Default.Search, null) },
-                        singleLine = true,
-                        trailingIcon = {
-                            if (toolQuery.isNotEmpty())
-                                IconButton(onClick = { toolQuery = "" }) {
-                                    Icon(Icons.Default.Close, "清空搜索")
-                                }
-                        },
-                        modifier = Modifier.fillMaxWidth().testTag("tool-search"),
-                    )
-                }
-                item {
-                    Row(
-                        Modifier.horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        listOf(
-                                "全部",
-                                "常用",
-                                "文档",
-                                "页面",
-                                "文字",
-                                "图片",
-                                "电子书",
-                                "手机引擎",
-                                "手机表格",
-                                "生成 PDF",
-                                "整理",
-                                "存储",
-                            )
-                            .forEach { name ->
-                                FilterChip(
-                                    toolGroup == name,
-                                    { toolGroup = name },
-                                    label = { Text(name) },
-                                )
-                            }
-                    }
-                }
+            } else if (tab == 2) {
                 val toolEntries =
                     listOfNotNull(
+                        HomeTool(
+                            "action:scan",
+                            "扫描纸张",
+                            "自动识边、连续拍摄和图像增强",
+                            Icons.Default.DocumentScanner,
+                        ) {
+                            vm.newScan()
+                        },
+                        HomeTool(
+                            "action:open-pdf",
+                            "打开 PDF",
+                            "导入 PDF，阅读、检查或编辑页面",
+                            Icons.Default.FileOpen,
+                            action = onPdf,
+                        ),
                         HomeTool(
                             "action:rename-batch",
                             "批量命名",
@@ -756,14 +724,6 @@ fun HomeScreen(
                             Icons.Default.AutoStories,
                         ) {
                             vm.screen.value = "notes"
-                        },
-                        HomeTool(
-                            "action:convert",
-                            "转换中心",
-                            "PDF、图片、文字、Office 与表格",
-                            Icons.Default.SwapHoriz,
-                        ) {
-                            vm.screen.value = "convert"
                         },
                         HomeTool(
                             "tool:merge",
@@ -841,6 +801,7 @@ fun HomeScreen(
                             "查看原件、历史、导出与可清理容量",
                             Icons.Default.Storage,
                         ) {
+                            vm.storageReturn.value = "home"
                             vm.screen.value = "storage"
                         },
                     ) +
@@ -854,7 +815,13 @@ fun HomeScreen(
                                     Icons.Default.SwapHoriz,
                                     entry.group,
                                 ) {
-                                    vm.openConversion(entry.mode)
+                                    if (
+                                        entry.mode in
+                                            setOf("workflows", "auto-export", "conversion-batch")
+                                    ) {
+                                        vm.toolHubReturn.value = "home"
+                                        vm.screen.value = entry.mode
+                                    } else vm.openConversion(entry.mode)
                                 }
                             } +
                         ToolCatalog.pdfTitles
@@ -870,55 +837,28 @@ fun HomeScreen(
                                     onPdfTool(mode)
                                 }
                             }
-                val found =
-                    toolEntries
-                        .distinctBy { it.id }
-                        .filter { tool ->
-                            (toolGroup == "全部" ||
-                                tool.group == toolGroup ||
-                                (toolGroup == "常用" && tool.id in pinnedTools)) &&
-                                (if (tool.id.startsWith("tool:"))
-                                    ToolCatalog.pdfMatches(
-                                        tool.id.removePrefix("tool:"),
-                                        tool.title,
-                                        toolQuery,
-                                    ) ||
-                                        ToolCatalog.matches(toolQuery, tool.title, tool.description)
-                                else
-                                    ToolCatalog.matches(
-                                        toolQuery,
-                                        tool.title,
-                                        tool.description,
-                                        tool.id,
-                                        tool.aliases,
-                                    ))
+                val shortcuts =
+                    UserSettings[SettingKeys.HomeTools].split(',').mapNotNull {
+                        when (it) {
+                            "images" -> "tool:image-pdf"
+                            "pdf" -> "action:open-pdf"
+                            "ocr" -> "action:ocr-images"
+                            "merge" -> "tool:merge"
+                            "compress" -> "tool:compress"
+                            else -> null
                         }
-                val sorted =
-                    if (toolGroup == "全部" && toolQuery.isBlank())
-                        found.sortedBy { it.id !in pinnedTools }
-                    else found
-                if (sorted.isEmpty())
-                    item {
-                        Text(
-                            if (toolGroup == "常用") "点击工具旁的星标，将常用操作固定在这里。" else "没有找到匹配的工具",
-                            Modifier.padding(24.dp),
-                        )
                     }
-                items(sorted, key = { it.id }) { tool ->
-                    val capability =
-                        if (tool.id.startsWith("tool:"))
-                            ToolCatalog.conversion(tool.id.removePrefix("tool:"))
-                        else null
-                    ToolCard(
-                        tool.title,
-                        tool.description,
-                        tool.icon,
-                        !busy,
-                        tool.action,
-                        pin = { ToolPinButton(tool.id, tool.title, tool.id in pinnedTools) },
-                        info = capability?.let { { toolCapability = it } },
-                    )
-                }
+                workspaceContent(
+                    toolEntries,
+                    toolGroup,
+                    toolQuery,
+                    pinnedTools,
+                    shortcuts,
+                    !busy,
+                    onGroup = { vm.workspaceGroup.value = it },
+                    onQuery = { vm.workspaceQuery.value = it },
+                    onInfo = { toolCapability = it },
+                )
             } else {
                 if (
                     tab == 0 &&
@@ -946,20 +886,35 @@ fun HomeScreen(
                         count = filtered.size,
                         largeFont = fontScale > 1.3f,
                         onSelect = { selecting = true },
-                        onAll =
-                            if (tab == 0) {
-                                {
-                                    tab = 1
-                                    collection = "ALL"
-                                    favoritesOnly = false
-                                    folder = ""
-                                    tagQuery = ""
-                                    showTrash = false
-                                }
-                            } else null,
+                        onAll = null,
                     )
                 }
-                if (tab == 1 && !inTrash) {
+                if (tab == 1 && !inTrash && filtersExpanded) {
+                    item {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                "筛选与布局",
+                                Modifier.weight(1f),
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                            IconButton(
+                                onClick = {
+                                    UserSettings.set(
+                                        SettingKeys.DocumentLayout,
+                                        if (covers) "LIST" else "COVERS",
+                                    )
+                                }
+                            ) {
+                                Icon(
+                                    if (covers) Icons.Default.ViewList else Icons.Default.GridView,
+                                    if (covers) "切换列表布局" else "切换封面布局",
+                                )
+                            }
+                        }
+                    }
                     item {
                         LibraryFilterControls(collection, sort, { collection = it }, { sort = it })
                     }
@@ -1459,45 +1414,7 @@ private fun QuickCard(
     }
 }
 
-@Composable
-private fun ToolCard(
-    title: String,
-    description: String,
-    icon: ImageVector,
-    enabled: Boolean,
-    onClick: () -> Unit,
-    pin: @Composable () -> Unit,
-    info: (() -> Unit)? = null,
-) {
-    Card(
-        onClick = onClick,
-        enabled = enabled,
-        colors =
-            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-    ) {
-        Row(
-            Modifier.fillMaxWidth().padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(18.dp),
-        ) {
-            Icon(icon, null, tint = MaterialTheme.colorScheme.primary)
-            Column(Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.titleMedium)
-                Text(
-                    description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Column {
-                pin()
-                info?.let { IconButton(onClick = it) { Icon(Icons.Default.Info, "${title}的能力说明") } }
-            }
-        }
-    }
-}
-
-private data class HomeTool(
+internal data class HomeTool(
     val id: String,
     val title: String,
     val description: String,

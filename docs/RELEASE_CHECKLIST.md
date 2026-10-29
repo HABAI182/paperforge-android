@@ -1,8 +1,14 @@
 # 发布检查
 
-## 当前大版本开发
+## 1.0.0 完整功能版
 
-当前仓库为私有，统一大版本前不新增 tag / Release。构建、同证书延续、开发/预发布/稳定通道、手机 Actions 获取方式及正式身份迁移方案见 [DISTRIBUTION.md](development/DISTRIBUTION.md)。候选包附真实 ABI / 证书 / SHA256 / 包体清单，不等同已发布版本。以下内容是历史交付记录，不能覆盖当前 releaseHold。
+所有者已接受当前范围并授权发布单APK，`releaseHold=false`。正式交付为`PaperForge-1.0.0-full-arm64-v8a.apk`，沿用原应用ID与证书；Office、特殊格式与联网工具均内置，桌面只保留一个图标。当前完整包版本码10003。私有/公开是仓库可见性，稳定/预发布是发行渠道，两者分别管理。
+
+发布前检查真实版本、单ABI、所有者证书、ZIP/ELF16KiB对齐；记录干净源提交、SHA256、文件字节数。UI仅针对本次变化检查分类、返回、搜索、设置与分享入口；既有原生转换证据保留版本标记。发布后核对tag/source、三个附件及服务器digest，更新README、CHANGELOG、安装说明与状态文档。能力和剩余设备验收见[1.0.0状态](quality/V1.0.0-STATUS.md)，安装见[INSTALL](INSTALL.md)。构建命令见[DISTRIBUTION](development/DISTRIBUTION.md)。
+
+## 历史开发约定（已被1.0.0授权取代）
+
+统一大版本前曾暂停新增tag/Release。以下内容为历史交付记录，不覆盖上面的当前发行约定。
 
 0.5.0使用固定官方MNN3.6.1源码与两份恢复模型，随包来源不等于模型开源许可。只验证本轮扫描链路，详细结果见acceptance/v050。发布流程继续生成同证书通用/ARM64/x86_64包、源码ZIP、报告及SHA256；逐附件回读后公开新预发布。新v0.5.0 tag保留旧版本不变，最终以上传目录release-0.5.0-verification.json为准。
 

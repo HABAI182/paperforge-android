@@ -21,6 +21,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val ocrEngine = (app as PaperForgeApp).ocrEngine
     val query = MutableStateFlow("")
     val homeTab = MutableStateFlow(0)
+    val documentTab = MutableStateFlow(0)
+    val workspaceGroup = MutableStateFlow("")
+    val workspaceQuery = MutableStateFlow("")
+    val settingsSection = MutableStateFlow("appearance")
+    val toolHubReturn = MutableStateFlow("convert")
+    val storageReturn = MutableStateFlow("settings")
     val conversionEntry = MutableStateFlow("")
     val conversionReturn = MutableStateFlow("convert")
 

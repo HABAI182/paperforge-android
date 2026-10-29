@@ -1,6 +1,5 @@
 package cn.paperforge.app.ui
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -54,7 +53,10 @@ fun ConversionScreen(
     val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
     var help by remember { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
-    var group by rememberSaveable { mutableStateOf("全部") }
+    var group by rememberSaveable {
+        mutableStateOf(ToolCatalog.conversion(requested)?.group ?: "全部")
+    }
+    var groupMenu by remember { mutableStateOf(false) }
     var options by remember { mutableStateOf("") }
     var longOptions by remember { mutableStateOf(LongImageOptions()) }
     var longValid by remember { mutableStateOf(true) }
@@ -81,6 +83,8 @@ fun ConversionScreen(
     fun launch(entry: ToolCapability) {
         focusManager.clearFocus()
         keyboard?.hide()
+        if (entry.mode in setOf("workflows", "auto-export", "conversion-batch"))
+            vm.toolHubReturn.value = "convert"
         when (entry.mode) {
             "pdf-diff" -> vm.screen.value = "pdf-diff"
             "workflows" -> vm.screen.value = "workflows"
@@ -171,26 +175,23 @@ fun ConversionScreen(
                 )
             }
             item {
-                Row(
-                    Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    listOf(
-                            "全部",
-                            "常用",
-                            "手机引擎",
-                            "手机表格",
-                            "版式文档",
-                            "电子书",
-                            "生成 PDF",
-                            "图片",
-                            "文字",
-                            "整理",
-                            "电脑引擎",
-                        )
-                        .forEach { name ->
-                            FilterChip(group == name, { group = name }, label = { Text(name) })
-                        }
+                Box {
+                    OutlinedButton(onClick = { groupMenu = true }) {
+                        Text("分类 · $group")
+                        Icon(Icons.Default.ExpandMore, null)
+                    }
+                    DropdownMenu(groupMenu, { groupMenu = false }) {
+                        (listOf("全部", "常用") + ToolCatalog.conversions.map { it.group }.distinct())
+                            .forEach { name ->
+                                DropdownMenuItem(
+                                    text = { Text(name) },
+                                    onClick = {
+                                        group = name
+                                        groupMenu = false
+                                    },
+                                )
+                            }
+                    }
                 }
             }
             if (drafts.isNotEmpty() && query.isBlank())
@@ -241,34 +242,34 @@ fun ConversionScreen(
                         Modifier.padding(24.dp),
                     )
                 }
-            items(matches, key = { it.mode }) { entry ->
-                OutlinedCard(
-                    onClick = { launch(entry) },
-                    enabled = !busy,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    ListItem(
-                        headlineContent = { Text(entry.title) },
-                        supportingContent = { Text(entry.detail) },
-                        trailingContent = {
-                            Column {
-                                ToolPinButton(entry.id, entry.title, entry.id in pinned)
-                                IconButton(onClick = { capability = entry }) {
-                                    Icon(Icons.Default.Info, "${entry.title}的能力说明")
-                                }
-                            }
-                        },
-                        leadingContent = {
-                            Icon(
+            matches
+                .groupBy { it.group }
+                .forEach { (family, entries) ->
+                    item(key = "family-$family") {
+                        Text(
+                            family,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                    items(entries, key = { it.mode }) { entry ->
+                        WorkspaceToolRow(
+                            HomeTool(
+                                entry.id,
+                                entry.title,
+                                entry.detail,
                                 if (entry.group == "图片") Icons.Default.Image
                                 else Icons.Default.SwapHoriz,
-                                null,
-                                tint = MaterialTheme.colorScheme.primary,
-                            )
-                        },
-                    )
+                                entry.group,
+                            ) {
+                                launch(entry)
+                            },
+                            entry.id in pinned,
+                            !busy,
+                            onInfo = { capability = it },
+                        )
+                    }
                 }
-            }
             item {
                 Text(
                     "快速正文入口会重新排版文字；Markdown / HTML 使用独立结构转换。Office 排版入口使用手机引擎。",

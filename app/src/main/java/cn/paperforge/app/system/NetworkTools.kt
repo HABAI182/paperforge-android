@@ -10,7 +10,8 @@ import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
 
 object NetworkTools {
-    fun updates(context: Context) = launch(context, "UpdatesActivity")
+    fun updates(context: Context, oneClick: Boolean = false) =
+        launch(context, "UpdatesActivity", oneClick = oneClick)
 
     fun lan(context: Context) = launch(context, "lan.LanActivity")
 
@@ -27,7 +28,12 @@ object NetworkTools {
             },
         )
 
-    private fun launch(context: Context, screen: String, source: Uri? = null) {
+    private fun launch(
+        context: Context,
+        screen: String,
+        source: Uri? = null,
+        oneClick: Boolean = false,
+    ) {
         val targetPackage = PhoneEngines.packageFor(context, "cn.paperforge.network")
         val installed =
             runCatching { context.packageManager.getPackageInfo(targetPackage, 0) }.isSuccess
@@ -51,6 +57,7 @@ object NetworkTools {
                     }
                     .putExtra("paperforgeTheme", UserSettings[SettingKeys.Theme])
                     .putExtra("paperforgeFontScale", UserSettings[SettingKeys.FontScale])
+                    .putExtra("paperforgeOneClickUpdate", oneClick)
                     .setComponent(ComponentName(targetPackage, "cn.paperforge.network.$screen"))
             )
         } else {

@@ -416,12 +416,13 @@ class MainActivity : ComponentActivity() {
                                 else "reader".also { vm.selected.value = vm.redactionSource.value }
                             screen in listOf("annotations", "pdf-pages", "pdf-diagnostics") ->
                                 "reader"
-                            screen == "conversion-batch" -> "convert"
+                            screen in listOf("conversion-batch", "workflows", "auto-export") ->
+                                vm.toolHubReturn.value
                             screen == "conversion-preview" -> vm.conversionPreviewReturn.value
                             screen == "text-compose" || screen == "markup-review" ->
                                 vm.conversionReturn.value
                             screen == "ocr-models" -> vm.ocrModelsReturn.value
-                            screen == "storage" -> "settings"
+                            screen == "storage" -> vm.storageReturn.value
                             screen == "profiles" -> vm.profileReturn.value
                             screen == "ocr-proof" -> "editor"
                             screen == "comparison" -> "home".also { vm.comparison.cancel() }
@@ -867,8 +868,6 @@ class MainActivity : ComponentActivity() {
                                     style = MaterialTheme.typography.bodySmall,
                                 )
                                 HorizontalDivider(Modifier.padding(vertical = 12.dp))
-                                Text("隐私与解锁", style = MaterialTheme.typography.titleSmall)
-                                SecuritySettings()
                                 TextButton(onClick = { showNotices = !showNotices }) {
                                     Text(if (showNotices) "收起开源与模型声明" else "开源与模型声明")
                                 }
