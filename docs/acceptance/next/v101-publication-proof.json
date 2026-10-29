@@ -11,5 +11,9 @@
   "profileReadme": "https://github.com/HABAI182",
   "profileReadmeSha": "28af1058805987dcb2e02c1a6575f5226cb610e1",
   "profilePaperForgeEntryVerified": true,
-  "checkedUtc": "2026-10-29T12:36:07.149888+00:00"
+  "checkedUtc": "2026-10-29T12:36:07.149888+00:00",
+  "actualAndroidLatestFeedback": "Public repository, no token configured, 当前已是最新版本",
+  "actualAndroidProof": "v101-ui/public-live-update.json",
+  "ciRun": "https://github.com/HABAI182/paperforge-android/actions/runs/40873676048",
+  "ciConclusion": "success"
 }

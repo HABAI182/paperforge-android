@@ -1,0 +1,17 @@
+{
+  "attempt": "Public repository, enabled emulator network, no repository token configured",
+  "latestFeedbackVisible": true,
+  "visibleTexts": [
+    "检查版本后显示结果，由你选择是否下载。安装包核对后交给系统安装。",
+    "检查更新",
+    "检查结果",
+    "当前已是最新版本",
+    "允许手动检查更新",
+    "由你点击发起，下载完成后交给系统确认",
+    "已安装",
+    "PaperForge  1.0.1",
+    "仓库与访问凭据",
+    "返回",
+    "检查更新"
+  ]
+}
