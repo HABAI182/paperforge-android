@@ -5,6 +5,7 @@ import cn.paperforge.app.model.PointN
 import com.tom_roush.pdfbox.contentstream.operator.Operator
 import com.tom_roush.pdfbox.cos.*
 import com.tom_roush.pdfbox.io.MemoryUsageSetting
+import com.tom_roush.pdfbox.multipdf.PDFCloneUtility
 import com.tom_roush.pdfbox.pdfparser.PDFStreamParser
 import com.tom_roush.pdfbox.pdfwriter.ContentStreamWriter
 import com.tom_roush.pdfbox.pdmodel.*
@@ -304,6 +305,19 @@ object NativePdfEditor {
         output: File,
         request: JSONObject,
         fontFiles: Map<String, File> = emptyMap(),
+        stages: JobFileStages? = null,
+        progress: suspend (Int) -> Unit = {},
+    ): JSONObject =
+        if (stages == null) rewrite(context, input, output, request, fontFiles, false, progress)
+        else NativeEditStages.apply(context, input, output, request, fontFiles, stages, progress)
+
+    internal suspend fun rewrite(
+        context: Context,
+        input: File,
+        output: File,
+        request: JSONObject,
+        fontFiles: Map<String, File>,
+        patchOnly: Boolean,
         progress: suspend (Int) -> Unit = {},
     ): JSONObject {
         require(input.canonicalFile != output.canonicalFile) { "请保存为新副本" }
@@ -322,6 +336,7 @@ object NativePdfEditor {
         try {
             PDDocument.load(input, MemoryUsageSetting.setupTempFileOnly()).use { pdf ->
                 val fonts = mutableMapOf<String, PDType0Font>()
+                val initialFonts = mutableMapOf<Int, Set<COSName>>()
                 fun font(edit: Edit, original: PDFont): PDFont {
                     if (edit.font == "ORIGINAL") return original
                     return fonts.getOrPut(edit.font) {
@@ -361,6 +376,7 @@ object NativePdfEditor {
                     val parsed = page(pdf, number)
                     val replacements = mutableMapOf<Int, Pair<Int, List<Any>>>()
                     val page = pdf.getPage(number)
+                    initialFonts[number] = page.resources?.fontNames?.toSet().orEmpty()
                     // Adding fonts gets a page-local dictionary, including inherited resources.
                     val resources = COSDictionary(page.resources?.cosObject ?: COSDictionary())
                     (resources.getDictionaryObject(COSName.FONT) as? COSDictionary)?.let {
@@ -472,7 +488,36 @@ object NativePdfEditor {
                     }
                     page.setContents(stream)
                 }
-                pdf.save(part)
+                if (!patchOnly) pdf.save(part)
+                else {
+                    require(initialFonts.size == 1) { "文字流阶段必须对应一页" }
+                    // Subset only the fonts introduced by this patch, before cloning their streams.
+                    fonts.values.forEach { it.subset() }
+                    val number = initialFonts.keys.single()
+                    val source = pdf.getPage(number)
+                    PDDocument().use { patch ->
+                        val target = PDPage(source.mediaBox)
+                        patch.addPage(target)
+                        val cloner = PDFCloneUtility(patch)
+                        val additions = COSDictionary()
+                        source.resources.fontNames
+                            .filterNot { it in initialFonts.getValue(number) }
+                            .forEach { name ->
+                                additions.setItem(
+                                    name,
+                                    cloner.cloneForNewDocument(
+                                        source.resources.getFont(name).cosObject
+                                    ),
+                                )
+                            }
+                        target.resources =
+                            PDResources(COSDictionary().apply { setItem(COSName.FONT, additions) })
+                        source.contents.use {
+                            target.setContents(PDStream(patch, it, COSName.FLATE_DECODE))
+                        }
+                        patch.save(part)
+                    }
+                }
             }
             mapping.finish(part)
             currentCoroutineContext().ensureActive()

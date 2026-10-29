@@ -28,7 +28,7 @@ import org.json.JSONObject
 object PdfImageOptimizer {
     private data class Binding(val resources: PDResources, val name: COSName)
 
-    private class Asset(val image: PDImageXObject) {
+    private class Asset(val image: PDImageXObject, val ordinal: Int) {
         val bindings = mutableListOf<Binding>()
         var widthPt = 0f
         var heightPt = 0f
@@ -42,7 +42,20 @@ object PdfImageOptimizer {
         input: File,
         output: File,
         quality: Int,
+        stages: JobFileStages? = null,
         progress: suspend (Int) -> Unit = {},
+    ): JSONObject {
+        if (stages != null)
+            return CompressionStages.compress(input, output, quality, stages, progress)
+        return compressCore(input, output, quality, null, progress)
+    }
+
+    internal suspend fun compressCore(
+        input: File,
+        output: File,
+        quality: Int,
+        stages: JobFileStages?,
+        progress: suspend (Int) -> Unit,
     ): JSONObject {
         require(input.canonicalFile != output.canonicalFile) { "请保存为新文件" }
         val temporary = File(output.path + ".part")
@@ -75,7 +88,7 @@ object PdfImageOptimizer {
                                 is PDImageXObject -> {
                                     val asset =
                                         assets.getOrPut(objectValue.cosObject) {
-                                            Asset(objectValue)
+                                            Asset(objectValue, assets.size)
                                         }
                                     if (protected) asset.protected = true
                                     else asset.bindings.add(Binding(resources, name))
@@ -207,64 +220,101 @@ object PdfImageOptimizer {
                                 // bounded fallback
                                 // uses sample=1 for other supported streams. Do not rely on the
                                 // broken API path.
-                                var bitmap =
-                                    if (directJpeg) {
-                                        val bounds =
-                                            BitmapFactory.Options().apply {
-                                                inJustDecodeBounds = true
-                                            }
-                                        stream.createRawInputStream().use {
-                                            BitmapFactory.decodeStream(it, null, bounds)
-                                        }
-                                        require(
-                                            bounds.outWidth == image.width &&
-                                                bounds.outHeight == image.height
-                                        ) {
-                                            "PDF 图片尺寸与编码头不一致"
-                                        }
-                                        stream.createRawInputStream().use {
-                                            BitmapFactory.decodeStream(
-                                                it,
-                                                null,
+                                suspend fun encode(): ByteArray {
+                                    var bitmap =
+                                        if (directJpeg) {
+                                            val bounds =
                                                 BitmapFactory.Options().apply {
-                                                    inSampleSize = sample
-                                                    inPreferredConfig = Bitmap.Config.ARGB_8888
-                                                },
-                                            )
-                                        } ?: error("PDF JPEG 解码失败")
-                                    } else image.image
-                                try {
-                                    if (bitmap.width != targetW || bitmap.height != targetH) {
-                                        val scaled =
-                                            Bitmap.createScaledBitmap(
-                                                bitmap,
-                                                targetW,
-                                                targetH,
-                                                true,
-                                            )
-                                        if (scaled !== bitmap) {
-                                            bitmap.recycle()
-                                            bitmap = scaled
+                                                    inJustDecodeBounds = true
+                                                }
+                                            stream.createRawInputStream().use {
+                                                BitmapFactory.decodeStream(it, null, bounds)
+                                            }
+                                            require(
+                                                bounds.outWidth == image.width &&
+                                                    bounds.outHeight == image.height
+                                            ) {
+                                                "PDF 图片尺寸与编码头不一致"
+                                            }
+                                            stream.createRawInputStream().use {
+                                                BitmapFactory.decodeStream(
+                                                    it,
+                                                    null,
+                                                    BitmapFactory.Options().apply {
+                                                        inSampleSize = sample
+                                                        inPreferredConfig = Bitmap.Config.ARGB_8888
+                                                    },
+                                                )
+                                            } ?: error("PDF JPEG 解码失败")
+                                        } else image.image
+                                    try {
+                                        if (bitmap.width != targetW || bitmap.height != targetH) {
+                                            val scaled =
+                                                Bitmap.createScaledBitmap(
+                                                    bitmap,
+                                                    targetW,
+                                                    targetH,
+                                                    true,
+                                                )
+                                            if (scaled !== bitmap) {
+                                                bitmap.recycle()
+                                                bitmap = scaled
+                                            }
                                         }
-                                    }
-                                    coroutineContext.ensureActive()
-                                    val encoded =
-                                        PdfImageEncoder.jpeg(
-                                            doc,
+                                        coroutineContext.ensureActive()
+                                        return PdfImageEncoder.jpegBytes(
                                             bitmap,
                                             colorspace == "DeviceGray",
                                             quality,
                                             dpi,
                                         )
-                                    if (encoded.cosObject.length < stream.length) {
-                                        replacement = encoded
-                                        row.put("outputBytes", encoded.cosObject.length)
-                                            .put("outputWidth", targetW)
-                                            .put("outputHeight", targetH)
-                                    } else row.put("skipped", "recompression was not smaller")
-                                } finally {
-                                    bitmap.recycle()
+                                    } finally {
+                                        bitmap.recycle()
+                                    }
                                 }
+                                val encodedFile =
+                                    if (stages != null) {
+                                        val signature =
+                                            "compression-jpeg-v1:${stages.sourceHash(input)}:${doc.document.getKey(stream) ?: "direct-${asset.ordinal}"}:$quality:$dpi:$targetW:$targetH:$colorspace"
+                                        stages.file("compression-jpeg", signature, "jpg") {
+                                            destination ->
+                                            FileOutputStream(destination).use { out ->
+                                                out.write(encode())
+                                                out.fd.sync()
+                                            }
+                                        }
+                                    } else null
+                                val encodedBytes = if (encodedFile == null) encode() else null
+                                val encodedLength =
+                                    encodedFile?.length() ?: encodedBytes!!.size.toLong()
+                                if (encodedLength < stream.length) {
+                                    val encoded =
+                                        (encodedFile?.inputStream()
+                                                ?: java.io.ByteArrayInputStream(encodedBytes!!))
+                                            .use { source ->
+                                                PDImageXObject(
+                                                    doc,
+                                                    source,
+                                                    COSName.DCT_DECODE,
+                                                    targetW,
+                                                    targetH,
+                                                    8,
+                                                    if (colorspace == "DeviceGray")
+                                                        com.tom_roush.pdfbox.pdmodel.graphics.color
+                                                            .PDDeviceGray
+                                                            .INSTANCE
+                                                    else
+                                                        com.tom_roush.pdfbox.pdmodel.graphics.color
+                                                            .PDDeviceRGB
+                                                            .INSTANCE,
+                                                )
+                                            }
+                                    encoded.interpolate = image.interpolate
+                                    replacement = encoded
+                                    row.put("outputBytes", encodedLength)
+                                        .put("outputWidth", targetW)
+                                        .put("outputHeight", targetH)
+                                } else row.put("skipped", "recompression was not smaller")
                             }
                             var selected = replacement ?: image
                             val digest = MessageDigest.getInstance("SHA-256")

@@ -1,0 +1,63 @@
+{
+  "compression": {
+    "sourceSha256": "2fdc750b1ad9b1bd89dd8f827ac666c8940df01f7bfffb817729c340ff34228d",
+    "pages": [
+      {
+        "page": 1,
+        "width": 612,
+        "height": 792,
+        "coldPixelsEqualResumed": true,
+        "sha256": "c9e545bb266a8b853ad71672df3242f9b4b2c7d9aaca5fbb4aad7d3b2492c3ca",
+        "text": "KEEP_NATIVE_001\n"
+      },
+      {
+        "page": 2,
+        "width": 612,
+        "height": 792,
+        "coldPixelsEqualResumed": true,
+        "sha256": "21eceba193cee9cc2c61e0cad2c2cf889da4818687bf2386624340ade3e8b8c6",
+        "text": "KEEP_NATIVE_002\n"
+      },
+      {
+        "page": 3,
+        "width": 612,
+        "height": 792,
+        "coldPixelsEqualResumed": true,
+        "sha256": "d2e3f1e65476016cd45ac0e2d78ed7036a0005e6bd9e604d4e0c7dd538fd5432",
+        "text": "KEEP_NATIVE_003\n"
+      }
+    ]
+  },
+  "native": {
+    "sourceSha256": "92bac14f91471adc8eca273f28b9a188e145d12af55ac91d2284350d7f7cc673",
+    "pages": [
+      {
+        "page": 1,
+        "width": 612,
+        "height": 792,
+        "coldPixelsEqualResumed": true,
+        "sha256": "965ee74d2a2d575d2a18d08898a21e86a06e58c0ba65f680151f41ea0298ac1f",
+        "text": "第一页甲\n ANCHOR_1\n"
+      },
+      {
+        "page": 2,
+        "width": 612,
+        "height": 792,
+        "coldPixelsEqualResumed": true,
+        "sha256": "02e95416a0e8d4f0686860fca8e579fd5974c745eeb5aadd2d6d95182cb418e4",
+        "text": "第二页乙\n ANCHOR_2\n"
+      },
+      {
+        "page": 3,
+        "width": 612,
+        "height": 792,
+        "coldPixelsEqualResumed": true,
+        "sha256": "f0714ec1552d0caacfb425ec8d15446ace65317be7b237bfd82961dd65092f21",
+        "text": "BEFORE_3 ANCHOR_3\n",
+        "uneditedPageSourcePixelsEqual": true
+      }
+    ],
+    "patchBytes": 7726,
+    "sourceBytes": 2361989
+  }
+}

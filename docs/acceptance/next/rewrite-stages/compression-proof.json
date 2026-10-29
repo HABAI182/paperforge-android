@@ -1,0 +1,238 @@
+{
+  "sourceSha256": "2fdc750b1ad9b1bd89dd8f827ac666c8940df01f7bfffb817729c340ff34228d",
+  "sourceUnchanged": true,
+  "imageAfterNewWorkId": {
+    "reused": 1,
+    "generated": 2,
+    "entries": [
+      {
+        "key": "compression-jpeg",
+        "reused": true,
+        "bytes": 145278,
+        "sha256": "6de08650c5727480a919bdc87aec49be86aeb18610f9371fc98c73a627be7a67"
+      },
+      {
+        "key": "compression-jpeg",
+        "reused": false,
+        "bytes": 168259,
+        "sha256": "a793608ff923b437825a3f05e5b42cbee115145c4ff85fb35f6f251e6037f3ae"
+      },
+      {
+        "key": "compression-quality-75",
+        "reused": false,
+        "bytes": 316557,
+        "sha256": "afc741d2ebaa91323cdf55f9e1cefdb4ed6cc077b8192e7ccaf92dd920c33899"
+      }
+    ]
+  },
+  "wholeQualityAfterNewWorkId": {
+    "reused": 1,
+    "generated": 0,
+    "entries": [
+      {
+        "key": "compression-quality-75",
+        "reused": true,
+        "bytes": 316557,
+        "sha256": "afc741d2ebaa91323cdf55f9e1cefdb4ed6cc077b8192e7ccaf92dd920c33899"
+      }
+    ]
+  },
+  "targetAfterNewWorkId": {
+    "reused": 2,
+    "generated": 11,
+    "entries": [
+      {
+        "key": "compression-quality-90",
+        "reused": true,
+        "bytes": 899334,
+        "sha256": "70c17087533b6c123dbeafdcdec80d71e6b7b93ba8677d0d3d31ceebade238b9"
+      },
+      {
+        "key": "compression-jpeg",
+        "reused": false,
+        "bytes": 151218,
+        "sha256": "03bbf66f443b9cdaa5915d5883b521960a25802c328e25088b8747ad580f3cfa"
+      },
+      {
+        "key": "compression-jpeg",
+        "reused": true,
+        "bytes": 134209,
+        "sha256": "426d805c772651a29f9a11f086970463eb323ed9340b1ddfda341e7af05575d4"
+      },
+      {
+        "key": "compression-quality-70",
+        "reused": false,
+        "bytes": 288442,
+        "sha256": "1cf90a4dedfd87f44b1d718efd6f4973cba649edec4fcdb73c00113c75e0bcb7"
+      },
+      {
+        "key": "compression-jpeg",
+        "reused": false,
+        "bytes": 27151,
+        "sha256": "42847f1d85f546ef230d4225876c64cc807c86589effd64def8cd85611968219"
+      },
+      {
+        "key": "compression-jpeg",
+        "reused": false,
+        "bytes": 48914,
+        "sha256": "219c055688d66b488d9ca40294de305660b1a4fee483cf6707a4380fac911b3e"
+      },
+      {
+        "key": "compression-quality-50",
+        "reused": false,
+        "bytes": 79044,
+        "sha256": "c9a44e2f0ad42904f8b65dd1482ae9e91a35cee5c0d865035924b7be60906e9c"
+      },
+      {
+        "key": "compression-jpeg",
+        "reused": false,
+        "bytes": 30865,
+        "sha256": "6e901a8247b0069ec4e8ee89c9dfbbb1a1498127fa7bfea6f199ea1d5207ca9b"
+      },
+      {
+        "key": "compression-jpeg",
+        "reused": false,
+        "bytes": 17766,
+        "sha256": "a7a3c9b482e87f8273111717246e386a3246fdc91b02aa0ccb027ab23a374ef9"
+      },
+      {
+        "key": "compression-quality-30",
+        "reused": false,
+        "bytes": 51605,
+        "sha256": "48ea466ebc265baa1588482633c0ef0e37519f18bd70d5959d580b7b281f5695"
+      },
+      {
+        "key": "compression-jpeg",
+        "reused": false,
+        "bytes": 4992,
+        "sha256": "59ec83215a116c8b7ef0d401778f0528e22c9e59f73cdbb4cd4746575596691f"
+      },
+      {
+        "key": "compression-jpeg",
+        "reused": false,
+        "bytes": 8783,
+        "sha256": "62949bb4cbc4396b574330c303a46b413987b6575dad775d0410a233aa43c26e"
+      },
+      {
+        "key": "compression-quality-10",
+        "reused": false,
+        "bytes": 16740,
+        "sha256": "a5a0f870a051fd15688eb26d7c1ed35eb307fcbec92d8106fbca3cc0827fb505"
+      }
+    ]
+  },
+  "targetReport": {
+    "inputBytes": 3451377,
+    "outputBytes": 15994,
+    "targetBytes": 1,
+    "targetAchieved": false,
+    "selectedQuality": 10,
+    "originalCopied": false,
+    "reason": "已保留本轮最小结果，仍高于目标",
+    "attempts": [
+      {
+        "quality": 90,
+        "bytes": 898448,
+        "fits": false,
+        "originalCopied": false
+      },
+      {
+        "quality": 70,
+        "bytes": 287651,
+        "fits": false,
+        "originalCopied": false
+      },
+      {
+        "quality": 50,
+        "bytes": 78286,
+        "fits": false,
+        "originalCopied": false
+      },
+      {
+        "quality": 30,
+        "bytes": 50852,
+        "fits": false,
+        "originalCopied": false
+      },
+      {
+        "quality": 10,
+        "bytes": 15994,
+        "fits": false,
+        "originalCopied": false
+      }
+    ],
+    "maxAttempts": 7,
+    "searchPolicy": "highest tested quality fitting target, otherwise smallest tested output including original",
+    "flattened": false
+  },
+  "coldImages": [
+    {
+      "page": 0,
+      "images": [
+        {
+          "width": 533,
+          "height": 667,
+          "colorSpace": "DeviceRGB",
+          "sha256": "a793608ff923b437825a3f05e5b42cbee115145c4ff85fb35f6f251e6037f3ae"
+        }
+      ]
+    },
+    {
+      "page": 1,
+      "images": [
+        {
+          "width": 533,
+          "height": 667,
+          "colorSpace": "DeviceGray",
+          "sha256": "6de08650c5727480a919bdc87aec49be86aeb18610f9371fc98c73a627be7a67"
+        }
+      ]
+    },
+    {
+      "page": 2,
+      "images": [
+        {
+          "width": 533,
+          "height": 667,
+          "colorSpace": "DeviceRGB",
+          "sha256": "a793608ff923b437825a3f05e5b42cbee115145c4ff85fb35f6f251e6037f3ae"
+        }
+      ]
+    }
+  ],
+  "resumedImages": [
+    {
+      "page": 0,
+      "images": [
+        {
+          "width": 533,
+          "height": 667,
+          "colorSpace": "DeviceRGB",
+          "sha256": "a793608ff923b437825a3f05e5b42cbee115145c4ff85fb35f6f251e6037f3ae"
+        }
+      ]
+    },
+    {
+      "page": 1,
+      "images": [
+        {
+          "width": 533,
+          "height": 667,
+          "colorSpace": "DeviceGray",
+          "sha256": "6de08650c5727480a919bdc87aec49be86aeb18610f9371fc98c73a627be7a67"
+        }
+      ]
+    },
+    {
+      "page": 2,
+      "images": [
+        {
+          "width": 533,
+          "height": 667,
+          "colorSpace": "DeviceRGB",
+          "sha256": "a793608ff923b437825a3f05e5b42cbee115145c4ff85fb35f6f251e6037f3ae"
+        }
+      ]
+    }
+  ]
+}

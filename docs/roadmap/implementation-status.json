@@ -500,8 +500,8 @@
     {
       "id": "JOB01",
       "title": "持久任务中心",
-      "status": "partial",
-      "note": "Room持久任务、取消/重试/部分结果及原子发布，Phone Office/表格/配方/扫描/OCR与图片ZIP已有检查点。补齐长图完整分段缓存并跳过对应渲染；PDF栅格化与栅格脱敏逐页复用，外观预览单独保存，单页遮盖变化仅重建该页。新workId续跑2.795秒集中检查、六页MuPDF像素和12段PNG独立一致，见 raster-stages-summary.json；最终容器重组、保留原生对象的PDF重写与整份压缩仍重新执行，保持partial。"
+      "status": "done",
+      "note": "Room状态、取消/重试、冻结来源、备份资源和各重流程已接检查点。最后补齐压缩的单图编码/完整质量候选复用与原生改字页级字体/内容流补丁，最终仍在原文档组合，保留共享资源/链接。新workId集中3.267秒与2.446秒、独立MuPDF六页冷/恢复像素一致，未改页也与原件一致；两页补丁7726字节，未复制2.36MB图片。见 rewrite-stages-summary.json；最终PDF/ZIP组合仍为原子阶段，单次原生调用不在任意字节抢占。"
     },
     {
       "id": "JOB02",
@@ -595,8 +595,8 @@
     }
   ],
   "counts": {
-    "done": 91,
-    "partial": 7,
+    "done": 92,
+    "partial": 6,
     "planned": 0
   },
   "releaseHold": true,

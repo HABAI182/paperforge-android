@@ -1,0 +1,58 @@
+{
+  "sourceSha256": "92bac14f91471adc8eca273f28b9a188e145d12af55ac91d2284350d7f7cc673",
+  "sourceBytes": 2361989,
+  "sourceUnchanged": true,
+  "patchBytes": 7726,
+  "reused": 1,
+  "generated": 1,
+  "report": {
+    "sourceSha256": "92bac14f91471adc8eca273f28b9a188e145d12af55ac91d2284350d7f7cc673",
+    "operation": "native-text-edit",
+    "edits": [
+      {
+        "page": 0,
+        "index": 0,
+        "before": "BEFORE_1",
+        "text": "第一页甲",
+        "font": "CJK",
+        "size": null,
+        "fit": true,
+        "fontSha256": "",
+        "actualFont": "PaperForgeCJK-Regular",
+        "originalAdvance": 104.48001,
+        "actualHorizontalScale": 100
+      },
+      {
+        "page": 1,
+        "index": 0,
+        "before": "BEFORE_2",
+        "text": "第二页乙",
+        "font": "CJK",
+        "size": null,
+        "fit": true,
+        "fontSha256": "",
+        "actualFont": "PaperForgeCJK-Regular",
+        "originalAdvance": 104.48001,
+        "actualHorizontalScale": 100
+      }
+    ],
+    "outputBytes": 2367253,
+    "originalRetained": true,
+    "checkpointReused": 1,
+    "checkpointGenerated": 1,
+    "checkpointEntries": [
+      {
+        "key": "native-edit-page-0",
+        "reused": true,
+        "bytes": 3832,
+        "sha256": "0fe1965f4f83c9a89991cecd88c96049b6975e0b61cc7bafd17536985c1e898e"
+      },
+      {
+        "key": "native-edit-page-1",
+        "reused": false,
+        "bytes": 3894,
+        "sha256": "5eb79b57a08de4dfcd71bf9ecb4bdd01d5a3182cec83cd14a8b27b7e18444897"
+      }
+    ]
+  }
+}

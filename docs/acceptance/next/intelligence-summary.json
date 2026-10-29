@@ -56,5 +56,13 @@
     "Source links open the current document page; frozen original remains available if that document later changes",
     "Local extractive step limited to 200000 source characters per run; remote submission limited to 80000; source snapshots max 2000000",
     "Language model files downloaded by SDK are not bundled or copied into Git"
-  ]
+  ],
+  "signedArm64CandidateSource": "cf12482388ab5a3d1627c3aacd6dd5e11c693242",
+  "signedArm64Manifest": "distribution/arm64-source-cf12482.json",
+  "r8X86Ui": {
+    "sameCertificateUpgrade": true,
+    "sourceRestored": true,
+    "disabledSettingSurvivedForceStop": true,
+    "viewModelReflectionWorks": true
+  }
 }

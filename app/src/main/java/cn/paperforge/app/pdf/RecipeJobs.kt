@@ -173,6 +173,7 @@ object RecipeJobs {
                             source,
                             result,
                             step.options.optInt("quality", 84).coerceIn(40, 100),
+                            stages = JobFileStages(repo, job),
                         ) {
                             stageProgress(it)
                         }

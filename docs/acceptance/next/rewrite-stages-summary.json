@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-29",
+  "card": "JOB01",
+  "status": "done",
+  "releaseHold": true,
+  "proofDirectory": "rewrite-stages",
+  "android": {
+    "api": 35,
+    "abi": "x86_64",
+    "compressionSeconds": 3.267,
+    "nativeEditSeconds": 2.446,
+    "focusedTests": 2,
+    "result": "OK"
+  },
+  "scope": [
+    "Partial compression attempts retain each completed JPEG encoding",
+    "Completed quality PDFs and their reports are reused during target-size search",
+    "Quality and target-size compression in PDF tasks and recipes use referenced checkpoints",
+    "Native text edits retain page stream/new-font patches; original resource graphs stay in the final source document",
+    "Final generation and merge phases each hold one full source PDF at a time",
+    "New workId resumes completed stages; source documents and already published outputs retained"
+  ],
+  "native": {
+    "sourceBytes": 2361989,
+    "patchBytes": 7726,
+    "reusedPages": 1,
+    "generatedPages": 1
+  },
+  "independent": {
+    "renderer": "MuPDF / PyMuPDF",
+    "coldVsResumedPixelsEqualPages": 6,
+    "uneditedPageSourcePixelsEqual": true,
+    "chineseSubsetsReadable": true,
+    "nativeTextRetained": true,
+    "linkRetained": true
+  },
+  "limits": [
+    "Final PDF or ZIP container assembly remains atomic and is rerun after interruption",
+    "A single native encoding call is not preempted in its middle; completed image/page stages are retained",
+    "Recovery comparison is a new workId with persisted Room checkpoint records; physical device process-kill/performance is not claimed by these two checks"
+  ]
+}

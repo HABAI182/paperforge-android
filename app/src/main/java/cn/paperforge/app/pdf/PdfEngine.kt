@@ -251,7 +251,7 @@ object PdfEngine {
         quality: Int,
         progress: suspend (Int) -> Unit = {},
     ) {
-        PdfImageOptimizer.compress(input, output, quality, progress)
+        PdfImageOptimizer.compress(input, output, quality, progress = progress)
     }
 
     suspend fun flatten(

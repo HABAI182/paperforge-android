@@ -10,6 +10,13 @@ import org.json.JSONObject
 
 /** Durable, referenced intermediate files. A new attempt reads the current Room checkpoint. */
 class JobFileStages(private val repo: Repository, private val job: JobHandle) {
+    private val sourceHashes = mutableMapOf<String, String>()
+
+    suspend fun sourceHash(file: File): String {
+        val key = "${file.canonicalPath}:${file.length()}:${file.lastModified()}"
+        return sourceHashes[key] ?: PdfAssembly.sha256(file).also { sourceHashes[key] = it }
+    }
+
     val entries = JSONArray()
     var reused = 0
         private set

@@ -180,6 +180,7 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                                 file,
                                 JSONObject(requestFile.readText()),
                                 fonts,
+                                stages = JobFileStages(repo, job),
                             ) {
                                 report(it)
                             }
@@ -399,11 +400,21 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                     "compress" -> {
                         compression =
                             if (p.optLong("targetBytes", 0) > 0)
-                                PdfSizeTarget.compress(input, file, p.getLong("targetBytes")) {
+                                PdfSizeTarget.compress(
+                                    input,
+                                    file,
+                                    p.getLong("targetBytes"),
+                                    stages = JobFileStages(repo, job),
+                                ) {
                                     report(it)
                                 }
                             else
-                                PdfImageOptimizer.compress(input, file, p.optInt("quality", 75)) {
+                                PdfImageOptimizer.compress(
+                                    input,
+                                    file,
+                                    p.optInt("quality", 75),
+                                    stages = JobFileStages(repo, job),
+                                ) {
                                     report(it)
                                 }
                         origin = compression

@@ -39,7 +39,18 @@ object PdfImageEncoder {
         gray: Boolean,
         quality: Int,
         dpi: Int,
-    ): PDImageXObject {
+    ): PDImageXObject =
+        PDImageXObject(
+            doc,
+            ByteArrayInputStream(jpegBytes(bitmap, gray, quality, dpi)),
+            COSName.DCT_DECODE,
+            bitmap.width,
+            bitmap.height,
+            8,
+            if (gray) PDDeviceGray.INSTANCE else PDDeviceRGB.INSTANCE,
+        )
+
+    fun jpegBytes(bitmap: Bitmap, gray: Boolean, quality: Int, dpi: Int): ByteArray {
         val bytes =
             if (gray) {
                 val source = Mat()
@@ -71,15 +82,7 @@ object PdfImageEncoder {
                     )
                     output.toByteArray()
                 }
-        return PDImageXObject(
-            doc,
-            ByteArrayInputStream(jfifDpi(bytes, dpi)),
-            COSName.DCT_DECODE,
-            bitmap.width,
-            bitmap.height,
-            8,
-            if (gray) PDDeviceGray.INSTANCE else PDDeviceRGB.INSTANCE,
-        )
+        return jfifDpi(bytes, dpi)
     }
 
     private fun binary(doc: PDDocument, bitmap: Bitmap): PDImageXObject {

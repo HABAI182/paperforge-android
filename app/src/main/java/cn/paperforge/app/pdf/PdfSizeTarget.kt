@@ -14,6 +14,7 @@ object PdfSizeTarget {
         input: File,
         output: File,
         targetBytes: Long,
+        stages: JobFileStages? = null,
         progress: suspend (Int) -> Unit = {},
     ): JSONObject {
         require(targetBytes > 0 && input.canonicalFile != output.canonicalFile) { "请选择目标体积并保存为新文件" }
@@ -31,7 +32,7 @@ object PdfSizeTarget {
             val file = File(directory, "quality-$quality.pdf")
             val index = attempts.length()
             val detail =
-                PdfImageOptimizer.compress(input, file, quality) { percent ->
+                PdfImageOptimizer.compress(input, file, quality, stages = stages) { percent ->
                     progress(((index * 100 + percent) * 95 / 700).coerceAtMost(95))
                 }
             attempts.put(
