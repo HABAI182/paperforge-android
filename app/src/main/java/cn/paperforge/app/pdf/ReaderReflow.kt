@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.RectF
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
 import cn.paperforge.app.model.*
 import cn.paperforge.app.ocr.OcrEngine
@@ -63,7 +64,7 @@ object ReaderReflow {
         withContext(Dispatchers.IO) {
             val hash = PdfAssembly.sha256(file)
             val signature =
-                "$VERSION:${NativeTextCoverage.VERSION}:${PdfGlyphGeometry.VERSION}:$hash:$page:$columns:${engine.signature(UserSettings.string("ocrLanguage", "CHINESE") != "LATIN", OcrOptions.current())}"
+                "$VERSION:${NativeTextCoverage.VERSION}:${PdfGlyphGeometry.VERSION}:$hash:$page:$columns:${engine.signature(UserSettings[SettingKeys.OcrLanguage] != "LATIN", OcrOptions.current())}"
             val key =
                 MessageDigest.getInstance("SHA-256").digest(signature.toByteArray()).joinToString(
                     ""

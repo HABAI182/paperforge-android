@@ -3,6 +3,7 @@ package cn.paperforge.app.imaging
 import ai.onnxruntime.*
 import android.content.Context
 import android.graphics.*
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
 import cn.paperforge.app.imaging.docquad.DocQuadLetterbox
 import cn.paperforge.app.imaging.docquad.DocQuadPostprocessor
@@ -136,7 +137,7 @@ object LearnedDocumentDetector {
         preview: Boolean = false,
         engineOverride: String? = null,
     ): DetectionResult {
-        val engine = engineOverride ?: UserSettings.string("detector", "NEURAL")
+        val engine = engineOverride ?: UserSettings[SettingKeys.Detector]
         if (engine == "STANDARD") return DocumentDetector.detect(source, preview)
         // HYBRID must not bypass the paper-edge model. The older fallback preferred high-score
         // background rectangles when DocQuad corner scores were low on small/curved documents.

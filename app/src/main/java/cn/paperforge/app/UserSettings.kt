@@ -7,66 +7,9 @@ import org.json.JSONObject
 
 /** Local preferences are read by camera, import, export and Compose from one shared source. */
 object UserSettings {
-    private val defaults: Map<String, Any> =
-        linkedMapOf(
-            "detector" to "NEURAL",
-            "outlineWeight" to 3f,
-            "outlineSwitchFrames" to 2f,
-            "dewarpStrength" to 1f,
-            "autoShutter" to true,
-            "turnRearm" to true,
-            "turnThreshold" to .06f,
-            "captureTimer" to 0f,
-            "scanAspect" to 0f,
-            "reviewAfterCapture" to false,
-            "lockCrop" to true,
-            "showOutline" to true,
-            "strictQuality" to false,
-            "captureArea" to .08f,
-            "captureConfidence" to .60f,
-            "stableMs" to 600f,
-            "cooldownMs" to 1500f,
-            "analysisMs" to 160f,
-            "cameraJpeg" to 97f,
-            "filter" to "AUTO",
-            "enhanceStrength" to 1f,
-            "brightness" to 0f,
-            "contrast" to 1f,
-            "ocrLanguage" to "CHINESE",
-            "ocrBackend" to "MLKIT",
-            "ocrPackId" to "",
-            "ocrMode" to "BALANCED",
-            "ocrVoting" to true,
-            "ocrOrder" to "AUTO",
-            "searchable" to false,
-            "paper" to "Auto",
-            "resolution" to "STANDARD",
-            "customDpi" to 300f,
-            "quality" to 90f,
-            "theme" to "SYSTEM",
-            "accent" to "GREEN",
-            "dynamicColor" to false,
-            "reduceMotion" to false,
-            "haptics" to true,
-            "documentSidebar" to true,
-            "fontScale" to 1f,
-            "compactRows" to false,
-            "documentLayout" to "LIST",
-            "gridColumns" to "AUTO",
-            "homeCollection" to "RECENT",
-            "edgeTurn" to true,
-            "readerSelectionOrder" to "0",
-            "speechVoice" to "",
-            "speechSpeed" to 1f,
-            "recentCount" to 6f,
-            "homeTools" to "images,pdf,ocr,merge,compress,tools",
-            "pinnedTools" to "",
-            "exportFormat" to "PDF",
-            "exportNaming" to "{title}",
-            "exportDestination" to "",
-            "workflowRecipes" to "[]",
-            "autoExportRules" to "[]",
-        )
+    private val defaults
+        get() = SettingKeys.defaults
+
     lateinit var prefs: SharedPreferences
         private set
 
@@ -88,6 +31,14 @@ object UserSettings {
                     context.getSharedPreferences("camera", 0).getBoolean("auto", true),
                 )
                 .apply()
+    }
+
+    operator fun <T : Any> get(key: SettingKey<T>): T =
+        key.read(if (::prefs.isInitialized) prefs else null)
+
+    fun <T : Any> set(key: SettingKey<T>, value: T) {
+        key.write(prefs.edit(), value).apply()
+        changed()
     }
 
     fun string(key: String, default: String) =
@@ -152,60 +103,13 @@ object UserSettings {
 
     fun normalizedValues(values: JSONObject): JSONObject {
         val ranges =
-            mapOf(
-                "stableMs" to 300f..2000f,
-                "turnThreshold" to .025f..0.2f,
-                "captureTimer" to 0f..10f,
-                "scanAspect" to 0f..2.5f,
-                "captureArea" to 0.05f..0.4f,
-                "captureConfidence" to 0.45f..0.95f,
-                "cooldownMs" to 800f..5000f,
-                "analysisMs" to 100f..500f,
-                "cameraJpeg" to 75f..100f,
-                "enhanceStrength" to 0f..1f,
-                "brightness" to -0.5f..0.5f,
-                "contrast" to 0.5f..1.8f,
-                "customDpi" to 72f..600f,
-                "quality" to 40f..100f,
-                "fontScale" to 0.85f..1.3f,
-                "speechSpeed" to .5f..2f,
-                "recentCount" to 4f..20f,
-                "outlineWeight" to 1f..8f,
-                "outlineSwitchFrames" to 1f..6f,
-                "dewarpStrength" to 0f..1f,
-            )
+            SettingKeys.all.filterIsInstance<SettingKey.Number>().associate { it.name to it.range }
         val options =
-            mapOf(
-                "detector" to setOf("NEURAL", "HYBRID", "STANDARD"),
-                "filter" to
-                    setOf("ORIGINAL", "AUTO", "TEXT", "CLEAN", "GRAY", "BW", "COLOR", "WHITEBOARD"),
-                "ocrLanguage" to setOf("CHINESE", "LATIN"),
-                "ocrBackend" to setOf("MLKIT", "PADDLE"),
-                "ocrMode" to setOf("FAST", "BALANCED", "DETAILED"),
-                "paper" to setOf("Auto", "A4", "A5", "Letter", "ID"),
-                "exportFormat" to setOf("PDF", "JPG", "PNG"),
-                "resolution" to setOf("DRAFT", "STANDARD", "HIGH", "CUSTOM"),
-                "theme" to setOf("SYSTEM", "LIGHT", "DARK", "AMOLED"),
-                "accent" to setOf("GREEN", "BLUE", "PURPLE", "ORANGE"),
-                "documentLayout" to setOf("LIST", "COVERS"),
-                "gridColumns" to setOf("AUTO", "2", "3", "4"),
-                "readerSelectionOrder" to setOf("0", "1", "2"),
-                "homeCollection" to setOf("RECENT", "FAVORITES", "INBOX", "NO_OCR", "NEEDS_EXPORT"),
-            )
-        val booleans =
-            setOf(
-                "autoShutter",
-                "ocrVoting",
-                "turnRearm",
-                "reviewAfterCapture",
-                "lockCrop",
-                "showOutline",
-                "strictQuality",
-                "searchable",
-                "compactRows",
-                "edgeTurn",
-                "dynamicColor",
-            )
+            SettingKeys.all
+                .filterIsInstance<SettingKey.Text>()
+                .filter { it.choices.isNotEmpty() }
+                .associate { it.name to it.choices }
+        val booleans = SettingKeys.all.filterIsInstance<SettingKey.Bool>().map { it.name }.toSet()
         val result = JSONObject()
         values.keys().forEach { key ->
             val value = values.get(key)

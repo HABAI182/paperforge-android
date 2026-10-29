@@ -15,7 +15,14 @@ import org.json.*
 class AutoExportWorker(context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params) {
     override suspend fun doWork(): Result =
-        withContext(Dispatchers.IO + BackgroundWork) {
+        withContext(
+            Dispatchers.IO +
+                BackgroundWork +
+                DocumentJobs.memoryContext(
+                    (applicationContext as PaperForgeApp).repository,
+                    inputData,
+                )
+        ) {
             val repo = (applicationContext as PaperForgeApp).repository
             var handle: JobHandle? = null
             var leased = false
@@ -54,7 +61,7 @@ class AutoExportWorker(context: Context, params: WorkerParameters) :
                 }
                 if (!current()) return@withContext skip("已跳过：文档或规则已变化，后续变化由新任务处理")
                 DocumentJobs.progress(repo, job, 0, "等待后台资源")
-                RuntimeBudget.background.acquire()
+                RuntimeBudget.background.acquire(job.row.id)
                 leased = true
                 if (!current()) return@withContext skip("已跳过：等待期间文档或规则已变化")
                 val snapshot =

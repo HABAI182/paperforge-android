@@ -41,6 +41,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import cn.paperforge.app.MainViewModel
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
 import cn.paperforge.app.imaging.CameraQualityAnalyzer
 import cn.paperforge.app.imaging.LearnedDocumentDetector
@@ -62,7 +63,7 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
     val context = LocalContext.current
     val settingsRevision by UserSettings.revision.collectAsState()
     val timerSeconds =
-        remember(settingsRevision) { UserSettings.number("captureTimer", 0f).roundToInt() }
+        remember(settingsRevision) { UserSettings[SettingKeys.CaptureTimer].roundToInt() }
     val lifecycle = LocalLifecycleOwner.current
     var permitted by remember {
         mutableStateOf(
@@ -77,7 +78,7 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
     val pages by vm.pages.collectAsState()
     val busy by vm.busy.collectAsState()
     val prefs = remember { context.getSharedPreferences("camera", 0) }
-    var auto by remember { mutableStateOf(UserSettings.bool("autoShutter", true)) }
+    var auto by remember { mutableStateOf(UserSettings[SettingKeys.AutoShutter]) }
     var torch by remember { mutableStateOf(false) }
     var quad by remember { mutableStateOf<Quad?>(null) }
     var rawQuad by remember { mutableStateOf<Quad?>(null) }
@@ -129,15 +130,15 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
     val snapping = remember { AtomicBoolean(false) }
     val gate = remember {
         AutoCaptureGate(
-            UserSettings.number("stableMs", 600f).toLong(),
-            UserSettings.number("cooldownMs", 1500f).toLong(),
-            UserSettings.number("captureArea", 0.08f),
+            UserSettings[SettingKeys.StableMs].toLong(),
+            UserSettings[SettingKeys.CooldownMs].toLong(),
+            UserSettings[SettingKeys.CaptureArea],
         )
     }
     val outline = remember {
         OutlineTracker(
-            UserSettings.number("outlineWeight", 3f),
-            UserSettings.number("outlineSwitchFrames", 2f).roundToInt(),
+            UserSettings[SettingKeys.OutlineWeight],
+            UserSettings[SettingKeys.OutlineSwitchFrames].roundToInt(),
         )
     }
     val qualityTracker = remember { CaptureQualityTracker() }
@@ -323,7 +324,7 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                     onClick = {
                         auto = !auto
                         prefs.edit().putBoolean("auto", auto).apply()
-                        UserSettings.set("autoShutter", auto)
+                        UserSettings.set(SettingKeys.AutoShutter, auto)
                         gate.reset(clearCaptured = true)
                     },
                     label = { Text(if (auto) "自动拍摄" else "手动拍摄", color = Color.White) },
@@ -366,9 +367,9 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                 TextButton(
                     onClick = {
                         val choices = listOf(0f, 3f, 5f, 10f)
-                        val value = UserSettings.number("captureTimer", 0f)
+                        val value = UserSettings[SettingKeys.CaptureTimer]
                         UserSettings.set(
-                            "captureTimer",
+                            SettingKeys.CaptureTimer,
                             choices[(choices.indexOf(value) + 1).mod(choices.size)],
                         )
                     }
@@ -417,8 +418,7 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                                 ImageCapture.Builder()
                                                     .setTargetRotation(displayRotation)
                                                     .setJpegQuality(
-                                                        UserSettings.number("cameraJpeg", 97f)
-                                                            .toInt()
+                                                        UserSettings[SettingKeys.CameraJpeg].toInt()
                                                     )
                                                     .setTargetAspectRatio(AspectRatio.RATIO_4_3)
                                                     .setCaptureMode(
@@ -456,7 +456,7 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                                     val now = SystemClock.elapsedRealtime()
                                                     if (
                                                         now - last >
-                                                            UserSettings.number("analysisMs", 160f)
+                                                            UserSettings[SettingKeys.AnalysisMs]
                                                                 .toLong()
                                                     ) {
                                                         last = now
@@ -699,10 +699,9 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                                                         }
                                                                     }
                                                                     val acceptable =
-                                                                        (!UserSettings.bool(
-                                                                            "strictQuality",
-                                                                            false,
-                                                                        ) ||
+                                                                        (!UserSettings[
+                                                                            SettingKeys
+                                                                                .StrictQuality] ||
                                                                             qualityTracker.update(
                                                                                 detected,
                                                                                 quality.sample,
@@ -721,10 +720,9 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                                                                     .toDouble(),
                                                                             )) &&
                                                                             detection.confidence >=
-                                                                                UserSettings.number(
-                                                                                    "captureConfidence",
-                                                                                    .60f,
-                                                                                )
+                                                                                UserSettings[
+                                                                                    SettingKeys
+                                                                                        .CaptureConfidence]
                                                                     qualityHint =
                                                                         when {
                                                                             detected == null -> ""
@@ -760,14 +758,12 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                                                                 quality.signature,
                                                                                 quality
                                                                                     .sceneSignature,
-                                                                                UserSettings.bool(
-                                                                                    "turnRearm",
-                                                                                    true,
-                                                                                ),
-                                                                                UserSettings.number(
-                                                                                    "turnThreshold",
-                                                                                    .06f,
-                                                                                ),
+                                                                                UserSettings[
+                                                                                    SettingKeys
+                                                                                        .TurnRearm],
+                                                                                UserSettings[
+                                                                                    SettingKeys
+                                                                                        .TurnThreshold],
                                                                             )
                                                                         else false
                                                                     stability = gate.progress
@@ -829,7 +825,7 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                 camera?.cameraControl?.enableTorch(false)
                             }
                         }
-                    if (UserSettings.bool("showOutline", true))
+                    if (UserSettings[SettingKeys.ShowOutline])
                         Canvas(Modifier.fillMaxSize()) {
                             overlay?.let { points ->
                                 val path =
@@ -931,9 +927,9 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                             TextButton(
                                 onClick = {
                                     val choices = listOf(0f, 3f, 5f, 10f)
-                                    val value = UserSettings.number("captureTimer", 0f)
+                                    val value = UserSettings[SettingKeys.CaptureTimer]
                                     UserSettings.set(
-                                        "captureTimer",
+                                        SettingKeys.CaptureTimer,
                                         choices[(choices.indexOf(value) + 1).mod(choices.size)],
                                     )
                                 }

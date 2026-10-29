@@ -5,6 +5,7 @@ import android.os.Handler
 import android.os.Looper
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
 import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,8 +57,8 @@ class OfflineSpeech(context: Context) : AutoCloseable {
                         if (status != TextToSpeech.SUCCESS || voices.isEmpty())
                             state.value = State(message = "未找到已安装的离线声音，请到系统朗读设置安装。")
                         else {
-                            val saved = UserSettings.string("speechVoice", "")
-                            val chinese = UserSettings.string("ocrLanguage", "CHINESE") != "LATIN"
+                            val saved = UserSettings[SettingKeys.SpeechVoice]
+                            val chinese = UserSettings[SettingKeys.OcrLanguage] != "LATIN"
                             val voice =
                                 voices.firstOrNull { it.name == saved }
                                     ?: voices.firstOrNull {
@@ -67,7 +68,7 @@ class OfflineSpeech(context: Context) : AutoCloseable {
                                     ?: voices.first()
                             tts?.voice = voice
                             tts?.setSpeechRate(
-                                UserSettings.number("speechSpeed", 1f).coerceIn(.5f, 2f)
+                                UserSettings[SettingKeys.SpeechSpeed].coerceIn(.5f, 2f)
                             )
                             state.value =
                                 State(
@@ -202,7 +203,7 @@ class OfflineSpeech(context: Context) : AutoCloseable {
     fun speed(rate: Float) {
         val value = rate.coerceIn(.5f, 2f)
         engine?.setSpeechRate(value)
-        UserSettings.set("speechSpeed", value)
+        UserSettings.set(SettingKeys.SpeechSpeed, value)
     }
 
     fun voice(name: String) {
@@ -215,7 +216,7 @@ class OfflineSpeech(context: Context) : AutoCloseable {
             }
             ?.let {
                 engine?.voice = it
-                UserSettings.set("speechVoice", name)
+                UserSettings.set(SettingKeys.SpeechVoice, name)
                 state.value = state.value.copy(selectedVoice = name)
                 if (state.value.playing) play(text, state.value.offset)
             }

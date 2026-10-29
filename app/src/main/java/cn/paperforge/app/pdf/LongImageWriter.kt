@@ -16,7 +16,13 @@ internal class LongImageWriter(
     private val stages: JobFileStages? = null,
     private val renderSignature: String = "",
 ) : AutoCloseable {
-    val height = options.segmentHeight.coerceAtMost(16_000_000 / options.width)
+    val height =
+        options.segmentHeight.coerceAtMost(
+            (minOf(16_000_000L, cn.paperforge.app.data.RuntimeBudget.memoryPlan().pixels()) /
+                    options.width)
+                .toInt()
+                .coerceAtLeast(1)
+        )
     private val bitmap = Bitmap.createBitmap(options.width, height, Bitmap.Config.ARGB_8888)
     private var used = 0
     private var segment = 1

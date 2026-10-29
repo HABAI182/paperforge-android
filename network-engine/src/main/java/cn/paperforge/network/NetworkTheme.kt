@@ -16,7 +16,8 @@ import kotlinx.coroutines.*
 internal fun ComponentActivity.networkContent(content: @Composable () -> Unit) {
     val dark =
         when (intent.getStringExtra("paperforgeTheme")) {
-            "DARK" -> true
+            "DARK",
+            "AMOLED" -> true
             "LIGHT" -> false
             else ->
                 resources.configuration.uiMode and
@@ -85,7 +86,18 @@ internal fun ComponentActivity.networkContent(content: @Composable () -> Unit) {
                     else (density.fontScale * factor).coerceAtMost(2f),
                 )
         ) {
-            MaterialTheme(colorScheme = colors) { content() }
+            MaterialTheme(
+                colorScheme =
+                    if (intent.getStringExtra("paperforgeTheme") == "AMOLED")
+                        colors.copy(
+                            background = Color.Black,
+                            surface = Color.Black,
+                            surfaceContainerLowest = Color.Black,
+                        )
+                    else colors
+            ) {
+                content()
+            }
         }
     }
 }

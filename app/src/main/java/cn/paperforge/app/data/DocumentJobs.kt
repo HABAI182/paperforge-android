@@ -2,6 +2,7 @@ package cn.paperforge.app.data
 
 import androidx.room.withTransaction
 import androidx.work.*
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.pdf.*
 import java.io.File
 import java.util.UUID
@@ -108,12 +109,41 @@ object DocumentJobs {
             "redact-raster" to "整份栅格脱敏",
         )[mode] ?: "PDF 处理"
 
+    suspend fun memoryContext(
+        repo: Repository,
+        data: androidx.work.Data,
+    ): kotlin.coroutines.CoroutineContext {
+        val payload =
+            data
+                .getString("task")
+                ?.let { repo.dao.task(it) }
+                ?.let { JSONObject(it.payload).optJSONObject("input") }
+        val requested =
+            payload
+                ?.optDouble(
+                    "memoryBudgetMb",
+                    cn.paperforge.app.UserSettings[cn.paperforge.app.SettingKeys.TaskMemoryMB]
+                        .toDouble(),
+                )
+                ?.toInt()
+                ?: cn.paperforge.app.UserSettings[cn.paperforge.app.SettingKeys.TaskMemoryMB]
+                    .toInt()
+        return RuntimeBudget.memoryContext(
+            WorkingMemoryPlan.create(requested, Runtime.getRuntime().maxMemory())
+        ) + BackgroundThreadPriority
+    }
+
     suspend fun prepare(
         repo: Repository,
         type: String,
         input: JobInput,
         workId: UUID = UUID.randomUUID(),
     ): LocalTaskRow {
+        if (!input.json.has("memoryBudgetMb"))
+            input.json.put(
+                "memoryBudgetMb",
+                cn.paperforge.app.UserSettings[cn.paperforge.app.SettingKeys.TaskMemoryMB],
+            )
         val needsOcr =
             type == "AUTO_EXPORT" ||
                 type == "OCR" ||
@@ -132,7 +162,7 @@ object DocumentJobs {
                     app.ocrEngine.id,
                     input.getBoolean(
                         "chinese",
-                        cn.paperforge.app.UserSettings.string("ocrLanguage", "CHINESE") != "LATIN",
+                        cn.paperforge.app.UserSettings[SettingKeys.OcrLanguage] != "LATIN",
                     ),
                 )
             input.json.put("ocrRequest", request.json())
@@ -435,8 +465,17 @@ object DocumentJobs {
                 repo.database.withTransaction {
                     val latest = repo.dao.task(row.id) ?: error("任务记录已移除")
                     require(latest.state !in LocalTaskRow.active) { "任务正在处理" }
+                    val payload = JSONObject(latest.payload)
+                    payload
+                        .getJSONObject("input")
+                        .put(
+                            "memoryBudgetMb",
+                            cn.paperforge.app.UserSettings[
+                                    cn.paperforge.app.SettingKeys.TaskMemoryMB],
+                        )
                     latest
                         .copy(
+                            payload = payload.toString(),
                             state = LocalTaskState.QUEUED,
                             error = null,
                             detail = "等待重试",

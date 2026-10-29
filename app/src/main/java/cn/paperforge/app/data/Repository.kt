@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.room.withTransaction
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.imaging.ScanProcessor
 import cn.paperforge.app.model.safeFileName
 import java.io.File
@@ -46,11 +47,11 @@ class Repository(val context: Context, val database: PaperDatabase) {
                     id,
                     0,
                     file.absolutePath,
-                    filter = cn.paperforge.app.UserSettings.string("filter", "AUTO"),
-                    brightness = cn.paperforge.app.UserSettings.number("brightness", 0f),
-                    contrast = cn.paperforge.app.UserSettings.number("contrast", 1f),
-                    enhanceStrength = cn.paperforge.app.UserSettings.number("enhanceStrength", 1f),
-                    outputAspect = cn.paperforge.app.UserSettings.number("scanAspect", 0f),
+                    filter = cn.paperforge.app.UserSettings[SettingKeys.Filter],
+                    brightness = cn.paperforge.app.UserSettings[SettingKeys.Brightness],
+                    contrast = cn.paperforge.app.UserSettings[SettingKeys.Contrast],
+                    enhanceStrength = cn.paperforge.app.UserSettings[SettingKeys.EnhanceStrength],
+                    outputAspect = cn.paperforge.app.UserSettings[SettingKeys.ScanAspect],
                     corners = (detection.quad ?: cn.paperforge.app.model.Quad.Full).encode(),
                     detectionConfidence = detection.confidence,
                     detectionMethod = detection.method,

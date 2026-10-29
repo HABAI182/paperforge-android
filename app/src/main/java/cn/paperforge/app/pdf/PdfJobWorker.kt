@@ -11,7 +11,14 @@ import org.json.JSONObject
 
 class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result =
-        withContext(Dispatchers.IO + BackgroundWork) {
+        withContext(
+            Dispatchers.IO +
+                BackgroundWork +
+                DocumentJobs.memoryContext(
+                    (applicationContext as PaperForgeApp).repository,
+                    inputData,
+                )
+        ) {
             var output: File? = null
             var published = false
             var originFile: File? = null
@@ -34,7 +41,7 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                         )
                     )
                 DocumentJobs.progress(repo, job, job.row.progress, "等待后台资源")
-                RuntimeBudget.background.acquire()
+                RuntimeBudget.background.acquire(job.row.id)
                 leased = true
                 DocumentJobs.progress(repo, job, job.row.progress)
                 suspend fun report(percent: Int) {
@@ -417,6 +424,16 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                                 ) {
                                     report(it)
                                 }
+                        val limited =
+                            compression?.optBoolean("memoryLimited") == true ||
+                                compression?.optJSONArray("images")?.let { images ->
+                                    (0 until images.length()).any { i ->
+                                        images.getJSONObject(i).let {
+                                            it.optBoolean("budgetLimited") && it.has("outputWidth")
+                                        }
+                                    }
+                                } == true
+                        if (limited) conversionNotice = "部分大图按内存预算降低了分辨率；可提高图像预算后新建任务"
                         origin = compression
                         originRole = "compression-report"
                     }

@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
 import cn.paperforge.app.data.*
 import cn.paperforge.app.model.ToolCatalog
@@ -45,11 +46,10 @@ fun HomeScreen(
     onOcrImages: () -> Unit = onImages,
 ) {
     val settingsVersion by UserSettings.revision.collectAsState()
-    val documentLayout = remember(settingsVersion) { UserSettings.string("documentLayout", "LIST") }
-    val compactCards = remember(settingsVersion) { UserSettings.bool("compactRows", false) }
-    val homeCollection =
-        remember(settingsVersion) { UserSettings.string("homeCollection", "RECENT") }
-    val gridSetting = remember(settingsVersion) { UserSettings.string("gridColumns", "AUTO") }
+    val documentLayout = remember(settingsVersion) { UserSettings[SettingKeys.DocumentLayout] }
+    val compactCards = remember(settingsVersion) { UserSettings[SettingKeys.CompactRows] }
+    val homeCollection = remember(settingsVersion) { UserSettings[SettingKeys.HomeCollection] }
+    val gridSetting = remember(settingsVersion) { UserSettings[SettingKeys.GridColumns] }
     val screenWidth = LocalConfiguration.current.screenWidthDp
     val fontScale = LocalDensity.current.fontScale
     val maxColumns =
@@ -186,7 +186,7 @@ fun HomeScreen(
                 else if (tab == 0 && search.isBlank())
                     it.filter { row -> homeCollection != "RECENT" || row.lastOpened > 0 }
                         .sortedByDescending { row -> row.lastOpened }
-                        .take(UserSettings.number("recentCount", 6f).toInt())
+                        .take(UserSettings[SettingKeys.RecentCount].toInt())
                 else
                     when (sort) {
                         "OPENED" -> it.sortedByDescending { row -> row.lastOpened }
@@ -538,7 +538,7 @@ fun HomeScreen(
                                 IconButton(
                                     onClick = {
                                         UserSettings.set(
-                                            "documentLayout",
+                                            SettingKeys.DocumentLayout,
                                             if (covers) "LIST" else "COVERS",
                                         )
                                     }
@@ -598,7 +598,7 @@ fun HomeScreen(
                             .forEach { (key, label) ->
                                 FilterChip(
                                     homeCollection == key,
-                                    { UserSettings.set("homeCollection", key) },
+                                    { UserSettings.set(SettingKeys.HomeCollection, key) },
                                     label = { Text(label) },
                                 )
                             }
@@ -606,8 +606,7 @@ fun HomeScreen(
                 }
             if (tab == 0) {
                 val shortcuts =
-                    UserSettings.string("homeTools", "images,pdf,ocr,merge,compress,tools")
-                        .split(',')
+                    UserSettings[SettingKeys.HomeTools].split(',')
                         .filter {
                             it in setOf("images", "pdf", "ocr", "merge", "compress", "tools")
                         }

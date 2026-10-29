@@ -67,6 +67,7 @@ object PdfImageOptimizer {
                 .put("inputBytes", input.length())
                 .put("images", rows)
                 .put("flattened", false)
+                .put("workingBudgetBytes", cn.paperforge.app.data.RuntimeBudget.memoryPlan().bytes)
         try {
             PDDocument.load(input, MemoryUsageSetting.setupTempFileOnly()).use { doc ->
                 if (doc.signatureDictionaries.isNotEmpty()) {
@@ -192,8 +193,16 @@ object PdfImageOptimizer {
                                         asset.heightPt * dpi / 72.0 / image.height,
                                     ),
                                 )
-                            val targetW = max(1, (image.width * targetScale).roundToInt())
-                            val targetH = max(1, (image.height * targetScale).roundToInt())
+                            val plan = cn.paperforge.app.data.RuntimeBudget.memoryPlan()
+                            val bytesPerPixel = if (colorspace == "DeviceGray") 12 else 8
+                            val fitted =
+                                plan.size(
+                                    max(1, (image.width * targetScale).roundToInt()),
+                                    max(1, (image.height * targetScale).roundToInt()),
+                                    bytesPerPixel,
+                                )
+                            var targetW = fitted.width
+                            var targetH = fitted.height
                             row.put("targetDpi", dpi)
                                 .put("displayWidthPt", asset.widthPt)
                                 .put("displayHeightPt", asset.heightPt)
@@ -206,11 +215,26 @@ object PdfImageOptimizer {
                             val directJpeg =
                                 stream.getDictionaryObject(COSName.FILTER) == COSName.DCT_DECODE &&
                                     !stream.containsKey(COSName.DECODE_PARMS)
+                            val requestedSample = sample
+                            if (directJpeg) {
+                                while (
+                                    ((image.width.toLong() + sample - 1) / sample) *
+                                        ((image.height.toLong() + sample - 1) / sample) >
+                                        plan.pixels(bytesPerPixel)
+                                ) sample *= 2
+                                if (sample > requestedSample) {
+                                    targetW = min(targetW, max(1, image.width / sample))
+                                    targetH = min(targetH, max(1, image.height / sample))
+                                }
+                            }
+                            row.put("budgetLimited", fitted.limited || sample > requestedSample)
+                                .put("workingBudgetBytes", plan.bytes)
                             if (
                                 (!directJpeg &&
-                                    image.width.toLong() * image.height > 18_000_000L) ||
+                                    image.width.toLong() * image.height >
+                                        plan.pixels(bytesPerPixel)) ||
                                     image.width.toLong() * image.height / sample / sample >
-                                        18_000_000L
+                                        plan.pixels(bytesPerPixel)
                             )
                                 row.put("skipped", "decode pixel budget")
                             else {
@@ -275,7 +299,7 @@ object PdfImageOptimizer {
                                 val encodedFile =
                                     if (stages != null) {
                                         val signature =
-                                            "compression-jpeg-v1:${stages.sourceHash(input)}:${doc.document.getKey(stream) ?: "direct-${asset.ordinal}"}:$quality:$dpi:$targetW:$targetH:$colorspace"
+                                            "compression-jpeg-v2:${stages.sourceHash(input)}:${doc.document.getKey(stream) ?: "direct-${asset.ordinal}"}:$quality:$dpi:$targetW:$targetH:$colorspace"
                                         stages.file("compression-jpeg", signature, "jpg") {
                                             destination ->
                                             FileOutputStream(destination).use { out ->
@@ -312,6 +336,13 @@ object PdfImageOptimizer {
                                     encoded.interpolate = image.interpolate
                                     replacement = encoded
                                     row.put("outputBytes", encodedLength)
+                                        .put(
+                                            "actualDpi",
+                                            minOf(
+                                                targetW * 72.0 / asset.widthPt,
+                                                targetH * 72.0 / asset.heightPt,
+                                            ),
+                                        )
                                         .put("outputWidth", targetW)
                                         .put("outputHeight", targetH)
                                 } else row.put("skipped", "recompression was not smaller")

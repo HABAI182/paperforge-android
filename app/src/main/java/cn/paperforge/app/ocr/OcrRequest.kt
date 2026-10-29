@@ -1,6 +1,7 @@
 package cn.paperforge.app.ocr
 
 import android.graphics.Bitmap
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
 import cn.paperforge.app.data.PageRow
 import org.json.JSONObject
@@ -44,13 +45,13 @@ data class OcrRequest(val engineId: String, val chinese: Boolean, val options: O
 
         fun current(
             engineId: String,
-            chinese: Boolean = UserSettings.string("ocrLanguage", "CHINESE") != "LATIN",
+            chinese: Boolean = UserSettings[SettingKeys.OcrLanguage] != "LATIN",
         ) = OcrRequest(engineId, chinese, OcrOptions.current())
 
         fun decode(
             json: JSONObject?,
             engineId: String,
-            chinese: Boolean = UserSettings.string("ocrLanguage", "CHINESE") != "LATIN",
+            chinese: Boolean = UserSettings[SettingKeys.OcrLanguage] != "LATIN",
         ) =
             if (json == null) current(engineId, chinese)
             else

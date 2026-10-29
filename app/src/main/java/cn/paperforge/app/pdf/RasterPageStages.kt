@@ -45,10 +45,13 @@ object RasterPageStages {
                                     (if (rounded) (value * scale).roundToInt()
                                         else (value * scale).toInt())
                                         .coerceAtLeast(1)
+                                val size =
+                                    cn.paperforge.app.data.RuntimeBudget.memoryPlan()
+                                        .size(dimension(source.width), dimension(source.height))
                                 val bitmap =
                                     Bitmap.createBitmap(
-                                        dimension(source.width),
-                                        dimension(source.height),
+                                        size.width,
+                                        size.height,
                                         Bitmap.Config.ARGB_8888,
                                     )
                                 try {

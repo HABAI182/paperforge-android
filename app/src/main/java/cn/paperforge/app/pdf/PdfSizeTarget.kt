@@ -41,6 +41,16 @@ object PdfSizeTarget {
                     .put("bytes", file.length())
                     .put("fits", file.length() <= targetBytes)
                     .put("originalCopied", detail.optBoolean("originalCopied"))
+                    .put(
+                        "budgetLimitedImages",
+                        detail.optJSONArray("images")?.let { images ->
+                            (0 until images.length()).count { i ->
+                                images.getJSONObject(i).let {
+                                    it.optBoolean("budgetLimited") && it.has("outputWidth")
+                                }
+                            }
+                        } ?: 0,
+                    )
             )
             if (file.length() < best.length()) {
                 best = file
@@ -124,6 +134,12 @@ object PdfSizeTarget {
                 .put(
                     "searchPolicy",
                     "highest tested quality fitting target, otherwise smallest tested output including original",
+                )
+                .put(
+                    "memoryLimited",
+                    (0 until attempts.length()).any {
+                        attempts.getJSONObject(it).optInt("budgetLimitedImages") > 0
+                    },
                 )
                 .put("flattened", false)
         } finally {

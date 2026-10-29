@@ -14,7 +14,14 @@ import org.json.*
 class ConversionJobWorker(context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params) {
     override suspend fun doWork(): Result =
-        withContext(Dispatchers.IO + BackgroundWork) {
+        withContext(
+            Dispatchers.IO +
+                BackgroundWork +
+                DocumentJobs.memoryContext(
+                    (applicationContext as PaperForgeApp).repository,
+                    inputData,
+                )
+        ) {
             val repo = (applicationContext as PaperForgeApp).repository
             var handle: JobHandle? = null
             var leased = false
@@ -42,7 +49,7 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                     )
                 require(!job.input.getBoolean("draft", false)) { "请先完成草稿编辑" }
                 DocumentJobs.progress(repo, job, job.row.progress, "等待后台资源")
-                RuntimeBudget.background.acquire()
+                RuntimeBudget.background.acquire(job.row.id)
                 leased = true
                 val inputs = job.input.getStringArray("inputs")?.map(::File).orEmpty()
                 val names = job.input.getStringArray("names").orEmpty()

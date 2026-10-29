@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.withTransaction
 import androidx.work.*
 import cn.paperforge.app.PaperForgeApp
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.data.*
 import cn.paperforge.app.model.safeFileName
 import java.io.File
@@ -15,7 +16,14 @@ import kotlinx.coroutines.withContext
 
 class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result =
-        withContext(Dispatchers.IO + BackgroundWork) {
+        withContext(
+            Dispatchers.IO +
+                BackgroundWork +
+                DocumentJobs.memoryContext(
+                    (applicationContext as PaperForgeApp).repository,
+                    inputData,
+                )
+        ) {
             val repo = (applicationContext as PaperForgeApp).repository
             var handle: JobHandle? = null
             var leased = false
@@ -30,7 +38,7 @@ class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 if (job.completed)
                     return@withContext Result.success(workDataOf("path" to job.result!!.path))
                 DocumentJobs.progress(repo, job, job.row.progress, "等待后台资源")
-                RuntimeBudget.background.acquire()
+                RuntimeBudget.background.acquire(job.row.id)
                 leased = true
                 DocumentJobs.progress(repo, job, job.row.progress)
                 suspend fun report(percent: Int, detail: String = "正在生成 PDF") {
@@ -80,10 +88,8 @@ class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                                 checkNotNull(engine)
                                     .layout(
                                         page,
-                                        cn.paperforge.app.UserSettings.string(
-                                            "ocrLanguage",
-                                            "CHINESE",
-                                        ) != "LATIN",
+                                        cn.paperforge.app.UserSettings[SettingKeys.OcrLanguage] !=
+                                            "LATIN",
                                     ),
                             )
                         DocumentJobs.checkpoint(repo, job, page.id, page.revision)

@@ -1,5 +1,6 @@
 package cn.paperforge.app.ocr
 
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
 
 enum class OcrMode(val label: String, val edge: Int) {
@@ -33,9 +34,9 @@ data class OcrOptions(
     companion object {
         fun current() =
             OcrOptions(
-                OcrMode.parse(UserSettings.string("ocrMode", "BALANCED")),
-                UserSettings.bool("ocrVoting", true),
-                OcrOrder.parse(UserSettings.string("ocrOrder", "AUTO")),
+                OcrMode.parse(UserSettings[SettingKeys.OcrMode]),
+                UserSettings[SettingKeys.OcrVoting],
+                OcrOrder.parse(UserSettings[SettingKeys.OcrOrder]),
             )
     }
 }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.unit.dp
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
 import cn.paperforge.app.ocr.*
 
@@ -12,7 +13,7 @@ import cn.paperforge.app.ocr.*
 fun OcrOptionsControl() {
     val revision by UserSettings.revision.collectAsState()
     val selected = remember(revision) { OcrOptions.current().mode }
-    val paddle = remember(revision) { UserSettings.string("ocrBackend", "MLKIT") == "PADDLE" }
+    val paddle = remember(revision) { UserSettings[SettingKeys.OcrBackend] == "PADDLE" }
     val order = remember(revision) { OcrOptions.current().order }
     var orderMenu by remember { mutableStateOf(false) }
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -22,7 +23,7 @@ fun OcrOptionsControl() {
                 OcrMode.entries.forEach { mode ->
                     FilterChip(
                         selected = selected == mode,
-                        onClick = { UserSettings.set("ocrMode", mode.name) },
+                        onClick = { UserSettings.set(SettingKeys.OcrMode, mode.name) },
                         label = { Text(mode.label) },
                     )
                 }
@@ -34,7 +35,7 @@ fun OcrOptionsControl() {
                     DropdownMenuItem(
                         text = { Text(value.label) },
                         onClick = {
-                            UserSettings.set("ocrOrder", value.name)
+                            UserSettings.set(SettingKeys.OcrOrder, value.name)
                             orderMenu = false
                         },
                     )

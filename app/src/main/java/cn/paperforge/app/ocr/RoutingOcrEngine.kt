@@ -2,6 +2,7 @@ package cn.paperforge.app.ocr
 
 import android.content.Context
 import android.graphics.Bitmap
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
 import cn.paperforge.app.data.*
 import cn.paperforge.app.imaging.ScanProcessor
@@ -29,8 +30,8 @@ class RoutingOcrEngine(private val context: Context, val packs: OcrModelPacks) :
     private val removing = mutableSetOf<String>()
 
     private fun selected() =
-        if (UserSettings.string("ocrBackend", "MLKIT") == "PADDLE")
-            packs.find(UserSettings.string("ocrPackId", ""))
+        if (UserSettings[SettingKeys.OcrBackend] == "PADDLE")
+            packs.find(UserSettings[SettingKeys.OcrPackId])
         else null
 
     private fun engineId(pack: OcrModelPack) = "paddle:${pack.id}:${pack.fingerprint}:pf1"
@@ -212,8 +213,8 @@ class RoutingOcrEngine(private val context: Context, val packs: OcrModelPacks) :
 
     suspend fun remove(pack: OcrModelPack) =
         withContext(Dispatchers.IO) {
-            if (UserSettings.string("ocrPackId", "") == pack.id)
-                UserSettings.set("ocrBackend", "MLKIT")
+            if (UserSettings[SettingKeys.OcrPackId] == pack.id)
+                UserSettings.set(SettingKeys.OcrBackend, "MLKIT")
             val wait =
                 lock.withLock {
                     removing += pack.id

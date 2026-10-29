@@ -1,6 +1,7 @@
 package cn.paperforge.app.imaging
 
 import android.content.res.AssetManager
+import cn.paperforge.app.SettingKeys
 import org.json.JSONObject
 
 /** One versioned JSON is read by Android and the desktop benchmark. */
@@ -21,7 +22,7 @@ object ScanConfig {
             return preset.removePrefix("DPI:").toIntOrNull()?.coerceIn(72, 600) ?: 220
         return when (preset) {
             "CUSTOM" ->
-                cn.paperforge.app.UserSettings.number("customDpi", 300f).toInt().coerceIn(72, 600)
+                cn.paperforge.app.UserSettings[SettingKeys.CustomDpi].toInt().coerceIn(72, 600)
             "DRAFT" -> int("draftDpi", 150)
             "HIGH" -> int("highDpi", 300)
             else -> int("standardDpi", 220)

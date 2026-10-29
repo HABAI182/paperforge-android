@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import androidx.exifinterface.media.ExifInterface
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.data.PageRow
 import cn.paperforge.app.model.CaptureReference
 import cn.paperforge.app.model.Quad
@@ -100,7 +101,7 @@ object ScanProcessor {
         previewQuad: Quad? = null,
         reference: CaptureReference? = null,
         detectorOverride: String? = null,
-        lockReference: Boolean = cn.paperforge.app.UserSettings.bool("lockCrop", true),
+        lockReference: Boolean = cn.paperforge.app.UserSettings[SettingKeys.LockCrop],
     ): DetectionResult {
         val image = decode(file, 4000)
         return try {

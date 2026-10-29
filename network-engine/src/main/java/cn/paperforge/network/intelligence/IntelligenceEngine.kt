@@ -266,6 +266,7 @@ object IntelligenceEngine {
                             .getJSONArray("choices")
                             .getJSONObject(0)
                             .getJSONObject("message")
+                    require(!message.isNull("content")) { "服务未返回正文" }
                     val answer =
                         when (val value = message.get("content")) {
                             is JSONArray ->

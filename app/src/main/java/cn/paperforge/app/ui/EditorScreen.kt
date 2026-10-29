@@ -15,6 +15,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
 import cn.paperforge.app.data.PageRow
 import cn.paperforge.app.data.origins
@@ -204,7 +205,7 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
     if (origins && active != null) PageOriginsDialog(vm, active) { origins = false }
     if (dewarp && active != null) {
         val page = active
-        var strength by remember { mutableFloatStateOf(UserSettings.number("dewarpStrength", 1f)) }
+        var strength by remember { mutableFloatStateOf(UserSettings[SettingKeys.DewarpStrength]) }
         var previewStrength by remember { mutableFloatStateOf(strength) }
         var previewError by remember { mutableStateOf<String?>(null) }
         val preview by

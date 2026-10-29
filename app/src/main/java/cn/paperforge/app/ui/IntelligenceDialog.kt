@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.PaperForgeApp
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
 import cn.paperforge.app.data.DocumentRow
 import cn.paperforge.app.data.PageRow
@@ -93,7 +94,7 @@ internal fun IntelligenceDialog(
                                                         index,
                                                         engine,
                                                     ),
-                                                    UserSettings.string("readerSelectionOrder", "0")
+                                                    UserSettings[SettingKeys.ReaderSelectionOrder]
                                                         .toIntOrNull() ?: 0,
                                                 )
                                                 .joinToString("\n") { it.text }
@@ -104,10 +105,8 @@ internal fun IntelligenceDialog(
                                                     page.ocrText
                                                         ?: engine.recognize(
                                                             page,
-                                                            UserSettings.string(
-                                                                "ocrLanguage",
-                                                                "CHINESE",
-                                                            ) != "LATIN",
+                                                            UserSettings[SettingKeys.OcrLanguage] !=
+                                                                "LATIN",
                                                         )
                                                 }
                                                 .orEmpty()

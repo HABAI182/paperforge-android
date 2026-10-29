@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
 import cn.paperforge.app.PaperForgeApp
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
 import cn.paperforge.app.ocr.OcrModelPack
 import kotlinx.coroutines.launch
@@ -27,8 +28,8 @@ fun OcrModelsScreen(vm: MainViewModel) {
     val app = context.applicationContext as PaperForgeApp
     val packs by app.ocrModels.installed.collectAsState()
     val revision by UserSettings.revision.collectAsState()
-    val backend = remember(revision) { UserSettings.string("ocrBackend", "MLKIT") }
-    val selected = remember(revision) { UserSettings.string("ocrPackId", "") }
+    val backend = remember(revision) { UserSettings[SettingKeys.OcrBackend] }
+    val selected = remember(revision) { UserSettings[SettingKeys.OcrPackId] }
     var working by remember { mutableStateOf(false) }
     var notice by remember { mutableStateOf("") }
     var info by remember { mutableStateOf<OcrModelPack?>(null) }
@@ -76,7 +77,7 @@ fun OcrModelsScreen(vm: MainViewModel) {
                     TextButton(
                         onClick = {
                             scope.launch {
-                                UserSettings.set("ocrBackend", "MLKIT")
+                                UserSettings.set(SettingKeys.OcrBackend, "MLKIT")
                                 app.ocrEngine.trimUnused()
                             }
                         },
@@ -130,8 +131,8 @@ fun OcrModelsScreen(vm: MainViewModel) {
                             TextButton(
                                 onClick = {
                                     scope.launch {
-                                        UserSettings.set("ocrPackId", pack.id)
-                                        UserSettings.set("ocrBackend", "PADDLE")
+                                        UserSettings.set(SettingKeys.OcrPackId, pack.id)
+                                        UserSettings.set(SettingKeys.OcrBackend, "PADDLE")
                                         app.ocrEngine.trimUnused()
                                     }
                                 },

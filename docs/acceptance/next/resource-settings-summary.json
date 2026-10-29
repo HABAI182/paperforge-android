@@ -1,0 +1,77 @@
+{
+  "date": "2026-10-29",
+  "relatedCard": "JOB03",
+  "status": "partial",
+  "releaseHold": true,
+  "proofDirectory": "resource-settings",
+  "android": {
+    "api": 35,
+    "abi": "x86_64",
+    "focusedTestSeconds": 0.425,
+    "tests": 1,
+    "result": "OK"
+  },
+  "typedSettings": {
+    "keys": 58,
+    "staticReadsMigrated": 87,
+    "staticWritesMigrated": 24,
+    "sharedDefaultsRangesChoices": true,
+    "contextSpecificDefaultsAndDynamicKeysKeptCompatible": true,
+    "restoredFlags": [
+      "reduceMotion",
+      "haptics",
+      "documentSidebar"
+    ],
+    "restoredOrders": [
+      "readerSelectionOrder 0-5",
+      "ocrOrder including vertical"
+    ]
+  },
+  "resourcePolicy": {
+    "oneHeavyBackgroundPipeline": true,
+    "foregroundOcrFirst": true,
+    "preferredWaitingTaskNext": true,
+    "expiredAndCancelledWaiterReleased": true,
+    "nativeCallingThreadBackgroundPriorityRestored": true,
+    "opencvThreads": 2,
+    "budgetFrozenWhenQueued": true,
+    "manualRetryUsesCurrentBudget": true,
+    "routes": [
+      "PDF image compression",
+      "persisted raster pages",
+      "PDF to image packages",
+      "long image segment buffers"
+    ],
+    "imageWorkingSet": {
+      "width": 1448,
+      "height": 1930,
+      "workingBudgetBytes": 33554432,
+      "pixelLimit": 2796202,
+      "requestedEdge": 12000,
+      "completeFrame": true
+    }
+  },
+  "ui": {
+    "settingsVisible": true,
+    "theme": "DARK",
+    "fontScale": 1.25,
+    "originalPreferencesUntouched": true
+  },
+  "limits": [
+    "Working-buffer estimate is not a process RSS hard limit",
+    "Office native peak and physical-phone sustained reading/camera performance not measured",
+    "OCR/scan/restoration keep their existing model/tile/resolution bounds; no universal physical memory claim"
+  ],
+  "ciBeforeThisGroup": [
+    {
+      "source": "cf12482388ab5a3d1627c3aacd6dd5e11c693242",
+      "run": 40801049852,
+      "result": "success"
+    },
+    {
+      "source": "f98e0b9ace8fccdc39db69963f9f946759fa9392",
+      "run": 40798892029,
+      "result": "success"
+    }
+  ]
+}

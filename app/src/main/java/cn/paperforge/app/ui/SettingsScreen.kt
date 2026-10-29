@@ -17,6 +17,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,6 +62,23 @@ fun SettingsScreen(vm: MainViewModel) {
             )
             Text("修改自动保存，拍摄参数在下一次进入相机时生效。", style = MaterialTheme.typography.bodySmall)
             if (visible("桌面 系统 快捷 扫描 识字 阅读 小组件")) SystemEntrypointsSettings()
+            if (visible("图像 内存 任务 后台 预算 大图")) {
+                Text("图像内存预算", style = MaterialTheme.typography.titleMedium)
+                val configured = UserSettings[SettingKeys.TaskMemoryMB]
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf(64f, 128f, 192f, 256f, 384f).forEach { value ->
+                        FilterChip(
+                            selected = configured == value,
+                            onClick = { UserSettings.set(SettingKeys.TaskMemoryMB, value) },
+                            label = { Text("${value.toInt()} MB") },
+                        )
+                    }
+                }
+                Text(
+                    "实际按设备内存调整。低预算可能降低超大页面的导出清晰度，原件保留；新任务和手动重试使用当前预算。",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
             if (visible("OCR 识字 识别 模型 语言包 Paddle"))
                 OutlinedButton(onClick = vm::openOcrModels, modifier = Modifier.fillMaxWidth()) {
                     Text("离线 OCR 与模型包")
@@ -143,7 +161,7 @@ fun SettingsScreen(vm: MainViewModel) {
             if (visible("导出 PDF OCR 文字 识别 DPI 竖排 多栏 排序 脚本 vertical order")) {
                 Text("导出与识别", style = MaterialTheme.typography.titleLarge)
                 OcrOptionsControl()
-                if (UserSettings.string("ocrBackend", "MLKIT") == "PADDLE")
+                if (UserSettings[SettingKeys.OcrBackend] == "PADDLE")
                     Text(
                         "识别语言按当前模型包决定，可在“离线 OCR 与模型包”中切换。",
                         style = MaterialTheme.typography.bodySmall,
@@ -251,7 +269,7 @@ fun SettingsScreen(vm: MainViewModel) {
                             index >= 0,
                             { checked ->
                                 UserSettings.set(
-                                    "homeTools",
+                                    SettingKeys.HomeTools,
                                     (if (checked) order + key else order - key).joinToString(","),
                                 )
                             },
@@ -264,7 +282,7 @@ fun SettingsScreen(vm: MainViewModel) {
                                 val next = order.toMutableList()
                                 next[index] = next[index - 1]
                                 next[index - 1] = key
-                                UserSettings.set("homeTools", next.joinToString(","))
+                                UserSettings.set(SettingKeys.HomeTools, next.joinToString(","))
                             },
                         ) {
                             Icon(Icons.Default.KeyboardArrowUp, "上移 ${names[key]}")
@@ -275,7 +293,7 @@ fun SettingsScreen(vm: MainViewModel) {
                                 val next = order.toMutableList()
                                 next[index] = next[index + 1]
                                 next[index + 1] = key
-                                UserSettings.set("homeTools", next.joinToString(","))
+                                UserSettings.set(SettingKeys.HomeTools, next.joinToString(","))
                             },
                         ) {
                             Icon(Icons.Default.KeyboardArrowDown, "下移 ${names[key]}")

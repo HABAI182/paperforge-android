@@ -19,6 +19,7 @@ import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
 
 internal val LocalDocumentFocus = staticCompositionLocalOf<(Boolean) -> Unit> { {} }
@@ -29,7 +30,7 @@ fun DocumentWorkspace(vm: MainViewModel, screen: String, content: @Composable ()
     val latestContent by rememberUpdatedState(content)
     val pane = remember { movableContentOf { latestContent() } }
     val revision by UserSettings.revision.collectAsState()
-    val enabled = remember(revision) { UserSettings.bool("documentSidebar", true) }
+    val enabled = remember(revision) { UserSettings[SettingKeys.DocumentSidebar] }
     var focus by rememberSaveable { mutableStateOf(false) }
     val motion = LocalPaperMotion.current
     val font = LocalDensity.current.fontScale

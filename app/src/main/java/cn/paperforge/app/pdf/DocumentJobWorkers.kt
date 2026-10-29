@@ -13,7 +13,14 @@ import kotlinx.coroutines.*
 class OcrDocumentWorker(context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params) {
     override suspend fun doWork(): Result =
-        withContext(Dispatchers.IO + BackgroundWork) {
+        withContext(
+            Dispatchers.IO +
+                BackgroundWork +
+                DocumentJobs.memoryContext(
+                    (applicationContext as PaperForgeApp).repository,
+                    inputData,
+                )
+        ) {
             val app = applicationContext as PaperForgeApp
             val repo = app.repository
             var handle: JobHandle? = null
@@ -30,7 +37,7 @@ class OcrDocumentWorker(context: Context, params: WorkerParameters) :
                         workDataOf("path" to job.result!!.path, "mode" to "OCR")
                     )
                 DocumentJobs.progress(repo, job, job.row.progress, "等待后台资源")
-                RuntimeBudget.background.acquire()
+                RuntimeBudget.background.acquire(job.row.id)
                 leased = true
                 val doc =
                     repo.dao.document(job.input.getString("document") ?: "") ?: error("来源文档已移除")

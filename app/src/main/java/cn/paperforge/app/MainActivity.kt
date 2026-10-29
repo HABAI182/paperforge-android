@@ -640,7 +640,7 @@ class MainActivity : ComponentActivity() {
                                 remember(exportRevision) {
                                     cn.paperforge.app.data
                                         .ExportDestinations(this@MainActivity)
-                                        .get(UserSettings.string("exportDestination", ""))
+                                        .get(UserSettings[SettingKeys.ExportDestination])
                                 }
                             Column {
                                 Text(
@@ -675,7 +675,7 @@ class MainActivity : ComponentActivity() {
                                                 cn.paperforge.app.data
                                                     .ExportDestinations(this@MainActivity)
                                                     .get(
-                                                        UserSettings.string("exportDestination", "")
+                                                        UserSettings[SettingKeys.ExportDestination]
                                                     )
                                                     ?.let {
                                                         putExtra(

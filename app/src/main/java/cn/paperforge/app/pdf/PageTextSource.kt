@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.ocr.OcrEngine
 import java.io.File
 import java.security.MessageDigest
@@ -26,7 +27,7 @@ object PageTextSource {
             val key =
                 MessageDigest.getInstance("SHA-256")
                     .digest(
-                        "selection-v4:${NativeTextCoverage.VERSION}:${PdfGlyphGeometry.VERSION}:${engine.signature(cn.paperforge.app.UserSettings.string("ocrLanguage","CHINESE") != "LATIN", cn.paperforge.app.ocr.OcrOptions.current())}:${file.canonicalPath}:${file.length()}:${file.lastModified()}:$page"
+                        "selection-v4:${NativeTextCoverage.VERSION}:${PdfGlyphGeometry.VERSION}:${engine.signature(cn.paperforge.app.UserSettings[SettingKeys.OcrLanguage] != "LATIN", cn.paperforge.app.ocr.OcrOptions.current())}:${file.canonicalPath}:${file.length()}:${file.lastModified()}:$page"
                             .toByteArray()
                     )
                     .joinToString("") { "%02x".format(it.toInt() and 255) }
@@ -71,8 +72,7 @@ object PageTextSource {
                             .snapshot()
                             .recognizeBitmap(
                                 bitmap,
-                                cn.paperforge.app.UserSettings.string("ocrLanguage", "CHINESE") !=
-                                    "LATIN",
+                                cn.paperforge.app.UserSettings[SettingKeys.OcrLanguage] != "LATIN",
                             )
                     else {
                         require(region.valid()) { "请圈选更大的文字区域" }
@@ -102,10 +102,8 @@ object PageTextSource {
                                     .snapshot()
                                     .recognizeBitmap(
                                         crop,
-                                        cn.paperforge.app.UserSettings.string(
-                                            "ocrLanguage",
-                                            "CHINESE",
-                                        ) != "LATIN",
+                                        cn.paperforge.app.UserSettings[SettingKeys.OcrLanguage] !=
+                                            "LATIN",
                                     ),
                                 bitmap.width,
                                 bitmap.height,

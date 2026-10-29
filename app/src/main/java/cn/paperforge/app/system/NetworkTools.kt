@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.widget.Toast
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
 
 object NetworkTools {
@@ -50,8 +51,8 @@ object NetworkTools {
                             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         }
                     }
-                    .putExtra("paperforgeTheme", UserSettings.string("theme", "SYSTEM"))
-                    .putExtra("paperforgeFontScale", UserSettings.number("fontScale", 1f))
+                    .putExtra("paperforgeTheme", UserSettings[SettingKeys.Theme])
+                    .putExtra("paperforgeFontScale", UserSettings[SettingKeys.FontScale])
                     .setComponent(
                         ComponentName("cn.paperforge.network", "cn.paperforge.network.$screen")
                     )

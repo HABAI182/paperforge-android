@@ -26,6 +26,7 @@ class PaperForgeApp : Application() {
         cn.paperforge.app.imaging.ScanModel.initialize(this)
         PDFBoxResourceLoader.init(this)
         OpenCVLoader.initLocal()
+        org.opencv.core.Core.setNumThreads(2)
         cn.paperforge.app.imaging.ScanConfig.load(assets)
         repository =
             Repository(

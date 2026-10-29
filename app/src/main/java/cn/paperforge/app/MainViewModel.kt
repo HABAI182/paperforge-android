@@ -104,7 +104,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 ocrEngine.recognizeRegion(
                     page,
                     region,
-                    UserSettings.string("ocrLanguage", "CHINESE") != "LATIN",
+                    UserSettings[SettingKeys.OcrLanguage] != "LATIN",
                 )
         }
 
@@ -491,7 +491,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 }
             if (
                 selected.value?.id == row.documentId &&
-                    (row.targetPageId != null || UserSettings.bool("reviewAfterCapture", false))
+                    (row.targetPageId != null || UserSettings[SettingKeys.ReviewAfterCapture])
             ) {
                 if (replacement.value == row.targetPageId) replacement.value = null
                 screen.value = "editor"
@@ -757,7 +757,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     )
                 )
                 saved = true
-                UserSettings.set("dewarpStrength", strength)
+                UserSettings.set(SettingKeys.DewarpStrength, strength)
                 messages.send("已应用曲面校正，可撤销")
             } finally {
                 source.recycle()
@@ -858,10 +858,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         perform("打包所选文档") {
             val docs = ids.mapNotNull { repo.dao.document(it) }.filter { it.trashedAt == null }
             require(docs.isNotEmpty()) { "请选择文档" }
-            val sharePaper = UserSettings.string("paper", "Auto")
-            val shareQuality = UserSettings.number("quality", 90f).toInt()
-            val shareSearchable = UserSettings.bool("searchable", false)
-            val requestedResolution = UserSettings.string("resolution", "STANDARD")
+            val sharePaper = UserSettings[SettingKeys.Paper]
+            val shareQuality = UserSettings[SettingKeys.Quality].toInt()
+            val shareSearchable = UserSettings[SettingKeys.Searchable]
+            val requestedResolution = UserSettings[SettingKeys.Resolution]
             val shareResolution =
                 if (requestedResolution == "CUSTOM")
                     "DPI:${cn.paperforge.app.imaging.ScanConfig.dpi(requestedResolution)}"
@@ -965,16 +965,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     withContext(Dispatchers.IO) { ExportDestinations(repo.context).remember(uri) }
                 }
                 .onSuccess { destination ->
-                    UserSettings.set("exportDestination", destination.id)
+                    UserSettings.set(SettingKeys.ExportDestination, destination.id)
                     saveOutputToDirectory(destination.id)
                 }
                 .onFailure { messages.send(it.message ?: "无法授权保存目录，请重新选择") }
         }
     }
 
-    fun saveOutputToDirectory(
-        destinationId: String = UserSettings.string("exportDestination", "")
-    ) {
+    fun saveOutputToDirectory(destinationId: String = UserSettings[SettingKeys.ExportDestination]) {
         val file = output.value ?: return
         val store = ExportDestinations(repo.context)
         val destination = store.get(destinationId)
@@ -1194,7 +1192,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun recognize(
         page: PageRow,
-        chinese: Boolean = UserSettings.string("ocrLanguage", "CHINESE") != "LATIN",
+        chinese: Boolean = UserSettings[SettingKeys.OcrLanguage] != "LATIN",
     ) = perform("正在离线识别文字") { showOcr(page, chinese) }
 
     private suspend fun showOcr(page: PageRow, chinese: Boolean) {
@@ -1203,10 +1201,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val (updated, result) =
             repo.cacheOcr(
                 page,
-                ocrEngine.layout(
-                    page,
-                    chinese && UserSettings.string("ocrLanguage", "CHINESE") != "LATIN",
-                ),
+                ocrEngine.layout(page, chinese && UserSettings[SettingKeys.OcrLanguage] != "LATIN"),
             )
         ocrReview.value =
             "${cn.paperforge.app.ocr.OcrMode.parse(result.recognitionMode).label} · ${result.lines.size} 行 · 可编辑、复制或导出"
@@ -1225,7 +1220,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             "OCR",
             workDataOf(
                 "document" to doc.id,
-                "chinese" to (UserSettings.string("ocrLanguage", "CHINESE") != "LATIN"),
+                "chinese" to (UserSettings[SettingKeys.OcrLanguage] != "LATIN"),
             ),
         )
     }
@@ -1235,7 +1230,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             val current =
                 repo.dao.pages(page.documentId).firstOrNull { it.id == page.id } ?: return@perform
             if (current.ocrText == null)
-                showOcr(current, UserSettings.string("ocrLanguage", "CHINESE") != "LATIN")
+                showOcr(current, UserSettings[SettingKeys.OcrLanguage] != "LATIN")
             else {
                 ocrPage = current
                 ocrVersions.value = OcrRecords.versions(current)
@@ -2228,7 +2223,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 pages.mapIndexed { index, page ->
                     currentCoroutineContext().ensureActive()
                     progress.value = "准备第 ${index+1} / ${pages.size} 页"
-                    cn.paperforge.app.data.RuntimeBudget.background.acquire()
+                    cn.paperforge.app.data.RuntimeBudget.background.acquire(
+                        "visible-scan-preparation",
+                        interactive = true,
+                    )
                     try {
                         val bitmap = cn.paperforge.app.imaging.ScanProcessor.render(page, 2400)
                         try {

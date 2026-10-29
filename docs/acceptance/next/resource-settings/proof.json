@@ -1,0 +1,23 @@
+{
+  "typedKeys": 58,
+  "normalizedKeys": 58,
+  "flagsAndVerticalOrderRoundTrip": true,
+  "priorityOrder": [
+    "visible",
+    "preferred",
+    "queued"
+  ],
+  "cancelledWaiterReleased": true,
+  "imageWorkingSet": {
+    "width": 1448,
+    "height": 1930,
+    "workingBudgetBytes": 33554432,
+    "pixelLimit": 2796202,
+    "requestedEdge": 12000,
+    "completeFrame": true
+  },
+  "originalPaperSizeKept": true,
+  "mainPreferencesUntouched": true,
+  "backgroundThreadPriorityRestored": true,
+  "opencvThreads": 2
+}

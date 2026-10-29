@@ -36,6 +36,8 @@ fun taskStateName(state: LocalTaskState) =
 @Composable
 fun TaskCenterScreen(vm: MainViewModel) {
     val tasks by vm.localTasks.collectAsState()
+    val waitingIds by RuntimeBudget.background.waitingIds.collectAsState()
+    val preferredId by RuntimeBudget.background.preferredId.collectAsState()
     val filter by vm.taskFilter.collectAsState()
     var preview by remember { mutableStateOf<LocalTaskRow?>(null) }
     val selected =
@@ -79,7 +81,7 @@ fun TaskCenterScreen(vm: MainViewModel) {
                 }
             }
             Text(
-                "${selected.size} 项任务",
+                "${selected.size} 项任务 · 等待中的任务可设为下一项优先",
                 Modifier.padding(16.dp),
                 style = MaterialTheme.typography.bodySmall,
             )
@@ -141,6 +143,8 @@ fun TaskCenterScreen(vm: MainViewModel) {
                                 }
                                 PaperStatusLabel(
                                     if (textDraft) "待编辑"
+                                    else if (active && row.id in waitingIds)
+                                        if (preferredId == row.id) "下一项优先" else "等待处理"
                                     else if (
                                         row.type == "CONVERT" && row.state == LocalTaskState.PARTIAL
                                     )
@@ -210,6 +214,16 @@ fun TaskCenterScreen(vm: MainViewModel) {
                                     )
                                         TextButton(onClick = { vm.editLongImageTask(row) }) {
                                             Text("调整接缝副本")
+                                        }
+                                    if (row.id in waitingIds)
+                                        TextButton(
+                                            onClick = {
+                                                RuntimeBudget.background.prefer(
+                                                    if (preferredId == row.id) null else row.id
+                                                )
+                                            }
+                                        ) {
+                                            Text(if (preferredId == row.id) "取消优先" else "下一项优先")
                                         }
                                     if (active)
                                         TextButton(onClick = { vm.cancelLocalTask(row) }) {

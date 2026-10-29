@@ -265,10 +265,16 @@ object PdfTools {
                             val scale =
                                 if (dpi > 0) dpi / 72f
                                 else edge.toFloat() / maxOf(page.width, page.height)
+                            val size =
+                                cn.paperforge.app.data.RuntimeBudget.memoryPlan()
+                                    .size(
+                                        (page.width * scale).toInt().coerceAtLeast(1),
+                                        (page.height * scale).toInt().coerceAtLeast(1),
+                                    )
                             val bitmap =
                                 Bitmap.createBitmap(
-                                    (page.width * scale).toInt().coerceAtLeast(1),
-                                    (page.height * scale).toInt().coerceAtLeast(1),
+                                    size.width,
+                                    size.height,
                                     Bitmap.Config.ARGB_8888,
                                 )
                             try {

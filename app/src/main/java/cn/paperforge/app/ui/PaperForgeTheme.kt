@@ -16,12 +16,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
 
 @Composable
 fun PaperForgeTheme(forceDarkSystemBars: Boolean = false, content: @Composable () -> Unit) {
     val revision by UserSettings.revision.collectAsState()
-    val theme = remember(revision) { UserSettings.string("theme", "SYSTEM") }
+    val theme = remember(revision) { UserSettings[SettingKeys.Theme] }
     val dark =
         when (theme) {
             "DARK",
@@ -30,7 +31,7 @@ fun PaperForgeTheme(forceDarkSystemBars: Boolean = false, content: @Composable (
             else -> isSystemInDarkTheme()
         }
     val accent =
-        when (UserSettings.string("accent", "GREEN")) {
+        when (UserSettings[SettingKeys.Accent]) {
             "BLUE" -> Color(0xFF225BAA)
             "PURPLE" -> Color(0xFF7250A0)
             "ORANGE" -> Color(0xFFA54B15)
@@ -119,7 +120,7 @@ fun PaperForgeTheme(forceDarkSystemBars: Boolean = false, content: @Composable (
                 surfaceTint = Color.Transparent,
             )
     val selectedColors =
-        if (UserSettings.bool("dynamicColor", false) && android.os.Build.VERSION.SDK_INT >= 31) {
+        if (UserSettings[SettingKeys.DynamicColor] && android.os.Build.VERSION.SDK_INT >= 31) {
             if (dark) dynamicDarkColorScheme(LocalContext.current)
             else dynamicLightColorScheme(LocalContext.current)
         } else colors
@@ -172,12 +173,12 @@ fun PaperForgeTheme(forceDarkSystemBars: Boolean = false, content: @Composable (
                 TextStyle(fontSize = 11.sp, lineHeight = 16.sp, fontWeight = FontWeight.Medium),
         )
     val density = LocalDensity.current
-    val customScale = UserSettings.number("fontScale", 1f).coerceIn(.85f, 1.3f)
+    val customScale = UserSettings[SettingKeys.FontScale].coerceIn(.85f, 1.3f)
     val effectiveFontScale =
         if (density.fontScale >= 2f) density.fontScale
         else (density.fontScale * customScale).coerceAtMost(2f)
     val reducedMotion =
-        UserSettings.bool("reduceMotion", false) ||
+        UserSettings[SettingKeys.ReduceMotion] ||
             !android.animation.ValueAnimator.areAnimatorsEnabled()
     CompositionLocalProvider(
         LocalPaperMotion provides PaperMotion(reducedMotion),

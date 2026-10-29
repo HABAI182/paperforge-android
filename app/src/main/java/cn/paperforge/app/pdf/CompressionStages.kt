@@ -19,7 +19,7 @@ object CompressionStages {
         stages: JobFileStages,
         progress: suspend (Int) -> Unit,
     ): JSONObject {
-        val signature = "pdf-image-rewrite-v2:${stages.sourceHash(input)}:$quality"
+        val signature = "pdf-image-rewrite-v3:${stages.sourceHash(input)}:$quality"
         val folder = File(output.parentFile, "compression-${UUID.randomUUID()}").apply { mkdirs() }
         val part = File(output.path + ".part")
         val reusedBefore = stages.reused

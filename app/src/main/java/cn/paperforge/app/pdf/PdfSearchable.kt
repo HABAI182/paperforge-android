@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
+import cn.paperforge.app.SettingKeys
 import com.tom_roush.pdfbox.io.MemoryUsageSetting
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import java.io.File
@@ -62,10 +63,8 @@ object PdfSearchable {
                                             )
                                             return engine.recognizeBitmap(
                                                 bitmap,
-                                                cn.paperforge.app.UserSettings.string(
-                                                    "ocrLanguage",
-                                                    "CHINESE",
-                                                ) != "LATIN",
+                                                cn.paperforge.app.UserSettings[
+                                                        SettingKeys.OcrLanguage] != "LATIN",
                                             )
                                         } finally {
                                             bitmap.recycle()

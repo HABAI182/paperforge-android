@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.RectF
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.model.OcrLayout
 import cn.paperforge.app.ocr.OcrEngine
 import com.tom_roush.pdfbox.pdmodel.PDDocument
@@ -597,8 +598,7 @@ object PhoneTables {
                         recognized =
                             engine.recognizeBitmap(
                                 crop,
-                                cn.paperforge.app.UserSettings.string("ocrLanguage", "CHINESE") !=
-                                    "LATIN",
+                                cn.paperforge.app.UserSettings[SettingKeys.OcrLanguage] != "LATIN",
                             )
                         val kept =
                             tokens.map { token -> NativeTextCoverage.Region(token.text, token.box) }

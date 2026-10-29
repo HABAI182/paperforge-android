@@ -32,6 +32,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import cn.paperforge.app.MainViewModel
 import cn.paperforge.app.ReaderPosition
 import cn.paperforge.app.ReaderPreferences
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.model.PageSpreads
 import cn.paperforge.app.model.PointN
 import cn.paperforge.app.pdf.PdfSearch
@@ -119,7 +120,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
         }
     }
     var edgeTurning by remember {
-        mutableStateOf(cn.paperforge.app.UserSettings.bool("edgeTurn", true))
+        mutableStateOf(cn.paperforge.app.UserSettings[SettingKeys.EdgeTurn])
     }
     var navigation by remember { mutableStateOf(false) }
     var textPage by remember { mutableStateOf<Int?>(null) }
@@ -132,7 +133,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
     var selectionJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
     var selectionOrder by remember {
         mutableIntStateOf(
-            cn.paperforge.app.UserSettings.string("readerSelectionOrder", "0").toIntOrNull() ?: 0
+            cn.paperforge.app.UserSettings[SettingKeys.ReaderSelectionOrder].toIntOrNull() ?: 0
         )
     }
     var regionPage by remember { mutableStateOf<Int?>(null) }
@@ -882,7 +883,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                             selection = next
                             selectionOrder = next.model.order
                             cn.paperforge.app.UserSettings.set(
-                                "readerSelectionOrder",
+                                SettingKeys.ReaderSelectionOrder,
                                 selectionOrder.toString(),
                             )
                         },
@@ -1016,7 +1017,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                             edgeTurning,
                             {
                                 edgeTurning = it
-                                cn.paperforge.app.UserSettings.set("edgeTurn", it)
+                                cn.paperforge.app.UserSettings.set(SettingKeys.EdgeTurn, it)
                             },
                         )
                     }

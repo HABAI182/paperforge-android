@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.data.PageRow
 import cn.paperforge.app.imaging.ScanProcessor
 import cn.paperforge.app.model.OcrLayout
@@ -61,19 +62,15 @@ object PdfEngine {
                                     it.matches(page) &&
                                         (it.requestSignature ==
                                             engine.signature(
-                                                cn.paperforge.app.UserSettings.string(
-                                                    "ocrLanguage",
-                                                    "CHINESE",
-                                                ) != "LATIN",
+                                                cn.paperforge.app.UserSettings[
+                                                        SettingKeys.OcrLanguage] != "LATIN",
                                                 cn.paperforge.app.ocr.OcrOptions.current(),
                                             ) || it.lines.any { line -> line.corrected })
                                 }
                                 ?: engine.layout(
                                     page,
-                                    cn.paperforge.app.UserSettings.string(
-                                        "ocrLanguage",
-                                        "CHINESE",
-                                    ) != "LATIN",
+                                    cn.paperforge.app.UserSettings[SettingKeys.OcrLanguage] !=
+                                        "LATIN",
                                 )
                     val dpi = cn.paperforge.app.imaging.ScanConfig.dpi(resolution)
                     var bitmap =

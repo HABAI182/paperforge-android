@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
 import cn.paperforge.app.data.*
 import cn.paperforge.app.model.*
@@ -404,7 +405,7 @@ fun WorkflowScreen(vm: MainViewModel) {
                                 if (operation.id == "save")
                                     options.put(
                                         "destination",
-                                        UserSettings.string("exportDestination", ""),
+                                        UserSettings[SettingKeys.ExportDestination],
                                     )
                                 vm.workflowDraft.value =
                                     draft.copy(

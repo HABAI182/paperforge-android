@@ -1,5 +1,6 @@
 package cn.paperforge.app.model
 
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
 import java.util.UUID
 import org.json.*
@@ -124,7 +125,7 @@ object WorkflowRecipes {
 
     fun all(): List<WorkflowRecipe> =
         runCatching {
-                val array = JSONArray(UserSettings.string("workflowRecipes", "[]"))
+                val array = JSONArray(UserSettings[SettingKeys.WorkflowRecipes])
                 List(array.length()) {
                         runCatching { WorkflowRecipe.decode(array.getJSONObject(it)) }.getOrNull()
                     }
@@ -135,14 +136,14 @@ object WorkflowRecipes {
     fun save(recipe: WorkflowRecipe) {
         val items = all().filterNot { it.id == recipe.id } + recipe
         UserSettings.set(
-            "workflowRecipes",
+            SettingKeys.WorkflowRecipes,
             JSONArray().apply { items.forEach { put(it.json()) } }.toString(),
         )
     }
 
     fun remove(id: String) =
         UserSettings.set(
-            "workflowRecipes",
+            SettingKeys.WorkflowRecipes,
             JSONArray()
                 .apply { all().filterNot { it.id == id }.forEach { put(it.json()) } }
                 .toString(),

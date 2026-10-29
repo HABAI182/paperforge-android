@@ -1,5 +1,6 @@
 package cn.paperforge.app.model
 
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
 import cn.paperforge.app.data.DocumentRow
 import java.security.MessageDigest
@@ -90,7 +91,7 @@ data class AutoExportRule(
 object AutoExportRules {
     fun all(): List<AutoExportRule> =
         runCatching {
-                val array = JSONArray(UserSettings.string("autoExportRules", "[]"))
+                val array = JSONArray(UserSettings[SettingKeys.AutoExportRules])
                 List(array.length()) {
                         runCatching { AutoExportRule.decode(array.getJSONObject(it)) }.getOrNull()
                     }
@@ -105,7 +106,7 @@ object AutoExportRules {
                 rule.copy(activation = UUID.randomUUID().toString())
             else rule
         UserSettings.set(
-            "autoExportRules",
+            SettingKeys.AutoExportRules,
             JSONArray()
                 .apply {
                     (previous.filterNot { it.id == rule.id } + selected).forEach { put(it.json()) }
@@ -116,7 +117,7 @@ object AutoExportRules {
 
     fun remove(id: String) =
         UserSettings.set(
-            "autoExportRules",
+            SettingKeys.AutoExportRules,
             JSONArray()
                 .apply { all().filterNot { it.id == id }.forEach { put(it.json()) } }
                 .toString(),

@@ -10,6 +10,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.dp
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
 
 object PaperSpace {
@@ -38,7 +39,7 @@ val LocalPaperMotion = staticCompositionLocalOf { PaperMotion() }
 internal fun selectionFeedback(): () -> Unit {
     val feedback = LocalHapticFeedback.current
     val revision by UserSettings.revision.collectAsState()
-    val enabled = remember(revision) { UserSettings.bool("haptics", true) }
+    val enabled = remember(revision) { UserSettings[SettingKeys.Haptics] }
     return { if (enabled) feedback.performHapticFeedback(HapticFeedbackType.LongPress) }
 }
 

@@ -18,6 +18,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import cn.paperforge.app.PaperForgeApp
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.model.PointN
 import cn.paperforge.app.pdf.*
 import cn.paperforge.app.reader.OfflineSpeech
@@ -143,7 +144,7 @@ fun ReaderTextSheet(
     var excerpt by remember { mutableStateOf(false) }
     var notice by remember { mutableStateOf("") }
     var speed by remember {
-        mutableFloatStateOf(cn.paperforge.app.UserSettings.number("speechSpeed", 1f))
+        mutableFloatStateOf(cn.paperforge.app.UserSettings[SettingKeys.SpeechSpeed])
     }
     var voicePicker by remember { mutableStateOf(false) }
     var voiceQuery by remember { mutableStateOf("") }

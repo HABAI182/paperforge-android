@@ -1,6 +1,7 @@
 package cn.paperforge.app.data
 
 import androidx.room.withTransaction
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
 import cn.paperforge.app.model.*
 import java.io.File
@@ -72,7 +73,7 @@ object AutoExportCoordinator {
     fun start(repo: Repository, scope: CoroutineScope) =
         scope.launch {
             UserSettings.revision
-                .map { UserSettings.string("autoExportRules", "[]") }
+                .map { UserSettings[SettingKeys.AutoExportRules] }
                 .distinctUntilChanged()
                 .flatMapLatest {
                     if (AutoExportRules.all().any { it.enabled }) signals(repo) else emptyFlow()
