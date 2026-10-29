@@ -2,7 +2,7 @@
 
 手机本地的扫描、阅读与文件转换工作台。无登录、广告或水印。完整功能版将Office、特殊格式和联网工具内置为一个安装包，更新、传输与智能工具按需使用。
 
-当前版本 **1.0.0 · 完整功能版**，普通ARM64手机只需安装一个APK，无需另装三个扩展。个人非营利项目，无登录、广告或订阅。访问[源码](https://github.com/HABAI182/paperforge-android)与[安装包](https://github.com/HABAI182/paperforge-android/releases)时，私有仓库需登录有权限的GitHub账号；仓库公开后可直接下载。
+当前版本 **1.0.0 · 完整功能版 / 10003**，安装包 **177.12 MB**，普通ARM64手机只需安装一个APK，无需另装三个扩展。个人非营利项目，无登录、广告或订阅。访问[源码](https://github.com/HABAI182/paperforge-android)与[安装包](https://github.com/HABAI182/paperforge-android/releases)时，私有仓库需登录有权限的GitHub账号；仓库公开后可直接下载。
 
 | 文档 | 工作台 | 设置 |
 |---|---|---|
