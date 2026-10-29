@@ -89,3 +89,5 @@ macOS/Linux 使用 `./gradlew`。首次构建需下载依赖，已安装应用�
 构建可选 Office 手机引擎：先运行 `python tools/fetch_office_runtime.py`（从固定来源下载并校验运行时），再执行 `gradlew.bat :office-engine:assembleDebug -PpaperforgeAbis=arm64-v8a`。主应用独立构建不需要该运行时。运行时目录不进入源码包。
 
 构建可选格式引擎：`gradlew.bat :format-engine:assembleDebug`。已提交固定版本的浏览器解析资源，普通 APK 构建无需 Node；原生 MuPDF AAR 固定 1.28.5，来源、SHA256 与重新构建方法见该模块文档。独立模块使用 AGPL-3.0-or-later，不改变主应用许可证。
+
+可选联网工具 `network-engine`：手机内更新下载与局域网互传均按需手动开启。工具页 → 局域网传输，手机/平板/电脑浏览器扫码配对；队列可离线准备、暂停/移除，断线保留续传。文件只取显式选择的副本，原件保留；主应用无网络权限。HTTP局域网传输不宣称加密。翻译与AI仍在开发。

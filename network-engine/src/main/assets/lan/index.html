@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PaperForge · 局域网传输</title><link rel="icon" href="/logo.png"><link rel="stylesheet" href="/style.css"><script src="/sha256.min.js" defer></script><script src="/app.js" defer></script></head>
+<body><main>
+<header><div class="logo"><img src="/logo.png" alt="PaperForge"></div><div><p class="eyebrow">PAPERFORGE</p><h1>文件，就在手边。</h1><p>同一网络互传，无需外部服务器。</p></div><span id="connection" class="badge">等待配对</span></header>
+<section id="pair-panel" class="card pair"><h2>连接手机</h2><p>扫描手机二维码，或输入手机显示的八位配对码。</p><form id="pair-form"><label>设备名称<input id="device-name" maxlength="60" placeholder="我的浏览器"></label><label>配对码或链接<input id="pair-code" autocomplete="off" placeholder="1234 5678" required></label><button type="submit">配对</button></form></section>
+<p id="notice" role="status" aria-live="polite"></p>
+<div id="workspace" class="workspace" hidden>
+<section class="card"><div class="section-title"><div><p class="eyebrow">发送到手机</p><h2>选择文件，继续传输</h2></div><button id="refresh" class="quiet">刷新</button></div><label class="picker">＋ 选择文件<input id="files" type="file" multiple></label><p class="hint">连接中断后可继续。重新打开页面时，重新选择同一个文件即可找到断点。</p><div id="upload-queue" class="list"></div></section>
+<section class="card"><p class="eyebrow">从手机领取</p><h2>手机上的待发送文件</h2><p class="hint">文件由手机加入队列。浏览器下载支持范围续传。</p><div id="downloads" class="list"></div></section>
+</div><footer>PaperForge · 局域网工具 <span>关闭手机上的传输服务后，队列仍保留。</span></footer>
+</main></body></html>

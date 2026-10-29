@@ -1,0 +1,44 @@
+{
+  "date": "2026-10-29",
+  "card": "EXT02",
+  "status": "done",
+  "releaseHold": true,
+  "mainRemainsOffline": true,
+  "defaultEnabled": false,
+  "proofDirectory": "lan",
+  "android": {
+    "api": 35,
+    "abi": "x86_64",
+    "coreTestSeconds": 0.507,
+    "browserTestSeconds": 4.788,
+    "tests": 2,
+    "result": "OK"
+  },
+  "nativeUi": {
+    "theme": "DARK",
+    "fontScale": 1.25,
+    "systemPickerOriginalName": "PaperForge-logo.png",
+    "offlineQueueSurvivedForceStop": true,
+    "pauseResume": true,
+    "serviceStartedStopped": true,
+    "qrRevokedAfterCapture": true,
+    "baselineAirplaneModeRestored": true
+  },
+  "transport": {
+    "session": "manual foreground dataSync / NOT_STICKY",
+    "pairing": "5min single-use QR nonce or 8-digit PIN; device token hash persisted; revoke closes peer sockets",
+    "incoming": "1MB browser chunks; durable offsets; final SHA256",
+    "outgoing": "owned read-only source copy; HTTP Range support; final source SHA256 header",
+    "wireEncryption": false
+  },
+  "limits": [
+    "HTTP local network; no end-to-end encryption claim",
+    "Browser reload requires reselecting the original file to resume",
+    "No physical phone/router compatibility or Android35 six-hour timeout endurance claim"
+  ],
+  "ciBeforeLan": {
+    "source": "1d9af77a857fbd5d1c22fe04e02f00465442a7cf",
+    "run": 40795835039,
+    "conclusion": "success"
+  }
+}

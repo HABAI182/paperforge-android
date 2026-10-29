@@ -70,3 +70,5 @@ JPEG-2000 / PDF JPX 解码使用 [ThalesGroup/JP2ForAndroid 1.1.0](https://githu
 ## 可选联网工具
 
 `network-engine`使用AOSP apksig 8.13.2（Apache-2.0）验证完整APK签名。工具独立拥有网络与系统安装请求权限，基础应用没有新增这些权限。依赖来源与哈希见 network-engine/UPSTREAM.json，许可随工具在assets/licenses/中提供。
+
+局域网二维码使用ZXing core 3.5.3（Apache-2.0）；随包浏览器增量哈希使用js-sha256 0.11.1（MIT），npm完整性与脚本SHA已核对。完整许可位于network-engine/src/main/assets/licenses，来源见其UPSTREAM.json。

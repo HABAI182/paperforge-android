@@ -1,0 +1,73 @@
+{
+  "sourceBytes": 1331651,
+  "sourceSha256": "e89c92a364586a9df54db35839f795be33778d7dfbb9f4b053b2507a86d7a9ab",
+  "checkpoint": 311296,
+  "serverRestart": true,
+  "readyState": "READY",
+  "sourceUnchanged": true,
+  "rangeReassemblyEqual": true,
+  "requests": [
+    {
+      "path": "\/api\/state",
+      "status": 401,
+      "responseBytes": 63
+    },
+    {
+      "path": "\/",
+      "status": 200,
+      "responseBytes": 1952
+    },
+    {
+      "path": "\/api\/pair",
+      "status": 200,
+      "responseBytes": 46
+    },
+    {
+      "path": "\/api\/uploads",
+      "status": 200,
+      "responseBytes": 321
+    },
+    {
+      "path": "\/api\/uploads\/3a942aae-e16d-4fb1-b7fe-17067ad86370?offset=0",
+      "status": 200,
+      "responseBytes": 345
+    },
+    {
+      "path": "\/api\/uploads\/3a942aae-e16d-4fb1-b7fe-17067ad86370?offset=311296",
+      "status": 409,
+      "responseBytes": 54
+    },
+    {
+      "path": "\/api\/uploads",
+      "status": 200,
+      "responseBytes": 330
+    },
+    {
+      "path": "\/api\/uploads\/3a942aae-e16d-4fb1-b7fe-17067ad86370?offset=311296",
+      "status": 200,
+      "responseBytes": 345
+    },
+    {
+      "path": "\/api\/uploads\/3a942aae-e16d-4fb1-b7fe-17067ad86370?offset=835584",
+      "status": 200,
+      "responseBytes": 349
+    },
+    {
+      "path": "\/download\/6bcbaf72-ef27-4dbd-b150-7eaf5f145d3e",
+      "status": 206,
+      "responseBytes": 311296,
+      "range": "bytes=0-311295"
+    },
+    {
+      "path": "\/download\/6bcbaf72-ef27-4dbd-b150-7eaf5f145d3e",
+      "status": 206,
+      "responseBytes": 1020355,
+      "range": "bytes=311296-"
+    },
+    {
+      "path": "\/api\/state",
+      "status": 401,
+      "responseBytes": 63
+    }
+  ]
+}

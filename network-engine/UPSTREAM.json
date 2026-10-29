@@ -3,5 +3,25 @@
   "license": "Apache-2.0",
   "jarSha256": "c070ed1394629d74641aa0906f60b2ffa1ee77e6366a1f93437f59717b1aeb89",
   "source": "https://android.googlesource.com/platform/tools/apksig/",
-  "purpose": "Full APK signature verification on Android; same-certificate and version/ABI checks are PaperForge code"
+  "purpose": "Full APK signature verification on Android; same-certificate and version/ABI checks are PaperForge code",
+  "additional": [
+    {
+      "artifact": "com.google.zxing:core:3.5.3",
+      "license": "Apache-2.0",
+      "source": "https://github.com/zxing/zxing/tree/zxing-3.5.3",
+      "purpose": "QR pairing links generated locally"
+    },
+    {
+      "name": "js-sha256",
+      "version": "0.11.1",
+      "repository": {
+        "url": "git+https://github.com/emn178/js-sha256.git",
+        "type": "git"
+      },
+      "license": "MIT",
+      "tarball": "https://registry.npmjs.org/js-sha256/-/js-sha256-0.11.1.tgz",
+      "integrity": "sha512-o6WSo/LUvY2uC4j7mO50a2ms7E/EAdbP0swigLV+nzHKTTaYnaLIWJ02VdXrsJX0vGedDESQnLsOekr94ryfjg==",
+      "scriptSha256": "4b53da9acab6a5d4010107be2025002fe1a22da64804dd5200b46895cb899219"
+    }
+  ]
 }

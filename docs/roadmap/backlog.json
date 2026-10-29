@@ -1197,7 +1197,7 @@
       ],
       "scope": "二维码配对、队列、离线等待、取消恢复",
       "acceptance": "电脑不在时能取消或保留待处理",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "EXT03",

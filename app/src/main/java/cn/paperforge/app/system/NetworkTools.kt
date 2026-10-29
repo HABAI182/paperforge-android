@@ -9,7 +9,11 @@ import android.widget.Toast
 import cn.paperforge.app.UserSettings
 
 object NetworkTools {
-    fun updates(context: Context) {
+    fun updates(context: Context) = launch(context, "UpdatesActivity")
+
+    fun lan(context: Context) = launch(context, "lan.LanActivity")
+
+    private fun launch(context: Context, screen: String) {
         val installed =
             runCatching { context.packageManager.getPackageInfo("cn.paperforge.network", 0) }
                 .isSuccess
@@ -29,10 +33,7 @@ object NetworkTools {
                     .putExtra("paperforgeTheme", UserSettings.string("theme", "SYSTEM"))
                     .putExtra("paperforgeFontScale", UserSettings.number("fontScale", 1f))
                     .setComponent(
-                        ComponentName(
-                            "cn.paperforge.network",
-                            "cn.paperforge.network.UpdatesActivity",
-                        )
+                        ComponentName("cn.paperforge.network", "cn.paperforge.network.$screen")
                     )
             )
         } else {
@@ -42,7 +43,7 @@ object NetworkTools {
                     Uri.parse("https://github.com/HABAI182/paperforge-android/releases"),
                 )
             )
-            Toast.makeText(context, "安装可选联网工具后，可在手机内检查和下载更新", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "安装可选联网工具后，可使用手机更新和局域网互传", Toast.LENGTH_LONG).show()
         }
     }
 }

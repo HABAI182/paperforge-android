@@ -37,6 +37,7 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.work:work-runtime-ktx:2.10.1")
     implementation("com.android.tools.build:apksig:8.13.2")
+    implementation("com.google.zxing:core:3.5.3")
     androidTestImplementation("androidx.test:runner:1.6.2")
     androidTestImplementation("androidx.test:core-ktx:1.6.1")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")

@@ -807,6 +807,14 @@ fun HomeScreen(
                             onPdfTool("annotate")
                         },
                         HomeTool(
+                            "action:lan",
+                            "局域网传输",
+                            "手机、平板和电脑浏览器互传，配对与断点保留",
+                            Icons.Default.Wifi,
+                        ) {
+                            cn.paperforge.app.system.NetworkTools.lan(context)
+                        },
+                        HomeTool(
                             "action:backup",
                             "离线备份",
                             "原图、PDF、OCR、分类与编辑历史",

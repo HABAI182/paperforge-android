@@ -566,8 +566,8 @@
     {
       "id": "EXT02",
       "title": "局域网配对与断点传输",
-      "status": "planned",
-      "note": "完整目标保留，未在本版标记完成"
+      "status": "done",
+      "note": "独立联网工具提供手机HTTP服务与随包浏览器界面；二维码/八位码配对、设备撤销、收发队列、离线保留/暂停/移除、分块续传与完整SHA核对。主应用工具入口、文件选择/分享/另存与PDF/图片回开；默认关闭。0.507秒传输集中、4.788秒实际WebView客户端上传及深色125%界面/强停队列恢复通过，见 lan-summary.json。HTTP局域网链路不宣称端到端加密；未作实体跨路由器兼容结论。"
     },
     {
       "id": "EXT03",
@@ -595,9 +595,9 @@
     }
   ],
   "counts": {
-    "done": 89,
+    "done": 90,
     "partial": 7,
-    "planned": 2
+    "planned": 1
   },
   "releaseHold": true,
   "publishedBaseline": "0.6.0"
