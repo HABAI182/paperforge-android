@@ -1,0 +1,68 @@
+{
+  "version": "1.0.1",
+  "versionCode": 10004,
+  "environment": "API35 x86_64 owner-signed integrated release",
+  "completed": [
+    "Reader: four primary actions, visible view/fullscreen, swipe/scroll, presets and grouped tools",
+    "Workbench: conversion/PDF family cards and parent navigation",
+    "Themes: follows live system light/dark, warm paper, midnight, blue; shared application/update palette; restored original mode/accent",
+    "200% system font: reader view and PDF category reachable"
+  ],
+  "originalTheme": "当前外观：深色",
+  "systemColors": {
+    "dark": [
+      18,
+      20,
+      22
+    ],
+    "light": [
+      250,
+      250,
+      248
+    ]
+  },
+  "sharedThemeColors": {
+    "main": [
+      250,
+      250,
+      248
+    ],
+    "network": [
+      250,
+      250,
+      248
+    ]
+  },
+  "protocolTest": "One loopback HTTP instrumentation test: latest, new version, unsupported ABI and unavailable server; 0.047 seconds; no native algorithm suites rerun",
+  "status": "passed",
+  "restoredSystemFont": "1.0",
+  "restoredSystemNightMode": "no",
+  "blueAccentPixels": {
+    "blue-settings": [
+      230,
+      235,
+      242
+    ],
+    "blue-update": [
+      34,
+      91,
+      170
+    ]
+  },
+  "equalHeightCards": {
+    "外观与布局": [
+      44,
+      893,
+      523,
+      1339
+    ],
+    "扫描与拍摄": [
+      556,
+      893,
+      1036,
+      1339
+    ]
+  },
+  "finalX86Build": "Release assemble + lintVital passed (37 seconds); final grid layout checked",
+  "finalX86ApkSha256": "57ea9269c40709e7dda5ad7b9fd988245c94d9be3c98aa5e282ff1a41fe777f6"
+}

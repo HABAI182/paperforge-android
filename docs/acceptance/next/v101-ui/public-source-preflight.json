@@ -1,0 +1,6 @@
+{
+  "scope": "Tracked text blobs in Git history; high-confidence credential patterns, plus tracked key filenames. No credential values are printed.",
+  "textBlobsChecked": 2212,
+  "credentialPatternFindings": [],
+  "trackedKeyFiles": []
+}

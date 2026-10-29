@@ -123,87 +123,96 @@ fun SettingsScreen(vm: MainViewModel) {
                     Text("存储空间与缓存")
                 }
             if (visible("扫描 取景 相机 自动 裁边 纸张 定位 AI 照片 纸框 显示 模糊 亮度 稳定 等待 分析 间隔 JPEG 画质", "scan")) {
-                Text("扫描与取景", style = MaterialTheme.typography.titleLarge)
-                SettingChoices(
-                    "纸张定位",
-                    "detector",
-                    "NEURAL",
-                    listOf("HYBRID" to "自动识边", "STANDARD" to "传统识边"),
-                )
-                SettingSlider("纸框平滑程度", "outlineWeight", 3f, 1f..8f, "")
-                SettingSlider("切换纸框确认帧数", "outlineSwitchFrames", 2f, 1f..6f, "帧")
-                SettingToggle("默认自动拍摄", "autoShutter", true)
-                SettingToggle("相似页翻动后重新自动拍摄", "turnRearm", true)
-                SettingSlider("翻页动作灵敏阈值", "turnThreshold", .06f, .025f..0.2f, "%", 100f)
-                SettingSlider("手动快门倒计时", "captureTimer", 0f, 0f..10f, "秒")
-                SettingToggle("拍一页即进入编辑", "reviewAfterCapture", false)
-                SettingToggle("照片沿用取景纸框", "lockCrop", true)
-                SettingToggle("显示纸边框", "showOutline", true)
-                SettingToggle("自动拍摄检查模糊与亮度", "strictQuality", false)
-                SettingSlider("自动拍摄最小纸张比例", "captureArea", 0.08f, 0.05f..0.4f, "%", 100f)
-                SettingSlider("自动拍摄识边阈值", "captureConfidence", .60f, 0.45f..0.95f, "%", 100f)
-                SettingSlider("稳定后拍摄等待", "stableMs", 600f, 300f..2000f, "ms")
-                SettingSlider("两次自动拍摄最短间隔", "cooldownMs", 1500f, 800f..5000f, "ms")
-                SettingSlider("取景分析间隔", "analysisMs", 160f, 100f..500f, "ms")
-                SettingSlider("拍照 JPEG 画质", "cameraJpeg", 97f, 75f..100f, "")
+                PreferenceBlock("扫描与拍摄") {
+                    SettingChoices(
+                        "纸张定位",
+                        "detector",
+                        "NEURAL",
+                        listOf("HYBRID" to "自动识边", "STANDARD" to "传统识边"),
+                    )
+                    SettingSlider("纸框平滑程度", "outlineWeight", 3f, 1f..8f, "")
+                    SettingSlider("切换纸框确认帧数", "outlineSwitchFrames", 2f, 1f..6f, "帧")
+                    SettingToggle("默认自动拍摄", "autoShutter", true)
+                    SettingToggle("相似页翻动后重新自动拍摄", "turnRearm", true)
+                    SettingSlider("翻页动作灵敏阈值", "turnThreshold", .06f, .025f..0.2f, "%", 100f)
+                    SettingSlider("手动快门倒计时", "captureTimer", 0f, 0f..10f, "秒")
+                    SettingToggle("拍一页即进入编辑", "reviewAfterCapture", false)
+                    SettingToggle("照片沿用取景纸框", "lockCrop", true)
+                    SettingToggle("显示纸边框", "showOutline", true)
+                    SettingToggle("自动拍摄检查模糊与亮度", "strictQuality", false)
+                    SettingSlider("自动拍摄最小纸张比例", "captureArea", 0.08f, 0.05f..0.4f, "%", 100f)
+                    SettingSlider("自动拍摄识边阈值", "captureConfidence", .60f, 0.45f..0.95f, "%", 100f)
+                    SettingSlider("稳定后拍摄等待", "stableMs", 600f, 300f..2000f, "ms")
+                    SettingSlider("两次自动拍摄最短间隔", "cooldownMs", 1500f, 800f..5000f, "ms")
+                    SettingSlider("取景分析间隔", "analysisMs", 160f, 100f..500f, "ms")
+                    SettingSlider("拍照 JPEG 画质", "cameraJpeg", 97f, 75f..100f, "")
+                }
             }
             if (visible("增强 图片 滤镜 扫描", "scan")) {
-                Text("默认增强", style = MaterialTheme.typography.titleLarge)
-                SettingChoices(
-                    "导入与拍摄滤镜",
-                    "filter",
-                    "AUTO",
-                    listOf(
-                        "ORIGINAL" to "原图",
-                        "AUTO" to "自动",
-                        "TEXT" to "清晰文字",
-                        "CLEAN" to "去阴影",
-                        "GRAY" to "灰度",
-                        "BW" to "黑白",
-                        "COLOR" to "彩色",
-                        "WHITEBOARD" to "白板",
-                    ),
-                )
-                SettingSlider("去阴影强度", "enhanceStrength", 1f, 0f..1f, "", 100f)
-                SettingSlider("默认亮度", "brightness", 0f, -0.5f..0.5f, "", 100f)
-                SettingSlider("默认对比度", "contrast", 1f, 0.5f..1.8f, "", 100f)
-                SettingSlider("默认曲面校正强度", "dewarpStrength", 1f, 0f..1f, "%", 100f)
+                PreferenceBlock("默认增强") {
+                    SettingChoices(
+                        "导入与拍摄滤镜",
+                        "filter",
+                        "AUTO",
+                        listOf(
+                            "ORIGINAL" to "原图",
+                            "AUTO" to "自动",
+                            "TEXT" to "清晰文字",
+                            "CLEAN" to "去阴影",
+                            "GRAY" to "灰度",
+                            "BW" to "黑白",
+                            "COLOR" to "彩色",
+                            "WHITEBOARD" to "白板",
+                        ),
+                    )
+                    SettingSlider("去阴影强度", "enhanceStrength", 1f, 0f..1f, "", 100f)
+                    SettingSlider("默认亮度", "brightness", 0f, -0.5f..0.5f, "", 100f)
+                    SettingSlider("默认对比度", "contrast", 1f, 0.5f..1.8f, "", 100f)
+                    SettingSlider("默认曲面校正强度", "dewarpStrength", 1f, 0f..1f, "%", 100f)
+                }
             }
             if (visible("导出 PDF OCR 文字 识别 DPI 竖排 多栏 排序 脚本 vertical order", "ocr")) {
-                Text("文字识别", style = MaterialTheme.typography.titleLarge)
-                OcrOptionsControl()
-                if (UserSettings[SettingKeys.OcrBackend] == "PADDLE")
-                    Text(
-                        "识别语言按当前模型包决定，可在“离线 OCR 与模型包”中切换。",
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                else {
-                    SettingToggle("结合多次识别结果校对", "ocrVoting", true)
-                    SettingChoices(
-                        "OCR 语言",
-                        "ocrLanguage",
-                        "CHINESE",
-                        listOf("CHINESE" to "中文 + 英文", "LATIN" to "英文 / 拉丁字母"),
-                    )
+                PreferenceBlock("文字识别") {
+                    OcrOptionsControl()
+                    if (UserSettings[SettingKeys.OcrBackend] == "PADDLE")
+                        Text(
+                            "识别语言按当前模型包决定，可在“离线 OCR 与模型包”中切换。",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    else {
+                        SettingToggle("结合多次识别结果校对", "ocrVoting", true)
+                        SettingChoices(
+                            "OCR 语言",
+                            "ocrLanguage",
+                            "CHINESE",
+                            listOf("CHINESE" to "中文 + 英文", "LATIN" to "英文 / 拉丁字母"),
+                        )
+                    }
                 }
             }
             if (visible("导出 PDF 纸张 分辨率 画质 质量 DPI OCR 文字层 默认", "export")) {
-                Text("PDF 导出默认值", style = MaterialTheme.typography.titleLarge)
-                SettingToggle("扫描导出默认附带文字层", "searchable", false)
-                SettingChoices(
-                    "默认纸张",
-                    "paper",
-                    "Auto",
-                    listOf("Auto" to "原比例", "A4" to "A4", "A5" to "A5", "Letter" to "Letter"),
-                )
-                SettingChoices(
-                    "默认分辨率",
-                    "resolution",
-                    "STANDARD",
-                    listOf("DRAFT" to "草稿", "STANDARD" to "标准", "HIGH" to "高清", "CUSTOM" to "自定义"),
-                )
-                SettingSlider("自定义分辨率", "customDpi", 300f, 72f..600f, "DPI")
-                SettingSlider("PDF 图片画质", "quality", 90f, 40f..100f, "")
+                PreferenceBlock("PDF导出") {
+                    SettingToggle("扫描导出默认附带文字层", "searchable", false)
+                    SettingChoices(
+                        "默认纸张",
+                        "paper",
+                        "Auto",
+                        listOf("Auto" to "原比例", "A4" to "A4", "A5" to "A5", "Letter" to "Letter"),
+                    )
+                    SettingChoices(
+                        "默认分辨率",
+                        "resolution",
+                        "STANDARD",
+                        listOf(
+                            "DRAFT" to "草稿",
+                            "STANDARD" to "标准",
+                            "HIGH" to "高清",
+                            "CUSTOM" to "自定义",
+                        ),
+                    )
+                    SettingSlider("自定义分辨率", "customDpi", 300f, 72f..600f, "DPI")
+                    SettingSlider("PDF 图片画质", "quality", 90f, 40f..100f, "")
+                }
             }
             if (
                 visible(
@@ -211,40 +220,38 @@ fun SettingsScreen(vm: MainViewModel) {
                     "appearance",
                 )
             ) {
-                Text("外观", style = MaterialTheme.typography.titleLarge)
-                SettingChoices(
-                    "主题",
-                    "theme",
-                    "SYSTEM",
-                    listOf("SYSTEM" to "跟随系统", "LIGHT" to "浅色", "DARK" to "深色", "AMOLED" to "纯黑"),
-                )
-                SettingToggle("使用系统动态配色", "dynamicColor", false)
-                SettingToggle("减少动效", "reduceMotion", false)
-                SettingToggle("文档选择触感", "haptics", true)
-                SettingToggle("宽屏文档侧栏", "documentSidebar", true)
-                SettingChoices(
-                    "主题色",
-                    "accent",
-                    "GREEN",
-                    listOf("GREEN" to "墨绿", "BLUE" to "蓝色", "PURPLE" to "紫色", "ORANGE" to "橙色"),
-                )
-                SettingSlider("应用字体比例", "fontScale", 1f, 0.85f..1.3f, "%", 100f)
-                Text("系统大字号优先；达到 200% 后，应用比例不再叠加放大。", style = MaterialTheme.typography.bodySmall)
-                SettingToggle("紧凑文档卡片", "compactRows", false)
-                SettingChoices(
-                    "文档布局",
-                    "documentLayout",
-                    "LIST",
-                    listOf("LIST" to "列表", "COVERS" to "封面"),
-                )
-                SettingChoices(
-                    "封面网格列数",
-                    "gridColumns",
-                    "AUTO",
-                    listOf("AUTO" to "自动", "2" to "2列", "3" to "3列", "4" to "4列"),
-                )
-                Text("窄屏和大字号时自动减少列数，便于阅读和点选。", style = MaterialTheme.typography.bodySmall)
-                SettingSlider("最近文档数量", "recentCount", 6f, 4f..20f, "份")
+                PreferenceBlock("外观与布局") {
+                    ThemePicker()
+                    SettingToggle(
+                        "使用系统壁纸动态配色",
+                        "dynamicColor",
+                        false,
+                        enabled = UserSettings[SettingKeys.Theme] !in setOf("SEPIA", "MIDNIGHT"),
+                    )
+                    SettingToggle("减少动效", "reduceMotion", false)
+                    SettingToggle("文档选择触感", "haptics", true)
+                    SettingToggle("宽屏文档侧栏", "documentSidebar", true)
+                    SettingSlider("应用字体比例", "fontScale", 1f, 0.85f..1.3f, "%", 100f)
+                    Text(
+                        "系统大字号优先；达到 200% 后，应用比例不再叠加放大。",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    SettingToggle("紧凑文档卡片", "compactRows", false)
+                    SettingChoices(
+                        "文档布局",
+                        "documentLayout",
+                        "LIST",
+                        listOf("LIST" to "列表", "COVERS" to "封面"),
+                    )
+                    SettingChoices(
+                        "封面网格列数",
+                        "gridColumns",
+                        "AUTO",
+                        listOf("AUTO" to "自动", "2" to "2列", "3" to "3列", "4" to "4列"),
+                    )
+                    Text("窄屏和大字号时自动减少列数，便于阅读和点选。", style = MaterialTheme.typography.bodySmall)
+                    SettingSlider("最近文档数量", "recentCount", 6f, 4f..20f, "份")
+                }
             }
             if (visible("首页 筛选 收藏 收件箱 未识字 未导出", "appearance")) {
                 SettingChoices(
@@ -368,17 +375,22 @@ fun SettingsScreen(vm: MainViewModel) {
 }
 
 @Composable
-private fun SettingToggle(title: String, key: String, default: Boolean) {
+private fun SettingToggle(title: String, key: String, default: Boolean, enabled: Boolean = true) {
     val revision by UserSettings.revision.collectAsState()
     val value = remember(revision) { UserSettings.bool(key, default) }
     Row(
         Modifier.fillMaxWidth()
             .heightIn(min = 56.dp)
-            .toggleable(value, role = Role.Switch, onValueChange = { UserSettings.set(key, it) }),
+            .toggleable(
+                value,
+                enabled = enabled,
+                role = Role.Switch,
+                onValueChange = { UserSettings.set(key, it) },
+            ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(title, Modifier.weight(1f))
-        Switch(value, null)
+        Switch(value, null, enabled = enabled)
     }
 }
 

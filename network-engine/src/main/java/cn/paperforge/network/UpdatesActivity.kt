@@ -25,14 +25,21 @@ class UpdatesActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         networkContent {
-            UpdatesScreen(intent.getBooleanExtra("paperforgeOneClickUpdate", false)) { finish() }
+            UpdatesScreen(
+                intent.getBooleanExtra(
+                    "paperforgeCheckOnOpen",
+                    intent.getBooleanExtra("paperforgeOneClickUpdate", false),
+                )
+            ) {
+                finish()
+            }
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-private fun UpdatesScreen(oneClickOnOpen: Boolean, onBack: () -> Unit) {
+private fun UpdatesScreen(checkOnOpen: Boolean, onBack: () -> Unit) {
     val context = LocalContext.current
     val integrated = remember(context) { NetworkFiles.integrated(context) }
     val prefs = remember { NetworkPreferences(context) }
@@ -63,7 +70,6 @@ private fun UpdatesScreen(oneClickOnOpen: Boolean, onBack: () -> Unit) {
     var checkJob by remember { mutableStateOf<Job?>(null) }
     var result by remember { mutableStateOf<UpdateCheck?>(null) }
     var startedOnOpen by rememberSaveable { mutableStateOf(false) }
-    var autoInstallSha by rememberSaveable { mutableStateOf("") }
     var pendingPermission by rememberSaveable { mutableStateOf("") }
     var installing by remember { mutableStateOf(false) }
     var resumed by remember { mutableStateOf(false) }
@@ -85,7 +91,6 @@ private fun UpdatesScreen(oneClickOnOpen: Boolean, onBack: () -> Unit) {
             revision++
             message = "已加入下载队列，可暂停后继续"
         } catch (e: Exception) {
-            autoInstallSha = ""
             message = e.message ?: "无法开始下载"
         }
     }
@@ -128,14 +133,14 @@ private fun UpdatesScreen(oneClickOnOpen: Boolean, onBack: () -> Unit) {
         }
     }
 
-    fun check(download: Boolean) {
+    fun check() {
         if (checking || installing) return
         if (!enabled) {
             message = "更新已关闭，请先开启下方的手动更新开关。"
             return
         }
         checking = true
-        message = null
+        message = "正在连接更新服务器…"
         result = null
         val serial = ++checkSerial
         checkJob =
@@ -156,27 +161,16 @@ private fun UpdatesScreen(oneClickOnOpen: Boolean, onBack: () -> Unit) {
                             .maxByOrNull { it.versionCode }
                     message =
                         when {
-                            download && candidate != null -> "已找到 ${candidate.versionName}，正在下载与核对。"
+                            candidate != null -> "发现新版本 ${candidate.versionName}，可在下方下载更新。"
                             checked.candidates.isNotEmpty() ->
-                                "找到 ${checked.candidates.size} 个适用安装包"
-                            checked.warnings.isNotEmpty() -> "检查未能完整核对，请查看下面的说明"
-                            checked.releases == 0 -> "所选渠道尚无发布版本"
-                            else -> "当前已是此渠道的最新适配版本"
+                                "发现 ${checked.candidates.size} 个适用更新，可在下方选择。"
+                            checked.warnings.isNotEmpty() -> "已连接服务器，但适配信息未能完整核对，请查看说明。"
+                            checked.releases == 0 -> "已连接服务器，当前渠道尚无发布版本。"
+                            else -> "当前已是最新版本"
                         }
-                    if (download && candidate != null) {
-                        autoInstallSha = candidate.sha256
-                        val ready =
-                            UpdateFiles.records(context).any {
-                                it.optString("state") == "READY" &&
-                                    it.getJSONObject("candidate").optString("sha256") ==
-                                        candidate.sha256
-                            }
-                        if (ready) revision++ else startDownload(candidate)
-                    }
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    autoInstallSha = ""
                     val detail = e.message.orEmpty()
                     if (listOf("401", "403", "404").any { it in detail }) {
                         configuration = true
@@ -185,8 +179,8 @@ private fun UpdatesScreen(oneClickOnOpen: Boolean, onBack: () -> Unit) {
                         message =
                             when (e) {
                                 is java.net.UnknownHostException,
-                                is java.net.ConnectException -> "暂时无法连接 GitHub，请检查网络后重试。"
-                                is java.net.SocketTimeoutException -> "连接 GitHub 超时，请稍后重试。"
+                                is java.net.ConnectException -> "未连接到更新服务器，请检查网络后重试。"
+                                is java.net.SocketTimeoutException -> "连接更新服务器超时，请稍后重试。"
                                 else -> e.message ?: "检查失败，请稍后重试"
                             }
                 } finally {
@@ -195,23 +189,10 @@ private fun UpdatesScreen(oneClickOnOpen: Boolean, onBack: () -> Unit) {
             }
     }
 
-    LaunchedEffect(oneClickOnOpen, enabled) {
-        if (oneClickOnOpen && !startedOnOpen) {
+    LaunchedEffect(checkOnOpen, enabled) {
+        if (checkOnOpen && !startedOnOpen) {
             startedOnOpen = true
-            check(download = true)
-        }
-    }
-    LaunchedEffect(records, autoInstallSha, resumed, enabled, installing) {
-        if (enabled && resumed && !installing && autoInstallSha.isNotBlank()) {
-            records
-                .find {
-                    it.optString("state") == "READY" &&
-                        it.getJSONObject("candidate").optString("sha256") == autoInstallSha
-                }
-                ?.let {
-                    autoInstallSha = ""
-                    install(UpdateCandidate.decode(it.getJSONObject("candidate")))
-                }
+            check()
         }
     }
     LaunchedEffect(resumed, pendingPermission, enabled, installing) {
@@ -231,7 +212,7 @@ private fun UpdatesScreen(oneClickOnOpen: Boolean, onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("应用更新") },
+                title = { Text("检查更新") },
                 navigationIcon = { TextButton(onClick = onBack) { Text("返回") } },
             )
         }
@@ -244,16 +225,16 @@ private fun UpdatesScreen(oneClickOnOpen: Boolean, onBack: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Text(
-                if (integrated) "一键检查新版本、下载安装包并核对，随后在系统安装器确认。"
+                if (integrated) "检查版本后显示结果，由你选择是否下载。安装包核对后交给系统安装。"
                 else "按需检查与下载；文件校验通过后交给系统安装。PaperForge主应用保持离线。",
                 style = MaterialTheme.typography.bodyMedium,
             )
             Button(
-                onClick = { check(download = true) },
+                onClick = { check() },
                 enabled = enabled && !checking && !installing,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text(if (checking) "正在检查" else if (installing) "正在核对安装包" else "一键更新")
+                Text(if (checking) "正在检查" else if (installing) "正在核对安装包" else "检查更新")
             }
             if (checking) {
                 LinearProgressIndicator(Modifier.fillMaxWidth())
@@ -267,14 +248,26 @@ private fun UpdatesScreen(oneClickOnOpen: Boolean, onBack: () -> Unit) {
                 ) {
                     Text("取消检查")
                 }
-            } else
-                TextButton(
-                    onClick = { check(download = false) },
-                    enabled = enabled && !installing,
+            }
+            message?.let { feedback ->
+                Card(
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        )
                 ) {
-                    Text("仅检查版本")
+                    Column(
+                        Modifier.fillMaxWidth().padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Text(
+                            if (checking) "正在检查" else "检查结果",
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        Text(feedback, style = MaterialTheme.typography.bodyLarge)
+                    }
                 }
-            message?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+            }
             result?.warnings?.forEach {
                 Text(
                     it,
@@ -306,7 +299,6 @@ private fun UpdatesScreen(oneClickOnOpen: Boolean, onBack: () -> Unit) {
                                 checkSerial++
                                 checkJob?.cancel()
                                 checking = false
-                                autoInstallSha = ""
                                 pendingPermission = ""
                                 manager.cancelAllWorkByTag("paperforge-update")
                                 message = "已关闭，下载断点保留"
@@ -465,8 +457,6 @@ private fun UpdatesScreen(oneClickOnOpen: Boolean, onBack: () -> Unit) {
                                 "VERIFYING" ->
                                     OutlinedButton(
                                         onClick = {
-                                            if (autoInstallSha == candidate.sha256)
-                                                autoInstallSha = ""
                                             pendingPermission = ""
                                             UpdateFiles.pause(context, candidate)
                                             revision++

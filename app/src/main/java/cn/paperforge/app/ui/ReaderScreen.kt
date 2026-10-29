@@ -532,27 +532,8 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                         ) {
                             Icon(Icons.Default.Search, "搜索文字")
                         }
-                        IconButton(onClick = { navigation = true }) {
-                            Icon(Icons.Default.FormatListBulleted, "目录与链接")
-                        }
-                        IconButton(
-                            onClick = {
-                                intelligenceExcerpt = null
-                                intelligence = true
-                            }
-                        ) {
-                            Icon(Icons.Default.Translate, "翻译与智能工具")
-                        }
-                        IconButton(onClick = { appearance = true }) {
-                            Icon(Icons.Default.Tune, "阅读设置")
-                        }
-                        IconButton(
-                            onClick = {
-                                toolMode = ""
-                                tools = true
-                            }
-                        ) {
-                            Icon(Icons.Default.MoreVert, "PDF 工具")
+                        IconButton(onClick = { file?.let(onShare) }, enabled = file != null) {
+                            Icon(Icons.Default.Share, "分享")
                         }
                     },
                 )
@@ -564,25 +545,17 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                         Modifier.fillMaxWidth().navigationBarsPadding().padding(vertical = 4.dp),
                         horizontalArrangement = Arrangement.SpaceEvenly,
                     ) {
+                        ToolAction(Icons.Default.Tune, "视图", true) {
+                            appearance = true
+                            interaction++
+                        }
                         ToolAction(Icons.Default.GridView, "页面", session != null) {
                             thumbnails = true
                         }
                         ToolAction(Icons.Default.Draw, "批注", !busy) { vm.beginMarks() }
-                        ToolAction(Icons.Default.Article, "重排", session != null) { reflow = true }
-                        ToolAction(Icons.Default.SwapHoriz, "转换", !busy) {
+                        ToolAction(Icons.Default.GridView, "工具", !busy) {
                             toolMode = ""
                             tools = true
-                        }
-                        ToolAction(Icons.Default.Share, "分享", file != null) { file?.let(onShare) }
-                        ToolAction(
-                            if (fullscreen) Icons.Default.FullscreenExit
-                            else Icons.Default.Fullscreen,
-                            if (fullscreen) "退出全屏" else "全屏",
-                            true,
-                        ) {
-                            fullscreen = !fullscreen
-                            controls = !fullscreen
-                            interaction++
                         }
                     }
                 }
@@ -998,124 +971,65 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
             )
     }
     if (appearance)
-        AlertDialog(
+        SpaciousToolDialog(
             onDismissRequest = { appearance = false },
-            title = { Text("阅读设置") },
+            title = { Text("阅读视图") },
             text = {
                 Column(
                     Modifier.verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Text("翻页方式", style = MaterialTheme.typography.labelLarge)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            "放大到页边，再滑一次翻页",
-                            Modifier.weight(1f),
-                            style = MaterialTheme.typography.bodyMedium,
+                    FilledTonalButton(
+                        onClick = {
+                            fullscreen = !fullscreen
+                            controls = !fullscreen
+                            appearance = false
+                            interaction++
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Icon(
+                            if (fullscreen) Icons.Default.FullscreenExit
+                            else Icons.Default.Fullscreen,
+                            null,
                         )
-                        Switch(
-                            edgeTurning,
-                            {
-                                edgeTurning = it
-                                cn.paperforge.app.UserSettings.set(SettingKeys.EdgeTurn, it)
-                            },
-                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(if (fullscreen) "退出全屏" else "进入全屏阅读")
                     }
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FilterChip(horizontal, { changeMode(true) }, label = { Text("左右翻页") })
-                        FilterChip(!horizontal, { changeMode(false) }, label = { Text("连续滚动") })
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(
-                            onClick = {
-                                bookmarks =
-                                    if (page in bookmarks) bookmarks - page else bookmarks + page
-                                doc?.id?.let { preferences.bookmarks(it, bookmarks) }
-                            }
-                        ) {
-                            Text(if (page in bookmarks) "移除此页书签" else "收藏此页")
+                    PreferenceBlock("翻页方式") {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilterChip(horizontal, { changeMode(true) }, label = { Text("左右翻页") })
+                            FilterChip(!horizontal, { changeMode(false) }, label = { Text("连续滚动") })
                         }
-                        TextButton(
-                            onClick = {
-                                appearance = false
-                                bookmarkDialog = true
-                            }
-                        ) {
-                            Text("书签 ${bookmarks.size}")
-                        }
-                    }
-                    Row(Modifier.horizontalScroll(rememberScrollState())) {
-                        OutlinedButton(
-                            onClick = {
-                                appearance = false
-                                navigation = true
-                            }
-                        ) {
-                            Text("目录与链接")
-                        }
-                        OutlinedButton(
-                            onClick = {
-                                appearance = false
-                                textPage = page
-                                textPoint = null
-                            }
-                        ) {
-                            Text("文字与朗读")
-                        }
-                        OutlinedButton(
-                            onClick = {
-                                appearance = false
-                                startRegion(page)
-                            }
-                        ) {
-                            Text("区域识字")
-                        }
-                    }
-                    Text(
-                        documentInfo.labels.getOrNull(page)?.let { "页面标签：$it · 物理页 ${page + 1}" }
-                            ?: "物理页 ${page + 1}",
-                        style = MaterialTheme.typography.labelMedium,
-                    )
-                    ReaderDisplaySettings(viewOptions, page, ::changeView)
-                    Text("纸张显示", style = MaterialTheme.typography.labelLarge)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        listOf("原色", "暖纸", "夜读").forEachIndexed { index, title ->
-                            FilterChip(
-                                paperTone == index,
-                                { paperTone = index },
-                                label = { Text(title) },
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("放大到页边，再滑一次翻页", Modifier.weight(1f))
+                            Switch(
+                                edgeTurning,
+                                {
+                                    edgeTurning = it
+                                    cn.paperforge.app.UserSettings.set(SettingKeys.EdgeTurn, it)
+                                },
                             )
+                        }
+                    }
+                    PreferenceBlock("页面适配") {
+                        ReaderDisplaySettings(viewOptions, page, ::changeView)
+                    }
+                    PreferenceBlock("纸张显示") {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf("原色", "暖纸", "夜读").forEachIndexed { index, title ->
+                                FilterChip(
+                                    paperTone == index,
+                                    { paperTone = index },
+                                    label = { Text(title) },
+                                )
+                            }
                         }
                     }
                     Text(
                         "双指缩放，放大后单指移动；双击放大或恢复。全屏轻触页面显示工具。",
                         style = MaterialTheme.typography.bodySmall,
                     )
-                    OutlinedButton(
-                        onClick = {
-                            appearance = false
-                            rangeDialog = true
-                        }
-                    ) {
-                        Text("抽页 / 旋转")
-                    }
-                    OutlinedButton(
-                        onClick = {
-                            appearance = false
-                            compressDialog = true
-                        }
-                    ) {
-                        Text("压缩 PDF")
-                    }
-                    OutlinedButton(
-                        onClick = {
-                            appearance = false
-                            doc?.let { vm.beginAssembly(listOf(it.id)) }
-                        }
-                    ) {
-                        Text("页面编排")
-                    }
                 }
             },
             confirmButton = { TextButton(onClick = { appearance = false }) { Text("完成") } },
@@ -1126,7 +1040,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
             title = { Text("阅读书签") },
             text = {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (bookmarks.isEmpty()) item { Text("在阅读设置中收藏当前页") }
+                    if (bookmarks.isEmpty()) item { Text("在工具的阅读与导航中收藏当前页") }
                     items(bookmarks.size) { index ->
                         val n = bookmarks.sorted()[index]
                         TextButton(
@@ -1237,7 +1151,62 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                 }
             },
         )
-    if (tools) PdfToolsDialog(vm, toolMode) { tools = false }
+    if (tools)
+        PdfToolsDialog(
+            vm,
+            toolMode,
+            readingActions =
+                listOf(
+                    HomeTool(
+                        "read:navigation",
+                        "目录与书签",
+                        "章节目录、本页链接与阅读定位",
+                        Icons.Default.FormatListBulleted,
+                    ) {
+                        tools = false
+                        navigation = true
+                    },
+                    HomeTool(
+                        "read:bookmark",
+                        if (page in bookmarks) "移除此页书签" else "收藏当前页",
+                        "保存当前阅读位置",
+                        Icons.Default.Bookmark,
+                    ) {
+                        bookmarks = if (page in bookmarks) bookmarks - page else bookmarks + page
+                        doc?.id?.let { preferences.bookmarks(it, bookmarks) }
+                        tools = false
+                    },
+                    HomeTool("read:text", "文字与朗读", "查看本页文字，离线朗读", Icons.Default.RecordVoiceOver) {
+                        tools = false
+                        textPage = page
+                        textPoint = null
+                    },
+                    HomeTool("read:region", "区域识字", "圈选需要识别的文字区域", Icons.Default.CropFree) {
+                        tools = false
+                        startRegion(page)
+                    },
+                    HomeTool("read:reflow", "文字重排", "按屏幕宽度重排正文", Icons.Default.Article) {
+                        tools = false
+                        reflow = true
+                    },
+                    HomeTool("read:translate", "翻译与智能工具", "选择文字后按需处理", Icons.Default.Translate) {
+                        tools = false
+                        intelligenceExcerpt = null
+                        intelligence = true
+                    },
+                    HomeTool("read:range", "抽页与旋转", "选择页码生成副本", Icons.Default.ContentCut) {
+                        tools = false
+                        rangeDialog = true
+                    },
+                    HomeTool("read:assembly", "页面编排", "跨文档选页、组合与排序", Icons.Default.ViewModule) {
+                        tools = false
+                        doc?.let { vm.beginAssembly(listOf(it.id)) }
+                    },
+                ),
+        ) {
+            tools = false
+        }
+
     if (thumbnails)
         AlertDialog(
             onDismissRequest = { thumbnails = false },

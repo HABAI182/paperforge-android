@@ -1,5 +1,6 @@
 // Shared by the offline app and the single-package full app.
 dependencies {
+    add("implementation", project(":theme-core"))
     add("coreLibraryDesugaring", "com.android.tools:desugar_jdk_libs_nio:2.1.5")
     add("implementation", "org.jsoup:jsoup:1.23.2")
     add("implementation", "org.commonmark:commonmark:0.30.0")

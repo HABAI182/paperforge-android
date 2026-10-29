@@ -1,8 +1,8 @@
 # 构建、签名与手机交付
 
-当前发行 **1.0.0完整功能版 / code10003**，所有者授权后`releaseHold=false`。普通手机从[Release](https://github.com/HABAI182/paperforge-android/releases/tag/v1.0.0)下载一个ARM64完整APK即可。脚本和CI负责构建与核对，不自动创建tag/Release。历史模块化构建仍可按需使用。
+当前发行 **1.0.1完整功能版 / code10004**，所有者授权后`releaseHold=false`。普通手机从[Release](https://github.com/HABAI182/paperforge-android/releases/tag/v1.0.1)下载一个ARM64完整APK即可。脚本和CI负责构建与核对，不自动创建tag/Release。历史模块化构建仍可按需使用。
 
-推荐完整包构建命令：`python scripts/build_distribution.py --abi arm64-v8a --channel stable --full`。产物在`build/distributions/full/arm64-v8a/`，只有完整APK、清单和SHA256SUMS。完整包声明网络权限，更新、传输与远程服务由用户发起；原模块化离线主包继续移除网络权限。完整包新增修订通过`fullDistribution.versionCodeOffset`连续增加，以便覆盖安装。
+推荐完整包构建命令：`python scripts/build_distribution.py --abi arm64-v8a --channel stable --full`。产物在`build/distributions/full/arm64-v8a/`，只有完整APK、清单和SHA256SUMS。完整包声明网络权限，更新、传输与远程服务由用户发起；原模块化离线主包继续移除网络权限。完整包新增修订通过基础版本码和`fullDistribution.versionCodeOffset`连续增加，以便覆盖安装。
 
 ## 手机自行获取历史模块化候选包
 
@@ -10,7 +10,7 @@
 
 主应用与可选引擎必须使用同一证书，签名权限才能正常通信。候选包按已有所有者证书核验，沿用同一应用 ID，可覆盖安装；独立模型包仍从 `model-packs/` 下载后在手机内导入。只安装主应用也可离线扫描、OCR、阅读和普通 PDF 处理。
 
-自动提交CI同时编译离线隔离包和完整功能隔离包，并编译可选引擎源码，使用临时开发证书；这些产物用于编译核对，不能覆盖所有者正式身份。日常更新使用Release中的所有者签名完整包，或应用设置中的一键更新。
+自动提交CI同时编译离线隔离包和完整功能隔离包，并编译可选引擎源码，使用临时开发证书；这些产物用于编译核对，不能覆盖所有者正式身份。日常更新使用Release中的所有者签名完整包，或应用设置中的检查更新。
 
 所有者签名 CI 的首次完整成功为 [40625859722](https://github.com/HABAI182/paperforge-android/actions/runs/40625859722)，实际 ZIP/APK 已下载并独立核对 SHA、历史证书、离线权限和 ELF；归档清单见 `docs/acceptance/next/distribution/ci-owner-proof.json`。该次候选基于 `0a22ae0`，用于证明远端签名链路；之后的原生精简和页级续跑按各自提交及验证记录追踪。
 

@@ -17,6 +17,15 @@ object UserSettings {
 
     fun initialize(context: Context) {
         prefs = context.getSharedPreferences("preferences", 0)
+        if (!prefs.getBoolean("commonToolsV2", false)) {
+            val edit = prefs.edit().putBoolean("commonToolsV2", true)
+            if (prefs.getString("pinnedTools", null).isNullOrBlank())
+                edit.putString(
+                    "pinnedTools",
+                    "tool:compress,tool:searchable,tool:images-png,tool:docx-layout",
+                )
+            edit.apply()
+        }
         if (!prefs.getBoolean("scanExportOcrOptInV1", false))
             prefs
                 .edit()
@@ -65,7 +74,11 @@ object UserSettings {
         changed()
     }
 
-    fun pinnedTools() = string("pinnedTools", "").split(',').filter { it.isNotBlank() }.toSet()
+    fun pinnedTools() =
+        string("pinnedTools", "tool:compress,tool:searchable,tool:images-png,tool:docx-layout")
+            .split(',')
+            .filter { it.isNotBlank() }
+            .toSet()
 
     fun toggleTool(id: String) {
         val pins = pinnedTools().toMutableSet()

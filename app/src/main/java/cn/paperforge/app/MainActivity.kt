@@ -850,7 +850,8 @@ class MainActivity : ComponentActivity() {
                                     TextButton(
                                         onClick = {
                                             cn.paperforge.app.system.NetworkTools.updates(
-                                                this@MainActivity
+                                                this@MainActivity,
+                                                checkOnOpen = true,
                                             )
                                         }
                                     ) {

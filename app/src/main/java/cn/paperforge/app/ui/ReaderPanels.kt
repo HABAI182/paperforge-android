@@ -79,7 +79,7 @@ fun ReaderNavigationSheet(
                     }
                     1 -> {
                         if (bookmarks.isEmpty())
-                            item { Text("还没有书签，可在阅读设置中收藏当前页。", Modifier.padding(16.dp)) }
+                            item { Text("还没有书签，可在工具的阅读与导航中收藏当前页。", Modifier.padding(16.dp)) }
                         itemsIndexed(bookmarks.sorted()) { _, index ->
                             TextButton(
                                 onClick = {

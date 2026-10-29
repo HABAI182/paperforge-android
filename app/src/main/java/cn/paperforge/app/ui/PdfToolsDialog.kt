@@ -1,9 +1,9 @@
 package cn.paperforge.app.ui
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -15,12 +15,19 @@ import cn.paperforge.app.model.ToolCatalog
 import org.json.JSONObject
 
 @Composable
-fun PdfToolsDialog(vm: MainViewModel, initialMode: String = "", onDismiss: () -> Unit) {
+internal fun PdfToolsDialog(
+    vm: MainViewModel,
+    initialMode: String = "",
+    readingActions: List<HomeTool> = emptyList(),
+    onDismiss: () -> Unit,
+) {
     var longOptions by remember { mutableStateOf(cn.paperforge.app.pdf.LongImageOptions()) }
     var longValid by remember { mutableStateOf(true) }
     var mode by remember { mutableStateOf(initialMode) }
+    var capability by remember { mutableStateOf<cn.paperforge.app.model.ToolCapability?>(null) }
+    capability?.let { ToolCapabilityDialog(it) { capability = null } }
     var query by remember { mutableStateOf("") }
-    var group by remember { mutableStateOf("全部") }
+    var group by remember { mutableStateOf("") }
     var range by remember { mutableStateOf("") }
     var text by remember { mutableStateOf("") }
     var second by remember { mutableStateOf("") }
@@ -44,14 +51,12 @@ fun PdfToolsDialog(vm: MainViewModel, initialMode: String = "", onDismiss: () ->
     val settingsVersion by UserSettings.revision.collectAsState()
     val pinned = remember(settingsVersion) { UserSettings.pinnedTools() }
     val titles = ToolCatalog.pdfTitles
-    AlertDialog(
+    SpaciousToolDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (mode.isEmpty()) "PDF 工具箱" else titles[mode] ?: "PDF 工具") },
         text = {
             Column(
-                Modifier.fillMaxWidth()
-                    .heightIn(max = 460.dp)
-                    .verticalScroll(rememberScrollState()),
+                Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 if (mode.isEmpty()) {
@@ -61,58 +66,96 @@ fun PdfToolsDialog(vm: MainViewModel, initialMode: String = "", onDismiss: () ->
                         label = { Text("搜索工具，如水印、Word、页码") },
                         singleLine = true,
                     )
-                    Row(
-                        Modifier.horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    ) {
-                        listOf("全部", "常用", "转换", "页面", "其他").forEach { name ->
-                            FilterChip(group == name, { group = name }, label = { Text(name) })
+                    if (query.isBlank() && group.isBlank()) {
+                        Text("常用", style = MaterialTheme.typography.titleMedium)
+                        titles
+                            .filterKeys { "tool:$it" in pinned }
+                            .entries
+                            .chunked(2)
+                            .forEach { row ->
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    row.forEach { (key, title) ->
+                                        FilledTonalButton(
+                                            onClick = { mode = key },
+                                            modifier = Modifier.weight(1f),
+                                        ) {
+                                            Text(
+                                                mapOf(
+                                                    "compress" to "压缩 PDF",
+                                                    "searchable" to "识别文字",
+                                                    "images-png" to "转为图片",
+                                                    "docx-layout" to "转为 Word",
+                                                )[key] ?: title,
+                                                maxLines = 2,
+                                            )
+                                        }
+                                    }
+                                    if (row.size == 1) Spacer(Modifier.weight(1f))
+                                }
+                            }
+                        if (titles.keys.none { "tool:$it" in pinned })
+                            Text("从工具菜单固定常用功能。", style = MaterialTheme.typography.bodySmall)
+                        Text("按用途选择", style = MaterialTheme.typography.titleMedium)
+                        val choices =
+                            (if (readingActions.isNotEmpty())
+                                listOf(
+                                    WorkspaceSection(
+                                        "reading",
+                                        "阅读与导航",
+                                        "目录、书签、朗读与翻译",
+                                        androidx.compose.material.icons.Icons.Default.AutoStories,
+                                    )
+                                )
+                            else emptyList()) + pdfFamilies
+                        SectionCardGrid(choices) { group = it }
+                    } else {
+                        TextButton(
+                            onClick = {
+                                group = ""
+                                query = ""
+                            }
+                        ) {
+                            Text("返回工具分类")
                         }
-                    }
-                    val conversion =
-                        setOf(
-                            "searchable",
-                            "images-jpg",
-                            "images-png",
-                            "images-webp",
-                            "long-image",
-                            "extract-images",
-                            "txt",
-                            "md",
-                            "html",
-                            "docx",
-                            "docx-layout",
-                            "pdf-pptx",
-                            "pdf-pptx-native",
-                            "docx-image",
-                        )
-                    val pageTools = setOf("split-each", "crop", "blank", "nup2", "nup4", "number")
-                    titles
-                        .filter { (key, title) ->
-                            val category =
-                                if (key in conversion) "转换"
-                                else if (key in pageTools) "页面" else "其他"
-                            (group == "全部" ||
-                                category == group ||
-                                (group == "常用" && "tool:$key" in pinned)) &&
-                                ToolCatalog.pdfMatches(key, title, query)
-                        }
-                        .forEach { (key, title) ->
-                            Row(
-                                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-                            ) {
-                                OutlinedButton(
-                                    onClick = {
+                        if (group == "reading" && query.isBlank()) {
+                            readingActions
+                                .filterNot { it.id in setOf("read:range", "read:assembly") }
+                                .forEach { tool -> WorkspaceToolRow(tool, false, true, {}) }
+                        } else {
+                            if (group == "pages" && query.isBlank())
+                                readingActions
+                                    .filter { it.id in setOf("read:range", "read:assembly") }
+                                    .forEach { tool -> WorkspaceToolRow(tool, false, true, {}) }
+                            val found =
+                                titles.filter { (key, title) ->
+                                    (query.isNotBlank() ||
+                                        group.isBlank() ||
+                                        pdfFamily(key) == group) &&
+                                        ToolCatalog.pdfMatches(key, title, query)
+                                }
+                            if (found.isEmpty()) Text("没有找到匹配的工具")
+                            found.forEach { (key, title) ->
+                                WorkspaceToolRow(
+                                    HomeTool(
+                                        "tool:$key",
+                                        title,
+                                        ToolCatalog.conversion(key)?.detail
+                                            ?: pdfFamilies
+                                                .find { it.id == pdfFamily(key) }
+                                                ?.detail
+                                                .orEmpty(),
+                                        androidx.compose.material.icons.Icons.Default.PictureAsPdf,
+                                    ) {
                                         mode = key
                                         number = if (key == "blank") "1" else "5"
                                     },
-                                    modifier = Modifier.weight(1f),
-                                ) {
-                                    Text(title)
-                                }
-                                ToolPinButton("tool:$key", title, "tool:$key" in pinned)
+                                    "tool:$key" in pinned,
+                                    true,
+                                    { capability = it },
+                                )
                             }
                         }
+                    }
                 } else {
                     if (
                         mode in

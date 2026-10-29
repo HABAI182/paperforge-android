@@ -19,7 +19,6 @@ fun ReaderDisplaySettings(
 ) {
     var expanded by remember { mutableStateOf(false) }
     var scope by remember(page) { mutableStateOf("page:$page") }
-    Text("页面适配", style = MaterialTheme.typography.labelLarge)
     Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
         Text("宽屏面对页", Modifier.weight(1f))
         Switch(
@@ -37,7 +36,7 @@ fun ReaderDisplaySettings(
                 Modifier.semantics { contentDescription = "封面单页" },
             )
         }
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         FilterChip(
             !options.rightToLeft,
             { onChange(options.copy(rightToLeft = false)) },
@@ -49,7 +48,7 @@ fun ReaderDisplaySettings(
             label = { Text("从右到左") },
         )
     }
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         FilterChip(
             !options.fitWidth,
             { onChange(options.copy(fitWidth = false)) },

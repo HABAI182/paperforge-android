@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
@@ -63,6 +64,7 @@ fun HomeScreen(
                 maxColumns,
             )
     var importMenu by remember { mutableStateOf(false) }
+    var libraryDisplay by remember { mutableStateOf(false) }
     val docs by vm.documents.collectAsState()
     val busy by vm.busy.collectAsState()
     var tab by rememberSaveable { mutableIntStateOf(vm.homeTab.value) }
@@ -213,7 +215,7 @@ fun HomeScreen(
         selection = if (id in selection) selection - id else selection + id
     }
     BackHandler(tab == 2 && (toolGroup.isNotBlank() || toolQuery.isNotBlank())) {
-        vm.workspaceGroup.value = ""
+        if (toolQuery.isBlank()) vm.workspaceGroup.value = toolGroup.substringBeforeLast('/', "")
         vm.workspaceQuery.value = ""
     }
     BackHandler(tab == 3 || (tab == 2 && toolGroup.isBlank() && toolQuery.isBlank())) {
@@ -287,6 +289,23 @@ fun HomeScreen(
             confirmButton = { TextButton(onClick = { moreHits = null }) { Text("关闭") } },
         )
     }
+    if (libraryDisplay)
+        AlertDialog(
+            onDismissRequest = { libraryDisplay = false },
+            title = { Text("文档视图") },
+            text = {
+                SectionCardGrid(
+                    listOf(
+                        WorkspaceSection("LIST", "列表", "紧凑排列，便于查找名称", Icons.Default.ViewList),
+                        WorkspaceSection("COVERS", "封面", "展示文档首页，直观浏览", Icons.Default.GridView),
+                    )
+                ) {
+                    UserSettings.set(SettingKeys.DocumentLayout, it)
+                    libraryDisplay = false
+                }
+            },
+            confirmButton = { TextButton(onClick = { libraryDisplay = false }) { Text("完成") } },
+        )
     Scaffold(
         topBar = {
             if (selecting)
@@ -320,11 +339,16 @@ fun HomeScreen(
                             if (inTrash) "回收站"
                             else
                                 when (tab) {
-                                    1 -> "文档"
                                     2 -> "工作台"
                                     3 -> "设置"
                                     else -> "PaperForge"
-                                }
+                                },
+                            style =
+                                if (tab < 2) MaterialTheme.typography.headlineMedium
+                                else MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     },
                     navigationIcon = {
@@ -334,6 +358,12 @@ fun HomeScreen(
                             }
                     },
                     actions = {
+                        if (tab < 2 && !inTrash)
+                            TextButton(onClick = { libraryDisplay = true }) {
+                                Icon(Icons.Default.ViewQuilt, null, Modifier.size(18.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text("视图")
+                            }
                         if (tab < 2 && !inTrash)
                             IconButton(
                                 onClick = {
@@ -645,7 +675,7 @@ fun HomeScreen(
             if (tab == 3) {
                 item {
                     SettingsHub(vm, onAbout) {
-                        cn.paperforge.app.system.NetworkTools.updates(context, oneClick = true)
+                        cn.paperforge.app.system.NetworkTools.updates(context, checkOnOpen = true)
                     }
                 }
             } else if (tab == 2) {

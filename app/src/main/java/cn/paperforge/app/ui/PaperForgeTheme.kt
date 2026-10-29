@@ -8,7 +8,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
@@ -26,16 +25,11 @@ fun PaperForgeTheme(forceDarkSystemBars: Boolean = false, content: @Composable (
     val dark =
         when (theme) {
             "DARK",
-            "AMOLED" -> true
-            "LIGHT" -> false
+            "AMOLED",
+            "MIDNIGHT" -> true
+            "LIGHT",
+            "SEPIA" -> false
             else -> isSystemInDarkTheme()
-        }
-    val accent =
-        when (UserSettings[SettingKeys.Accent]) {
-            "BLUE" -> Color(0xFF225BAA)
-            "PURPLE" -> Color(0xFF7250A0)
-            "ORANGE" -> Color(0xFFA54B15)
-            else -> Color(0xFF176B54)
         }
     val activity = LocalActivity.current as? androidx.activity.ComponentActivity
     val darkBars = dark || forceDarkSystemBars
@@ -52,75 +46,13 @@ fun PaperForgeTheme(forceDarkSystemBars: Boolean = false, content: @Composable (
                 SystemBarStyle.auto(0xE6FFFFFF.toInt(), 0x801B1B1B.toInt()) { darkBars },
         )
     }
-    val colors =
-        if (dark)
-            darkColorScheme(
-                primary = lerp(accent, Color.White, .48f),
-                onPrimary = Color(0xFF102019),
-                primaryContainer = lerp(accent, Color.Black, .55f),
-                onPrimaryContainer = lerp(accent, Color.White, .8f),
-                secondary = lerp(accent, Color.White, .55f),
-                onSecondary = Color(0xFF102019),
-                secondaryContainer = lerp(accent, Color.Black, .65f),
-                onSecondaryContainer = Color(0xFFE2EAE6),
-                background = Color(0xFF111715),
-                onBackground = Color(0xFFE4EAE6),
-                surface = Color(0xFF111715),
-                surfaceBright = Color(0xFF303B35),
-                surfaceDim = Color(0xFF0D1210),
-                inverseSurface = Color(0xFFE4EAE6),
-                inverseOnSurface = Color(0xFF1C2822),
-                inversePrimary = accent,
-                surfaceContainerLowest = Color(0xFF0D1210),
-                surfaceContainerLow = Color(0xFF19211E),
-                surfaceContainer = Color(0xFF1D2622),
-                surfaceContainerHigh = Color(0xFF26302B),
-                surfaceContainerHighest = Color(0xFF303B35),
-                onSurface = Color(0xFFE4EAE6),
-                onSurfaceVariant = Color(0xFFBCC9C0),
-                outline = Color(0xFF87958C),
-                outlineVariant = Color(0xFF3B4941),
-                tertiary = Color(0xFFE5BD82),
-                onTertiary = Color(0xFF2B1900),
-                tertiaryContainer = Color(0xFF554329),
-                onTertiaryContainer = Color(0xFFFFDDB0),
-                surfaceTint = Color.Transparent,
-            )
-        else
-            lightColorScheme(
-                primary = accent,
-                onPrimary = Color.White,
-                primaryContainer = lerp(accent, Color.White, .82f),
-                onPrimaryContainer = lerp(accent, Color.Black, .5f),
-                secondary = accent,
-                onSecondary = Color.White,
-                secondaryContainer = lerp(accent, Color.White, .88f),
-                onSecondaryContainer = lerp(accent, Color.Black, .45f),
-                background = Color(0xFFFAF9F5),
-                onBackground = Color(0xFF1C2822),
-                surface = Color(0xFFFAF9F5),
-                surfaceBright = Color(0xFFFAF9F5),
-                surfaceDim = Color(0xFFDDE3DA),
-                inverseSurface = Color(0xFF1C2822),
-                inverseOnSurface = Color(0xFFFAF9F5),
-                inversePrimary = lerp(accent, Color.White, .48f),
-                surfaceContainerLowest = Color.White,
-                surfaceContainerLow = Color(0xFFF1F3EE),
-                surfaceContainer = Color(0xFFECEFE9),
-                surfaceContainerHigh = Color(0xFFE6EBE3),
-                surfaceContainerHighest = Color(0xFFE0E7DD),
-                onSurface = Color(0xFF1C2822),
-                onSurfaceVariant = Color(0xFF536258),
-                outline = Color(0xFF75857A),
-                outlineVariant = Color(0xFFCFD9CF),
-                tertiary = Color(0xFF795A27),
-                onTertiary = Color.White,
-                tertiaryContainer = Color(0xFFFFDEAC),
-                onTertiaryContainer = Color(0xFF2B1900),
-                surfaceTint = Color.Transparent,
-            )
+    val colors = cn.paperforge.theme.paperColorScheme(UserSettings[SettingKeys.Accent], dark, theme)
     val selectedColors =
-        if (UserSettings[SettingKeys.DynamicColor] && android.os.Build.VERSION.SDK_INT >= 31) {
+        if (
+            UserSettings[SettingKeys.DynamicColor] &&
+                theme !in setOf("SEPIA", "MIDNIGHT") &&
+                android.os.Build.VERSION.SDK_INT >= 31
+        ) {
             if (dark) dynamicDarkColorScheme(LocalContext.current)
             else dynamicLightColorScheme(LocalContext.current)
         } else colors

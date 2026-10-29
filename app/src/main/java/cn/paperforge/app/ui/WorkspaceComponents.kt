@@ -14,9 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -95,6 +93,12 @@ internal fun LazyListScope.workspaceContent(
 ) {
     val tools = entries.distinctBy { it.id }
     val searching = query.isNotBlank()
+    val root = group.substringBefore('/')
+    val family = group.substringAfter('/', "")
+    val families =
+        if (root == "convert") conversionFamilies
+        else if (root == "pdf") pdfFamilies else emptyList()
+    val familyLanding = !searching && family.isBlank() && families.isNotEmpty()
     item(key = "workspace-search") {
         OutlinedTextField(
             query,
@@ -150,60 +154,7 @@ internal fun LazyListScope.workspaceContent(
             Text("全部功能", style = MaterialTheme.typography.titleMedium)
         }
         item(key = "workspace-categories") {
-            val fontScale = LocalDensity.current.fontScale
-            val columns = if (LocalConfiguration.current.screenWidthDp / fontScale >= 340) 2 else 1
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                if (columns == 1)
-                    workspaceSections.forEach { section ->
-                        SectionNavigationRow(section) { onGroup(section.id) }
-                    }
-                else
-                    workspaceSections.chunked(columns).forEach { row ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            row.forEach { section ->
-                                Card(
-                                    onClick = { onGroup(section.id) },
-                                    modifier = Modifier.weight(1f),
-                                    shape = RoundedCornerShape(20.dp),
-                                    colors =
-                                        CardDefaults.cardColors(
-                                            containerColor =
-                                                MaterialTheme.colorScheme.surfaceContainerLow
-                                        ),
-                                ) {
-                                    Column(
-                                        Modifier.fillMaxWidth().padding(18.dp),
-                                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                                    ) {
-                                        Surface(
-                                            shape = RoundedCornerShape(12.dp),
-                                            color = MaterialTheme.colorScheme.secondaryContainer,
-                                        ) {
-                                            Icon(
-                                                section.icon,
-                                                null,
-                                                Modifier.padding(10.dp).size(24.dp),
-                                                tint =
-                                                    MaterialTheme.colorScheme.onSecondaryContainer,
-                                            )
-                                        }
-                                        Text(
-                                            section.title,
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.SemiBold,
-                                        )
-                                        Text(
-                                            section.detail,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            minLines = 2,
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-            }
+            SectionCardGrid(workspaceSections, onSelect = onGroup)
         }
         item {
             Text(
@@ -229,19 +180,22 @@ internal fun LazyListScope.workspaceContent(
                                 tool.title,
                                 query,
                             ))
-                } else if (group == "pinned") tool.id in pinned else workspaceSection(tool) == group
+                } else if (group == "pinned") tool.id in pinned
+                else
+                    workspaceSection(tool) == root &&
+                        (family.isBlank() || toolFamily(tool, root) == family)
             }
         item(key = "workspace-breadcrumb") {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 TextButton(
                     onClick = {
                         onQuery("")
-                        onGroup("")
+                        onGroup(if (family.isNotBlank()) root else "")
                     }
                 ) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("全部功能")
+                    Text(if (family.isNotBlank()) "返回分类" else "全部功能")
                 }
                 Spacer(Modifier.weight(1f))
                 Text(
@@ -253,7 +207,9 @@ internal fun LazyListScope.workspaceContent(
         }
         if (!searching)
             item(key = "workspace-section-title") {
-                val section = workspaceSections.find { it.id == group }
+                val section =
+                    if (family.isNotBlank()) families.find { it.id == family }
+                    else workspaceSections.find { it.id == root }
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
                         section?.title ?: "常用工具",
@@ -274,36 +230,52 @@ internal fun LazyListScope.workspaceContent(
                     Modifier.padding(vertical = 24.dp),
                 )
             }
-        val sections =
-            if (searching) workspaceSections.map { it.id to it.title } else listOf(group to "")
-        sections.forEach { (id, title) ->
-            val rows = if (searching) found.filter { workspaceSection(it) == id } else found
-            if (rows.isNotEmpty()) {
-                if (searching)
-                    item(key = "result-$id") {
-                        Text(
-                            title,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                // Conversions retain their format families instead of becoming another long mixed
-                // list.
-                rows
-                    .groupBy { if (!searching && group == "convert") it.group else "" }
-                    .forEach { (family, members) ->
-                        if (family.isNotBlank())
-                            item(key = "family-$id-$family") {
-                                Text(
-                                    family,
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.primary,
-                                )
-                            }
-                        items(members, key = { it.id }) { tool ->
-                            WorkspaceToolRow(tool, tool.id in pinned, enabled, onInfo)
+        if (familyLanding)
+            item(key = "family-cards-$root") {
+                val choices =
+                    families
+                        .filter { f -> found.any { toolFamily(it, root) == f.id } }
+                        .map { f ->
+                            f.copy(
+                                detail =
+                                    "${found.count { toolFamily(it, root) == f.id }} 项 · ${f.detail}"
+                            )
                         }
-                    }
+                SectionCardGrid(choices) { onGroup("$root/$it") }
+            }
+        else {
+            val sections =
+                if (searching) workspaceSections.map { it.id to it.title } else listOf(group to "")
+            sections.forEach { (id, title) ->
+                val rows = if (searching) found.filter { workspaceSection(it) == id } else found
+                if (rows.isNotEmpty()) {
+                    if (searching)
+                        item(key = "result-$id") {
+                            Text(
+                                title,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    // Conversions retain their format families instead of becoming another long
+                    // mixed
+                    // list.
+                    rows
+                        .groupBy { if (!searching && group == "convert") it.group else "" }
+                        .forEach { (family, members) ->
+                            if (family.isNotBlank())
+                                item(key = "family-$id-$family") {
+                                    Text(
+                                        family,
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
+                            items(members, key = { it.id }) { tool ->
+                                WorkspaceToolRow(tool, tool.id in pinned, enabled, onInfo)
+                            }
+                        }
+                }
             }
         }
     }
@@ -416,7 +388,7 @@ internal fun SettingsHub(vm: MainViewModel, onAbout: () -> Unit, onUpdates: () -
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(14.dp),
             ) {
-                Text("一键更新")
+                Text("检查更新")
             }
             OutlinedButton(
                 onClick = {
@@ -435,14 +407,9 @@ internal fun SettingsHub(vm: MainViewModel, onAbout: () -> Unit, onUpdates: () -
         }
         Spacer(Modifier.height(4.dp))
         Text("偏好设置", style = MaterialTheme.typography.titleMedium)
-        settingsSections.forEach { section ->
-            SectionNavigationRow(
-                section,
-                onClick = {
-                    vm.settingsSection.value = section.id
-                    vm.screen.value = "settings"
-                },
-            )
+        SectionCardGrid(settingsSections) { id ->
+            vm.settingsSection.value = id
+            vm.screen.value = "settings"
         }
         Spacer(Modifier.height(4.dp))
         Text("关于 PaperForge", style = MaterialTheme.typography.titleMedium)

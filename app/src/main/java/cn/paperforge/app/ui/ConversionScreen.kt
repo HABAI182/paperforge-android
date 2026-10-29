@@ -242,34 +242,54 @@ fun ConversionScreen(
                         Modifier.padding(24.dp),
                     )
                 }
-            matches
-                .groupBy { it.group }
-                .forEach { (family, entries) ->
-                    item(key = "family-$family") {
-                        Text(
-                            family,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                    items(entries, key = { it.mode }) { entry ->
-                        WorkspaceToolRow(
-                            HomeTool(
-                                entry.id,
-                                entry.title,
-                                entry.detail,
-                                if (entry.group == "图片") Icons.Default.Image
-                                else Icons.Default.SwapHoriz,
-                                entry.group,
-                            ) {
-                                launch(entry)
-                            },
-                            entry.id in pinned,
-                            !busy,
-                            onInfo = { capability = it },
-                        )
+            if (group == "全部" && query.isBlank())
+                item {
+                    SectionCardGrid(
+                        conversionFamilies.filter { family ->
+                            matches.any { it.group == family.id }
+                        } +
+                            listOf(
+                                WorkspaceSection(
+                                    "整理",
+                                    "批量与整理",
+                                    "批量转换、合并与流程",
+                                    Icons.Default.PendingActions,
+                                )
+                            )
+                    ) {
+                        group = it
                     }
                 }
+            else {
+                matches
+                    .groupBy { it.group }
+                    .forEach { (family, entries) ->
+                        item(key = "family-$family") {
+                            Text(
+                                family,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                        items(entries, key = { it.mode }) { entry ->
+                            WorkspaceToolRow(
+                                HomeTool(
+                                    entry.id,
+                                    entry.title,
+                                    entry.detail,
+                                    if (entry.group == "图片") Icons.Default.Image
+                                    else Icons.Default.SwapHoriz,
+                                    entry.group,
+                                ) {
+                                    launch(entry)
+                                },
+                                entry.id in pinned,
+                                !busy,
+                                onInfo = { capability = it },
+                            )
+                        }
+                    }
+            }
             item {
                 Text(
                     "快速正文入口会重新排版文字；Markdown / HTML 使用独立结构转换。Office 排版入口使用手机引擎。",

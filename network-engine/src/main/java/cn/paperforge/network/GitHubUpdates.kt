@@ -249,7 +249,10 @@ class GitHubUpdates(
                             if (code <= (installed[id]?.versionCode ?: 0)) continue
                             val abiArray = item.getJSONArray("abis")
                             val abis = List(abiArray.length()) { abiArray.getString(it) }
-                            if (!compatible(abis, supported)) continue
+                            if (!compatible(abis, supported)) {
+                                warnings += "$tag 有新版本，但没有适配当前设备架构的安装包"
+                                continue
+                            }
                             val asset = files[item.getString("file")]
                             if (asset == null) {
                                 warnings += "$tag 缺少 ${item.getString("file")}"

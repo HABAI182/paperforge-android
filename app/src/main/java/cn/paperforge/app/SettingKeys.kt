@@ -78,8 +78,18 @@ object SettingKeys {
         SettingKey.Text("resolution", "STANDARD", setOf("DRAFT", "STANDARD", "HIGH", "CUSTOM"))
     val CustomDpi = SettingKey.Number("customDpi", 300f, 72f..600f)
     val Quality = SettingKey.Number("quality", 90f, 40f..100f)
-    val Theme = SettingKey.Text("theme", "SYSTEM", setOf("SYSTEM", "LIGHT", "DARK", "AMOLED"))
-    val Accent = SettingKey.Text("accent", "GREEN", setOf("GREEN", "BLUE", "PURPLE", "ORANGE"))
+    val Theme =
+        SettingKey.Text(
+            "theme",
+            "SYSTEM",
+            setOf("SYSTEM", "LIGHT", "DARK", "AMOLED", "SEPIA", "MIDNIGHT"),
+        )
+    val Accent =
+        SettingKey.Text(
+            "accent",
+            "GREEN",
+            setOf("GREEN", "BLUE", "PURPLE", "ORANGE", "TEAL", "ROSE", "SLATE", "SEPIA"),
+        )
     val DynamicColor = SettingKey.Bool("dynamicColor", false)
     val ReduceMotion = SettingKey.Bool("reduceMotion", false)
     val Haptics = SettingKey.Bool("haptics", true)

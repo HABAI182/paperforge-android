@@ -1,10 +1,10 @@
 # 发布检查
 
-## 1.0.0 完整功能版
+## 1.0.1 完整功能版
 
-所有者已接受当前范围并授权发布单APK，`releaseHold=false`。正式交付为`PaperForge-1.0.0-full-arm64-v8a.apk`，沿用原应用ID与证书；Office、特殊格式与联网工具均内置，桌面只保留一个图标。当前完整包版本码10003。私有/公开是仓库可见性，稳定/预发布是发行渠道，两者分别管理。
+所有者已接受当前范围并授权发布单APK，`releaseHold=false`。正式交付为`PaperForge-1.0.0-full-arm64-v8a.apk`，沿用原应用ID与证书；Office、特殊格式与联网工具均内置，桌面只保留一个图标。当前完整包版本码10004。私有/公开是仓库可见性，稳定/预发布是发行渠道，两者分别管理。
 
-发布前检查真实版本、单ABI、所有者证书、ZIP/ELF16KiB对齐；记录干净源提交、SHA256、文件字节数。UI仅针对本次变化检查分类、返回、搜索、设置与分享入口；既有原生转换证据保留版本标记。发布后核对tag/source、三个附件及服务器digest，更新README、CHANGELOG、安装说明与状态文档。能力和剩余设备验收见[1.0.0状态](quality/V1.0.0-STATUS.md)，安装见[INSTALL](INSTALL.md)。构建命令见[DISTRIBUTION](development/DISTRIBUTION.md)。
+发布前检查真实版本、单ABI、所有者证书、ZIP/ELF16KiB对齐；记录干净源提交、SHA256、文件字节数。UI仅针对本次变化检查分类、返回、搜索、设置与分享入口；既有原生转换证据保留版本标记。发布后核对tag/source、三个附件及服务器digest，更新README、CHANGELOG、安装说明与状态文档。能力和剩余设备验收见[1.0.1状态](quality/V1.0.1-STATUS.md)，安装见[INSTALL](INSTALL.md)。构建命令见[DISTRIBUTION](development/DISTRIBUTION.md)。
 
 ## 历史开发约定（已被1.0.0授权取代）
 
