@@ -81,6 +81,9 @@ def main():
     parser.add_argument('--abi', choices=['arm64-v8a', 'x86_64', 'universal'], default='arm64-v8a')
     parser.add_argument('--channel', choices=['development', 'prerelease', 'stable'], default='development')
     parser.add_argument('--include-engines', action='store_true')
+    parser.add_argument('--engine', action='append', default=[],
+                        choices=['office-engine', 'format-engine', 'network-engine'],
+                        help='Include only the selected optional engine; repeat for multiple engines')
     parser.add_argument('--isolated-ci', action='store_true', help='Debug package cn.paperforge.app.ci, using a disposable CI identity')
     parser.add_argument('--output', type=Path)
     args = parser.parse_args()
@@ -99,9 +102,11 @@ def main():
                 raise SystemExit('Missing external signing setting: ' + field)
     output = (args.output or ROOT / 'build/distributions' / args.channel / args.abi).resolve()
     output.mkdir(parents=True, exist_ok=True)
-    modules = ['app'] + (['office-engine', 'format-engine', 'network-engine'] if args.include_engines else [])
+    optional_modules = ['office-engine', 'format-engine', 'network-engine']
+    modules = ['app'] + [module for module in optional_modules
+                         if args.include_engines or module in args.engine]
     selected_abis = policy['supportedAbis'] if args.abi == 'universal' else [args.abi]
-    if args.include_engines:
+    if 'office-engine' in modules:
         run([sys.executable, '-X', 'utf8', 'tools/fetch_office_runtime.py',
              *sum((['--abi', abi] for abi in selected_abis), [])])
     variant = 'debug' if args.isolated_ci else 'release'
