@@ -18,6 +18,7 @@ internal fun ReaderSelectionBar(
     onMark: (String) -> Unit,
     onText: () -> Unit,
     onRegion: () -> Unit,
+    onIntelligence: () -> Unit = {},
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -77,6 +78,13 @@ internal fun ReaderSelectionBar(
                                 )
                             }
                         HorizontalDivider()
+                        DropdownMenuItem(
+                            text = { Text("翻译与智能工具") },
+                            onClick = {
+                                more = false
+                                onIntelligence()
+                            },
+                        )
                         DropdownMenuItem(
                             text = { Text("文字、摘录与朗读") },
                             onClick = {

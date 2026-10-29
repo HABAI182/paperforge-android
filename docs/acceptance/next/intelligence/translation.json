@@ -1,0 +1,28 @@
+{
+  "id": "683b8e47-2479-4d18-831d-ce33792c3afa",
+  "source": {
+    "format": 1,
+    "title": "离线翻译样本",
+    "documentId": "proof-document",
+    "pages": [
+      {
+        "page": 3,
+        "text": "PaperForge keeps your documents on your phone."
+      }
+    ]
+  },
+  "sourceSha256": "06d9999cf1134b48d1ce4798041a66a6db5f203c86b0c55a2e3824be2b0cf54d",
+  "mode": "本机翻译",
+  "operation": "翻译",
+  "question": "",
+  "answer": "[p3]\nPaperforge将您的文件保存在您的手机上。",
+  "pages": [
+    3
+  ],
+  "unknownPages": [],
+  "model": "ML Kit en → zh",
+  "endpoint": "",
+  "created": 1793236934944,
+  "sourceUnchanged": true,
+  "networkDisabledByHostBeforeTest": true
+}

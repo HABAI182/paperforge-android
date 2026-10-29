@@ -22,6 +22,15 @@
       "tarball": "https://registry.npmjs.org/js-sha256/-/js-sha256-0.11.1.tgz",
       "integrity": "sha512-o6WSo/LUvY2uC4j7mO50a2ms7E/EAdbP0swigLV+nzHKTTaYnaLIWJ02VdXrsJX0vGedDESQnLsOekr94ryfjg==",
       "scriptSha256": "4b53da9acab6a5d4010107be2025002fe1a22da64804dd5200b46895cb899219"
+    },
+    {
+      "artifact": "com.google.mlkit:translate:17.0.3",
+      "aarSha256": "b6194f7b42034309cf8299784b2d5d70a82a2e9287fbe1650dea4d1f3ad1fe55",
+      "source": "https://maven.google.com/web/index.html#com.google.mlkit:translate:17.0.3",
+      "documentation": "https://developers.google.com/ml-kit/language/translation/android",
+      "license": "Google ML Kit SDK terms; not open source",
+      "terms": "https://developers.google.com/ml-kit/terms",
+      "purpose": "Optional on-device translation; models explicitly downloaded and removable; not linked into offline main APK"
     }
   ]
 }

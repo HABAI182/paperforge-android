@@ -1,0 +1,5 @@
+Google ML Kit Translate SDK 17.0.3
+This Google SDK and its downloaded language models are not represented as open source.
+SDK terms: https://developers.google.com/ml-kit/terms
+Documentation: https://developers.google.com/ml-kit/language/translation/android
+Models are explicitly downloaded using the SDK model manager and are not redistributed in this repository.

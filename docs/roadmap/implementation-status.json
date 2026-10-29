@@ -572,8 +572,8 @@
     {
       "id": "EXT03",
       "title": "可选翻译与AI",
-      "status": "planned",
-      "note": "完整目标保留，未在本版标记完成"
+      "status": "done",
+      "note": "可选智能工具接入阅读器原页/选区、扫描页和全局工具；冻结文字快照，按页选择、本地原句摘录、ML Kit语言包本机翻译，以及局域网/BYOK Chat Completions服务。手动运行、默认关闭、凭据加密，结果/历史/Markdown与有效/无效页码分开；原文快照与当前源页回查。0.186秒本地/协议集中、14.063秒首次语言包下载、飞行模式0.504秒翻译通过，实际PDF第2页进入/翻译/回查/强停历史恢复，原PDF与既有独立SHA一致，见 intelligence-summary.json。自定义服务使用自有本地协议样本，未消耗外部模型或声称生成质量。"
     },
     {
       "id": "REL01",
@@ -595,9 +595,9 @@
     }
   ],
   "counts": {
-    "done": 90,
+    "done": 91,
     "partial": 7,
-    "planned": 1
+    "planned": 0
   },
   "releaseHold": true,
   "publishedBaseline": "0.6.0"

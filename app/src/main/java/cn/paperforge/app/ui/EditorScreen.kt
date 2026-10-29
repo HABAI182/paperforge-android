@@ -59,6 +59,11 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
     val tasks by vm.localTasks.collectAsState()
     val pager = rememberPagerState(pageCount = { pages.size })
     val active = pages.getOrNull(pager.currentPage)
+    var intelligence by remember { mutableStateOf(false) }
+    if (intelligence && doc != null)
+        IntelligenceDialog(doc!!, pages.size, pager.currentPage, pages = pages) {
+            intelligence = false
+        }
     val target by vm.editorTarget.collectAsState()
     val pageTarget by vm.editorPageTarget.collectAsState()
     LaunchedEffect(pageTarget, pages, doc?.id) {
@@ -356,6 +361,14 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                         }
                     ) {
                         Text("清理与修复 · 另存副本")
+                    }
+                    TextButton(
+                        onClick = {
+                            more = false
+                            intelligence = true
+                        }
+                    ) {
+                        Text("翻译与智能工具")
                     }
                     OcrOptionsControl()
                     if (active.origins().isNotEmpty())

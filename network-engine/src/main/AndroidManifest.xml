@@ -25,6 +25,7 @@
                 <data android:mimeType="*/*" />
             </intent-filter>
         </activity>
+        <activity android:name=".intelligence.IntelligenceActivity" android:exported="true" android:label="PaperForge 智能工具" />
         <service android:name=".lan.LanService" android:exported="false" android:foregroundServiceType="dataSync" />
         <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.files" android:exported="false" android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/update_paths" />

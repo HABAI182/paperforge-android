@@ -1,0 +1,149 @@
+{
+  "provider": "Google ML Kit remote download on 2026-10-29; weights not committed",
+  "files": [
+    {
+      "file": "en_zh/merged_dict_en_zh_25_both.bin",
+      "sha256": "78b58b3b34ce65bcbd5651299229a8d0f31ff9194e14d8ea2b22c2d3b170f137"
+    },
+    {
+      "file": "en_zh/translit_zh/sys_dict.jpg",
+      "sha256": "aa61a4408999346e528dc4389b1ebbbb65d2edf097ea1398a2ef98bade6a6f2a"
+    },
+    {
+      "file": "en_zh/translit_zh/data_scheme.jpg",
+      "sha256": "14906e30830d075da85798900d7e142ad0b183c84d79330ae5f721e68b95cdea"
+    },
+    {
+      "file": "en_zh/translit_zh/tokens.jpg",
+      "sha256": "1dd38d1defc729f15b15653f629bfef22928a7c2133122d3f3695bc76b57f7be"
+    },
+    {
+      "file": "en_zh/translit_zh/polyphone_dict.jpg",
+      "sha256": "54340f3afc2c649c2f7f9f31aab538ae7fe58fb703ab422eb6051e054da7659b"
+    },
+    {
+      "file": "en_zh/translit_zh/setting_scheme.jpg",
+      "sha256": "23edafc24f668f02795b42a861c005d4969a0363b27b27df9f051147210ecf92"
+    },
+    {
+      "file": "en_zh/merged_dict_en_zh_25_update.bin",
+      "sha256": "69c4418682d3927cd905cb03d1d7785230d8730478f6c274bab91937b9f2d33a"
+    },
+    {
+      "file": "en_zh/merged_dict_en_zh_25_from_en.bin",
+      "sha256": "062e6d2b61e10e682c9745cb5ca07fad3a0f86f06c9d9bf5acc2fb5101b8d18e"
+    },
+    {
+      "file": "en_zh/translate_enzh/processor_spec.pb",
+      "sha256": "16eac86213107cc2aa5ee1b76ffa6fc42af3a5a43b50f545d4c6a46bf4597e30"
+    },
+    {
+      "file": "en_zh/translate_enzh/resources/src_wpm_model.model",
+      "sha256": "21f321a080d84dbfc5f56d1ce7312823e00b9dfea91201ceb5faf7035df24490"
+    },
+    {
+      "file": "en_zh/translate_enzh/resources/tgt_wpm_model.vocab",
+      "sha256": "9b9255470b48f27f70c0dc2dc937b8a437ccbd8c8bccfa74565a639365430398"
+    },
+    {
+      "file": "en_zh/translate_enzh/resources/src_wpm_model.vocab",
+      "sha256": "8624d34f64b66ebd575d211f05287a2a547360346f29c1926e22a98ca4d9dd1e"
+    },
+    {
+      "file": "en_zh/translate_enzh/resources/tgt_wpm_model.model",
+      "sha256": "2ea8077709961432414c533d14d8aeab4ed94d025f51b350b5352db5145a9e69"
+    },
+    {
+      "file": "en_zh/translate_enzh/translation_model_encoder_swizzled_birnn_2.bipe",
+      "sha256": "921b50dd286c65502d86f4bf19e68bb35843c17fb49870fa46a1e816a1cf9f31"
+    },
+    {
+      "file": "en_zh/translate_enzh/translation_model_encoder_swizzled_birnn_0.bipe",
+      "sha256": "f009577d219911385c8cafefc7fd9ff5ea327cfeb9ddd8496546580c8593751d"
+    },
+    {
+      "file": "en_zh/translate_enzh/translation_model_decoder_init_0.bipe",
+      "sha256": "3e066f2fe08f12ac97bcf296f8443002f80545887b9a48efd1cc470c73aa4581"
+    },
+    {
+      "file": "en_zh/translate_enzh/translation_model_encoder_swizzled_birnn_1.bipe",
+      "sha256": "dd4b270e69c6aeb2923204b0d960f6593f3e5408557119ee26b7d86202b7eac1"
+    },
+    {
+      "file": "en_zh/translate_enzh/translation_model_decoder_step_0.bipe",
+      "sha256": "0dc83aed937f95c57827296592f11aec0fd1d8eef3ddff0086e31840eb38312d"
+    },
+    {
+      "file": "en_zh/translate_enzh/translation_model.pb",
+      "sha256": "65532c5f2282ea4c4bda1a3ae0694de1f6f926db328efbcf95b44b23831b9b5c"
+    },
+    {
+      "file": "en_zh/translate_enzh/translation_model_decoder_step_embed_ids_0.bipe",
+      "sha256": "d44548a4340ceaf82677db717ca27ef00ce2d31253c396d205b9155ad49097c9"
+    },
+    {
+      "file": "en_zh/translate_enzh/translation_model_encoder_embed_ids_0.bipe",
+      "sha256": "c70f69bb7ce0a0899295cf9bfdc8dfb81176ccb8b453bc8c49ddad44af976000"
+    },
+    {
+      "file": "en_zh/merged_dict_en_zh_25_from_zh.bin",
+      "sha256": "8182e281cfcc0a29c7900291ff97d4920f91959e1364f2a3bc8ea99892c9c58c"
+    },
+    {
+      "file": "en_zh/translate_zhen/processor_spec.pb",
+      "sha256": "37671fec0a1f8480cd3cf7b4a4b4ca1680fd9f3b4bb51f71bba18a9cf870cb21"
+    },
+    {
+      "file": "en_zh/translate_zhen/resources/src_wpm_model.model",
+      "sha256": "ec6690e4359e80c3047a3b8c855efbe33696d45e04f0e156922c24cf8a781ec5"
+    },
+    {
+      "file": "en_zh/translate_zhen/resources/tgt_wpm_model.vocab",
+      "sha256": "f6e769d9cf66bae5965d26f8474474012eb5edee8e04a4a280ae5a5a19bec74e"
+    },
+    {
+      "file": "en_zh/translate_zhen/resources/src_wpm_model.vocab",
+      "sha256": "434ed6109ea9bbc9d602e4f69f0c79532e9e13d10fdf3674216415645a3ce4ab"
+    },
+    {
+      "file": "en_zh/translate_zhen/resources/tgt_wpm_model.model",
+      "sha256": "fafbc774e7afc049522fd693e724c0a1f4fa52fcd192ad8b2dc582ae61c84acd"
+    },
+    {
+      "file": "en_zh/translate_zhen/translation_model_encoder_swizzled_birnn_2.bipe",
+      "sha256": "7d6ce82617911abcb69ecfa213edb5c265d70e248e2da800ce9d871e27ea5984"
+    },
+    {
+      "file": "en_zh/translate_zhen/translation_model_encoder_swizzled_birnn_0.bipe",
+      "sha256": "a7f783597eed7ca24654ee7f50d536c5c025a51f27c2075467d18afc12288daf"
+    },
+    {
+      "file": "en_zh/translate_zhen/translation_model_decoder_init_0.bipe",
+      "sha256": "e093fa038f6d794d999f543d4d186cf50dadad05d7048156f8d83ab28dff4b77"
+    },
+    {
+      "file": "en_zh/translate_zhen/translation_model_encoder_swizzled_birnn_1.bipe",
+      "sha256": "75c5ed634e7e74b774161a057c3be9163da188b487d1c869d2f1f8ebae9a4ea4"
+    },
+    {
+      "file": "en_zh/translate_zhen/translation_model_decoder_step_0.bipe",
+      "sha256": "b0a7707c442a43fa7c19caf70eeeca392a560c9acfc085c12d5621d031d0420d"
+    },
+    {
+      "file": "en_zh/translate_zhen/translation_model.pb",
+      "sha256": "10e4bc6d55493656f228e7d849a26135983cb26d7383b23f8d4ff152eb65e598"
+    },
+    {
+      "file": "en_zh/translate_zhen/translation_model_decoder_step_embed_ids_0.bipe",
+      "sha256": "ab986343de86d1157b8bc478eca2f01b1757318a48ce20dc8b1c47cbc14793e8"
+    },
+    {
+      "file": "en_zh/translate_zhen/translation_model_encoder_embed_ids_0.bipe",
+      "sha256": "f0880d55fc73bf7df3172fb9153a2d5d190a2b4aa061f0b07f9e3ae37ca77364"
+    },
+    {
+      "file": "en_zh/fallback_to_pb_en_zh.pb.bin",
+      "sha256": "3c6d1977d9b3cf8cfe68b1f7ae3952057697f7770af3e053f716f96291afaf3d"
+    }
+  ]
+}

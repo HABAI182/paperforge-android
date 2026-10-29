@@ -23,3 +23,6 @@ office-engine/src/main/assets/licenses/* -whitespace
 format-engine/vendor/** -whitespace
 format-engine/src/main/assets/layout/licenses.txt -whitespace
 format-engine/src/main/assets/layout/adapters.js* -whitespace
+
+# Preserve the pinned browser hash implementation byte-for-byte.
+network-engine/src/main/assets/lan/sha256.min.js -text

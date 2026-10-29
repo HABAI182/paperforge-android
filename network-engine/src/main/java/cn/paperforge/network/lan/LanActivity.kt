@@ -29,6 +29,7 @@ import cn.paperforge.network.*
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.update
 
 class LanActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,14 +62,14 @@ private fun addCopies(context: Context, uris: List<Uri>, peer: String) {
     if (uris.isEmpty()) return
     val app = context.applicationContext
     LanSession.scope.launch {
-        LanSession.copying.value += uris.size
+        LanSession.copying.update { it + uris.size }
         for (uri in uris) {
             try {
                 LanLedger.get(app).add(uri, peer)
             } catch (e: Exception) {
                 LanSession.message.value = e.message ?: "文件未能加入队列，请重新选择"
             } finally {
-                LanSession.copying.value--
+                LanSession.copying.update { it - 1 }
             }
         }
     }
@@ -99,6 +100,7 @@ private fun LanScreen(back: () -> Unit) {
     var target by rememberSaveable { mutableStateOf("") }
     var configuration by rememberSaveable { mutableStateOf(false) }
     var devices by rememberSaveable { mutableStateOf(false) }
+    var pairingExpanded by rememberSaveable { mutableStateOf(false) }
     var addresses by remember { mutableStateOf(LanSession.addresses()) }
     var address by rememberSaveable { mutableStateOf("") }
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
@@ -267,24 +269,26 @@ private fun LanScreen(back: () -> Unit) {
                         if (server == null) Text("关闭时可以准备发送队列。重新开启后，配对过的浏览器仍可连接。")
                         else if (host == null) Text("尚无局域网地址。连接 Wi-Fi 或开启热点后，这里会显示二维码；队列保留。")
                         else {
-                            if (qr != null)
-                                Image(
-                                    qr!!.asImageBitmap(),
-                                    "扫描二维码配对",
-                                    Modifier.size(224.dp).align(Alignment.CenterHorizontally),
-                                )
-                            if (link == null) Text("配对码已过期，刷新后可连接新设备。")
-                            else {
-                                Text(
-                                    ticket.pin.chunked(4).joinToString(" "),
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    fontFamily = FontFamily.Monospace,
-                                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                                )
-                                Text(
-                                    "新设备配对码 · ${((ticket.expires-now)/1000).coerceAtLeast(0)} 秒后失效",
-                                    style = MaterialTheme.typography.bodySmall,
-                                )
+                            if (peers.isEmpty() || pairingExpanded) {
+                                if (qr != null)
+                                    Image(
+                                        qr!!.asImageBitmap(),
+                                        "扫描二维码配对",
+                                        Modifier.size(224.dp).align(Alignment.CenterHorizontally),
+                                    )
+                                if (link == null) Text("配对码已过期，刷新后可连接新设备。")
+                                else {
+                                    Text(
+                                        ticket.pin.chunked(4).joinToString(" "),
+                                        style = MaterialTheme.typography.headlineMedium,
+                                        fontFamily = FontFamily.Monospace,
+                                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                                    )
+                                    Text(
+                                        "新设备配对码 · ${((ticket.expires-now)/1000).coerceAtLeast(0)} 秒后失效",
+                                        style = MaterialTheme.typography.bodySmall,
+                                    )
+                                }
                             }
                             Text(base.orEmpty(), fontFamily = FontFamily.Monospace)
                             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -302,6 +306,16 @@ private fun LanScreen(back: () -> Unit) {
                                     Text("复制连接")
                                 }
                                 TextButton(onClick = { server?.rotateTicket() }) { Text("刷新配对码") }
+                                if (peers.isNotEmpty())
+                                    TextButton(
+                                        onClick = {
+                                            pairingExpanded = !pairingExpanded
+                                            if (pairingExpanded && ticket.expires < now)
+                                                server?.rotateTicket()
+                                        }
+                                    ) {
+                                        Text(if (pairingExpanded) "收起配对" else "连接新设备")
+                                    }
                             }
                             if (addresses.size > 1)
                                 FlowRow {

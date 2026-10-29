@@ -72,3 +72,5 @@ JPEG-2000 / PDF JPX 解码使用 [ThalesGroup/JP2ForAndroid 1.1.0](https://githu
 `network-engine`使用AOSP apksig 8.13.2（Apache-2.0）验证完整APK签名。工具独立拥有网络与系统安装请求权限，基础应用没有新增这些权限。依赖来源与哈希见 network-engine/UPSTREAM.json，许可随工具在assets/licenses/中提供。
 
 局域网二维码使用ZXing core 3.5.3（Apache-2.0）；随包浏览器增量哈希使用js-sha256 0.11.1（MIT），npm完整性与脚本SHA已核对。完整许可位于network-engine/src/main/assets/licenses，来源见其UPSTREAM.json。
+
+可选联网工具新增Google ML Kit Translate 17.0.3，适用[Google ML Kit SDK条款](https://developers.google.com/ml-kit/terms)，不是开源模型。SDK AAR固定哈希在network-engine/UPSTREAM.json；语言包由用户手动下载/移除，文字翻译在设备本地处理，权重未提交或随APK再打包。

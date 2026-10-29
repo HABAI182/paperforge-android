@@ -1,0 +1,60 @@
+{
+  "date": "2026-10-29",
+  "card": "EXT03",
+  "status": "done",
+  "releaseHold": true,
+  "optionalPackage": "cn.paperforge.network",
+  "mainRemainsOffline": true,
+  "defaultEnabled": false,
+  "proofDirectory": "intelligence",
+  "android": {
+    "api": 35,
+    "abi": "x86_64",
+    "focusedTestSeconds": 0.186,
+    "firstModelDownloadSeconds": 14.063,
+    "offlineTranslationSeconds": 0.504,
+    "tests": 3,
+    "result": "OK"
+  },
+  "scope": [
+    "Frozen source snapshot; original OCR and document untouched",
+    "PDF current page/range/selection and scan page/range entry; standalone pasted text",
+    "Local extractive keyword lookup and sentence summary; explicitly not a generative model",
+    "ML Kit language pack download/removal; translation remains local after download",
+    "Custom local or BYOK Chat Completions endpoint/model/key/instructions/token limit",
+    "Valid page references and unknown pages distinguished; original text retained independently of model answer",
+    "Durable result history and Markdown export with source snapshots and links"
+  ],
+  "realUi": {
+    "theme": "DARK",
+    "fontScale": 1.25,
+    "sourcePage": 2,
+    "defaultEnabled": false,
+    "optionalPackageBridge": true,
+    "offlineNativeTranslation": true,
+    "frozenOriginalText": "ROTATED 00456",
+    "resultText": "旋转00456",
+    "backToActualReaderPage": "2 / 3",
+    "historySurvivedForceStopAndUpgrade": true,
+    "disabledAgain": true,
+    "sourcePDFSha256": "5a82388fd3b7b7b65a2a1509de25d28516e43682a8932a174261f28d41b6ca4e",
+    "equalsPreviousIndependentSourceHash": true
+  },
+  "models": {
+    "sdk": "com.google.mlkit:translate:17.0.3",
+    "sdkLicense": "Google ML Kit SDK terms; not open source",
+    "downloadedSamplePair": [
+      "en",
+      "zh"
+    ],
+    "weightsSnapshot": "intelligence/model-files.json",
+    "runtimeAndroidXAndTranslationNativeElf16KiB": true
+  },
+  "limits": [
+    "Live external paid model not contacted; custom endpoint verified against owned local protocol fixture",
+    "Two short English to Chinese samples verify offline mechanism, not broad translation quality",
+    "Source links open the current document page; frozen original remains available if that document later changes",
+    "Local extractive step limited to 200000 source characters per run; remote submission limited to 80000; source snapshots max 2000000",
+    "Language model files downloaded by SDK are not bundled or copied into Git"
+  ]
+}

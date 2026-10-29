@@ -293,6 +293,8 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
     var jump by remember { mutableStateOf(false) }
     var jumpText by remember { mutableStateOf("1") }
     var tools by remember { mutableStateOf(false) }
+    var intelligence by remember { mutableStateOf(false) }
+    var intelligenceExcerpt by remember { mutableStateOf<Pair<Int, String>?>(null) }
     var toolMode by remember { mutableStateOf("") }
     var thumbnails by remember { mutableStateOf(false) }
     var search by remember { mutableStateOf(false) }
@@ -484,6 +486,16 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
         }
     }
 
+    if (intelligence && doc != null && file != null)
+        IntelligenceDialog(
+            doc!!,
+            session?.count ?: 1,
+            page,
+            pdf = file,
+            excerpt = intelligenceExcerpt,
+        ) {
+            intelligence = false
+        }
     val showChrome = !fullscreen || controls || search
     Scaffold(
         contentWindowInsets = if (fullscreen) WindowInsets(0, 0, 0, 0) else WindowInsets.systemBars,
@@ -521,6 +533,14 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                         }
                         IconButton(onClick = { navigation = true }) {
                             Icon(Icons.Default.FormatListBulleted, "目录与链接")
+                        }
+                        IconButton(
+                            onClick = {
+                                intelligenceExcerpt = null
+                                intelligence = true
+                            }
+                        ) {
+                            Icon(Icons.Default.Translate, "翻译与智能工具")
                         }
                         IconButton(onClick = { appearance = true }) {
                             Icon(Icons.Default.Tune, "阅读设置")
@@ -885,6 +905,10 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                             textPoint = current.startPoint
                             textInitial = current.model.lines
                             selection = null
+                        },
+                        onIntelligence = {
+                            intelligenceExcerpt = current.model.page to current.text
+                            intelligence = true
                         },
                         onRegion = { startRegion(current.model.page) },
                         onClose = { selection = null },

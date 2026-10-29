@@ -110,6 +110,30 @@ private fun UpdatesScreen(onBack: () -> Unit) {
             ) {
                 Text("局域网传输 · 手机与浏览器互传")
             }
+            OutlinedButton(
+                onClick = {
+                    context.startActivity(
+                        Intent(
+                                context,
+                                cn.paperforge.network.intelligence.IntelligenceActivity::class.java,
+                            )
+                            .putExtra(
+                                "paperforgeTheme",
+                                (context as? android.app.Activity)
+                                    ?.intent
+                                    ?.getStringExtra("paperforgeTheme"),
+                            )
+                            .putExtra(
+                                "paperforgeFontScale",
+                                (context as? android.app.Activity)
+                                    ?.intent
+                                    ?.getFloatExtra("paperforgeFontScale", 1f) ?: 1f,
+                            )
+                    )
+                }
+            ) {
+                Text("翻译与智能工具 · 按需使用")
+            }
             Card {
                 Row(
                     Modifier.fillMaxWidth().padding(16.dp),

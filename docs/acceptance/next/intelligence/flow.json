@@ -1,0 +1,68 @@
+{
+  "sourceUnchanged": true,
+  "sourceSha256": "190fbaef9c1bf82b316d09a0d249c6919b0770fdddfe18f7e93881cd482d435a",
+  "localResult": {
+    "id": "b42a2c97-9419-495d-be49-32d380f6418e",
+    "source": {
+      "format": 1,
+      "title": "功能说明",
+      "documentId": "proof-document",
+      "pages": [
+        {
+          "page": 2,
+          "text": "PaperForge keeps original OCR. 文档原件始终保留。"
+        },
+        {
+          "page": 5,
+          "text": "局域网传输支持断点续传。配对设备可以撤销。"
+        }
+      ]
+    },
+    "sourceSha256": "190fbaef9c1bf82b316d09a0d249c6919b0770fdddfe18f7e93881cd482d435a",
+    "mode": "本地原文摘录",
+    "operation": "问答",
+    "question": "断点续传",
+    "answer": "[p5] 局域网传输支持断点续传。",
+    "pages": [
+      5
+    ],
+    "unknownPages": [],
+    "model": "关键词匹配 \/ 原句提取",
+    "endpoint": "",
+    "created": 1793236885926
+  },
+  "remoteResult": {
+    "id": "3904943c-cf37-441d-a2e2-87ab7cef070f",
+    "source": {
+      "format": 1,
+      "title": "功能说明",
+      "documentId": "proof-document",
+      "pages": [
+        {
+          "page": 2,
+          "text": "PaperForge keeps original OCR. 文档原件始终保留。"
+        },
+        {
+          "page": 5,
+          "text": "局域网传输支持断点续传。配对设备可以撤销。"
+        }
+      ]
+    },
+    "sourceSha256": "190fbaef9c1bf82b316d09a0d249c6919b0770fdddfe18f7e93881cd482d435a",
+    "mode": "自定义服务",
+    "operation": "摘要",
+    "question": "",
+    "answer": "依据原文保留OCR [p2]，不属于来源的引用 [p99]",
+    "pages": [
+      2
+    ],
+    "unknownPages": [
+      99
+    ],
+    "model": "fixture-protocol",
+    "endpoint": "http:\/\/127.0.0.1:45357\/v1",
+    "created": 1793236886026
+  },
+  "service": "owned local protocol fixture; no paid provider contacted",
+  "encryptedKeyRoundTrip": true
+}

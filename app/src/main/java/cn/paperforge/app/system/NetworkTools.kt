@@ -13,7 +13,20 @@ object NetworkTools {
 
     fun lan(context: Context) = launch(context, "lan.LanActivity")
 
-    private fun launch(context: Context, screen: String) {
+    fun intelligence(context: Context, source: java.io.File? = null) =
+        launch(
+            context,
+            "intelligence.IntelligenceActivity",
+            source?.let {
+                androidx.core.content.FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.files",
+                    it,
+                )
+            },
+        )
+
+    private fun launch(context: Context, screen: String, source: Uri? = null) {
         val installed =
             runCatching { context.packageManager.getPackageInfo("cn.paperforge.network", 0) }
                 .isSuccess
@@ -30,6 +43,13 @@ object NetworkTools {
             }
             context.startActivity(
                 Intent()
+                    .apply {
+                        if (source != null) {
+                            data = source
+                            clipData = android.content.ClipData.newRawUri("原文快照", source)
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                    }
                     .putExtra("paperforgeTheme", UserSettings.string("theme", "SYSTEM"))
                     .putExtra("paperforgeFontScale", UserSettings.number("fontScale", 1f))
                     .setComponent(
@@ -43,7 +63,7 @@ object NetworkTools {
                     Uri.parse("https://github.com/HABAI182/paperforge-android/releases"),
                 )
             )
-            Toast.makeText(context, "安装可选联网工具后，可使用手机更新和局域网互传", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "安装可选联网工具后，可使用更新、局域网互传和智能工具", Toast.LENGTH_LONG).show()
         }
     }
 }

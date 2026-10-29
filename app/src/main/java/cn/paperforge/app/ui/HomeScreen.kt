@@ -815,6 +815,14 @@ fun HomeScreen(
                             cn.paperforge.app.system.NetworkTools.lan(context)
                         },
                         HomeTool(
+                            "action:intelligence",
+                            "翻译与智能工具",
+                            "本机翻译、带页码摘录和自定义服务，按需启用",
+                            Icons.Default.AutoAwesome,
+                        ) {
+                            cn.paperforge.app.system.NetworkTools.intelligence(context)
+                        },
+                        HomeTool(
                             "action:backup",
                             "离线备份",
                             "原图、PDF、OCR、分类与编辑历史",

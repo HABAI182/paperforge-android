@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "baseline": "0.5.0",
-  "checked": "2026-10-28",
+  "checked": "2026-10-29",
   "estimates": "rough person-day ranges; cards may overlap and are not additive deadlines",
   "tasks": [
     {
@@ -1210,7 +1210,7 @@
       ],
       "scope": "页码引用、本地/BYOK、手动运行、可禁用",
       "acceptance": "不改原始OCR，回答可回查原文",
-      "status": "planned"
+      "status": "done"
     },
     {
       "id": "REL01",

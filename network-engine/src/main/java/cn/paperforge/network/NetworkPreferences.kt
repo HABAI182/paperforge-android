@@ -46,8 +46,12 @@ class NetworkPreferences(context: Context) {
                 .generateKey()
     }
 
-    fun token(): String {
-        val saved = store.getString("githubToken", null) ?: return ""
+    fun token(): String = secret("githubToken")
+
+    fun token(value: String) = secret("githubToken", value)
+
+    internal fun secret(slot: String): String {
+        val saved = store.getString(slot, null) ?: return ""
         val parts = saved.split(':', limit = 2)
         return Cipher.getInstance("AES/GCM/NoPadding").run {
             init(
@@ -59,9 +63,9 @@ class NetworkPreferences(context: Context) {
         }
     }
 
-    fun token(value: String) {
+    internal fun secret(slot: String, value: String) {
         if (value.isBlank()) {
-            store.edit().remove("githubToken").commit()
+            store.edit().remove(slot).commit()
             return
         }
         val cipher =
@@ -70,7 +74,7 @@ class NetworkPreferences(context: Context) {
         store
             .edit()
             .putString(
-                "githubToken",
+                slot,
                 Base64.encodeToString(cipher.iv, Base64.NO_WRAP) +
                     ":" +
                     Base64.encodeToString(encrypted, Base64.NO_WRAP),

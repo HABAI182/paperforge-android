@@ -2605,7 +2605,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     ((uri.getQueryParameter("page")?.toIntOrNull() ?: 1) - 1).coerceAtLeast(0)
                 reader.save(doc.id, reader.load(doc.id).copy(page = page))
                 open(doc)
-                readerTarget.value = doc.id to page
+                if (doc.kind == "scan") editorTarget.value = doc.id to page
+                else readerTarget.value = doc.id to page
             }
         }
     }
