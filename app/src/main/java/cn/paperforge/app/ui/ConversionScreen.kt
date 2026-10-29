@@ -585,7 +585,7 @@ fun ConversionScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text("手机转换：选格式、选文件，完成后预览、分享或另存。")
-                    Text("Office：先安装一次手机 Office 引擎，再回到转换中心选择文件。表格识别直接在纸匠内部完成，可预览校正。")
+                    Text("Office：先安装一次手机 Office 引擎，再回到转换中心选择文件。表格识别直接在PaperForge内部完成，可预览校正。")
                     Text("Office 排版使用 LibreOffice；结构 Word 和表格会重建可编辑内容。实际字体和复杂版式可能影响结果，原件始终保留。")
                     TextButton(
                         onClick = {

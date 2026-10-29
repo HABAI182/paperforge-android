@@ -260,4 +260,4 @@ fun safeFileName(input: String): String =
     fileStemPrefix(input.replace(Regex("[\\\\/:*?\"<>|\\p{Cntrl}]"), "_").trim().trim('.'))
         .trim()
         .trim('.')
-        .ifBlank { "纸匠文档" }
+        .ifBlank { "PaperForge文档" }

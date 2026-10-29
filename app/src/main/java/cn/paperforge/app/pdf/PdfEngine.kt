@@ -172,7 +172,7 @@ object PdfEngine {
                     progress((index + 1) * 100 / pages.size)
                 }
                 doc.documentInformation.title = output.nameWithoutExtension
-                doc.documentInformation.creator = "PaperForge 纸匠"
+                doc.documentInformation.creator = "PaperForge"
                 doc.save(temp)
             }
             mapping.finish(temp)

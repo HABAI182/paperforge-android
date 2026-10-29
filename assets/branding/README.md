@@ -1,11 +1,7 @@
-# PaperForge 折纸字标
+# PaperForge 应用标志
 
-原创矢量标记，以连续纸面组成 P：上缘为薄荷绿折角，内侧用暖金色区分纸背。保留纸匠的绿色识别，减少通用文件图标的横线与装饰。
+当前使用用户于2026-10-29指定的绿色叠页图标。`paperforge-user-logo.png`为收到的原文件，字节与SHA256见source.json。应用显示名统一为 **PaperForge**，配套引擎保留用途后缀。
 
-- 主色：深青绿 `#102F2C` 到 `#226C5B` 的轻渐变。
-- 纸面：暖白 `#F5F5EC`；折面 `#80D8BC`、`#D9B878`。
-- Android 前景使用 108 × 108 画布；图形落在中心直径 66 的安全区域内。
-- 圆形、自适应圆角和单色图标保持同一轮廓；Android 13+ 提供真正的 monochrome 图层。
-- 关于对话框复用同一标记，未引入图像依赖或字体资产。
+Android 26+自适应图标使用完整原图并由系统遮罩裁切，并用原生图层补齐展示留白边缘；13+单色轮廓对应同一叠页与三条文字线。普通图标和关于页以原生视口去除展示留白，保留原画形状与阴影，不对原PNG重编码。
 
-`paperforge-app-icon.svg` 为静态完整图标，`paperforge-mark.svg` 为透明字标，`icon-mask-preview.svg` 为大小、明暗与形状预览。SVG 与 Android XML 共用路径；PNG 仅用于评审，不作为应用中的位图资源。
+主应用、Office、格式引擎与联网工具共享此资源。现存`paperforge-app-icon.svg`、`paperforge-mark.svg`、`icon-mask-preview.svg`是上一版折纸P字标的历史源文件；当前资源入口以本文件和source.json为准。

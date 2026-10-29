@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <permission android:name="cn.paperforge.formats.permission.CONVERT" android:protectionLevel="signature" />
     <uses-permission android:name="cn.paperforge.formats.permission.CONVERT" />
-    <application android:name=".FormatApp" android:label="PaperForge 格式引擎" android:allowBackup="false" android:supportsRtl="true" android:theme="@android:style/Theme.Material.Light.NoActionBar">
+    <application android:name=".FormatApp" android:label="PaperForge 格式引擎" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:allowBackup="false" android:supportsRtl="true" android:theme="@android:style/Theme.Material.Light.NoActionBar">
         <meta-data android:name="paperforge.pdfa.validator" android:value="verapdf-1.30.3-android1" />
         <meta-data android:name="paperforge.formats.native" android:value="mupdf-1.28.5-layout6" />
         <activity android:name=".MainActivity" android:exported="true">

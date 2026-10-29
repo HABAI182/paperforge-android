@@ -1,5 +1,1 @@
-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-    <path android:fillColor="#F5F5EC" android:fillType="evenOdd" android:pathData="M35,80V29H59L76,46V56L63,68H49V80ZM49,43V56H57L62,51V48L57,43Z" />
-    <path android:fillColor="#80D8BC" android:pathData="M59,29L76,46H59Z" />
-    <path android:fillColor="#D9B878" android:pathData="M49,56H57L49,64Z" />
-</vector>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android"><item><bitmap android:src="@drawable/brand_logo_source" android:gravity="fill" android:filter="true" /></item><item android:drawable="@drawable/ic_brand_edge_fill" /></layer-list>

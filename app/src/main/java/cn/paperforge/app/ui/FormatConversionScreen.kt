@@ -109,7 +109,7 @@ fun FormatConversionScreen(vm: MainViewModel) {
                             style = MaterialTheme.typography.titleMedium,
                         )
                         if (installed == null)
-                            Text("请安装本次版本附带的「PaperForge 格式引擎」APK，再返回纸匠。之后转换无需电脑或网络。")
+                            Text("请安装本次版本附带的「PaperForge 格式引擎」APK，再返回PaperForge。之后转换无需电脑或网络。")
                         TextButton(
                             onClick = {
                                 uriHandler.openUri("https://github.com/HABAI182/paperforge-android")

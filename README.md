@@ -1,4 +1,4 @@
-# 纸匠 · PaperForge
+# PaperForge
 
 手机本地的扫描、阅读与文件转换工作台。无登录、广告或水印，应用不声明 INTERNET 权限。
 

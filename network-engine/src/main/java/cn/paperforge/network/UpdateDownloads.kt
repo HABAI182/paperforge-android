@@ -163,7 +163,7 @@ object UpdateApkVerifier {
                 }
                 .toSet()
         require(certificates.isNotEmpty() && certificates.all { it in owner(context) }) {
-            "安装包签名与纸匠不一致"
+            "安装包签名与PaperForge不一致"
         }
         val info =
             context.packageManager.getPackageArchiveInfo(file.path, 0) ?: error("无法读取 APK 元数据")

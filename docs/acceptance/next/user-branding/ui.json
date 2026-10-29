@@ -1,0 +1,14 @@
+{
+  "applicationLabel": "PaperForge",
+  "nativeAppInfoLabelVerified": true,
+  "aboutLogoVisible": true,
+  "aboutBrandTitleVerified": true,
+  "sourceArtwork": "assets/branding/paperforge-user-logo.png",
+  "sourceSha256": "e89c92a364586a9df54db35839f795be33778d7dfbb9f4b053b2507a86d7a9ab",
+  "date": "2026-10-29",
+  "dataWiped": false,
+  "aboutVersionSeparated": true,
+  "projectUpdatesAndPrivacyVisible": true,
+  "noticesCollapsed": true,
+  "nativeMaskPresentationMarginFilled": true
+}

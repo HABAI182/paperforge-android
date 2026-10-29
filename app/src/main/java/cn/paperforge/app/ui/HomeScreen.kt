@@ -306,7 +306,7 @@ fun HomeScreen(
                                 when (tab) {
                                     1 -> "我的文档"
                                     2 -> "工具"
-                                    else -> "纸匠"
+                                    else -> "PaperForge"
                                 }
                         )
                     },
@@ -816,7 +816,7 @@ fun HomeScreen(
                         HomeTool(
                             "action:restore",
                             "恢复备份",
-                            "选择纸匠 ZIP 并保留现有文档",
+                            "选择PaperForge ZIP 并保留现有文档",
                             Icons.Default.Restore,
                             action = onRestoreBackup,
                         ),

@@ -163,8 +163,11 @@ private fun UpdatesScreen(onBack: () -> Unit) {
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text("纸匠 · 联网工具", style = MaterialTheme.typography.headlineSmall)
-            Text("按需检查与下载；文件校验通过后交给系统安装。纸匠主应用保持离线。", style = MaterialTheme.typography.bodyMedium)
+            Text("PaperForge · 联网工具", style = MaterialTheme.typography.headlineSmall)
+            Text(
+                "按需检查与下载；文件校验通过后交给系统安装。PaperForge主应用保持离线。",
+                style = MaterialTheme.typography.bodyMedium,
+            )
             Card {
                 Row(
                     Modifier.fillMaxWidth().padding(16.dp),

@@ -28,7 +28,7 @@ class OfficeActivity : Activity() {
             }
         column.addView(
             TextView(this).apply {
-                text = "纸匠 Office 手机引擎"
+                text = "PaperForge Office 手机引擎"
                 textSize = 26f
                 setTextColor(Color.rgb(23, 107, 84))
             }
@@ -46,10 +46,10 @@ class OfficeActivity : Activity() {
             convert(intent.data!!, intent.getStringExtra("format") ?: "pdf")
         } else {
             status.text =
-                "引擎已安装。回到纸匠 → 转换中心，选择 Office 转换。\n\n完全在手机本机运行，无需电脑或网络。\n引擎：LibreOfficeKit 26.2.6.3"
+                "引擎已安装。回到PaperForge → 转换中心，选择 Office 转换。\n\n完全在手机本机运行，无需电脑或网络。\n引擎：LibreOfficeKit 26.2.6.3"
             column.addView(
                 Button(this).apply {
-                    text = "返回纸匠"
+                    text = "返回PaperForge"
                     setOnClickListener {
                         packageManager
                             .getLaunchIntentForPackage("cn.paperforge.app")

@@ -1,0 +1,1034 @@
+{
+  "format": 1,
+  "candidateOnly": true,
+  "releaseHold": true,
+  "channel": "development",
+  "abi": "arm64-v8a",
+  "commit": "78e5ce18016bf575239e15f9a6ea99f9ac6b3f65",
+  "workingTreeDirty": false,
+  "versionCode": 7,
+  "versionName": "0.6.1-dev",
+  "isolatedCi": false,
+  "artifacts": [
+    {
+      "applicationId": "cn.paperforge.app",
+      "versionCode": 7,
+      "versionName": "0.6.1-dev",
+      "certificatesSha256": [
+        "d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e"
+      ],
+      "certificateReport": "Signer #1 certificate DN: C=US, O=Android, CN=Android Debug\nSigner #1 certificate SHA-256 digest: d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e\nSigner #1 certificate SHA-1 digest: bea4323eb8bc8dbce599217239a68de9638098cb\nSigner #1 certificate MD5 digest: ba611759fac2050d4691f7b4ce18b4d5",
+      "buildToolsVersion": "35.0.0",
+      "abis": [
+        "arm64-v8a"
+      ],
+      "permissions": [
+        "android.permission.CAMERA",
+        "cn.paperforge.office.permission.CONVERT",
+        "cn.paperforge.formats.permission.CONVERT",
+        "android.permission.WAKE_LOCK",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.FOREGROUND_SERVICE",
+        "cn.paperforge.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+      ],
+      "zipAlignment16KiB": true,
+      "bytes": 82164125,
+      "sha256": "115a50faa1258b02754e139153ffa95ef98f1c99d73099c2655caa600135c6f1",
+      "groups": {
+        "META-INF": {
+          "zipBytes": 22939,
+          "unpackedBytes": 62969
+        },
+        "assets": {
+          "zipBytes": 26804214,
+          "unpackedBytes": 35142186
+        },
+        "dex": {
+          "zipBytes": 5407212,
+          "unpackedBytes": 11843140
+        },
+        "native/arm64-v8a": {
+          "zipBytes": 49097280,
+          "unpackedBytes": 49097280
+        },
+        "DebugProbesKt.bin": {
+          "zipBytes": 780,
+          "unpackedBytes": 1733
+        },
+        "common.properties": {
+          "zipBytes": 38,
+          "unpackedBytes": 52
+        },
+        "firebase-annotations.properties": {
+          "zipBytes": 51,
+          "unpackedBytes": 78
+        },
+        "firebase-components.properties": {
+          "zipBytes": 50,
+          "unpackedBytes": 76
+        },
+        "firebase-encoders-json.properties": {
+          "zipBytes": 53,
+          "unpackedBytes": 82
+        },
+        "firebase-encoders.properties": {
+          "zipBytes": 48,
+          "unpackedBytes": 72
+        },
+        "image.properties": {
+          "zipBytes": 41,
+          "unpackedBytes": 58
+        },
+        "kotlin-tooling-metadata.json": {
+          "zipBytes": 283,
+          "unpackedBytes": 625
+        },
+        "kotlin": {
+          "zipBytes": 11134,
+          "unpackedBytes": 32063
+        },
+        "org": {
+          "zipBytes": 37891,
+          "unpackedBytes": 216798
+        },
+        "play-services-base.properties": {
+          "zipBytes": 50,
+          "unpackedBytes": 74
+        },
+        "play-services-basement.properties": {
+          "zipBytes": 53,
+          "unpackedBytes": 82
+        },
+        "play-services-mlkit-text-recognition-chinese.properties": {
+          "zipBytes": 75,
+          "unpackedBytes": 126
+        },
+        "play-services-mlkit-text-recognition-common.properties": {
+          "zipBytes": 74,
+          "unpackedBytes": 124
+        },
+        "play-services-mlkit-text-recognition.properties": {
+          "zipBytes": 67,
+          "unpackedBytes": 110
+        },
+        "play-services-tasks.properties": {
+          "zipBytes": 51,
+          "unpackedBytes": 76
+        },
+        "text-recognition-bundled-common.properties": {
+          "zipBytes": 62,
+          "unpackedBytes": 100
+        },
+        "text-recognition-chinese.properties": {
+          "zipBytes": 55,
+          "unpackedBytes": 86
+        },
+        "text-recognition.properties": {
+          "zipBytes": 47,
+          "unpackedBytes": 70
+        },
+        "transport-api.properties": {
+          "zipBytes": 44,
+          "unpackedBytes": 62
+        },
+        "transport-backend-cct.properties": {
+          "zipBytes": 52,
+          "unpackedBytes": 78
+        },
+        "transport-runtime.properties": {
+          "zipBytes": 48,
+          "unpackedBytes": 70
+        },
+        "vision-common.properties": {
+          "zipBytes": 42,
+          "unpackedBytes": 64
+        },
+        "vision-interfaces.properties": {
+          "zipBytes": 47,
+          "unpackedBytes": 72
+        },
+        "AndroidManifest.xml": {
+          "zipBytes": 4507,
+          "unpackedBytes": 21116
+        },
+        "res": {
+          "zipBytes": 139536,
+          "unpackedBytes": 210940
+        },
+        "resources.arsc": {
+          "zipBytes": 468304,
+          "unpackedBytes": 468304
+        }
+      },
+      "largestFiles": [
+        {
+          "file": "lib/arm64-v8a/libonnxruntime.so",
+          "zipBytes": 25763824,
+          "unpackedBytes": 25763824
+        },
+        {
+          "file": "assets/docquad/docquadnet256.ort",
+          "zipBytes": 13404960,
+          "unpackedBytes": 13404960
+        },
+        {
+          "file": "lib/arm64-v8a/libmlkit_google_ocr_pipeline.so",
+          "zipBytes": 11064544,
+          "unpackedBytes": 11064544
+        },
+        {
+          "file": "lib/arm64-v8a/libopencv_java4.so",
+          "zipBytes": 9485216,
+          "unpackedBytes": 9485216
+        },
+        {
+          "file": "assets/fonts/PaperForgeCJK-Regular.ttf",
+          "zipBytes": 6316740,
+          "unpackedBytes": 10591172
+        },
+        {
+          "file": "classes.dex",
+          "zipBytes": 5406441,
+          "unpackedBytes": 11841748
+        },
+        {
+          "file": "lib/arm64-v8a/libpaperforge_scan.so",
+          "zipBytes": 2250104,
+          "unpackedBytes": 2250104
+        },
+        {
+          "file": "assets/scan/border.mnn",
+          "zipBytes": 1584816,
+          "unpackedBytes": 1584816
+        },
+        {
+          "file": "assets/scan/dewarp.mnn",
+          "zipBytes": 1584744,
+          "unpackedBytes": 1584744
+        },
+        {
+          "file": "assets/mlkit-google-ocr-models/gocr/gocr_models/line_recognition_legacy_mobile/Hani_ctc/optical/lstm_model.fb",
+          "zipBytes": 599499,
+          "unpackedBytes": 891872
+        },
+        {
+          "file": "resources.arsc",
+          "zipBytes": 468304,
+          "unpackedBytes": 468304
+        },
+        {
+          "file": "lib/arm64-v8a/libopenjpeg.so",
+          "zipBytes": 406224,
+          "unpackedBytes": 406224
+        },
+        {
+          "file": "assets/mlkit-google-ocr-models/taser/detector/rpn_text_detector_mobile_space_to_depth_quantized_mbv2_v1.tflite",
+          "zipBytes": 340760,
+          "unpackedBytes": 340760
+        },
+        {
+          "file": "assets/mlkit-google-ocr-models/gocr/gocr_models/line_recognition_legacy_mobile/tflite_langid.tflite",
+          "zipBytes": 315520,
+          "unpackedBytes": 315520
+        },
+        {
+          "file": "assets/retouch/super-resolution-10.onnx",
+          "zipBytes": 219622,
+          "unpackedBytes": 240078
+        },
+        {
+          "file": "assets/com/tom_roush/pdfbox/resources/ttf/LiberationSans-Regular.ttf",
+          "zipBytes": 210865,
+          "unpackedBytes": 410712
+        },
+        {
+          "file": "assets/mlkit-google-ocr-models/gocr/gocr_models/line_recognition_legacy_mobile/Latn_ctc/optical/lstm_model.fb",
+          "zipBytes": 181609,
+          "unpackedBytes": 309568
+        },
+        {
+          "file": "assets/mlkit-google-ocr-models/gocr/layout/line_clustering_custom_ops/model.tflite",
+          "zipBytes": 129612,
+          "unpackedBytes": 129612
+        },
+        {
+          "file": "assets/mlkit-google-ocr-models/taser/segmenter/tflite_script_detector_0.3.lstm_model",
+          "zipBytes": 119566,
+          "unpackedBytes": 161448
+        },
+        {
+          "file": "assets/mlkit-google-ocr-models/gocr/layout/line_splitting_custom_ops/model.tflite",
+          "zipBytes": 114384,
+          "unpackedBytes": 114384
+        }
+      ],
+      "nativeElf": [
+        {
+          "file": "lib/arm64-v8a/libandroidx.graphics.path.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libimage_processing_util_jni.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libmlkit_google_ocr_pipeline.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libonnxruntime.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libonnxruntime4j_jni.so",
+          "loadAlignments": [
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libopencv_java4.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libopenjpeg.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libpaperforge_scan.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libsurface_util_jni.so",
+          "loadAlignments": [
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        }
+      ],
+      "nativeElf16KiBCompatible": true,
+      "file": "PaperForge-0.6.1-dev-arm64-v8a-development.apk",
+      "module": "app",
+      "variant": "release"
+    },
+    {
+      "applicationId": "cn.paperforge.office",
+      "versionCode": 1,
+      "versionName": "0.6.0",
+      "certificatesSha256": [
+        "d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e"
+      ],
+      "certificateReport": "Signer #1 certificate DN: C=US, O=Android, CN=Android Debug\nSigner #1 certificate SHA-256 digest: d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e\nSigner #1 certificate SHA-1 digest: bea4323eb8bc8dbce599217239a68de9638098cb\nSigner #1 certificate MD5 digest: ba611759fac2050d4691f7b4ce18b4d5",
+      "buildToolsVersion": "35.0.0",
+      "abis": [
+        "arm64-v8a"
+      ],
+      "permissions": [
+        "cn.paperforge.office.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+      ],
+      "zipAlignment16KiB": true,
+      "bytes": 89033630,
+      "sha256": "507354429f6f9ba721d31b4cd6a7f2882cf135db49f0acfcc7c0a3a9d79f6fc2",
+      "groups": {
+        "META-INF": {
+          "zipBytes": 449,
+          "unpackedBytes": 481
+        },
+        "assets": {
+          "zipBytes": 13536241,
+          "unpackedBytes": 29426814
+        },
+        "dex": {
+          "zipBytes": 1624897,
+          "unpackedBytes": 4998112
+        },
+        "native/arm64-v8a": {
+          "zipBytes": 73764438,
+          "unpackedBytes": 204803000
+        },
+        "DebugProbesKt.bin": {
+          "zipBytes": 782,
+          "unpackedBytes": 1738
+        },
+        "kotlin-tooling-metadata.json": {
+          "zipBytes": 283,
+          "unpackedBytes": 625
+        },
+        "kotlin": {
+          "zipBytes": 11134,
+          "unpackedBytes": 32063
+        },
+        "AndroidManifest.xml": {
+          "zipBytes": 1881,
+          "unpackedBytes": 6604
+        },
+        "res": {
+          "zipBytes": 13504,
+          "unpackedBytes": 25339
+        },
+        "resources.arsc": {
+          "zipBytes": 50752,
+          "unpackedBytes": 50752
+        }
+      },
+      "largestFiles": [
+        {
+          "file": "lib/arm64-v8a/liblo-native-code.so",
+          "zipBytes": 70927376,
+          "unpackedBytes": 196227296
+        },
+        {
+          "file": "assets/unpack/user/fonts/PaperForgeCJK-Regular.ttf",
+          "zipBytes": 6316740,
+          "unpackedBytes": 10591172
+        },
+        {
+          "file": "assets/share/config/images_colibre.zip",
+          "zipBytes": 1625393,
+          "unpackedBytes": 2956026
+        },
+        {
+          "file": "classes.dex",
+          "zipBytes": 1624897,
+          "unpackedBytes": 4998112
+        },
+        {
+          "file": "lib/arm64-v8a/libnss3.so",
+          "zipBytes": 496967,
+          "unpackedBytes": 1659152
+        },
+        {
+          "file": "lib/arm64-v8a/libsqlite3.so",
+          "zipBytes": 487675,
+          "unpackedBytes": 1275288
+        },
+        {
+          "file": "lib/arm64-v8a/libc++_shared.so",
+          "zipBytes": 454850,
+          "unpackedBytes": 1374336
+        },
+        {
+          "file": "lib/arm64-v8a/libfreebl3.so",
+          "zipBytes": 420428,
+          "unpackedBytes": 1340224
+        },
+        {
+          "file": "assets/unpack/user/fonts/Carlito-BoldItalic.ttf",
+          "zipBytes": 325537,
+          "unpackedBytes": 816716
+        },
+        {
+          "file": "assets/unpack/user/fonts/Carlito-Italic.ttf",
+          "zipBytes": 284806,
+          "unpackedBytes": 623416
+        },
+        {
+          "file": "assets/unpack/user/fonts/Carlito-Bold.ttf",
+          "zipBytes": 282402,
+          "unpackedBytes": 690516
+        },
+        {
+          "file": "assets/unpack/user/fonts/Carlito-Regular.ttf",
+          "zipBytes": 271018,
+          "unpackedBytes": 635996
+        },
+        {
+          "file": "lib/arm64-v8a/libssl3.so",
+          "zipBytes": 243646,
+          "unpackedBytes": 701528
+        },
+        {
+          "file": "assets/unpack/program/offapi.rdb",
+          "zipBytes": 226586,
+          "unpackedBytes": 684009
+        },
+        {
+          "file": "assets/unpack/user/fonts/LiberationSans-Italic.ttf",
+          "zipBytes": 217379,
+          "unpackedBytes": 415816
+        },
+        {
+          "file": "assets/unpack/user/fonts/LiberationSans-BoldItalic.ttf",
+          "zipBytes": 213786,
+          "unpackedBytes": 408996
+        },
+        {
+          "file": "assets/unpack/user/fonts/LiberationSans-Bold.ttf",
+          "zipBytes": 212094,
+          "unpackedBytes": 414456
+        },
+        {
+          "file": "assets/unpack/user/fonts/LiberationSerif-BoldItalic.ttf",
+          "zipBytes": 211403,
+          "unpackedBytes": 376772
+        },
+        {
+          "file": "assets/unpack/user/fonts/LiberationSerif-Regular.ttf",
+          "zipBytes": 211384,
+          "unpackedBytes": 393576
+        },
+        {
+          "file": "assets/unpack/user/fonts/LiberationSans-Regular.ttf",
+          "zipBytes": 210865,
+          "unpackedBytes": 410712
+        }
+      ],
+      "nativeElf": [
+        {
+          "file": "lib/arm64-v8a/libc++_shared.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libfreebl3.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/liblo-native-code.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libnspr4.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libnss3.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libnssckbi.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libnssdbm3.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libnssutil3.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libplc4.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libplds4.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libsmime3.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libsoftokn3.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libsqlite3.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        },
+        {
+          "file": "lib/arm64-v8a/libssl3.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        }
+      ],
+      "nativeElf16KiBCompatible": true,
+      "file": "PaperForge-Office-0.6.0-arm64-v8a-development.apk",
+      "module": "office-engine",
+      "variant": "release"
+    },
+    {
+      "applicationId": "cn.paperforge.formats",
+      "versionCode": 1,
+      "versionName": "0.6.1-dev",
+      "certificatesSha256": [
+        "d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e"
+      ],
+      "certificateReport": "Signer #1 certificate DN: C=US, O=Android, CN=Android Debug\nSigner #1 certificate SHA-256 digest: d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e\nSigner #1 certificate SHA-1 digest: bea4323eb8bc8dbce599217239a68de9638098cb\nSigner #1 certificate MD5 digest: ba611759fac2050d4691f7b4ce18b4d5",
+      "buildToolsVersion": "35.0.0",
+      "abis": [
+        "arm64-v8a"
+      ],
+      "permissions": [
+        "cn.paperforge.formats.permission.CONVERT",
+        "cn.paperforge.formats.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+      ],
+      "zipAlignment16KiB": true,
+      "bytes": 22351233,
+      "sha256": "a9434e8c45bc14f587faee52b41eb7d812357b0256e7cd5b33f224bfda122db5",
+      "groups": {
+        "META-INF": {
+          "zipBytes": 6143,
+          "unpackedBytes": 12274
+        },
+        "assets": {
+          "zipBytes": 940075,
+          "unpackedBytes": 3177022
+        },
+        "dex": {
+          "zipBytes": 6974237,
+          "unpackedBytes": 17779204
+        },
+        "native/arm64-v8a": {
+          "zipBytes": 10840392,
+          "unpackedBytes": 10840392
+        },
+        "DebugProbesKt.bin": {
+          "zipBytes": 780,
+          "unpackedBytes": 1733
+        },
+        "com": {
+          "zipBytes": 118280,
+          "unpackedBytes": 296935
+        },
+        "font": {
+          "zipBytes": 1755969,
+          "unpackedBytes": 5118615
+        },
+        "javax": {
+          "zipBytes": 3757,
+          "unpackedBytes": 8189
+        },
+        "kotlin-tooling-metadata.json": {
+          "zipBytes": 283,
+          "unpackedBytes": 625
+        },
+        "kotlin": {
+          "zipBytes": 11134,
+          "unpackedBytes": 32063
+        },
+        "license": {
+          "zipBytes": 9498,
+          "unpackedBytes": 23478
+        },
+        "net": {
+          "zipBytes": 58326,
+          "unpackedBytes": 254447
+        },
+        "org": {
+          "zipBytes": 1395723,
+          "unpackedBytes": 9821355
+        },
+        "AndroidManifest.xml": {
+          "zipBytes": 1741,
+          "unpackedBytes": 6104
+        },
+        "res": {
+          "zipBytes": 12516,
+          "unpackedBytes": 22523
+        },
+        "resources.arsc": {
+          "zipBytes": 50952,
+          "unpackedBytes": 50952
+        }
+      },
+      "largestFiles": [
+        {
+          "file": "lib/arm64-v8a/libmupdf_java.so",
+          "zipBytes": 10840392,
+          "unpackedBytes": 10840392
+        },
+        {
+          "file": "classes4.dex",
+          "zipBytes": 3383184,
+          "unpackedBytes": 7988728
+        },
+        {
+          "file": "classes.dex",
+          "zipBytes": 3236137,
+          "unpackedBytes": 8953156
+        },
+        {
+          "file": "classes5.dex",
+          "zipBytes": 351152,
+          "unpackedBytes": 830196
+        },
+        {
+          "file": "assets/layout/adapters.js",
+          "zipBytes": 295586,
+          "unpackedBytes": 1079663
+        },
+        {
+          "file": "font/cmap/UniCNS-UCS2-H",
+          "zipBytes": 111812,
+          "unpackedBytes": 326418
+        },
+        {
+          "file": "font/cmap/Adobe-Japan1-UCS2",
+          "zipBytes": 100113,
+          "unpackedBytes": 294111
+        },
+        {
+          "file": "font/cmap/UniGB-UCS2-H",
+          "zipBytes": 95536,
+          "unpackedBytes": 274383
+        },
+        {
+          "file": "font/cmap/UniCNS-UTF16-H",
+          "zipBytes": 95139,
+          "unpackedBytes": 253252
+        },
+        {
+          "file": "font/cmap/Adobe-CNS1-UCS2",
+          "zipBytes": 94423,
+          "unpackedBytes": 266531
+        },
+        {
+          "file": "font/cmap/UniGB-UTF32-H",
+          "zipBytes": 83816,
+          "unpackedBytes": 271244
+        },
+        {
+          "file": "font/cmap/UniGB-UTF8-H",
+          "zipBytes": 82175,
+          "unpackedBytes": 241183
+        },
+        {
+          "file": "font/cmap/Adobe-GB1-UCS2",
+          "zipBytes": 79430,
+          "unpackedBytes": 221211
+        },
+        {
+          "file": "font/cmap/UniGB-UTF16-H",
+          "zipBytes": 79319,
+          "unpackedBytes": 203288
+        },
+        {
+          "file": "font/cmap/Adobe-KR-UCS2",
+          "zipBytes": 73154,
+          "unpackedBytes": 203264
+        },
+        {
+          "file": "font/cmap/UniAKR-UTF16-H",
+          "zipBytes": 72411,
+          "unpackedBytes": 186571
+        },
+        {
+          "file": "font/cmap/UniJIS-UTF16-H",
+          "zipBytes": 71469,
+          "unpackedBytes": 188225
+        },
+        {
+          "file": "org/xmlresolver/www.w3.org/Math/DTD/mathml2/xhtml-math11-f.dtd",
+          "zipBytes": 68081,
+          "unpackedBytes": 393483
+        },
+        {
+          "file": "org/xmlresolver/www.w3.org/Math/DTD/mathml2/xhtml-math11-f-a.dtd",
+          "zipBytes": 66528,
+          "unpackedBytes": 387376
+        },
+        {
+          "file": "font/cmap/UniKS-UCS2-H",
+          "zipBytes": 59463,
+          "unpackedBytes": 166078
+        }
+      ],
+      "nativeElf": [
+        {
+          "file": "lib/arm64-v8a/libmupdf_java.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        }
+      ],
+      "nativeElf16KiBCompatible": true,
+      "file": "PaperForge-Formats-0.6.1-dev-arm64-v8a-development.apk",
+      "module": "format-engine",
+      "variant": "release"
+    },
+    {
+      "applicationId": "cn.paperforge.network",
+      "versionCode": 1,
+      "versionName": "0.6.1-dev",
+      "certificatesSha256": [
+        "d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e"
+      ],
+      "certificateReport": "Signer #1 certificate DN: C=US, O=Android, CN=Android Debug\nSigner #1 certificate SHA-256 digest: d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e\nSigner #1 certificate SHA-1 digest: bea4323eb8bc8dbce599217239a68de9638098cb\nSigner #1 certificate MD5 digest: ba611759fac2050d4691f7b4ce18b4d5",
+      "buildToolsVersion": "35.0.0",
+      "abis": [
+        "arm64-v8a"
+      ],
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.REQUEST_INSTALL_PACKAGES",
+        "android.permission.WAKE_LOCK",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.FOREGROUND_SERVICE",
+        "cn.paperforge.network.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+      ],
+      "zipAlignment16KiB": true,
+      "bytes": 1206461,
+      "sha256": "a7f2167af4ec01aec51c0b8764b3ee578c709f7b5c835167ba16db70733fab65",
+      "groups": {
+        "META-INF": {
+          "zipBytes": 11362,
+          "unpackedBytes": 31102
+        },
+        "assets": {
+          "zipBytes": 12232,
+          "unpackedBytes": 27514
+        },
+        "dex": {
+          "zipBytes": 1042375,
+          "unpackedBytes": 2159960
+        },
+        "native/arm64-v8a": {
+          "zipBytes": 10096,
+          "unpackedBytes": 10096
+        },
+        "DebugProbesKt.bin": {
+          "zipBytes": 782,
+          "unpackedBytes": 1738
+        },
+        "kotlin-tooling-metadata.json": {
+          "zipBytes": 283,
+          "unpackedBytes": 625
+        },
+        "kotlin": {
+          "zipBytes": 11134,
+          "unpackedBytes": 32063
+        },
+        "AndroidManifest.xml": {
+          "zipBytes": 2968,
+          "unpackedBytes": 13160
+        },
+        "res": {
+          "zipBytes": 1064,
+          "unpackedBytes": 2356
+        },
+        "resources.arsc": {
+          "zipBytes": 91108,
+          "unpackedBytes": 91108
+        }
+      },
+      "largestFiles": [
+        {
+          "file": "classes.dex",
+          "zipBytes": 1042375,
+          "unpackedBytes": 2159960
+        },
+        {
+          "file": "resources.arsc",
+          "zipBytes": 91108,
+          "unpackedBytes": 91108
+        },
+        {
+          "file": "lib/arm64-v8a/libandroidx.graphics.path.so",
+          "zipBytes": 10096,
+          "unpackedBytes": 10096
+        },
+        {
+          "file": "kotlin/kotlin.kotlin_builtins",
+          "zipBytes": 5129,
+          "unpackedBytes": 18653
+        },
+        {
+          "file": "assets/licenses/apksig-LICENSE.txt",
+          "zipBytes": 4000,
+          "unpackedBytes": 11873
+        },
+        {
+          "file": "assets/licenses/Apache-2.0.txt",
+          "zipBytes": 3949,
+          "unpackedBytes": 11358
+        },
+        {
+          "file": "assets/dexopt/baseline.prof",
+          "zipBytes": 3817,
+          "unpackedBytes": 3817
+        },
+        {
+          "file": "META-INF/androidx/annotation/annotation/LICENSE.txt",
+          "zipBytes": 3563,
+          "unpackedBytes": 10175
+        },
+        {
+          "file": "META-INF/androidx/collection/collection-ktx/LICENSE.txt",
+          "zipBytes": 3563,
+          "unpackedBytes": 10175
+        },
+        {
+          "file": "META-INF/androidx/collection/collection/LICENSE.txt",
+          "zipBytes": 3563,
+          "unpackedBytes": 10175
+        },
+        {
+          "file": "AndroidManifest.xml",
+          "zipBytes": 2968,
+          "unpackedBytes": 13160
+        },
+        {
+          "file": "kotlin/collections/collections.kotlin_builtins",
+          "zipBytes": 1489,
+          "unpackedBytes": 3635
+        },
+        {
+          "file": "kotlin/ranges/ranges.kotlin_builtins",
+          "zipBytes": 1256,
+          "unpackedBytes": 3349
+        },
+        {
+          "file": "kotlin/reflect/reflect.kotlin_builtins",
+          "zipBytes": 1246,
+          "unpackedBytes": 2370
+        },
+        {
+          "file": "kotlin/concurrent/atomics/atomics.kotlin_builtins",
+          "zipBytes": 1020,
+          "unpackedBytes": 2471
+        },
+        {
+          "file": "DebugProbesKt.bin",
+          "zipBytes": 782,
+          "unpackedBytes": 1738
+        },
+        {
+          "file": "res/r2.xml",
+          "zipBytes": 526,
+          "unpackedBytes": 1164
+        },
+        {
+          "file": "kotlin/annotation/annotation.kotlin_builtins",
+          "zipBytes": 523,
+          "unpackedBytes": 865
+        },
+        {
+          "file": "assets/dexopt/baseline.profm",
+          "zipBytes": 466,
+          "unpackedBytes": 466
+        },
+        {
+          "file": "kotlin/internal/internal.kotlin_builtins",
+          "zipBytes": 355,
+          "unpackedBytes": 583
+        }
+      ],
+      "nativeElf": [
+        {
+          "file": "lib/arm64-v8a/libandroidx.graphics.path.so",
+          "loadAlignments": [
+            16384,
+            16384,
+            16384
+          ],
+          "compatible16KiB": true
+        }
+      ],
+      "nativeElf16KiBCompatible": true,
+      "file": "PaperForge-Network-0.6.1-dev-arm64-v8a-development.apk",
+      "module": "network-engine",
+      "variant": "release"
+    }
+  ]
+}

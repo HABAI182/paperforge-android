@@ -1,0 +1,1 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android"><item><bitmap android:src="@drawable/brand_logo_source" android:gravity="fill" android:filter="true" /></item><item android:drawable="@drawable/ic_brand_edge_fill" /></layer-list>

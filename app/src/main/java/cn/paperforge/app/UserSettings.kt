@@ -135,7 +135,7 @@ object UserSettings {
 
     fun importJson(text: String): Int {
         val root = JSONObject(text)
-        require(root.optInt("format") == 1) { "不是支持的纸匠设置文件" }
+        require(root.optInt("format") == 1) { "不是支持的PaperForge设置文件" }
         val values = normalizedValues(root.getJSONObject("preferences"))
         val edit = prefs.edit()
         values.keys().forEach { key ->

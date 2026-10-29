@@ -1,4 +1,5 @@
 <resources>
+    <string name="app_name">PaperForge</string>
     <string name="shortcut_scan">Scan paper</string>
     <string name="shortcut_ocr">Image OCR</string>
     <string name="shortcut_continue">Continue reading</string>

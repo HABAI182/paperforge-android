@@ -176,7 +176,7 @@ object OfficeBridge {
                     if (!bound) finish(IllegalStateException("请先安装或更新「Office 手机引擎」，再在任务中心重试"))
                     if (!continuation.isActive) main.post { cleanup() }
                 } catch (error: SecurityException) {
-                    finish(IllegalStateException("请安装与纸匠同一签名渠道的 Office 手机引擎", error))
+                    finish(IllegalStateException("请安装与PaperForge同一签名渠道的 Office 手机引擎", error))
                 } catch (error: Exception) {
                     finish(error)
                 }

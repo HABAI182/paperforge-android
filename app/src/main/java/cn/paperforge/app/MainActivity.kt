@@ -101,14 +101,14 @@ class MainActivity : ComponentActivity() {
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            Text("纸匠已锁定", style = MaterialTheme.typography.headlineSmall)
+                            Text("PaperForge已锁定", style = MaterialTheme.typography.headlineSmall)
                             Button(
                                 onClick = {
                                     @Suppress("DEPRECATION")
                                     val intent =
                                         getSystemService(android.app.KeyguardManager::class.java)
                                             .createConfirmDeviceCredentialIntent(
-                                                "解锁纸匠",
+                                                "解锁PaperForge",
                                                 "请使用系统设备凭据验证",
                                             )
                                     if (intent != null) {
@@ -729,7 +729,7 @@ class MainActivity : ComponentActivity() {
                             TextButton(
                                 onClick = {
                                     pendingText = text
-                                    saveText.launch("纸匠文字.txt")
+                                    saveText.launch("PaperForge文字.txt")
                                 }
                             ) {
                                 Text("导出 TXT")
@@ -796,23 +796,29 @@ class MainActivity : ComponentActivity() {
                         onDismissRequest = { about = false },
                         title = {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                androidx.compose.foundation.Image(
-                                    androidx.compose.ui.res.painterResource(R.drawable.ic_launcher),
-                                    null,
-                                    Modifier.size(48.dp),
-                                )
+                                BrandLogo(Modifier.size(52.dp))
                                 Spacer(Modifier.width(12.dp))
-                                Text(
-                                    "纸匠 PaperForge · " +
-                                        packageManager.getPackageInfo(packageName, 0).versionName,
-                                    Modifier.weight(1f),
-                                )
+                                Column(Modifier.weight(1f)) {
+                                    Text(
+                                        "PaperForge",
+                                        style = MaterialTheme.typography.headlineSmall,
+                                    )
+                                    Text(
+                                        packageManager
+                                            .getPackageInfo(packageName, 0)
+                                            .versionName
+                                            .orEmpty(),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
                             }
                         },
                         text = {
                             Column(Modifier.verticalScroll(rememberScrollState())) {
+                                var showNotices by remember { mutableStateOf(false) }
                                 Text(
-                                    "非商用个人项目\n\n无需账户、无广告、无水印。扫描与识别在本机完成。应用没有网络权限，不上传文档。\n\n通过系统文件选择器导入副本；删除应用内文档不会删除外部原件。卸载会删除应用私有草稿，请先导出或备份重要文件。\n\n扫描自动裁边、去阴影、中英文 OCR、可搜索 PDF；阅读与搜索、页面整理、批注签名、安全脱敏、密码、表单、图片和文字导出、备份恢复。曲面校正支持预览与强度调整。Office 排版可通过手机引擎处理，表格识别在手机本机完成；支持限定原生文字对象编辑、类型化表单、证书签署与 PDF/A 归档校验。",
+                                    "个人项目 · 扫描、阅读与文件转换\n\n扫描与 OCR 在手机运行。Office 与特殊格式使用可选本机引擎，文档、原图和编辑历史可完整备份。",
                                     style = MaterialTheme.typography.bodyMedium,
                                 )
                                 Row(
@@ -844,23 +850,28 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                                 Text(
-                                    "可选联网工具支持渠道检查、断点下载和签名校验；未安装时打开发布页。",
+                                    "安装可选联网工具后，可在手机内检查和下载更新。",
                                     style = MaterialTheme.typography.bodySmall,
                                 )
+                                HorizontalDivider(Modifier.padding(vertical = 12.dp))
+                                Text("隐私与解锁", style = MaterialTheme.typography.titleSmall)
                                 SecuritySettings()
-                                Text("开源与模型声明：")
-                                Text(
-                                    remember {
-                                        runCatching {
-                                                assets
-                                                    .open("LICENSE_NOTICES.txt")
-                                                    .bufferedReader()
-                                                    .use { it.readText() }
-                                            }
-                                            .getOrDefault("见源码 LICENSE_NOTICES.md")
-                                    },
-                                    style = MaterialTheme.typography.bodySmall,
-                                )
+                                TextButton(onClick = { showNotices = !showNotices }) {
+                                    Text(if (showNotices) "收起开源与模型声明" else "开源与模型声明")
+                                }
+                                if (showNotices)
+                                    Text(
+                                        remember {
+                                            runCatching {
+                                                    assets
+                                                        .open("LICENSE_NOTICES.txt")
+                                                        .bufferedReader()
+                                                        .use { it.readText() }
+                                                }
+                                                .getOrDefault("见源码 LICENSE_NOTICES.md")
+                                        },
+                                        style = MaterialTheme.typography.bodySmall,
+                                    )
                             }
                         },
                         confirmButton = { TextButton(onClick = { about = false }) { Text("知道了") } },

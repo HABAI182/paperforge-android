@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-29",
+  "releaseHold": true,
+  "applicationName": "PaperForge",
+  "source": "User-provided green layered-document logo",
+  "sourceSha256": "e89c92a364586a9df54db35839f795be33778d7dfbb9f4b053b2507a86d7a9ab",
+  "originalPngBytesPreserved": true,
+  "applications": [
+    "cn.paperforge.app",
+    "cn.paperforge.office",
+    "cn.paperforge.formats",
+    "cn.paperforge.network"
+  ],
+  "adaptation": [
+    "Adaptive launcher bitmap with native presentation-margin fill",
+    "Android 13 themed monochrome silhouette",
+    "Cropped original artwork in compact About layout"
+  ],
+  "validation": {
+    "fourX86DebugBuilds": "passed",
+    "sourceCopiesByteIdentical": true,
+    "nativeSystemLabel": "PaperForge",
+    "aboutLabelAndLogo": "observed",
+    "projectUpdatesAndPrivacyVisible": true,
+    "broadSuitesRerun": false,
+    "dataWiped": false
+  },
+  "proofDirectory": "user-branding"
+}

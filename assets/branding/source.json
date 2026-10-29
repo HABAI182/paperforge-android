@@ -1,0 +1,14 @@
+{
+  "source": "user-provided attachment",
+  "received": "2026-10-29",
+  "file": "paperforge-user-logo.png",
+  "bytes": 1331651,
+  "sha256": "e89c92a364586a9df54db35839f795be33778d7dfbb9f4b053b2507a86d7a9ab",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "applicationName": "PaperForge",
+  "originalBytesPreserved": true,
+  "adaptation": "Android drawable viewport and Compose clipping; monochrome vector silhouette"
+}

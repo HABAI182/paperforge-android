@@ -20,7 +20,8 @@ object NetworkTools {
                     "cn.paperforge.network",
                 ) != PackageManager.SIGNATURE_MATCH
             ) {
-                Toast.makeText(context, "联网工具签名与纸匠不一致，请使用同一来源的安装包", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "联网工具签名与PaperForge不一致，请使用同一来源的安装包", Toast.LENGTH_LONG)
+                    .show()
                 return
             }
             context.startActivity(

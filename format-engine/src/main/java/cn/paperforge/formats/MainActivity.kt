@@ -25,7 +25,7 @@ class MainActivity : Activity() {
                         gravity = Gravity.CENTER
                         textSize = 20f
                         text =
-                            "PaperForge 格式引擎\n\nOFD / DjVu · 本机版面转换\nXPS / SVG / CBZ / FB2 · MuPDF\n邮件 EML · PDF 容器 CAJ / KDH\nLaTeX · 常用正文与数学\nPDF/A · veraPDF 完整规则校验\n\n已安装，可回到纸匠选择文件。"
+                            "PaperForge 格式引擎\n\nOFD / DjVu · 本机版面转换\nXPS / SVG / CBZ / FB2 · MuPDF\n邮件 EML · PDF 容器 CAJ / KDH\nLaTeX · 常用正文与数学\nPDF/A · veraPDF 完整规则校验\n\n已安装，可回到PaperForge选择文件。"
                     }
                 )
                 addView(

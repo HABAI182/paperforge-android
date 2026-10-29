@@ -26,7 +26,7 @@ object BackupStore {
                 archive.outputStream().use { input.copyTo(it) }
             } ?: error("无法读取备份")
             ZipFile(archive).use { zip ->
-                val entry = zip.getEntry("paperforge.json") ?: error("不是纸匠备份文件")
+                val entry = zip.getEntry("paperforge.json") ?: error("不是PaperForge备份文件")
                 val raw = zip.getInputStream(entry).use { it.readBytes() }
                 val metadata = JSONObject(raw.toString(Charsets.UTF_8))
                 val format = metadata.getInt("format")
@@ -308,7 +308,9 @@ object BackupStore {
             ZipFile(archive).use { zip ->
                 val metadata =
                     JSONObject(
-                        zip.getInputStream(zip.getEntry("paperforge.json") ?: error("不是纸匠备份文件"))
+                        zip.getInputStream(
+                                zip.getEntry("paperforge.json") ?: error("不是PaperForge备份文件")
+                            )
                             .bufferedReader()
                             .use { it.readText() }
                     )

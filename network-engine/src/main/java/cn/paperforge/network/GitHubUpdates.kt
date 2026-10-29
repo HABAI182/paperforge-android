@@ -68,7 +68,7 @@ class GitHubUpdates(
     companion object {
         val packages =
             linkedMapOf(
-                "cn.paperforge.app" to "纸匠",
+                "cn.paperforge.app" to "PaperForge",
                 "cn.paperforge.office" to "Office 引擎",
                 "cn.paperforge.formats" to "格式引擎",
                 "cn.paperforge.network" to "联网工具",
