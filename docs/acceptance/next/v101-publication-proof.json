@@ -1,0 +1,15 @@
+{
+  "repository": "https://github.com/HABAI182/paperforge-android",
+  "visibility": "PUBLIC",
+  "authorizationHeaderUsed": false,
+  "anonymousRepositoryMetadata": true,
+  "anonymousReadmeMatchesGitBlob": true,
+  "anonymousLatestRelease": "v1.0.1",
+  "anonymousUpdateManifestSha256": "df45964ea06e2ae38182970fb885f1e314b81bee5491808cf64434192d2507ad",
+  "manifestVersionCode": 10004,
+  "sourceCommit": "49922fd0a7e6cae38b9be458bdd7d9cb846e10fb",
+  "profileReadme": "https://github.com/HABAI182",
+  "profileReadmeSha": "28af1058805987dcb2e02c1a6575f5226cb610e1",
+  "profilePaperForgeEntryVerified": true,
+  "checkedUtc": "2026-10-29T12:36:07.149888+00:00"
+}
