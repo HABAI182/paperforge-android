@@ -31,5 +31,5 @@
     "declaresInternet": true,
     "oneLauncher": true
   },
-  "ownerReleaseAuthorization": "2026-10-29: owner requested the 1.0.1 UI revision, upload, project/profile documentation updates and making paperforge-android public"
+  "ownerReleaseAuthorization": "2026-10-30: owner authorized publishing 1.1.0 and documentation updates without repeating functional tests"
 }
