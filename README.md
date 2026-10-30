@@ -2,7 +2,7 @@
 
 手机本地的扫描、PDF阅读与文件转换工作台。个人非营利项目，无账户、广告、水印或订阅。
 
-**1.1.0 · 完整功能版 / 约156 MB**，Android 8.0及以上，普通64位ARM手机只需安装一个APK。Office、特殊格式和联网工具均已内置，日常文档处理无需电脑。
+**1.1.0 · 完整功能版 / 155.99 MB**，Android 8.0及以上，普通64位ARM手机只需安装一个APK。Office、特殊格式和联网工具均已内置，日常文档处理无需电脑。
 
 [下载最新版](https://github.com/HABAI182/paperforge-android/releases/latest) · [安装与手机更新](docs/INSTALL.md) · [版本记录](CHANGELOG.md) · [能力与验证范围](docs/quality/V1.1.0-STATUS.md)
 
