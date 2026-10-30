@@ -532,6 +532,7 @@ object ToolCatalog {
             }
     val pdfTitles =
         linkedMapOf(
+            "enhance-images" to "图像增强 · 扫描 PDF 二次增强",
             "compress" to "压缩 PDF · 目标体积",
             "searchable" to "扫描 PDF → 可搜索 PDF",
             "images-jpg" to "PDF 转 JPG 图片包",
@@ -567,6 +568,7 @@ object ToolCatalog {
         )
     private val pdfAliases =
         mapOf(
+            "enhance-images" to "图像增强 扫描 黑白 柔和 灰度 去阴影 清晰 enhance scan",
             "watermark" to "水印 watermark 印章",
             "number" to "页码 page 页数",
             "crop" to "裁边 crop 边距",

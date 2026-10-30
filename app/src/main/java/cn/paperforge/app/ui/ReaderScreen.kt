@@ -1155,6 +1155,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
         PdfToolsDialog(
             vm,
             toolMode,
+            currentPage = page,
             readingActions =
                 listOf(
                     HomeTool(
