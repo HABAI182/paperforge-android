@@ -417,6 +417,10 @@ internal fun SettingsHub(vm: MainViewModel, onAbout: () -> Unit, onUpdates: () -
             WorkspaceSection("about", "关于与项目主页", "版本信息、GitHub 与开源声明", Icons.Default.Info),
             onClick = onAbout,
         )
+        SectionNavigationRow(
+            WorkspaceSection("help", "使用说明", "扫描、阅读、转换与备份的离线指南", Icons.Default.HelpOutline),
+            onClick = { vm.screen.value = "help" },
+        )
     }
 }
 

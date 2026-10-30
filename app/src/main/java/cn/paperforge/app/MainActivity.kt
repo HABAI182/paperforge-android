@@ -437,6 +437,7 @@ class MainActivity : ComponentActivity() {
                             "capture" -> CameraScreen(vm) { images.launch(arrayOf("image/*")) }
                             "editor" -> EditorScreen(vm) { images.launch(arrayOf("image/*")) }
                             "reader" -> ReaderScreen(vm, share)
+                            "help" -> UsageGuideScreen(vm)
                             "pdf-diagnostics" -> PdfDiagnosticsScreen(vm)
                             "pdf-native-edit" -> NativePdfEditorScreen(vm)
                             "pdf-certificates" -> PdfCertificatesScreen(vm)
