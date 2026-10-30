@@ -181,12 +181,14 @@ class LanLedger private constructor(private val context: Context) {
         return peer to token
     }
 
-    fun authenticate(token: String): LanPeer? =
+    fun authenticate(token: String, now: Long = System.currentTimeMillis()): LanPeer? =
         token
             .takeIf { it.length in 32..128 }
             ?.let { value ->
                 val hash = digest(value.toByteArray())
-                peers.value.firstOrNull { it.tokenHash == hash }
+                peers.value.firstOrNull {
+                    it.tokenHash == hash && it.created <= now && now - it.created < 2592000000L
+                }
             }
 
     @Synchronized

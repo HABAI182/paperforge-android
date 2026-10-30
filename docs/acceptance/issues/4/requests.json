@@ -1,0 +1,59 @@
+[
+  {
+    "path": "\/api\/state",
+    "status": 401,
+    "responseBytes": 63
+  },
+  {
+    "path": "\/",
+    "status": 200,
+    "responseBytes": 2571
+  },
+  {
+    "path": "\/api\/pair",
+    "status": 200,
+    "responseBytes": 46
+  },
+  {
+    "path": "\/api\/uploads",
+    "status": 200,
+    "responseBytes": 320
+  },
+  {
+    "path": "\/api\/uploads\/5650ad92-a62d-4236-8a9d-8fd9972157c3?offset=0",
+    "status": 200,
+    "responseBytes": 344
+  },
+  {
+    "path": "\/api\/uploads\/5650ad92-a62d-4236-8a9d-8fd9972157c3?offset=311296",
+    "status": 409,
+    "responseBytes": 54
+  },
+  {
+    "path": "\/api\/uploads",
+    "status": 200,
+    "responseBytes": 329
+  },
+  {
+    "path": "\/api\/uploads\/5650ad92-a62d-4236-8a9d-8fd9972157c3?offset=311296",
+    "status": 200,
+    "responseBytes": 346
+  },
+  {
+    "path": "\/download\/da247621-3b38-46fb-9210-38f900535c6a",
+    "status": 206,
+    "responseBytes": 311296,
+    "range": "bytes=0-311295"
+  },
+  {
+    "path": "\/download\/da247621-3b38-46fb-9210-38f900535c6a",
+    "status": 206,
+    "responseBytes": 493764,
+    "range": "bytes=311296-"
+  },
+  {
+    "path": "\/api\/state",
+    "status": 401,
+    "responseBytes": 63
+  }
+]

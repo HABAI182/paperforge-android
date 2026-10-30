@@ -85,6 +85,13 @@ android.sourceSets.getByName("main") {
     manifest.srcFile(generatedManifest)
 }
 tasks.named("preBuild") { dependsOn(prepareFullManifest) }
+// Execute the same transport/browser regression sources in the integrated installation.
+val prepareLanTests = tasks.register<Sync>("prepareLanTests") {
+    from(rootProject.file("network-engine/src/androidTest/java")) { include("**/Lan*.kt") }
+    into(layout.buildDirectory.dir("generated/lan-tests"))
+}
+android.sourceSets.getByName("androidTest").java.srcDir(prepareLanTests.map { it.destinationDir })
+tasks.matching { it.name.startsWith("compile") && it.name.contains("AndroidTest") || it.name.startsWith("ksp") && it.name.contains("AndroidTest") }.configureEach { dependsOn(prepareLanTests) }
 apply(from = rootProject.file("gradle/app-dependencies.gradle.kts"))
 dependencies {
     implementation(project(":bundled-office"))

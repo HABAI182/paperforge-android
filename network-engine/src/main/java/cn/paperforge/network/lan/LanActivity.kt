@@ -145,9 +145,10 @@ private fun LanScreen(back: () -> Unit) {
         }
     }
     val host = address.takeIf { it in addresses } ?: addresses.firstOrNull()
-    val base = host?.let { "http://$it:${server?.port ?: port}/" }
+    val base = host?.let { "https://$it:${server?.port ?: port}/" }
     val link =
-        if (server != null && base != null && ticket.expires > now) "$base#pair=${ticket.nonce}"
+        if (server != null && base != null && ticket.expires > now)
+            "$base#pair=${ticket.nonce}&cert=${server?.fingerprint.orEmpty()}"
         else null
     val qr by
         produceState<Bitmap?>(null, link) {
@@ -270,6 +271,21 @@ private fun LanScreen(back: () -> Unit) {
                         else if (host == null) Text("尚无局域网地址。连接 Wi-Fi 或开启热点后，这里会显示二维码；队列保留。")
                         else {
                             if (peers.isEmpty() || pairingExpanded) {
+                                Text(
+                                    "HTTPS 加密 · 首次连接请核对证书指纹",
+                                    style = MaterialTheme.typography.titleSmall,
+                                )
+                                Text(
+                                    "浏览器会提示本地证书。先查看证书详情，将 SHA-256 与手机逐组核对，一致后才继续并输入配对码。",
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                                androidx.compose.foundation.text.selection.SelectionContainer {
+                                    Text(
+                                        server?.fingerprint.orEmpty().chunked(8).joinToString(" "),
+                                        fontFamily = FontFamily.Monospace,
+                                        style = MaterialTheme.typography.bodySmall,
+                                    )
+                                }
                                 if (qr != null)
                                     Image(
                                         qr!!.asImageBitmap(),
@@ -291,6 +307,10 @@ private fun LanScreen(back: () -> Unit) {
                                 }
                             }
                             Text(base.orEmpty(), fontFamily = FontFamily.Monospace)
+                            Text(
+                                "传输受 HTTPS 保护 · 配对有效期 30 天",
+                                style = MaterialTheme.typography.bodySmall,
+                            )
                             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 TextButton(
                                     onClick = {

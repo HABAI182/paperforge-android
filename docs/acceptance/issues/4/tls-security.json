@@ -1,0 +1,16 @@
+{
+  "wireBytes": 2054,
+  "protocol": "TLSv1.3",
+  "wrongCertificateRejected": true,
+  "wrongPairingIdentityRejected": true,
+  "secureCookie": true,
+  "pairingReplayRejected": true,
+  "apiReplayRejected": true,
+  "staleRequestRejected": true,
+  "wrongOriginRejected": true,
+  "filenameSessionAndPayloadEncrypted": true,
+  "tamperedTlsRecordRejected": true,
+  "plaintextHttpRejected": true,
+  "expiredSessionRejected": true,
+  "revokedSessionRejected": true
+}

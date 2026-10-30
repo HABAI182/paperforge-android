@@ -5,18 +5,40 @@ import cn.paperforge.network.R
 import java.io.*
 import java.net.*
 import java.util.concurrent.*
+import javax.net.ssl.SSLServerSocket
+import javax.net.ssl.SSLSocket
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.json.*
 
 data class PairingTicket(val nonce: String, val expires: Long, val pin: String = "")
 
-/** Streaming local HTTP transport. Files are reachable only after explicit device pairing. */
+/**
+ * HTTPS-only streaming transport. Browser trust is bound to the phone's certificate fingerprint.
+ */
 class LanHttpServer(private val context: Context, port: Int, bindAddress: String = "0.0.0.0") :
     Closeable {
     private val ledger = LanLedger.get(context)
+    private val identity = LanTlsIdentity.load(context)
+    val fingerprint: String
+        get() = identity.fingerprint
+
+    val epoch: String = LanLedger.randomToken()
+
+    private val replay = LanReplayWindow()
     private val socket =
-        ServerSocket().apply {
+        (identity.context.serverSocketFactory.createServerSocket() as SSLServerSocket).apply {
             reuseAddress = true
+            enabledProtocols =
+                supportedProtocols.filter { it in setOf("TLSv1.2", "TLSv1.3") }.toTypedArray()
+            enabledCipherSuites =
+                enabledCipherSuites
+                    .filter {
+                        it.startsWith("TLS_AES_") ||
+                            it.startsWith("TLS_CHACHA20_") ||
+                            (it.contains("_ECDHE_") &&
+                                (it.contains("_GCM_") || it.contains("_CHACHA20_")))
+                    }
+                    .toTypedArray()
             bind(InetSocketAddress(bindAddress, port), 8)
         }
     val port: Int
@@ -71,8 +93,13 @@ class LanHttpServer(private val context: Context, port: Int, bindAddress: String
                     connections[client] = ""
                     try {
                         pool.execute {
-                            client.use { serve(it) }
-                            connections.remove(client)
+                            try {
+                                client.use { serve(it) }
+                            } catch (_: IOException) {
+                                /* Peer closed during TLS negotiation. */
+                            } finally {
+                                connections.remove(client)
+                            }
                         }
                     } catch (_: RejectedExecutionException) {
                         connections.remove(client)
@@ -186,6 +213,11 @@ class LanHttpServer(private val context: Context, port: Int, bindAddress: String
     }
 
     private fun serve(client: Socket) {
+        try {
+            (client as SSLSocket).startHandshake()
+        } catch (_: IOException) {
+            return
+        }
         val output = ResponseStream(client.getOutputStream())
         try {
             val input = client.getInputStream().buffered()
@@ -200,6 +232,20 @@ class LanHttpServer(private val context: Context, port: Int, bindAddress: String
             }
             val request = Request(first[0], URI(first[1]), fields, input)
             val path = request.uri.path
+            fields["origin"]?.let { origin ->
+                if (origin != "https://${fields["host"]}") throw HttpFailure(403, "连接来源不一致")
+            }
+            if (path == "/api/hello" && request.method == "GET") {
+                json(
+                    output,
+                    JSONObject()
+                        .put("protocol", 2)
+                        .put("epoch", epoch)
+                        .put("certificateSha256", fingerprint)
+                        .put("time", System.currentTimeMillis()),
+                )
+                return
+            }
             if (
                 request.method == "GET" &&
                     path in setOf("/", "/app.js", "/style.css", "/sha256.min.js", "/logo.png")
@@ -235,6 +281,11 @@ class LanHttpServer(private val context: Context, port: Int, bindAddress: String
             }
             if (path == "/api/pair" && request.method == "POST") {
                 val data = request.json()
+                if (
+                    data.optString("certificateSha256") != fingerprint ||
+                        !data.optBoolean("identityConfirmed")
+                )
+                    throw HttpFailure(401, "请先核对手机与浏览器证书指纹")
                 synchronized(this) {
                     val current = ticket.value
                     if (System.currentTimeMillis() - pairWindow > 60000) {
@@ -260,13 +311,24 @@ class LanHttpServer(private val context: Context, port: Int, bindAddress: String
                         extra =
                             mapOf(
                                 "Set-Cookie" to
-                                    "pf_session=$token; Path=/; HttpOnly; SameSite=Strict; Max-Age=2592000"
+                                    "pf_session=$token; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=2592000"
                             ),
                     )
                 }
                 return
             }
             val peer = authenticate(request)
+            if (path.startsWith("/api/") && fields["x-paperforge-epoch"] != epoch)
+                throw HttpFailure(409, "连接会话已刷新，请重新载入页面")
+            if (
+                path.startsWith("/api/") &&
+                    !replay.accept(
+                        peer.id,
+                        fields["x-paperforge-request-id"].orEmpty(),
+                        fields["x-paperforge-time"]?.toLongOrNull() ?: 0,
+                    )
+            )
+                throw HttpFailure(409, "请求已使用或已过期，请刷新后重试")
             connections[client] = peer.id
             lastActivity = System.currentTimeMillis()
             if (path == "/api/state" && request.method == "GET") {
