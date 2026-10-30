@@ -37,7 +37,8 @@ android {
             version = "3.22.1"
         }
     }
-    androidResources { noCompress += listOf("ort", "mnn") }
+    // ScanModel reads model bytes; ORT is copied to a cache file before opening.
+    // Both support compressed APK assets, saving download/storage without losing offline models.
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
@@ -49,9 +50,15 @@ android {
             providers.gradleProperty("paperforgeIdSuffix").orNull?.let { applicationIdSuffix = it }
         }
         release {
-            // Preserve the same reflective archive/runtime classes as the standalone engines.
-            isMinifyEnabled = false
-            isShrinkResources = false
+            val optimize = providers.gradleProperty("paperforgeOptimizeFull").orNull != "false"
+            isMinifyEnabled = optimize
+            isShrinkResources = optimize
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                rootProject.file("app/proguard-rules.pro"),
+                "proguard-rules.pro",
+            )
+            testProguardFiles("test-proguard-rules.pro")
         }
     }
     packaging {

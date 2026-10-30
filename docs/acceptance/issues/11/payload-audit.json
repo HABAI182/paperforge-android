@@ -1,0 +1,44 @@
+[
+  {
+    "abi": "arm64-v8a",
+    "nativeLibraries": 25,
+    "nativePayloadsByteIdentical": true,
+    "elfMachineMatchesAbi": true,
+    "offlineModelAndMetadataEntriesUnchanged": 35,
+    "canonicalCjkFontUnchanged": true,
+    "duplicateCjkFontRemoved": true
+  },
+  {
+    "abi": "x86_64",
+    "nativeLibraries": 25,
+    "nativePayloadsByteIdentical": true,
+    "elfMachineMatchesAbi": true,
+    "offlineModelAndMetadataEntriesUnchanged": 35,
+    "canonicalCjkFontUnchanged": true,
+    "duplicateCjkFontRemoved": true
+  },
+  {
+    "apkInspection": {
+      "applicationId": "cn.paperforge.app",
+      "versionCode": 10004,
+      "versionName": "1.0.1",
+      "abis": [
+        "arm64-v8a"
+      ],
+      "certificatesSha256": [
+        "d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e"
+      ],
+      "zipAlignment16KiB": true,
+      "nativeElf16KiBCompatible": true,
+      "sha256": "9df895fc40a2ffd7817ac316d4ab5362537cac8bf1e0801cce3ab745c37f655e",
+      "bytes": 155992001,
+      "r8Mapping": {
+        "file": "PaperForge-1.0.1-full-arm64-v8a-r8-mapping.zip",
+        "bytes": 11316221,
+        "sha256": "21e5a6ed1b62f2bc7772634fb4761e0401a468653d541cb7067f834a13ea2544"
+      }
+    },
+    "candidateOnly": true,
+    "published": false
+  }
+]

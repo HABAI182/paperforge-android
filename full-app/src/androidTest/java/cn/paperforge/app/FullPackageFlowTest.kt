@@ -79,7 +79,31 @@ class FullPackageFlowTest {
                 )
                 return File(requireNotNull(result.outputData.getString("path")))
             }
-            val office = convert(source, "OFFICE", JSONObject().put("format", "pdf"))
+            // Exercise first-use shared-font installation, not just an upgraded existing font.
+            val sharedFont =
+                File(app.applicationInfo.dataDir, "user/fonts/PaperForgeCJK-Regular.ttf")
+            val previousFont = File(sharedFont.parentFile, "PaperForgeCJK-issue11-backup.ttf")
+            check(!previousFont.exists())
+            if (sharedFont.exists()) check(sharedFont.renameTo(previousFont))
+            val office =
+                try {
+                    convert(source, "OFFICE", JSONObject().put("format", "pdf")).also {
+                        val canonical =
+                            app.assets.open("fonts/PaperForgeCJK-Regular.ttf").use { stream ->
+                                java.security.MessageDigest.getInstance("SHA-256")
+                                    .digest(stream.readBytes())
+                                    .joinToString("") { byte ->
+                                        "%02x".format(byte.toInt() and 255)
+                                    }
+                            }
+                        assertEquals(canonical, PdfAssembly.sha256(sharedFont))
+                    }
+                } finally {
+                    if (previousFont.exists()) {
+                        check(sharedFont.delete() || !sharedFont.exists())
+                        check(previousFont.renameTo(sharedFont))
+                    }
+                }
             val officeText =
                 PDDocument.load(office).use {
                     assertEquals(2, it.numberOfPages)

@@ -1,0 +1,36 @@
+{
+  "device": "API35 x86_64 emulator",
+  "installedCodeKiBBefore": 556004,
+  "installedCodeKiBAfter": 487712,
+  "installedCodeBytesSaved": 69931008,
+  "installationMethod": "adb install -r; same package/signer; cmd package compile -m verify -f; root du of APK + extracted native libraries + oat; user documents and caches excluded",
+  "beforeStartup": [
+    {
+      "state": "COLD",
+      "totalTimeMs": 954
+    },
+    {
+      "state": "COLD",
+      "totalTimeMs": 951
+    },
+    {
+      "state": "COLD",
+      "totalTimeMs": 955
+    }
+  ],
+  "afterStartup": [
+    {
+      "state": "COLD",
+      "totalTimeMs": 928
+    },
+    {
+      "state": "COLD",
+      "totalTimeMs": 918
+    },
+    {
+      "state": "COLD",
+      "totalTimeMs": 952
+    }
+  ],
+  "startupCaveat": "Three emulator samples, same retained app data; no statistically supported startup speed claim."
+}

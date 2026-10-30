@@ -42,6 +42,18 @@ internal object OfficeRuntime {
                     copy("unpack", File(context.applicationInfo.dataDir))
                     check(preferences.edit().putBoolean("runtime-26.2.6.3", true).commit())
                 }
+                // Share the app's canonical CJK font instead of storing a second APK copy.
+                // Existing standalone runtimes already unpacked this file; keep that path valid.
+                val font =
+                    File(context.applicationInfo.dataDir, "user/fonts/PaperForgeCJK-Regular.ttf")
+                if (!font.isFile) {
+                    font.parentFile!!.mkdirs()
+                    context.assets.open("fonts/PaperForgeCJK-Regular.ttf").use { source ->
+                        val part = File(font.parentFile, "${font.name}.part")
+                        part.outputStream().use { source.copyTo(it) }
+                        check(part.renameTo(font)) { "无法准备中文排版字体" }
+                    }
+                }
             }
         }
         LibreOfficeKit.putenv("SAL_LOK_OPTIONS=compact_fonts")
