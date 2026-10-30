@@ -6,9 +6,9 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import cn.paperforge.network.lan.*
 import java.io.File
-import java.net.HttpURLConnection
 import java.net.URL
 import java.util.UUID
+import javax.net.ssl.HttpsURLConnection
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 import org.junit.Assert.*
@@ -21,7 +21,7 @@ class LanTransferTest {
     fun actualPairResumeRangeAndSourceOwnership() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val ledger = LanLedger.get(context)
-        val proof = File(context.filesDir, "lan-proof").apply { mkdirs() }
+        val proof = File(context.getExternalFilesDir(null), "issue4").apply { mkdirs() }
         val sourceId = UUID.randomUUID().toString()
         val original =
             ledger.file(sourceId).apply {
@@ -45,7 +45,16 @@ class LanTransferTest {
             range: String? = null,
         ): Reply {
             val conn =
-                URL("http://127.0.0.1:${server.port}$path").openConnection() as HttpURLConnection
+                URL("https://127.0.0.1:${server.port}$path").openConnection() as HttpsURLConnection
+            conn.sslSocketFactory = LanTestTrust.factory(server.fingerprint)
+            conn.hostnameVerifier =
+                javax.net.ssl.HostnameVerifier { _, _ -> true } // Exact certificate pinned above.
+            conn.setRequestProperty(
+                "X-PaperForge-Request-Id",
+                UUID.randomUUID().toString().replace("-", ""),
+            )
+            conn.setRequestProperty("X-PaperForge-Time", System.currentTimeMillis().toString())
+            conn.setRequestProperty("X-PaperForge-Epoch", server.epoch)
             conn.connectTimeout = 5000
             conn.readTimeout = 10000
             conn.requestMethod = method
@@ -80,6 +89,8 @@ class LanTransferTest {
                     JSONObject()
                         .put("nonce", server.ticket.value.pin)
                         .put("name", "局域网集中样本")
+                        .put("certificateSha256", server.fingerprint)
+                        .put("identityConfirmed", true)
                         .toString()
                         .toByteArray(),
                 )
@@ -90,7 +101,7 @@ class LanTransferTest {
             val uri =
                 FileProvider.getUriForFile(
                     context,
-                    "${context.packageName}.files",
+                    NetworkFiles.authority(context),
                     original,
                     "来源 图片.png",
                 )

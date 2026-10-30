@@ -27,7 +27,7 @@ class LanBrowserTest {
         val ledger = LanLedger.get(context)
         val before = ledger.items.value.map { it.id }.toSet()
         val peersBefore = ledger.peers.value.map { it.id }.toSet()
-        val proof = File(context.filesDir, "lan-proof").apply { mkdirs() }
+        val proof = File(context.getExternalFilesDir(null), "issue4").apply { mkdirs() }
         val bytes = ByteArray(400003) { ((it * 17 + 31) % 256).toByte() }
         val expected = LanLedger.digest(bytes)
         val server = LanHttpServer(context, 0, "127.0.0.1")
@@ -51,13 +51,23 @@ class LanBrowserTest {
                         WebView(activity).apply {
                             settings.javaScriptEnabled = true
                             settings.domStorageEnabled = true
+                            webViewClient = LanTestTrust.browser(server.fingerprint)
                         }
                     activity.setContentView(view)
                     view!!.loadUrl(
-                        "http://127.0.0.1:${server.port}/#pair=${server.ticket.value.nonce}"
+                        "https://127.0.0.1:${server.port}/#pair=${server.ticket.value.nonce}&cert=${server.fingerprint}"
                     )
                 }
                 val deadline = System.currentTimeMillis() + 15000
+                while (
+                    System.currentTimeMillis() < deadline &&
+                        js(
+                            "document.getElementById('certificate-fingerprint')?.textContent.length > 0"
+                        ) != "true"
+                ) Thread.sleep(100)
+                js(
+                    "(()=>{document.getElementById('identity-confirmed').checked=true;document.getElementById('pair-form').requestSubmit();return true;})()"
+                )
                 while (
                     System.currentTimeMillis() < deadline &&
                         js("document.getElementById('workspace')?.hidden === false") != "true"
