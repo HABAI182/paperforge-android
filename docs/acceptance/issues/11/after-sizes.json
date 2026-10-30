@@ -1,0 +1,510 @@
+[
+  {
+    "file": "PaperForge-1.0.1-full-arm64-v8a.apk",
+    "apkBytes": 155992001,
+    "sha256": "9df895fc40a2ffd7817ac316d4ab5362537cac8bf1e0801cce3ab745c37f655e",
+    "abis": [
+      "arm64-v8a"
+    ],
+    "compressedPayloadBytes": 155708933,
+    "uncompressedPayloadBytes": 387740067,
+    "groups": {
+      "Office native": {
+        "compressedBytes": 73764438,
+        "uncompressedBytes": 204803000,
+        "entries": 14
+      },
+      "Offline models": {
+        "compressedBytes": 17241547,
+        "uncompressedBytes": 19096499,
+        "entries": 35
+      },
+      "Scan / ONNX / OpenCV native": {
+        "compressedBytes": 14129892,
+        "uncompressedBytes": 37582656,
+        "entries": 4
+      },
+      "DEX": {
+        "compressedBytes": 12304127,
+        "uncompressedBytes": 31932188,
+        "entries": 4
+      },
+      "Fonts": {
+        "compressedBytes": 11836648,
+        "uncompressedBytes": 22045076,
+        "entries": 73
+      },
+      "ML Kit native": {
+        "compressedBytes": 11185172,
+        "uncompressedBytes": 27425576,
+        "entries": 2
+      },
+      "MuPDF native": {
+        "compressedBytes": 5496846,
+        "uncompressedBytes": 10840392,
+        "entries": 1
+      },
+      "Java resources / metadata": {
+        "compressedBytes": 3437495,
+        "uncompressedBytes": 15901691,
+        "entries": 896
+      },
+      "Office assets": {
+        "compressedBytes": 2336407,
+        "uncompressedBytes": 8669767,
+        "entries": 53
+      },
+      "Other assets": {
+        "compressedBytes": 2303931,
+        "uncompressedBytes": 7391203,
+        "entries": 245
+      },
+      "Android resources": {
+        "compressedBytes": 1469991,
+        "uncompressedBytes": 1601843,
+        "entries": 376
+      },
+      "Other native": {
+        "compressedBytes": 202439,
+        "uncompressedBytes": 450176,
+        "entries": 4
+      }
+    },
+    "largestEntries": [
+      {
+        "path": "lib/arm64-v8a/liblo-native-code.so",
+        "compressedBytes": 70927376,
+        "uncompressedBytes": 196227296,
+        "method": 8
+      },
+      {
+        "path": "assets/docquad/docquadnet256.ort",
+        "compressedBytes": 12401347,
+        "uncompressedBytes": 13404960,
+        "method": 8
+      },
+      {
+        "path": "lib/arm64-v8a/libonnxruntime.so",
+        "compressedBytes": 9411422,
+        "uncompressedBytes": 25763824,
+        "method": 8
+      },
+      {
+        "path": "lib/arm64-v8a/libtranslate_jni.so",
+        "compressedBytes": 6779503,
+        "uncompressedBytes": 16361032,
+        "method": 8
+      },
+      {
+        "path": "assets/fonts/PaperForgeCJK-Regular.ttf",
+        "compressedBytes": 6316740,
+        "uncompressedBytes": 10591172,
+        "method": 8
+      },
+      {
+        "path": "lib/arm64-v8a/libmupdf_java.so",
+        "compressedBytes": 5496846,
+        "uncompressedBytes": 10840392,
+        "method": 8
+      },
+      {
+        "path": "classes.dex",
+        "compressedBytes": 4943037,
+        "uncompressedBytes": 12762172,
+        "method": 8
+      },
+      {
+        "path": "lib/arm64-v8a/libmlkit_google_ocr_pipeline.so",
+        "compressedBytes": 4405669,
+        "uncompressedBytes": 11064544,
+        "method": 8
+      },
+      {
+        "path": "classes3.dex",
+        "compressedBytes": 4050794,
+        "uncompressedBytes": 11188768,
+        "method": 8
+      },
+      {
+        "path": "lib/arm64-v8a/libopencv_java4.so",
+        "compressedBytes": 3770857,
+        "uncompressedBytes": 9485296,
+        "method": 8
+      },
+      {
+        "path": "classes4.dex",
+        "compressedBytes": 3307346,
+        "uncompressedBytes": 7975700,
+        "method": 8
+      },
+      {
+        "path": "assets/share/config/images_colibre.zip",
+        "compressedBytes": 1625393,
+        "uncompressedBytes": 2956026,
+        "method": 8
+      },
+      {
+        "path": "assets/scan/border.mnn",
+        "compressedBytes": 1461057,
+        "uncompressedBytes": 1584816,
+        "method": 8
+      },
+      {
+        "path": "assets/scan/dewarp.mnn",
+        "compressedBytes": 1446936,
+        "uncompressedBytes": 1584744,
+        "method": 8
+      },
+      {
+        "path": "lib/arm64-v8a/libpaperforge_scan.so",
+        "compressedBytes": 921777,
+        "uncompressedBytes": 2250104,
+        "method": 8
+      },
+      {
+        "path": "res/8C.png",
+        "compressedBytes": 805060,
+        "uncompressedBytes": 805060,
+        "method": 0
+      },
+      {
+        "path": "assets/mlkit-google-ocr-models/gocr/gocr_models/line_recognition_legacy_mobile/Hani_ctc/optical/lstm_model.fb",
+        "compressedBytes": 599499,
+        "uncompressedBytes": 891872,
+        "method": 8
+      },
+      {
+        "path": "resources.arsc",
+        "compressedBytes": 500444,
+        "uncompressedBytes": 500444,
+        "method": 0
+      },
+      {
+        "path": "lib/arm64-v8a/libnss3.so",
+        "compressedBytes": 496967,
+        "uncompressedBytes": 1659152,
+        "method": 8
+      },
+      {
+        "path": "lib/arm64-v8a/libsqlite3.so",
+        "compressedBytes": 487675,
+        "uncompressedBytes": 1275288,
+        "method": 8
+      },
+      {
+        "path": "lib/arm64-v8a/libc++_shared.so",
+        "compressedBytes": 454850,
+        "uncompressedBytes": 1374336,
+        "method": 8
+      },
+      {
+        "path": "lib/arm64-v8a/libfreebl3.so",
+        "compressedBytes": 420428,
+        "uncompressedBytes": 1340224,
+        "method": 8
+      },
+      {
+        "path": "assets/mlkit-google-ocr-models/taser/detector/rpn_text_detector_mobile_space_to_depth_quantized_mbv2_v1.tflite",
+        "compressedBytes": 340760,
+        "uncompressedBytes": 340760,
+        "method": 0
+      },
+      {
+        "path": "assets/unpack/user/fonts/Carlito-BoldItalic.ttf",
+        "compressedBytes": 325537,
+        "uncompressedBytes": 816716,
+        "method": 8
+      },
+      {
+        "path": "assets/mlkit-google-ocr-models/gocr/gocr_models/line_recognition_legacy_mobile/tflite_langid.tflite",
+        "compressedBytes": 315520,
+        "uncompressedBytes": 315520,
+        "method": 0
+      }
+    ],
+    "duplicateResources": [
+      [
+        "assets/com/tom_roush/fontbox/resources/cmap/UniCNS-UCS2-H",
+        "font/cmap/UniCNS-UCS2-H"
+      ],
+      [
+        "assets/com/tom_roush/fontbox/resources/cmap/UniJIS-UCS2-H",
+        "font/cmap/UniJIS-UCS2-H"
+      ],
+      [
+        "assets/com/tom_roush/fontbox/resources/cmap/UniKS-UCS2-H",
+        "font/cmap/UniKS-UCS2-H"
+      ],
+      [
+        "assets/com/tom_roush/fontbox/resources/cmap/UniKS-UTF16-H",
+        "font/cmap/UniKS-UTF16-H"
+      ],
+      [
+        "assets/com/tom_roush/pdfbox/resources/ttf/LiberationSans-Regular.ttf",
+        "assets/unpack/user/fonts/LiberationSans-Regular.ttf"
+      ],
+      [
+        "org/xmlresolver/www.w3.org/2001/XMLSchema.xsd",
+        "org/xmlresolver/www.w3.org/TR/xmlschema-1/XMLSchema.xsd"
+      ],
+      [
+        "org/xmlresolver/www.w3.org/Graphics/SVG/1.1/DTD/svg11-flat-20030114.dtd",
+        "org/xmlresolver/www.w3.org/Graphics/SVG/1.1/DTD/svg11-flat.dtd"
+      ]
+    ]
+  },
+  {
+    "file": "after-x86_64.apk",
+    "apkBytes": 165938754,
+    "sha256": "cb3f773721573e4fb5d26820229359b22cfcfe614ec3d8747f6013d007cff6cb",
+    "abis": [
+      "x86_64"
+    ],
+    "compressedPayloadBytes": 165655835,
+    "uncompressedPayloadBytes": 407033067,
+    "groups": {
+      "Office native": {
+        "compressedBytes": 80856239,
+        "uncompressedBytes": 215086848,
+        "entries": 14
+      },
+      "Offline models": {
+        "compressedBytes": 17241547,
+        "uncompressedBytes": 19096499,
+        "entries": 35
+      },
+      "Scan / ONNX / OpenCV native": {
+        "compressedBytes": 16341578,
+        "uncompressedBytes": 44517096,
+        "entries": 4
+      },
+      "DEX": {
+        "compressedBytes": 12304127,
+        "uncompressedBytes": 31932188,
+        "entries": 4
+      },
+      "Fonts": {
+        "compressedBytes": 11836648,
+        "uncompressedBytes": 22045076,
+        "entries": 73
+      },
+      "ML Kit native": {
+        "compressedBytes": 11568688,
+        "uncompressedBytes": 28997744,
+        "entries": 2
+      },
+      "MuPDF native": {
+        "compressedBytes": 5719659,
+        "uncompressedBytes": 11264136,
+        "entries": 1
+      },
+      "Java resources / metadata": {
+        "compressedBytes": 3437495,
+        "uncompressedBytes": 15901691,
+        "entries": 896
+      },
+      "Office assets": {
+        "compressedBytes": 2336407,
+        "uncompressedBytes": 8669767,
+        "entries": 53
+      },
+      "Other assets": {
+        "compressedBytes": 2303931,
+        "uncompressedBytes": 7391203,
+        "entries": 245
+      },
+      "Android resources": {
+        "compressedBytes": 1469991,
+        "uncompressedBytes": 1601843,
+        "entries": 376
+      },
+      "Other native": {
+        "compressedBytes": 239525,
+        "uncompressedBytes": 528976,
+        "entries": 4
+      }
+    },
+    "largestEntries": [
+      {
+        "path": "lib/x86_64/liblo-native-code.so",
+        "compressedBytes": 78012112,
+        "uncompressedBytes": 206865312,
+        "method": 8
+      },
+      {
+        "path": "assets/docquad/docquadnet256.ort",
+        "compressedBytes": 12401347,
+        "uncompressedBytes": 13404960,
+        "method": 8
+      },
+      {
+        "path": "lib/x86_64/libonnxruntime.so",
+        "compressedBytes": 11182994,
+        "uncompressedBytes": 31239096,
+        "method": 8
+      },
+      {
+        "path": "lib/x86_64/libtranslate_jni.so",
+        "compressedBytes": 7098010,
+        "uncompressedBytes": 17371616,
+        "method": 8
+      },
+      {
+        "path": "assets/fonts/PaperForgeCJK-Regular.ttf",
+        "compressedBytes": 6316740,
+        "uncompressedBytes": 10591172,
+        "method": 8
+      },
+      {
+        "path": "lib/x86_64/libmupdf_java.so",
+        "compressedBytes": 5719659,
+        "uncompressedBytes": 11264136,
+        "method": 8
+      },
+      {
+        "path": "classes.dex",
+        "compressedBytes": 4943037,
+        "uncompressedBytes": 12762172,
+        "method": 8
+      },
+      {
+        "path": "lib/x86_64/libmlkit_google_ocr_pipeline.so",
+        "compressedBytes": 4470678,
+        "uncompressedBytes": 11626128,
+        "method": 8
+      },
+      {
+        "path": "classes3.dex",
+        "compressedBytes": 4050794,
+        "uncompressedBytes": 11188768,
+        "method": 8
+      },
+      {
+        "path": "lib/x86_64/libopencv_java4.so",
+        "compressedBytes": 4016366,
+        "uncompressedBytes": 10446168,
+        "method": 8
+      },
+      {
+        "path": "classes4.dex",
+        "compressedBytes": 3307346,
+        "uncompressedBytes": 7975700,
+        "method": 8
+      },
+      {
+        "path": "assets/share/config/images_colibre.zip",
+        "compressedBytes": 1625393,
+        "uncompressedBytes": 2956026,
+        "method": 8
+      },
+      {
+        "path": "assets/scan/border.mnn",
+        "compressedBytes": 1461057,
+        "uncompressedBytes": 1584816,
+        "method": 8
+      },
+      {
+        "path": "assets/scan/dewarp.mnn",
+        "compressedBytes": 1446936,
+        "uncompressedBytes": 1584744,
+        "method": 8
+      },
+      {
+        "path": "lib/x86_64/libpaperforge_scan.so",
+        "compressedBytes": 1116429,
+        "uncompressedBytes": 2751240,
+        "method": 8
+      },
+      {
+        "path": "res/8C.png",
+        "compressedBytes": 805060,
+        "uncompressedBytes": 805060,
+        "method": 0
+      },
+      {
+        "path": "assets/mlkit-google-ocr-models/gocr/gocr_models/line_recognition_legacy_mobile/Hani_ctc/optical/lstm_model.fb",
+        "compressedBytes": 599499,
+        "uncompressedBytes": 891872,
+        "method": 8
+      },
+      {
+        "path": "lib/x86_64/libnss3.so",
+        "compressedBytes": 500498,
+        "uncompressedBytes": 1523952,
+        "method": 8
+      },
+      {
+        "path": "resources.arsc",
+        "compressedBytes": 500444,
+        "uncompressedBytes": 500444,
+        "method": 0
+      },
+      {
+        "path": "lib/x86_64/libsqlite3.so",
+        "compressedBytes": 470225,
+        "uncompressedBytes": 1143384,
+        "method": 8
+      },
+      {
+        "path": "lib/x86_64/libc++_shared.so",
+        "compressedBytes": 462409,
+        "uncompressedBytes": 1337488,
+        "method": 8
+      },
+      {
+        "path": "lib/x86_64/libfreebl3.so",
+        "compressedBytes": 442870,
+        "uncompressedBytes": 1522664,
+        "method": 8
+      },
+      {
+        "path": "assets/mlkit-google-ocr-models/taser/detector/rpn_text_detector_mobile_space_to_depth_quantized_mbv2_v1.tflite",
+        "compressedBytes": 340760,
+        "uncompressedBytes": 340760,
+        "method": 0
+      },
+      {
+        "path": "assets/unpack/user/fonts/Carlito-BoldItalic.ttf",
+        "compressedBytes": 325537,
+        "uncompressedBytes": 816716,
+        "method": 8
+      },
+      {
+        "path": "assets/mlkit-google-ocr-models/gocr/gocr_models/line_recognition_legacy_mobile/tflite_langid.tflite",
+        "compressedBytes": 315520,
+        "uncompressedBytes": 315520,
+        "method": 0
+      }
+    ],
+    "duplicateResources": [
+      [
+        "assets/com/tom_roush/fontbox/resources/cmap/UniCNS-UCS2-H",
+        "font/cmap/UniCNS-UCS2-H"
+      ],
+      [
+        "assets/com/tom_roush/fontbox/resources/cmap/UniJIS-UCS2-H",
+        "font/cmap/UniJIS-UCS2-H"
+      ],
+      [
+        "assets/com/tom_roush/fontbox/resources/cmap/UniKS-UCS2-H",
+        "font/cmap/UniKS-UCS2-H"
+      ],
+      [
+        "assets/com/tom_roush/fontbox/resources/cmap/UniKS-UTF16-H",
+        "font/cmap/UniKS-UTF16-H"
+      ],
+      [
+        "assets/com/tom_roush/pdfbox/resources/ttf/LiberationSans-Regular.ttf",
+        "assets/unpack/user/fonts/LiberationSans-Regular.ttf"
+      ],
+      [
+        "org/xmlresolver/www.w3.org/2001/XMLSchema.xsd",
+        "org/xmlresolver/www.w3.org/TR/xmlschema-1/XMLSchema.xsd"
+      ],
+      [
+        "org/xmlresolver/www.w3.org/Graphics/SVG/1.1/DTD/svg11-flat-20030114.dtd",
+        "org/xmlresolver/www.w3.org/Graphics/SVG/1.1/DTD/svg11-flat.dtd"
+      ]
+    ]
+  }
+]

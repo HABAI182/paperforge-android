@@ -146,6 +146,18 @@ def main():
         target = output / filename
         shutil.copy2(apk, target)
         record.update({'file': filename, 'module': module, 'variant': variant})
+        if module == 'full-app' and variant == 'release':
+            mapping_dir = ROOT / module / 'build/outputs/mapping/release'
+            mapping_name = target.stem + '-r8-mapping.zip'
+            with zipfile.ZipFile(output / mapping_name, 'w', zipfile.ZIP_DEFLATED) as archive:
+                for name in ['mapping.txt', 'configuration.txt']:
+                    source = mapping_dir / name
+                    if not source.is_file():
+                        raise RuntimeError('Optimized full release is missing its R8 report: ' + name)
+                    archive.writestr(zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0)),
+                                     source.read_bytes(), compress_type=zipfile.ZIP_DEFLATED)
+            record['r8Mapping'] = {'file': mapping_name, 'bytes': (output / mapping_name).stat().st_size,
+                                   'sha256': sha(output / mapping_name)}
         results.append(record)
     main_app = results[0]
     revision = run(['git', 'rev-parse', 'HEAD'], True).strip()
@@ -158,6 +170,8 @@ def main():
                 'isolatedCi': args.isolated_ci, 'artifacts': results}
     (output / 'release-manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     checksums = ''.join(f'{record["sha256"]}  {record["file"]}\n' for record in results)
+    checksums += ''.join(f'{record["r8Mapping"]["sha256"]}  {record["r8Mapping"]["file"]}\n'
+                         for record in results if 'r8Mapping' in record)
     (output / 'SHA256SUMS.txt').write_text(checksums, encoding='utf-8')
     print(json.dumps({'directory': str(output), 'candidateOnly': candidate_only,
                       'artifacts': [{'file': x['file'], 'bytes': x['bytes'], 'sha256': x['sha256']} for x in results]}))

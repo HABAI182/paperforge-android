@@ -1,0 +1,9 @@
+{
+  "singleCanonicalCjkFont": true,
+  "compressedModelAssets": true,
+  "borderMnnLoaded": true,
+  "dewarpMnnLoaded": true,
+  "ortMethod": "docquad-CORNERS",
+  "latinOfflineOcr": "PAPERFORGE 012345",
+  "chineseOfflineOcr": "PAPERFORGE 012345"
+}

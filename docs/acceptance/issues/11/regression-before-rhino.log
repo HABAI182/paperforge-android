@@ -1,0 +1,37 @@
+
+cn.paperforge.app.ShrunkRuntimeTest:.
+cn.paperforge.app.FullPackageFlowTest:
+Error in singleInstalledIdentityRunsOfficeNativeFormatsArchiveAndSharedFiles(cn.paperforge.app.FullPackageFlowTest):
+java.lang.IllegalStateException: 格式引擎遇到兼容问题，请更新完整格式引擎；原件保留
+	at cn.paperforge.app.pdf.FormatBridge$request$2$1$reply$1.handleMessage(r8-map-id-a039858c289ab3f032a483170fad11083f0e97bea97b2ac1620d6f4ba98c7543:63)
+	at android.os.Handler.dispatchMessage(Handler.java:103)
+	at android.os.Looper.loopOnce(Looper.java:232)
+	at android.os.Looper.loop(Looper.java:317)
+	at android.app.ActivityThread.main(ActivityThread.java:8705)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:580)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:886)
+
+cn.paperforge.app.SoftMonochromeTest:.
+cn.paperforge.app.PdfEnhancementTest:..
+cn.paperforge.app.PdfEnhancementUiTest:.
+cn.paperforge.app.LanTlsProtectionTest:.
+cn.paperforge.network.LanBrowserTest:.
+
+Time: 14.829
+There was 1 failure:
+1) singleInstalledIdentityRunsOfficeNativeFormatsArchiveAndSharedFiles(cn.paperforge.app.FullPackageFlowTest)
+java.lang.IllegalStateException: 格式引擎遇到兼容问题，请更新完整格式引擎；原件保留
+	at cn.paperforge.app.pdf.FormatBridge$request$2$1$reply$1.handleMessage(r8-map-id-a039858c289ab3f032a483170fad11083f0e97bea97b2ac1620d6f4ba98c7543:63)
+	at android.os.Handler.dispatchMessage(Handler.java:103)
+	at android.os.Looper.loopOnce(Looper.java:232)
+	at android.os.Looper.loop(Looper.java:317)
+	at android.app.ActivityThread.main(ActivityThread.java:8705)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:580)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:886)
+
+FAILURES!!!
+Tests run: 8,  Failures: 1
+
+

@@ -53,7 +53,9 @@ def fetch(abis):
   records.append({'abi':abi,'version':'26.2.6.3','url':url,'downloadUrl':download_url,'sha256':expected,
    'source':f'https://f-droid.org/repo/org.documentfoundation.libreoffice_{code}_src.tar.gz'})
  font=root/'app/src/main/assets/fonts/PaperForgeCJK-Regular.ttf'
- target=runtime/'assets/unpack/user/fonts'/font.name;target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(font,target)
+ target=runtime/'assets/fonts'/font.name;target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(font,target)
+ # Standalone Office keeps one canonical copy; the integrated variant uses the app font.
+ (runtime/'assets/unpack/user/fonts'/font.name).unlink(missing_ok=True)
  (runtime/'runtime-manifest.json').write_text(json.dumps(records,indent=2),encoding='utf-8')
  print('Mobile Office engine runtime ready',flush=True)
 if __name__=='__main__':
