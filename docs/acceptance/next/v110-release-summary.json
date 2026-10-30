@@ -1,0 +1,53 @@
+{
+  "version": "1.1.0",
+  "versionCode": 10103,
+  "sourceCommit": "7cc0e61361fddcb687254fe72421b21717a9960d",
+  "tagCommit": "7c994766b94648e50c6d278cda1eb8e12cb6f134",
+  "releaseId": 428784326,
+  "releaseUrl": "https://github.com/HABAI182/paperforge-android/releases/tag/v1.1.0",
+  "tag": "v1.1.0",
+  "oneApk": true,
+  "sourceCleanAtBuild": true,
+  "assetDigestsMatch": true,
+  "latest": true,
+  "releaseNotesArchive": "docs/releases/1.1.0.md",
+  "assets": {
+    "PaperForge-1.1.0-full-arm64-v8a.apk": {
+      "bytes": 155992001,
+      "sha256": "6759d9140d4010203735ce876c94a5500d628a24d04883b090afde784228e8c1"
+    },
+    "PaperForge-1.1.0-full-arm64-v8a-r8-mapping.zip": {
+      "bytes": 11316231,
+      "sha256": "b31994e53a91b563b22c4b7bfab5bafbb70581b84783555407cf53337903d563"
+    },
+    "release-manifest.json": {
+      "bytes": 14530,
+      "sha256": "035c85855d24d03ea34e32e61fdb0b5a52f152f5e583ef15e5a37aec750029b9"
+    },
+    "SHA256SUMS.txt": {
+      "bytes": 217,
+      "sha256": "a6b378755984aff752a9b806d88b956a61d8eb017ea5c226401badc8bd102b2b"
+    }
+  },
+  "arm64Manifest": {
+    "format": 1,
+    "candidateOnly": false,
+    "releaseHold": false,
+    "distribution": "full",
+    "channel": "stable",
+    "abi": "arm64-v8a",
+    "commit": "7cc0e61361fddcb687254fe72421b21717a9960d",
+    "workingTreeDirty": false,
+    "versionCode": 10103,
+    "versionName": "1.1.0",
+    "isolatedCi": false,
+    "applicationId": "cn.paperforge.app",
+    "certificatesSha256": [
+      "d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e"
+    ],
+    "zipAlignment16KiB": true,
+    "nativeElf16KiBCompatible": true,
+    "apkBytes": 155992001,
+    "apkSha256": "6759d9140d4010203735ce876c94a5500d628a24d04883b090afde784228e8c1"
+  }
+}
