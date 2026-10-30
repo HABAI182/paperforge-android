@@ -8,6 +8,7 @@ import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
@@ -112,11 +113,11 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                             .map { it.corners }
                 )
         }
-    var crop by remember { mutableStateOf(false) }
+    var crop by rememberSaveable(doc?.id) { mutableStateOf(false) }
     var name by remember(doc?.id) { mutableStateOf(doc?.title ?: "") }
-    var export by remember { mutableStateOf(false) }
+    var export by rememberSaveable(doc?.id) { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
-    var adjust by remember { mutableStateOf(false) }
+    var adjust by rememberSaveable(doc?.id) { mutableStateOf(false) }
     var more by remember { mutableStateOf(false) }
     var bookSplit by remember { mutableStateOf(false) }
     var dewarp by remember { mutableStateOf(false) }
@@ -205,7 +206,10 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
     if (origins && active != null) PageOriginsDialog(vm, active) { origins = false }
     if (dewarp && active != null) {
         val page = active
-        var strength by remember { mutableFloatStateOf(UserSettings[SettingKeys.DewarpStrength]) }
+        var strength by
+            rememberSaveable(active.id) {
+                mutableFloatStateOf(UserSettings[SettingKeys.DewarpStrength])
+            }
         var previewStrength by remember { mutableFloatStateOf(strength) }
         var previewError by remember { mutableStateOf<String?>(null) }
         val preview by
@@ -300,14 +304,14 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
             dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("保留") } },
         )
     if (adjust && active != null) {
-        var brightness by remember { mutableFloatStateOf(active.brightness) }
-        var contrast by remember { mutableFloatStateOf(active.contrast) }
-        var strength by remember { mutableFloatStateOf(active.enhanceStrength) }
-        AlertDialog(
+        var brightness by rememberSaveable(active.id) { mutableFloatStateOf(active.brightness) }
+        var contrast by rememberSaveable(active.id) { mutableFloatStateOf(active.contrast) }
+        var strength by rememberSaveable(active.id) { mutableFloatStateOf(active.enhanceStrength) }
+        SpaciousToolDialog(
             onDismissRequest = { adjust = false },
             title = { Text("增强与明暗") },
             text = {
-                Column {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
                     Text("去阴影强度 %.0f%%".format(strength * 100))
                     Slider(
                         value = strength,
@@ -539,7 +543,7 @@ fun ToolAction(
     onClick: () -> Unit,
 ) {
     Column(
-        Modifier.widthIn(min = 56.dp)
+        Modifier.widthIn(min = 48.dp)
             .clickable(
                 enabled = enabled,
                 role = androidx.compose.ui.semantics.Role.Button,

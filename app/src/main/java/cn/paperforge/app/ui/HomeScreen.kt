@@ -1114,7 +1114,10 @@ fun HomeScreen(
                                             if (!selecting)
                                                 Box {
                                                     IconButton(onClick = { menu = true }) {
-                                                        Icon(Icons.Default.MoreVert, "文档操作")
+                                                        Icon(
+                                                            Icons.Default.MoreVert,
+                                                            "${doc.title}的更多操作",
+                                                        )
                                                     }
                                                     DropdownMenu(
                                                         expanded = menu,

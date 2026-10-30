@@ -6,6 +6,8 @@ import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -35,9 +37,17 @@ fun ScanPageCanvas(
     onTap: () -> Unit,
     onZoom: (Boolean) -> Unit,
     highlights: List<List<PointN>> = emptyList(),
+    previousPage: (() -> Unit)? = null,
+    nextPage: (() -> Unit)? = null,
 ) {
-    var zoom by remember(page.id) { mutableFloatStateOf(1f) }
-    var pan by remember(page.id) { mutableStateOf(Offset.Zero) }
+    var zoom by rememberSaveable(page.id) { mutableFloatStateOf(1f) }
+    val panSaver = remember {
+        Saver<Offset, List<Float>>(
+            save = { listOf(it.x, it.y) },
+            restore = { Offset(it[0], it[1]) },
+        )
+    }
+    var pan by rememberSaveable(page.id, stateSaver = panSaver) { mutableStateOf(Offset.Zero) }
     val preview =
         pagePreview(
             if (compare) page.copy(filter = "ORIGINAL", brightness = 0f, contrast = 1f) else page,
@@ -55,7 +65,42 @@ fun ScanPageCanvas(
         Modifier.fillMaxSize()
             .clipToBounds()
             .testTag("scan-page-${page.id}")
-            .semantics { stateDescription = "缩放 ${(zoom * 100).toInt()}%" }
+            .semantics(mergeDescendants = true) {
+                stateDescription = "缩放 ${(zoom * 100).toInt()}%"
+                onClick("显示或隐藏工具") {
+                    tap()
+                    true
+                }
+                customActions =
+                    listOfNotNull(
+                        previousPage?.let {
+                            CustomAccessibilityAction("上一扫描页") {
+                                it()
+                                true
+                            }
+                        },
+                        nextPage?.let {
+                            CustomAccessibilityAction("下一扫描页") {
+                                it()
+                                true
+                            }
+                        },
+                        CustomAccessibilityAction("放大预览") {
+                            zoom = (zoom * 1.5f).coerceAtMost(5f)
+                            true
+                        },
+                        CustomAccessibilityAction("缩小预览") {
+                            zoom = (zoom / 1.5f).coerceAtLeast(1f)
+                            if (zoom == 1f) pan = Offset.Zero
+                            true
+                        },
+                        CustomAccessibilityAction("重置缩放") {
+                            zoom = 1f
+                            pan = Offset.Zero
+                            true
+                        },
+                    )
+            }
             .pointerInput(page.id) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
