@@ -16,7 +16,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.data.PageRow
@@ -90,11 +92,12 @@ fun ScanEditorLayout(
                                 overflow = TextOverflow.Ellipsis,
                                 style = MaterialTheme.typography.titleMedium,
                             )
-                            Text(
-                                "整理扫描 · 点击名称重命名",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                            if (LocalDensity.current.fontScale <= 1.5f)
+                                Text(
+                                    "整理扫描 · 点击名称重命名",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
                         }
                     },
                     navigationIcon = {
@@ -141,7 +144,7 @@ fun ScanEditorLayout(
                                 onAction("more")
                             }
                         }
-                        Row(
+                        FlowRow(
                             Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
@@ -206,6 +209,20 @@ fun ScanEditorLayout(
                             onTap = { fullscreen = !fullscreen },
                             onZoom = { if (index == pager.currentPage) zoomed = it },
                             highlights = highlights[pages[index].id].orEmpty(),
+                            previousPage =
+                                if (index > 0)
+                                    ({
+                                        scope.launch { pager.animateScrollToPage(index - 1) }
+                                        Unit
+                                    })
+                                else null,
+                            nextPage =
+                                if (index + 1 < pages.size)
+                                    ({
+                                        scope.launch { pager.animateScrollToPage(index + 1) }
+                                        Unit
+                                    })
+                                else null,
                         )
                     }
                 if (fullscreen)
@@ -280,6 +297,9 @@ fun ScanEditorLayout(
                         itemsIndexed(ScanProcessor.filters) { _, filter ->
                             Surface(
                                 onClick = { if (!busy) onFilter(active, filter) },
+                                enabled = !busy,
+                                modifier =
+                                    Modifier.semantics { selected = active.filter == filter },
                                 shape = RoundedCornerShape(10.dp),
                                 border =
                                     BorderStroke(

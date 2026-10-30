@@ -14,9 +14,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -29,6 +31,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+@OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
 class MainActivity : ComponentActivity() {
     private var appLocked by mutableStateOf(false)
     private var authenticating = false
@@ -431,7 +434,12 @@ class MainActivity : ComponentActivity() {
                             else -> "home"
                         }
                 }
-                Box(Modifier.fillMaxSize()) {
+                Box(
+                    Modifier.fillMaxSize().semantics {
+                        testTagsAsResourceId = true
+                        isTraversalGroup = true
+                    }
+                ) {
                     DocumentWorkspace(vm, screen) {
                         when (screen) {
                             "capture" -> CameraScreen(vm) { images.launch(arrayOf("image/*")) }
@@ -601,20 +609,35 @@ class MainActivity : ComponentActivity() {
                             shape = MaterialTheme.shapes.large,
                             shadowElevation = 4.dp,
                         ) {
-                            Row(
+                            Column(
                                 Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
-                                CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                                Text(
-                                    progress,
-                                    Modifier.weight(1f),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                )
-                                if (backgroundable)
-                                    TextButton(onClick = vm::backgroundJob) { Text("后台") }
-                                TextButton(onClick = vm::cancel) { Text("取消") }
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                ) {
+                                    CircularProgressIndicator(
+                                        Modifier.size(20.dp),
+                                        strokeWidth = 2.dp,
+                                    )
+                                    Text(
+                                        progress,
+                                        Modifier.weight(1f).semantics {
+                                            liveRegion = LiveRegionMode.Polite
+                                        },
+                                        style = MaterialTheme.typography.bodyMedium,
+                                    )
+                                }
+                                FlowRow(
+                                    Modifier.fillMaxWidth(),
+                                    horizontalArrangement =
+                                        Arrangement.spacedBy(8.dp, Alignment.End),
+                                ) {
+                                    if (backgroundable)
+                                        TextButton(onClick = vm::backgroundJob) { Text("后台") }
+                                    TextButton(onClick = vm::cancel) { Text("取消") }
+                                }
                             }
                         }
                 }
@@ -633,7 +656,7 @@ class MainActivity : ComponentActivity() {
                         }
                     val fileNotice =
                         outputNotice?.takeIf { it.first == file.path }?.second.orEmpty()
-                    AlertDialog(
+                    SpaciousToolDialog(
                         onDismissRequest = { vm.output.value = null },
                         title = { Text(if (file.extension == "pdf") "PDF 已生成" else "文件已生成") },
                         text = {
@@ -644,7 +667,7 @@ class MainActivity : ComponentActivity() {
                                         .ExportDestinations(this@MainActivity)
                                         .get(UserSettings[SettingKeys.ExportDestination])
                                 }
-                            Column {
+                            Column(Modifier.verticalScroll(rememberScrollState())) {
                                 Text(
                                     "${displayName}\n${file.length()/1024} KB\n${if(fileNotice.isNotBlank()) fileNotice+"\n" else ""}已保存在应用中，可另存到系统文件夹。"
                                 )
@@ -694,7 +717,7 @@ class MainActivity : ComponentActivity() {
                             }
                         },
                         dismissButton = {
-                            Row {
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 TextButton(onClick = { share(file) }) { Text("分享") }
                                 if (file.extension == "pdf" && !locked)
                                     TextButton(onClick = { vm.previewOutput(file) }) { Text("预览") }
@@ -704,15 +727,15 @@ class MainActivity : ComponentActivity() {
                     )
                 }
                 ocr?.let { result ->
-                    var text by remember(result) { mutableStateOf(result) }
+                    var text by rememberSaveable(result) { mutableStateOf(result) }
                     val review by vm.ocrReview.collectAsState()
                     val versions by vm.ocrVersions.collectAsState()
                     var audit by remember(result) { mutableStateOf(false) }
-                    AlertDialog(
+                    SpaciousToolDialog(
                         onDismissRequest = { vm.ocr.value = null },
                         title = { Text("识别结果") },
                         text = {
-                            Column {
+                            Column(Modifier.verticalScroll(rememberScrollState())) {
                                 if (canCorrectOcr && review.isNotBlank())
                                     Text(review, style = MaterialTheme.typography.bodySmall)
                                 if (canCorrectOcr && versions.isNotEmpty())
@@ -738,7 +761,7 @@ class MainActivity : ComponentActivity() {
                             }
                         },
                         dismissButton = {
-                            Row {
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 TextButton(
                                     onClick = {
                                         clipboard.setText(AnnotatedString(text))

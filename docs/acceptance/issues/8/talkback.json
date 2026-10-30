@@ -1,0 +1,41 @@
+{
+  "screenReader": "TfPu_release_16_2-2026_10_30_1129",
+  "ttsEngine": "com.reecedunn.espeak",
+  "actualTouchExploration": true,
+  "nativeAccessibilityActivation": true,
+  "physicalGestureValidation": false,
+  "actions": [
+    "裁切",
+    "应用",
+    "识字",
+    "关闭",
+    "导出",
+    "生成 PDF",
+    "预览",
+    "视图",
+    "连续滚动",
+    "完成",
+    "返回",
+    "回收站",
+    "扫描 10-30 06.57",
+    "设置",
+    "使用说明"
+  ],
+  "spokenControlLabels": [
+    "裁切",
+    "识字",
+    "导出",
+    "生成 PDF",
+    "预览",
+    "视图",
+    "连续滚动",
+    "返回",
+    "回收站",
+    "扫描 10-30 06.57",
+    "设置",
+    "使用说明"
+  ],
+  "ocrContainsDigits": true,
+  "pdfGenerated": true,
+  "trashRestored": true
+}

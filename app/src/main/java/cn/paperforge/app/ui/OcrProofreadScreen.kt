@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,14 +40,24 @@ fun OcrProofreadScreen(vm: MainViewModel) {
     var regional by rememberSaveable { mutableStateOf(false) }
     var lineIndex by rememberSaveable(page?.id) { mutableIntStateOf(0) }
     var wordIndex by rememberSaveable(page?.id) { mutableStateOf<Int?>(null) }
-    var draft by remember { mutableStateOf("") }
-    var region by remember(page?.id) { mutableStateOf(OcrRegion(.1f, .1f, .9f, .3f)) }
+    val regionSaver = remember {
+        Saver<OcrRegion, List<Float>>(
+            save = { listOf(it.left, it.top, it.right, it.bottom) },
+            restore = { OcrRegion(it[0], it[1], it[2], it[3]) },
+        )
+    }
+    var region by
+        rememberSaveable(page?.id, stateSaver = regionSaver) {
+            mutableStateOf(OcrRegion(.1f, .1f, .9f, .3f))
+        }
     val layout = remember(page?.ocrLayout) { page?.ocrLayout?.let(OcrLayout::decode) }
     val line = layout?.lines?.getOrNull(lineIndex)
+    val sourceText = wordIndex?.let { line?.elements?.getOrNull(it)?.text } ?: line?.text.orEmpty()
+    var draft by
+        rememberSaveable(page?.id, lineIndex, wordIndex, sourceText) { mutableStateOf(sourceText) }
     LaunchedEffect(page?.ocrLayout, lineIndex, wordIndex) {
         if (layout != null && lineIndex > layout.lines.lastIndex)
             lineIndex = layout.lines.lastIndex.coerceAtLeast(0)
-        draft = wordIndex?.let { line?.elements?.getOrNull(it)?.text } ?: line?.text.orEmpty()
     }
     val previewPage =
         page?.copy(

@@ -2,7 +2,9 @@ package cn.paperforge.app.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -135,15 +137,32 @@ internal fun SpaciousToolDialog(
             Modifier.fillMaxWidth().fillMaxHeight(.9f).padding(horizontal = 12.dp),
             shape = RoundedCornerShape(24.dp),
         ) {
-            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                ProvideTextStyle(MaterialTheme.typography.titleLarge) { title() }
-                Box(Modifier.weight(1f).fillMaxWidth()) { text() }
-                FlowRow(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+            BoxWithConstraints {
+                val compact = maxHeight < 420.dp && LocalDensity.current.fontScale > 1.3f
+                val compactBodyHeight = (maxHeight * .5f).coerceAtLeast(160.dp)
+                Column(
+                    Modifier.fillMaxSize()
+                        .padding(20.dp)
+                        .then(
+                            if (compact) Modifier.verticalScroll(rememberScrollState())
+                            else Modifier
+                        ),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-                    dismissButton()
-                    confirmButton()
+                    ProvideTextStyle(MaterialTheme.typography.titleLarge) { title() }
+                    Box(
+                        (if (compact) Modifier.height(compactBodyHeight) else Modifier.weight(1f))
+                            .fillMaxWidth()
+                    ) {
+                        text()
+                    }
+                    FlowRow(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        dismissButton()
+                        confirmButton()
+                    }
                 }
             }
         }

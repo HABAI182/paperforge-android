@@ -8,6 +8,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -32,12 +34,19 @@ fun ScanExportDialog(
     val scope = rememberCoroutineScope()
     val profiles = remember { SettingsProfiles(context) }
     val destinations = remember { ExportDestinations(context) }
-    var options by remember { mutableStateOf(ScanExportOptions.current()) }
-    var dpiText by remember(options.dpi) { mutableStateOf(options.dpi.toString()) }
+    val optionsSaver = remember {
+        Saver<ScanExportOptions, String>(
+            save = { it.values().toString() },
+            restore = { ScanExportOptions.decode(org.json.JSONObject(it)) },
+        )
+    }
+    var options by
+        rememberSaveable(stateSaver = optionsSaver) { mutableStateOf(ScanExportOptions.current()) }
+    var dpiText by rememberSaveable(options.dpi) { mutableStateOf(options.dpi.toString()) }
     val dpiValid = dpiText.toIntOrNull()?.let { it in 72..600 } == true
-    var presetName by remember { mutableStateOf("") }
+    var presetName by rememberSaveable { mutableStateOf("") }
     var presetMenu by remember { mutableStateOf(false) }
-    var selectedPreset by remember { mutableStateOf("当前设置") }
+    var selectedPreset by rememberSaveable { mutableStateOf("当前设置") }
     var presets by remember { mutableStateOf(profiles.saved().filter { it.values.has("paper") }) }
     var notice by remember { mutableStateOf("") }
     val pick =
@@ -52,7 +61,7 @@ fun ScanExportDialog(
                         .onFailure { notice = it.message ?: "无法授权此目录，请重新选择" }
                 }
         }
-    AlertDialog(
+    SpaciousToolDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (settingsOnly) "导出预设与目录" else "导出 ${pages} 页") },
         text = {

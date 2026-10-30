@@ -64,6 +64,9 @@ fun DocumentWorkspace(vm: MainViewModel, screen: String, content: @Composable ()
                     screen in setOf("reader", "editor") &&
                     maxWidth >= 1000.dp + ((font - 1).coerceAtLeast(0f) * 160).dp &&
                     maxHeight >= 460.dp
+            // Keep the native accessibility subtree in one stable parent. Moving Compose
+            // content between conditional containers retains state but clears TalkBack focus.
+            var documentModifier: Modifier = Modifier.fillMaxSize()
             if (separated != null) {
                 val (first, second) = separated
                 // Keep the document in the larger pane, using the other only when useful.
@@ -86,9 +89,9 @@ fun DocumentWorkspace(vm: MainViewModel, screen: String, content: @Composable ()
                 ) {
                     DocumentSidebar(vm, sidebar.modifier().testTag("workspace-document-sidebar"))
                 }
-                Box(document.modifier().testTag("workspace-document-pane")) { pane() }
+                documentModifier = document.modifier().testTag("workspace-document-pane")
             } else if (wide)
-                Row(Modifier.fillMaxSize()) {
+                Box(Modifier.fillMaxSize()) {
                     AnimatedVisibility(
                         !focus,
                         enter =
@@ -106,9 +109,12 @@ fun DocumentWorkspace(vm: MainViewModel, screen: String, content: @Composable ()
                             VerticalDivider()
                         }
                     }
-                    Box(Modifier.weight(1f).fillMaxHeight()) { pane() }
+                    if (!focus)
+                        documentModifier =
+                            Modifier.fillMaxSize()
+                                .padding(start = (320 * font.coerceIn(1f, 1.2f)).dp + 1.dp)
                 }
-            else pane()
+            Box(documentModifier) { pane() }
         }
     }
 }

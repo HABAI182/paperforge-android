@@ -21,8 +21,12 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsPropertyKey
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.IntOffset
@@ -220,9 +224,53 @@ internal fun ReaderPage(
         (if (paged) Modifier.fillMaxSize() else Modifier.fillMaxWidth().aspectRatio(ratio))
             .testTag("reader-viewport-$index")
             .semantics {
+                contentDescription = "第 ${index+1} 页"
+                role = Role.Image
                 this[PdfViewTransformKey] = listOf(transform.zoom, transform.x, transform.y)
                 stateDescription = "第 ${index+1} 页，缩放 ${(transform.zoom*100).toInt()}%"
                 customActions = buildList {
+                    add(
+                        CustomAccessibilityAction("放大页面") {
+                            change(current.copy(zoom = (current.zoom * 1.5f).coerceAtMost(5f)))
+                            true
+                        }
+                    )
+                    add(
+                        CustomAccessibilityAction("缩小页面") {
+                            val zoom = (current.zoom / 1.5f).coerceAtLeast(1f)
+                            change(
+                                PageTransform(
+                                    zoom,
+                                    current.x.coerceIn(-frame.limitX(zoom), frame.limitX(zoom)),
+                                    current.y.coerceIn(-frame.limitY(zoom), frame.limitY(zoom)),
+                                )
+                            )
+                            true
+                        }
+                    )
+                    if (current.zoom > 1f) {
+                        fun move(x: Float, y: Float): Boolean {
+                            change(
+                                current.copy(
+                                    x =
+                                        (current.x + x).coerceIn(
+                                            -frame.limitX(current.zoom),
+                                            frame.limitX(current.zoom),
+                                        ),
+                                    y =
+                                        (current.y + y).coerceIn(
+                                            -frame.limitY(current.zoom),
+                                            frame.limitY(current.zoom),
+                                        ),
+                                )
+                            )
+                            return true
+                        }
+                        add(CustomAccessibilityAction("向左移动页面") { move(-.15f, 0f) })
+                        add(CustomAccessibilityAction("向右移动页面") { move(.15f, 0f) })
+                        add(CustomAccessibilityAction("向上移动页面") { move(0f, -.15f) })
+                        add(CustomAccessibilityAction("向下移动页面") { move(0f, .15f) })
+                    }
                     if (index > 0)
                         add(
                             CustomAccessibilityAction("上一页") {
@@ -251,6 +299,10 @@ internal fun ReaderPage(
                             }
                         )
                     }
+                }
+                onClick("显示或隐藏阅读工具") {
+                    tap()
+                    true
                 }
             }
             .onSizeChanged { rootSize = it }
@@ -432,7 +484,7 @@ internal fun ReaderPage(
                     .clipToBounds()
             ) {
                 val filter = readerToneFilter(tone)
-                Image(painter, "第 ${index+1} 页", Modifier.fillMaxSize(), colorFilter = filter)
+                Image(painter, null, Modifier.fillMaxSize(), colorFilter = filter)
                 Canvas(
                     Modifier.fillMaxSize().testTag("reader-tiles-$index").semantics {
                         this[PdfTileCountKey] = tiles.size

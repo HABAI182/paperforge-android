@@ -10,8 +10,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.data.DocumentRow
 import cn.paperforge.app.data.Repository
@@ -102,8 +105,12 @@ internal fun LibraryDocumentCard(
     Card(
         modifier
             .fillMaxWidth()
+            .testTag("library-document-${document.id}")
+            .semantics { if (selecting) stateDescription = if (selected) "已选择" else "未选择" }
             .combinedClickable(
                 enabled = enabled,
+                role = Role.Button,
+                onLongClickLabel = "多选文档",
                 onClick = {
                     if (selecting) feedback()
                     onOpen()
