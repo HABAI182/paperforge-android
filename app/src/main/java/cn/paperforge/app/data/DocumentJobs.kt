@@ -70,6 +70,7 @@ object DocumentJobs {
 
     internal fun modeName(mode: String?) =
         mapOf(
+            "enhance-images" to "图像增强",
             "native-edit" to "原生文字编辑",
             "forms-fill" to "填写表单",
             "certificate-sign" to "证书签署",

@@ -1,0 +1,19 @@
+{
+  "preset": "BW",
+  "flattened": false,
+  "textPreserved": true,
+  "pages": [
+    {
+      "page": 2,
+      "scanImages": 1,
+      "inlineImagesPreserved": 0
+    },
+    {
+      "page": 3,
+      "scanImages": 1,
+      "inlineImagesPreserved": 0
+    }
+  ],
+  "imageBindings": 4,
+  "uniqueImages": 1
+}

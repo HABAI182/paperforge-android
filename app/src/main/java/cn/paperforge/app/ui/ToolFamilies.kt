@@ -33,6 +33,7 @@ internal fun pdfFamily(mode: String): String =
         "certificates",
         "archive" -> "protect"
         "compress",
+        "enhance-images",
         "optimize",
         "metadata",
         "diagnostics",

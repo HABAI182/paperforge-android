@@ -336,6 +336,20 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                             report(it)
                         }
                     "extract-images" -> PdfTools.extractImages(input, file)
+                    "enhance-images" -> {
+                        origin =
+                            PdfImageEnhancement.enhance(
+                                input,
+                                file,
+                                p.optString("preset", "BW"),
+                                range,
+                                JobFileStages(repo, job),
+                            ) {
+                                report(it)
+                            }
+                        originRole = "enhancement-report"
+                        conversionNotice = "扫描底图已增强，文字层及矢量保留；原件不变"
+                    }
                     "searchable" -> {
                         val result =
                             PdfSearchable.convert(

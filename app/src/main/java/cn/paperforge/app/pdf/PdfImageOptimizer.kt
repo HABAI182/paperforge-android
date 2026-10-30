@@ -395,7 +395,7 @@ object PdfImageOptimizer {
         }
     }
 
-    private class PlacementProbe(page: PDPage, val image: (PDImage, Float, Float) -> Unit) :
+    internal class PlacementProbe(page: PDPage, val image: (PDImage, Float, Float) -> Unit) :
         PDFGraphicsStreamEngine(page) {
         private val stack = identitySet<COSStream>()
         private var current = PointF()

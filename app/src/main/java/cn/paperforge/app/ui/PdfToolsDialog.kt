@@ -19,6 +19,7 @@ internal fun PdfToolsDialog(
     vm: MainViewModel,
     initialMode: String = "",
     readingActions: List<HomeTool> = emptyList(),
+    currentPage: Int = 0,
     onDismiss: () -> Unit,
 ) {
     var longOptions by remember { mutableStateOf(cn.paperforge.app.pdf.LongImageOptions()) }
@@ -46,6 +47,11 @@ internal fun PdfToolsDialog(
     if (mode == "compress") {
         val doc by vm.selected.collectAsState()
         PdfCompressionDialog(vm, doc?.pdfPath?.let({ java.io.File(it) }), onDismiss)
+        return
+    }
+    if (mode == "enhance-images") {
+        val doc by vm.selected.collectAsState()
+        PdfEnhancementDialog(vm, doc?.pdfPath?.let { java.io.File(it) }, currentPage, onDismiss)
         return
     }
     val settingsVersion by UserSettings.revision.collectAsState()
