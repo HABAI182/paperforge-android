@@ -1,0 +1,74 @@
+[
+  {
+    "scene": "plain",
+    "feature": "fine-print",
+    "before": 1,
+    "after": 1
+  },
+  {
+    "scene": "plain",
+    "feature": "pencil",
+    "before": 0,
+    "after": 1
+  },
+  {
+    "scene": "plain",
+    "feature": "table-rules",
+    "before": 0.009348706762231224,
+    "after": 1
+  },
+  {
+    "scene": "plain",
+    "feature": "solid-ink",
+    "before": 1,
+    "after": 1
+  },
+  {
+    "scene": "shadow",
+    "feature": "fine-print",
+    "before": 1,
+    "after": 1
+  },
+  {
+    "scene": "shadow",
+    "feature": "pencil",
+    "before": 0,
+    "after": 1
+  },
+  {
+    "scene": "shadow",
+    "feature": "table-rules",
+    "before": 0.009348706762231224,
+    "after": 1
+  },
+  {
+    "scene": "shadow",
+    "feature": "solid-ink",
+    "before": 1,
+    "after": 1
+  },
+  {
+    "scene": "noise",
+    "feature": "fine-print",
+    "before": 1,
+    "after": 1
+  },
+  {
+    "scene": "noise",
+    "feature": "pencil",
+    "before": 0,
+    "after": 0.9984212900315742
+  },
+  {
+    "scene": "noise",
+    "feature": "table-rules",
+    "before": 0.007946400747896541,
+    "after": 1
+  },
+  {
+    "scene": "noise",
+    "feature": "solid-ink",
+    "before": 1,
+    "after": 1
+  }
+]

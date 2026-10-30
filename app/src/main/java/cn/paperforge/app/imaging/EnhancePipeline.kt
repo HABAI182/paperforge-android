@@ -11,6 +11,15 @@ import org.opencv.photo.Photo
  * enhancement-v030.
  */
 object EnhancePipeline {
+    /** Shared by scan thumbnails, page rendering, batch edits and PDF enhancement. */
+    object SoftMonochrome {
+        const val illuminationStrength = .85f
+        const val paperWhite = 242f
+        const val maximumGain = 2.6f
+        const val windowFraction = .035f
+        const val sauvolaK = .075f
+    }
+
     /** RGB input, caller owns destination. ORIGINAL never changes channel count. */
     fun apply(rgb: Mat, destination: Mat, mode: String, strengthOverride: Float? = null) {
         if (mode == "ORIGINAL") {
@@ -77,12 +86,20 @@ object EnhancePipeline {
             val illumination = ByteArray(input.size)
             rgb.get(0, 0, input)
             field.get(0, 0, illumination)
-            val strength =
+            val userStrength =
                 strengthOverride?.coerceIn(0f, 1f)
                     ?: if (mode == "WHITEBOARD") 1f
                     else ScanConfig.float("illuminationStrength", 1f)
+            // Do not clip faint strokes to white before thresholding. BW has an independent,
+            // conservative preset; the existing strength slider remains a relative adjustment.
+            val monochrome = mode == "BW"
+            val strength =
+                if (monochrome) userStrength * SoftMonochrome.illuminationStrength else userStrength
             for (i in input.indices) {
-                val gain = (250f / max(70, illumination[i].toInt() and 255)).coerceIn(.85f, 3f)
+                val gain =
+                    ((if (monochrome) SoftMonochrome.paperWhite else 250f) /
+                            max(70, illumination[i].toInt() and 255))
+                        .coerceIn(.85f, if (monochrome) SoftMonochrome.maximumGain else 3f)
                 input[i] =
                     ((input[i].toInt() and 255) * (1 + (gain - 1) * strength))
                         .toInt()
@@ -106,11 +123,8 @@ object EnhancePipeline {
                 return
             }
             val window =
-                max(
-                    15,
-                    (min(rgb.cols(), rgb.rows()) * ScanConfig.float("sauvolaWindowFraction", .05f))
-                        .roundToInt(),
-                ) or 1
+                max(15, (min(rgb.cols(), rgb.rows()) * SoftMonochrome.windowFraction).roundToInt())
+                    .coerceAtMost(201) or 1
             val f = mat()
             val mean = mat()
             val square = mat()
@@ -140,11 +154,7 @@ object EnhancePipeline {
             Core.max(square, Scalar(0.0), square)
             Core.sqrt(square, square)
             square.convertTo(threshold, -1, 1.0 / 128, -1.0)
-            Core.multiply(
-                threshold,
-                Scalar(ScanConfig.float("sauvolaK", .22f).toDouble()),
-                threshold,
-            )
+            Core.multiply(threshold, Scalar(SoftMonochrome.sauvolaK.toDouble()), threshold)
             Core.add(threshold, Scalar(1.0), threshold)
             Core.multiply(mean, threshold, threshold)
             val grayBytes = ByteArray(gray.rows() * gray.cols())
