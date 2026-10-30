@@ -67,11 +67,8 @@ fun HomeScreen(
     var libraryDisplay by remember { mutableStateOf(false) }
     val docs by vm.documents.collectAsState()
     val busy by vm.busy.collectAsState()
-    var tab by rememberSaveable { mutableIntStateOf(vm.homeTab.value) }
-    LaunchedEffect(tab) {
-        vm.homeTab.value = tab
-        if (tab < 2) vm.documentTab.value = tab
-    }
+    val tab by vm.homeTab.collectAsState()
+    LaunchedEffect(tab) { if (tab < 2) vm.documentTab.value = tab }
     val toolQuery by vm.workspaceQuery.collectAsState()
     val toolGroup by vm.workspaceGroup.collectAsState()
     var filtersExpanded by rememberSaveable { mutableStateOf(false) }
@@ -219,7 +216,7 @@ fun HomeScreen(
         vm.workspaceQuery.value = ""
     }
     BackHandler(tab == 3 || (tab == 2 && toolGroup.isBlank() && toolQuery.isBlank())) {
-        tab = vm.documentTab.value
+        vm.homeTab.value = vm.documentTab.value
     }
     BackHandler(inTrash && !selecting) { showTrash = false }
     BackHandler(selecting) { finishSelection() }
@@ -367,7 +364,7 @@ fun HomeScreen(
                         if (tab < 2 && !inTrash)
                             IconButton(
                                 onClick = {
-                                    tab = 1
+                                    vm.homeTab.value = 1
                                     showTrash = true
                                     favoritesOnly = false
                                     folder = ""
@@ -511,7 +508,7 @@ fun HomeScreen(
                             NavigationBarItem(
                                 selected = if (i == 0) tab < 2 else tab == destination,
                                 onClick = {
-                                    tab = destination
+                                    vm.homeTab.value = destination
                                     showTrash = false
                                 },
                                 icon = { Icon(icon, null) },
@@ -615,7 +612,7 @@ fun HomeScreen(
                         FilterChip(
                             tab == 0,
                             {
-                                tab = 0
+                                vm.homeTab.value = 0
                                 showTrash = false
                             },
                             label = {
@@ -633,7 +630,7 @@ fun HomeScreen(
                         FilterChip(
                             tab == 1 && !favoritesOnly,
                             {
-                                tab = 1
+                                vm.homeTab.value = 1
                                 collection = "ALL"
                                 favoritesOnly = false
                                 folder = ""
@@ -645,7 +642,7 @@ fun HomeScreen(
                             FilterChip(
                                 tab == 1 && favoritesOnly,
                                 {
-                                    tab = 1
+                                    vm.homeTab.value = 1
                                     collection = "ALL"
                                     favoritesOnly = true
                                     folder = ""
@@ -1049,7 +1046,7 @@ fun HomeScreen(
                                 if (docs.isNotEmpty())
                                     TextButton(
                                         onClick = {
-                                            tab = 1
+                                            vm.homeTab.value = 1
                                             collection = "ALL"
                                             favoritesOnly = false
                                             folder = ""
