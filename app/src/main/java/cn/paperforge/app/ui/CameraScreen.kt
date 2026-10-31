@@ -786,6 +786,8 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                                                                 UserSettings[
                                                                                     SettingKeys
                                                                                         .TurnThreshold],
+                                                                                frameWidth,
+                                                                                frameHeight,
                                                                             )
                                                                         else false
                                                                     stability = gate.progress

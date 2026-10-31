@@ -11,8 +11,14 @@ import android.graphics.Typeface
 import android.os.Build
 import android.os.SystemClock
 import androidx.test.platform.app.InstrumentationRegistry
+import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
+import cn.paperforge.app.imaging.PageDecoder
+import cn.paperforge.app.imaging.ScanConfig
 import cn.paperforge.app.imaging.ScanProcessor
+import cn.paperforge.app.model.AutoCaptureGate
+import cn.paperforge.app.model.CropSafety
+import cn.paperforge.app.model.ImageGeometry
 import cn.paperforge.app.model.Quad
 import java.io.File
 import java.util.Locale
@@ -50,6 +56,13 @@ class DocUnetProbeTest {
         Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.rgb(24, 132, 226)
             style = Paint.Style.FILL
+        }
+    private val safetyStrokePaint =
+        Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.rgb(24, 132, 226)
+            style = Paint.Style.STROKE
+            strokeWidth = 3f
+            pathEffect = android.graphics.DashPathEffect(floatArrayOf(14f, 9f), 0f)
         }
 
     @Test
@@ -112,6 +125,7 @@ class DocUnetProbeTest {
                 }
                 row.put("detectMs", (SystemClock.elapsedRealtimeNanos() - started) / 1_000_000.0)
                 val result = outcome.getOrNull()
+                var safetyQuad: Quad? = null
                 if (result == null) {
                     row.put("hasQuad", false)
                     row.put("error", "detect: " + (outcome.exceptionOrNull()?.message ?: "unknown"))
@@ -127,6 +141,79 @@ class DocUnetProbeTest {
                         "diagnostics",
                         JSONObject(result.diagnostics.mapValues { it.value.toDouble() }.toMap()),
                     )
+                    if (quad != null) {
+                        // #21 A/B evidence: the safety ring actually used for the crop, the
+                        // side ratio, and whether the auto-capture gate arms on this photo.
+                        val safety =
+                            CropSafety.expand(
+                                quad,
+                                bitmap.width,
+                                bitmap.height,
+                                ScanConfig.float("cropSafetyMargin", CropSafety.Margin),
+                            )
+                        val sides = ImageGeometry.pixelSides(quad, bitmap.width, bitmap.height)
+                        val aspect = max(sides.first, sides.second) / min(sides.first, sides.second)
+                        val gate =
+                            AutoCaptureGate(
+                                UserSettings[SettingKeys.StableMs].toLong(),
+                                UserSettings[SettingKeys.CooldownMs].toLong(),
+                                UserSettings[SettingKeys.CaptureArea],
+                            )
+                        var armed = false
+                        for (step in 0..12) {
+                            if (
+                                gate.update(
+                                    quad,
+                                    step * 200L,
+                                    true,
+                                    frameWidth = bitmap.width,
+                                    frameHeight = bitmap.height,
+                                )
+                            )
+                                armed = true
+                        }
+                        safetyQuad = safety
+                        row.put("aspect", aspect.toDouble())
+                        row.put("cropQuad", quadJson(safety))
+                        row.put("cropArea", safety.area.toDouble())
+                        row.put(
+                            "cropMargin",
+                            ScanConfig.float("cropSafetyMargin", CropSafety.Margin).toDouble(),
+                        )
+                        row.put(
+                            "areaFloor",
+                            gate.areaFloor(quad, bitmap.width, bitmap.height).toDouble(),
+                        )
+                        row.put("autoArm", armed)
+                        val decoded = runCatching {
+                            PageDecoder.crop(file, quad, 2400).let { decodedImage ->
+                                try {
+                                    val cropped =
+                                        ScanProcessor.transform(
+                                            decodedImage.bitmap,
+                                            decodedImage.quad,
+                                            "ORIGINAL",
+                                        )
+                                    try {
+                                        File(output, file.nameWithoutExtension + "-crop.jpg")
+                                            .outputStream()
+                                            .use {
+                                                cropped.compress(Bitmap.CompressFormat.JPEG, 90, it)
+                                            }
+                                        row.put("cropWidth", cropped.width)
+                                            .put("cropHeight", cropped.height)
+                                    } finally {
+                                        cropped.recycle()
+                                    }
+                                } finally {
+                                    decodedImage.bitmap.recycle()
+                                }
+                            }
+                        }
+                        decoded.exceptionOrNull()?.let {
+                            row.put("cropError", it.message ?: it.javaClass.simpleName)
+                        }
+                    }
                 }
                 if (previewProbe) {
                     val previewStarted = SystemClock.elapsedRealtimeNanos()
@@ -156,7 +243,7 @@ class DocUnetProbeTest {
                     val sheetName = file.nameWithoutExtension + "-sheet.jpg"
                     val saved =
                         runCatching {
-                                val sheet = contactSheet(bitmap, result?.quad, row)
+                                val sheet = contactSheet(bitmap, result?.quad, safetyQuad, row)
                                 try {
                                     File(output, sheetName).outputStream().use {
                                         sheet.compress(Bitmap.CompressFormat.JPEG, 88, it)
@@ -215,7 +302,7 @@ class DocUnetProbeTest {
         val originH: Float,
     )
 
-    private fun contactSheet(source: Bitmap, quad: Quad?, row: JSONObject): Bitmap {
+    private fun contactSheet(source: Bitmap, quad: Quad?, safety: Quad?, row: JSONObject): Bitmap {
         val size = 1200
         val half = size / 2
         val sheet = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
@@ -233,9 +320,11 @@ class DocUnetProbeTest {
         val detailCell = RectF(0f, half.toFloat(), half.toFloat(), size.toFloat())
         val metricsCell = RectF(half.toFloat(), half.toFloat(), size.toFloat(), size.toFloat())
 
-        drawPanel(canvas, source, sourceCell, "SOURCE")
+        drawPanel(canvas, source, sourceCell, "SOURCE  red=detected  blue=crop safety")
         val detectedPanel = drawPanel(canvas, source, detectedCell, "DETECTED QUAD")
         if (quad != null) drawQuad(canvas, quad, detectedPanel, source.width, source.height)
+        if (safety != null)
+            drawQuad(canvas, safety, detectedPanel, source.width, source.height, safety = true)
 
         drawTag(canvas, detailCell, "CORNER DETAIL")
         val detail = quad?.let { zoomCrop(source, it) }
@@ -259,6 +348,8 @@ class DocUnetProbeTest {
             canvas.drawBitmap(detail.bitmap, null, panel.frame, filterPaint)
             detail.bitmap.recycle()
             if (quad != null) drawQuad(canvas, quad, panel, source.width, source.height)
+            if (safety != null)
+                drawQuad(canvas, safety, panel, source.width, source.height, safety = true)
         }
 
         drawTag(canvas, metricsCell, "METRICS")
@@ -324,6 +415,7 @@ class DocUnetProbeTest {
         panel: Panel,
         sourceWidth: Int,
         sourceHeight: Int,
+        safety: Boolean = false,
     ) {
         val mapped =
             quad.points.map { point ->
@@ -342,9 +434,13 @@ class DocUnetProbeTest {
                 for (index in 1 until mapped.size) lineTo(mapped[index].x, mapped[index].y)
                 close()
             }
-        canvas.drawPath(path, fillPaint)
-        canvas.drawPath(path, strokePaint)
-        mapped.forEach { canvas.drawCircle(it.x, it.y, 7f, cornerPaint) }
+        if (safety) {
+            canvas.drawPath(path, safetyStrokePaint)
+        } else {
+            canvas.drawPath(path, fillPaint)
+            canvas.drawPath(path, strokePaint)
+            mapped.forEach { canvas.drawCircle(it.x, it.y, 7f, cornerPaint) }
+        }
     }
 
     private class Crop(val bitmap: Bitmap, val left: Int, val top: Int)
@@ -380,11 +476,23 @@ class DocUnetProbeTest {
                 "image  " + row.optInt("width") + " x " + row.optInt("height"),
                 "quad   " + if (row.optBoolean("hasQuad")) "returned" else "none",
                 "area   " + String.format(Locale.US, "%.2f%%", row.optDouble("area", 0.0) * 100),
+                "aspect " + String.format(Locale.US, "%.2f", row.optDouble("aspect", 0.0)),
+                "floor  " +
+                    String.format(Locale.US, "%.0f%%", row.optDouble("areaFloor", 0.0) * 100),
+                "arm    " + if (row.optBoolean("autoArm")) "yes" else "no",
                 "conf   " + String.format(Locale.US, "%.3f", row.optDouble("confidence", 0.0)),
                 "method " + row.optString("method", "-"),
                 "detect " + String.format(Locale.US, "%.0f ms", row.optDouble("detectMs", 0.0)),
                 "inner  " +
                     String.format(Locale.US, "%.0f ms", row.optDouble("detectorElapsedMs", 0.0)),
+                "crop   " +
+                    String.format(
+                        Locale.US,
+                        "%.0fx%.0f +%.1f%%",
+                        row.optDouble("cropWidth", 0.0),
+                        row.optDouble("cropHeight", 0.0),
+                        row.optDouble("cropMargin", 0.0) * 100,
+                    ),
             )
         var y = cell.top + 84f
         lines.forEach { line ->

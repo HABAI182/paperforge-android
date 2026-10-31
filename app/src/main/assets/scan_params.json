@@ -10,6 +10,7 @@
   "detectorEdgeMinimum": 0.25,
   "houghFallbackScore": 0.88,
   "refineBandFraction": 0.008,
+  "cropSafetyMargin": 0.01,
   "illuminationEdge": 480,
   "illuminationTilePercentile": 0.88,
   "illuminationStrength": 1.0,

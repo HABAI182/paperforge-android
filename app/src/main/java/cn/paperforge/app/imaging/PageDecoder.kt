@@ -20,7 +20,19 @@ object PageDecoder {
         BitmapFactory.decodeFile(file.path, bounds)
         require(bounds.outWidth > 0 && bounds.outHeight > 0) { "无法读取这张图片" }
         val orientation = ExifInterface(file).getAttributeInt(ExifInterface.TAG_ORIENTATION, 1)
-        val raw = quad.points.map { ImageGeometry.exif(it, orientation, inverse = true) }
+        val uprightWidth = if (orientation in 5..8) bounds.outHeight else bounds.outWidth
+        val uprightHeight = if (orientation in 5..8) bounds.outWidth else bounds.outHeight
+        // The crop quad that actually gets warped, grown by a safety ring so straight-edge
+        // approximations do not shave edge glyphs (#21). Clamped and validated inside CropSafety;
+        // an impossible expansion leaves the detected quad untouched.
+        val crop =
+            CropSafety.expand(
+                quad,
+                uprightWidth,
+                uprightHeight,
+                ScanConfig.float("cropSafetyMargin", CropSafety.Margin),
+            )
+        val raw = crop.points.map { ImageGeometry.exif(it, orientation, inverse = true) }
         val roi =
             Rect(
                 floor(raw.minOf { it.x } * (bounds.outWidth - 1)).toInt().minus(2).coerceAtLeast(0),
@@ -37,9 +49,7 @@ object PageDecoder {
                     .plus(3)
                     .coerceAtMost(bounds.outHeight),
             )
-        val uprightWidth = if (orientation in 5..8) bounds.outHeight else bounds.outWidth
-        val uprightHeight = if (orientation in 5..8) bounds.outWidth else bounds.outHeight
-        val sides = ImageGeometry.pixelSides(quad, uprightWidth, uprightHeight)
+        val sides = ImageGeometry.pixelSides(crop, uprightWidth, uprightHeight)
         val plan =
             ImageGeometry.decodePlan(
                 roi.width(),
