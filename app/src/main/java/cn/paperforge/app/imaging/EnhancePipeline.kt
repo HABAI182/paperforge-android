@@ -20,6 +20,23 @@ object EnhancePipeline {
         const val sauvolaK = .075f
     }
 
+    /**
+     * Thin-paper workbook preset. Show-through from the reverse side and a grey paper base are
+     * broad and low-contrast, so they are dropped by a soft-knee on the paper residual instead of a
+     * threshold: only ink clearly darker than the local paper survives. Pencil strokes are kept by
+     * the floor being well below their residual, and a light high-pass restores stroke edges.
+     */
+    object Workbook {
+        const val illuminationStrength = .9f
+        const val paperWhite = 246f
+        const val maximumGain = 2.9f
+
+        /** Reverse-side bleed stays below this paper residual; thin pencil is above it. */
+        const val ghostFloor = 40f
+        const val inkGain = 1.35f
+        const val sharpenAmount = .3f
+    }
+
     /** RGB input, caller owns destination. ORIGINAL never changes channel count. */
     fun apply(rgb: Mat, destination: Mat, mode: String, strengthOverride: Float? = null) {
         if (mode == "ORIGINAL") {
@@ -90,16 +107,30 @@ object EnhancePipeline {
                 strengthOverride?.coerceIn(0f, 1f)
                     ?: if (mode == "WHITEBOARD") 1f
                     else ScanConfig.float("illuminationStrength", 1f)
-            // Do not clip faint strokes to white before thresholding. BW has an independent,
-            // conservative preset; the existing strength slider remains a relative adjustment.
             val monochrome = mode == "BW"
+            val workbook = mode == "WORKBOOK"
+            val paperTarget =
+                when {
+                    monochrome -> SoftMonochrome.paperWhite
+                    workbook -> Workbook.paperWhite
+                    else -> 250f
+                }
+            val maximumGain =
+                when {
+                    monochrome -> SoftMonochrome.maximumGain
+                    workbook -> Workbook.maximumGain
+                    else -> 3f
+                }
             val strength =
-                if (monochrome) userStrength * SoftMonochrome.illuminationStrength else userStrength
+                when {
+                    monochrome -> userStrength * SoftMonochrome.illuminationStrength
+                    workbook -> userStrength * Workbook.illuminationStrength
+                    else -> userStrength
+                }
             for (i in input.indices) {
                 val gain =
-                    ((if (monochrome) SoftMonochrome.paperWhite else 250f) /
-                            max(70, illumination[i].toInt() and 255))
-                        .coerceIn(.85f, if (monochrome) SoftMonochrome.maximumGain else 3f)
+                    (paperTarget / max(70, illumination[i].toInt() and 255))
+                        .coerceIn(.85f, maximumGain)
                 input[i] =
                     ((input[i].toInt() and 255) * (1 + (gain - 1) * strength))
                         .toInt()
@@ -108,6 +139,10 @@ object EnhancePipeline {
             }
             corrected.create(rgb.rows(), rgb.cols(), CvType.CV_8UC3)
             corrected.put(0, 0, input)
+            if (workbook) {
+                workbookDocument(corrected, field, destination, strength)
+                return
+            }
             if (mode in listOf("AUTO", "TEXT", "COLOR")) {
                 enhanceLuminance(corrected, destination, mode, strength)
                 return
@@ -170,6 +205,61 @@ object EnhancePipeline {
             Core.compare(f, threshold, destination, Core.CMP_GT)
         } finally {
             owned.forEach { it.release() }
+        }
+    }
+
+    /**
+     * Grey workbook rendering: a paper residual below the ghost floor counts as blank, so
+     * reverse-side bleed disappears while thin pencil and printed rules keep their tone.
+     */
+    private fun workbookDocument(corrected: Mat, field: Mat, destination: Mat, strength: Float) {
+        val gray = Mat()
+        val paper = Mat()
+        val out = Mat()
+        val blurred = Mat()
+        try {
+            Imgproc.cvtColor(corrected, gray, Imgproc.COLOR_RGB2GRAY)
+            Imgproc.cvtColor(field, paper, Imgproc.COLOR_RGB2GRAY)
+            val values = ByteArray(gray.rows() * gray.cols())
+            val paperValues = ByteArray(values.size)
+            gray.get(0, 0, values)
+            paper.get(0, 0, paperValues)
+            val floor = Workbook.ghostFloor + (1f - strength) * 40f
+            val gain = Workbook.inkGain * (.85f + .15f * strength)
+            for (i in values.indices) {
+                // Compare corrected ink against the corrected paper level, not the raw tile value:
+                // the illumination correction has already lifted both, so mixing the scales would
+                // read faint strokes as blank paper.
+                val rawPaper = paperValues[i].toInt() and 255
+                val paperTarget = Workbook.paperWhite / max(70, rawPaper)
+                val correctedPaper =
+                    rawPaper *
+                        (1f + (paperTarget.coerceIn(.85f, Workbook.maximumGain) - 1f) * strength)
+                val ink = (correctedPaper - (values[i].toInt() and 255)).coerceAtLeast(0f)
+                val kept = (ink - floor).coerceAtLeast(0f) * gain
+                values[i] = (255f - kept).coerceIn(0f, 255f).toInt().toByte()
+            }
+            out.create(gray.rows(), gray.cols(), CvType.CV_8UC1)
+            out.put(0, 0, values)
+            Imgproc.GaussianBlur(out, blurred, Size(0.0, 0.0), 1.0)
+            val sharp = ByteArray(values.size)
+            val low = ByteArray(values.size)
+            out.get(0, 0, sharp)
+            blurred.get(0, 0, low)
+            for (i in sharp.indices) {
+                val value = sharp[i].toInt() and 255
+                val detail = value - (low[i].toInt() and 255)
+                if (abs(detail) > 2)
+                    sharp[i] =
+                        (value + detail * Workbook.sharpenAmount).toInt().coerceIn(0, 255).toByte()
+            }
+            out.put(0, 0, sharp)
+            out.copyTo(destination)
+        } finally {
+            gray.release()
+            paper.release()
+            out.release()
+            blurred.release()
         }
     }
 

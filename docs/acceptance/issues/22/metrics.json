@@ -1,0 +1,34 @@
+{
+  "scene": "synthetic-thin-paper",
+  "synthetic": true,
+  "physical_device": false,
+  "source": {
+    "mode": "ORIGINAL",
+    "ghost": 184.30302196834205,
+    "ink": 31,
+    "pencil": 117,
+    "rules": 87.99999999999999,
+    "paper": 189.09607636086778,
+    "ink_mean": 33.95446428571429
+  },
+  "results": [
+    {
+      "mode": "AUTO",
+      "ghost": 230.34318111701552,
+      "ink": 33.772,
+      "pencil": 152.13099999999997,
+      "rules": 117.77199999999999,
+      "paper": 245.15656421159673,
+      "ink_mean": 77.3436499669477
+    },
+    {
+      "mode": "WORKBOOK",
+      "ghost": 249.7383186419668,
+      "ink": 31,
+      "pencil": 189.99999999999997,
+      "rules": 146,
+      "paper": 254.72969442660386,
+      "ink_mean": 88.79828042328042
+    }
+  ]
+}

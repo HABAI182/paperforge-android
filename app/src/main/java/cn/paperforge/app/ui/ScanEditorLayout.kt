@@ -28,12 +28,13 @@ import kotlinx.coroutines.launch
 
 fun scanFilterName(filter: String) =
     when (filter) {
-        "ORIGINAL" -> "自然"
-        "AUTO" -> "自动"
-        "TEXT" -> "清晰"
-        "CLEAN" -> "去阴影"
+        "ORIGINAL" -> "原图"
+        "AUTO" -> "自然"
+        "TEXT" -> "清晰文字"
+        "WORKBOOK" -> "练习册"
+        "CLEAN" -> "强力去背景"
         "GRAY" -> "灰度"
-        "BW" -> "黑白"
+        "BW" -> "柔和黑白"
         "COLOR" -> "彩色"
         "WHITEBOARD" -> "白板"
         else -> filter
