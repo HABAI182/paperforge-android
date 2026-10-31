@@ -172,7 +172,7 @@ fun SettingsScreen(vm: MainViewModel) {
                     SettingSlider("默认曲面校正强度", "dewarpStrength", 1f, 0f..1f, "%", 100f)
                 }
             }
-            if (visible("分享 去水印 压缩 微信 转发 PDF", "advanced")) {
+            if (visible("分享 去水印 压缩 微信 转发 PDF", "export")) {
                 PreferenceBlock("分享处理") {
                     SettingToggle("收到 PDF 时自动处理并转发", "shareProcess", true)
                     SettingToggle("自动去水印（通用对象处理）", "shareRemoveWatermark", true)
