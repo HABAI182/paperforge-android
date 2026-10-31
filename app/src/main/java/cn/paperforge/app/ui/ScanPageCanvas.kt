@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.Saver
@@ -20,6 +21,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -41,6 +43,8 @@ fun ScanPageCanvas(
     nextPage: (() -> Unit)? = null,
 ) {
     var zoom by rememberSaveable(page.id) { mutableFloatStateOf(1f) }
+    // #31: press-and-hold on the canvas previews the untouched original without leaving the page.
+    var holdOriginal by remember { mutableStateOf(false) }
     val panSaver = remember {
         Saver<Offset, List<Float>>(
             save = { listOf(it.x, it.y) },
@@ -48,9 +52,11 @@ fun ScanPageCanvas(
         )
     }
     var pan by rememberSaveable(page.id, stateSaver = panSaver) { mutableStateOf(Offset.Zero) }
+    val showingOriginal = compare || holdOriginal
     val preview =
         pagePreview(
-            if (compare) page.copy(filter = "ORIGINAL", brightness = 0f, contrast = 1f) else page,
+            if (showingOriginal) page.copy(filter = "ORIGINAL", brightness = 0f, contrast = 1f)
+            else page,
             if (zoom > 1.5f) 2800 else 1800,
         )
     val bitmap = preview.bitmap
@@ -60,6 +66,7 @@ fun ScanPageCanvas(
     val tap by rememberUpdatedState(onTap)
     val changeZoom by rememberUpdatedState(onZoom)
     LaunchedEffect(zoom) { changeZoom(zoom > 1.01f) }
+    LaunchedEffect(page.id) { holdOriginal = false }
     DisposableEffect(page.id) { onDispose { tapJob?.cancel() } }
     Box(
         Modifier.fillMaxSize()
@@ -108,6 +115,16 @@ fun ScanPageCanvas(
                     var multiple = false
                     var travel = Offset.Zero
                     var moved = false
+                    var longHeld = false
+                    // Timer instead of checking inside the pointer loop: a still finger produces no
+                    // further pointer events, so the loop only resumes on movement or release.
+                    val holdJob = scope.launch {
+                        delay(350)
+                        if (!moved && !multiple) {
+                            longHeld = true
+                            holdOriginal = true
+                        }
+                    }
                     do {
                         val event = awaitPointerEvent()
                         eventTime = event.changes.maxOf { it.uptimeMillis }
@@ -139,7 +156,9 @@ fun ScanPageCanvas(
                             event.changes.forEach { it.consume() }
                         }
                     } while (event.changes.any { it.pressed })
-                    if (!moved && !multiple) {
+                    holdJob.cancel()
+                    holdOriginal = false
+                    if (!moved && !multiple && !longHeld) {
                         val now = eventTime
                         if (now - lastTap < 280) {
                             tapJob?.cancel()
@@ -162,6 +181,9 @@ fun ScanPageCanvas(
                                     tap()
                                 }
                         }
+                    } else if (longHeld) {
+                        // A press-and-hold must not be re-read as the first tap of a double tap.
+                        lastTap = 0L
                     }
                 }
             },
@@ -178,7 +200,7 @@ fun ScanPageCanvas(
             ) {
                 Image(
                     it.asImageBitmap(),
-                    if (compare) "原图对照" else "扫描预览",
+                    if (showingOriginal) "原图对照" else "扫描预览",
                     Modifier.fillMaxSize(),
                     contentScale = ContentScale.Fit,
                 )
@@ -209,6 +231,19 @@ fun ScanPageCanvas(
                     Text("可在任务中心重试，或从更多菜单重拍", style = MaterialTheme.typography.bodySmall)
                 }
             else CircularProgressIndicator()
+        if (holdOriginal && bitmap != null)
+            Surface(
+                modifier = Modifier.align(Alignment.TopCenter).padding(top = 12.dp),
+                color = Color.Black.copy(alpha = .62f),
+                shape = RoundedCornerShape(12.dp),
+            ) {
+                Text(
+                    "原图 · 松开返回",
+                    Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    color = Color.White,
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
     }
 }
 

@@ -52,7 +52,6 @@ fun pagePreview(page: PageRow, edge: Int = 1200, original: Boolean = false): Pag
     return preview
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
     val pages by vm.pages.collectAsState()
@@ -119,6 +118,11 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
     var confirmDelete by remember { mutableStateOf(false) }
     var adjust by rememberSaveable(doc?.id) { mutableStateOf(false) }
     var more by remember { mutableStateOf(false) }
+    var addPage by remember { mutableStateOf(false) }
+    var receipts by remember { mutableStateOf(false) }
+    // #31: the grouped menu lives here but the rename / fullscreen dialogs belong to the layout.
+    var renameTick by remember { mutableIntStateOf(0) }
+    var fullscreenTick by remember { mutableIntStateOf(0) }
     var bookSplit by remember { mutableStateOf(false) }
     var dewarp by remember { mutableStateOf(false) }
     var trace by remember { mutableStateOf(false) }
@@ -147,12 +151,14 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                 "back" -> vm.closeDocument()
                 "tasks" -> vm.screen.value = "tasks"
                 "capture" -> vm.screen.value = "capture"
+                "addPageSheet" -> addPage = true
                 "import" -> onImport()
                 "pages" -> vm.screen.value = "pages"
                 "export" -> export = true
                 "undo" -> vm.undo()
                 "redo" -> vm.redo()
                 "crop" -> crop = true
+                "delete" -> confirmDelete = true
                 "adjust" -> adjust = true
                 "retouch" -> retouch = active
                 "more" -> more = true
@@ -177,6 +183,8 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                         it.state != cn.paperforge.app.data.LocalTaskState.SUCCEEDED
                 }
                 ?.let { "${taskStateName(it.state)} · ${it.detail}" },
+        renameRequest = renameTick,
+        fullscreenRequest = fullscreenTick,
     )
     if (crop && active != null)
         CropDialog(
@@ -355,218 +363,124 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
     }
     if (export) ScanExportDialog(vm, name, pages.size, { export = false })
     if (more && active != null)
-        AlertDialog(
-            onDismissRequest = { more = false },
-            title = { Text("扫描页面工具") },
-            text = {
-                Column(Modifier.verticalScroll(rememberScrollState())) {
-                    TextButton(
-                        onClick = {
-                            more = false
-                            retouch = active
-                        }
-                    ) {
-                        Text("清理与修复 · 另存副本")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            intelligence = true
-                        }
-                    ) {
-                        Text("翻译与智能工具")
-                    }
-                    OcrOptionsControl()
-                    if (active.origins().isNotEmpty())
-                        TextButton(
-                            onClick = {
-                                more = false
-                                origins = true
-                            }
-                        ) {
-                            Text("页面来源与原件关系")
-                        }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            vm.openProofreading(active)
-                        }
-                    ) {
-                        Text("框选识别与同屏校对")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            vm.recognize(active)
-                        }
-                    ) {
-                        Text("重新识别本页")
-                    }
-                    if (active.ocrText != null)
-                        TextButton(
-                            onClick = {
-                                more = false
-                                vm.openOcr(active)
-                            }
-                        ) {
-                            Text("识别记录与文字校正")
-                        }
-                    HorizontalDivider(Modifier.padding(vertical = 12.dp))
-                    TextButton(
-                        onClick = {
-                            more = false
-                            vm.detectPage(active)
-                        }
-                    ) {
-                        Text("自动裁边")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            dewarp = true
-                        }
-                    ) {
-                        Text("曲面校正")
-                    }
-                    if (
-                        cn.paperforge.app.data.PageResources.entries(active).any {
-                            it.role == "dewarp-grid"
-                        }
-                    )
-                        TextButton(
-                            onClick = {
-                                more = false
-                                trace = true
-                            }
-                        ) {
-                            Text("曲面来源与网格")
-                        }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            vm.save(active.copy(rotation = (active.rotation + 90) % 360))
-                        }
-                    ) {
-                        Text("旋转本页")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            vm.replacement.value = active.id
-                            vm.screen.value = "capture"
-                        }
-                    ) {
-                        Text("重拍本页")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            vm.screen.value = "pages"
-                        }
-                    ) {
-                        Text("页面管理与排序")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            confirmDelete = true
-                        }
-                    ) {
-                        Text("删除本页")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            vm.exportScanCase(active)
-                        }
-                    ) {
-                        Text("保存本页诊断包（含原图）")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            vm.duplicate(active)
-                        }
-                    ) {
-                        Text("复制当前页")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            vm.autoSplitSpread(active)
-                        }
-                    ) {
-                        Text("拆分双页 · 自动书脊")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            bookSplit = true
-                        }
-                    ) {
-                        Text("书籍双页与书脊")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            vm.recognizeAll()
-                        }
-                    ) {
-                        Text("识别全部页面文字")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            vm.stitchScanPages()
-                        }
-                    ) {
-                        Text("长票据拼接与接缝调整")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            vm.images("jpg")
-                        }
-                    ) {
-                        Text("全部页面导出 JPG 图片包")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            vm.images("png")
-                        }
-                    ) {
-                        Text("全部页面导出 PNG 图片包")
-                    }
-                }
-            },
-            confirmButton = { TextButton(onClick = { more = false }) { Text("关闭") } },
+        EditorMoreSheet(
+            active = active,
+            busy = busy,
+            onDismiss = { more = false },
+            onOcr = { vm.openOcr(active) },
+            onProofread = { vm.openProofreading(active) },
+            onRecognize = { vm.recognize(active) },
+            onRecognizeAll = { vm.recognizeAll() },
+            onPageGrid = { vm.screen.value = "pages" },
+            onAddPage = { addPage = true },
+            onAutoSplit = { vm.autoSplitSpread(active) },
+            onBookSplit = { bookSplit = true },
+            onStitch = { vm.stitchScanPages() },
+            onOrigins = { origins = true },
+            onRotate = { degrees -> vm.save(active.copy(rotation = (active.rotation + degrees) % 360)) },
+            onAutoDetect = { vm.detectPage(active) },
+            onDewarp = { dewarp = true },
+            onDewarpTrace = { trace = true },
+            onRetouch = { retouch = active },
+            onIntelligence = { intelligence = true },
+            onExport = { export = true },
+            onReceipt = { receipts = true },
+            onExportImages = { format -> vm.images(format) },
+            onDiagnostics = { vm.exportScanCase(active) },
+            onRename = { renameTick++ },
+            onFullscreen = { fullscreenTick++ },
         )
+    if (addPage)
+        EditorAddPageSheet(
+            hasActive = active != null,
+            busy = busy,
+            onDismiss = { addPage = false },
+            onCapture = { vm.screen.value = "capture" },
+            onImport = onImport,
+            onRetake = {
+                active?.let { vm.replacement.value = it.id }
+                vm.screen.value = "capture"
+            },
+            onDuplicate = { active?.let { vm.duplicate(it) } },
+        )
+    // #31 decision 4: receipt fields are reachable from the editor. The draft reuses the cached
+    // offline OCR through the existing vm.receiptDraft; nothing is recognised here.
+    val document = doc
+    if (receipts && document != null) {
+        var receipt by remember(document.id) { mutableStateOf<ReceiptFields.Record?>(null) }
+        var loaded by remember(document.id) { mutableStateOf(false) }
+        LaunchedEffect(document.id, receipts) {
+            receipt = runCatching { vm.receiptDraft(document) }.getOrNull()
+            loaded = true
+        }
+        val current = receipt
+        if (current != null)
+            ReceiptReviewDialog(
+                initial = current,
+                sourceTitle = document.title,
+                busy = busy,
+                onDismiss = { receipts = false },
+                onExport = { record, xlsx ->
+                    vm.exportReceipt(record, document, xlsx)
+                    receipts = false
+                },
+            )
+        else
+            AlertDialog(
+                onDismissRequest = { receipts = false },
+                title = { Text("票据信息") },
+                text = {
+                    Text(
+                        if (!loaded) "正在读取本机已缓存的离线 OCR…"
+                        else "这份文档还没有可用的离线 OCR 文字，无法抽取票据字段。请先识别文字后再试。"
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = { receipts = false }) {
+                        Text(if (loaded) "知道了" else "取消")
+                    }
+                },
+            )
+    }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ToolAction(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
     enabled: Boolean = true,
+    modifier: Modifier = Modifier,
+    showLabel: Boolean = true,
+    longPressLabel: String? = null,
+    onLongPress: (() -> Unit)? = null,
     onClick: () -> Unit,
 ) {
+    val longPressAction = onLongPress
     Column(
-        Modifier.widthIn(min = 48.dp)
-            .clickable(
+        modifier
+            .widthIn(min = 48.dp)
+            .combinedClickable(
                 enabled = enabled,
-                role = androidx.compose.ui.semantics.Role.Button,
+                role = Role.Button,
                 onClick = onClick,
+                onLongClick = onLongPress,
             )
             .clearAndSetSemantics {
                 contentDescription = label
                 role = Role.Button
-                if (enabled)
+                if (enabled) {
                     onClick(label) {
                         onClick()
                         true
                     }
-                else disabled()
+                    longPressAction?.let { action ->
+                        onLongClick(longPressLabel ?: "更多选项") {
+                            action()
+                            true
+                        }
+                    }
+                } else disabled()
             },
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -579,6 +493,6 @@ fun ToolAction(
                     else MaterialTheme.colorScheme.onSurface.copy(alpha = .38f),
             )
         }
-        Text(label, style = MaterialTheme.typography.labelSmall)
+        if (showLabel) Text(label, style = MaterialTheme.typography.labelSmall)
     }
 }

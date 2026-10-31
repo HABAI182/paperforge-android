@@ -54,26 +54,34 @@ fun ScanEditorLayout(
     suggestName: (suspend () -> SmartNaming.Suggestion?)? = null,
     highlights: Map<String, List<List<PointN>>> = emptyMap(),
     taskStatus: String? = null,
+    renameRequest: Int = 0,
+    fullscreenRequest: Int = 0,
 ) {
     var fullscreen by rememberSaveable { mutableStateOf(false) }
     var enhance by rememberSaveable { mutableStateOf(false) }
-    var thumbnails by rememberSaveable { mutableStateOf(false) }
+    // #31: the thumbnail strip is persistent (collapsed only on explicit request or fullscreen).
+    var thumbnails by rememberSaveable { mutableStateOf(true) }
     var compare by remember { mutableStateOf(false) }
     var zoomed by remember { mutableStateOf(false) }
     var rename by remember { mutableStateOf(false) }
     val active = pages.getOrNull(pager.currentPage)
+    val stripIndex = if (pages.isEmpty()) 0 else pager.currentPage.coerceIn(0, pages.lastIndex)
     val scope = rememberCoroutineScope()
+    // The "more" sheet lives in EditorScreen; these counters let it open the dialogs owned here.
+    LaunchedEffect(renameRequest) { if (renameRequest > 0) rename = true }
+    LaunchedEffect(fullscreenRequest) { if (fullscreenRequest > 0) fullscreen = true }
     FocusSystemBars(fullscreen)
     val requestDocumentFocus = LocalDocumentFocus.current
     DisposableEffect(fullscreen, requestDocumentFocus) {
         requestDocumentFocus(fullscreen)
         onDispose { requestDocumentFocus(false) }
     }
-    BackHandler(fullscreen || enhance || thumbnails) {
+    // The strip is expanded by default, so system back still leaves the editor; only the
+    // transient in-place surfaces (fullscreen, filter panel) intercept it, as before.
+    BackHandler(fullscreen || enhance) {
         when {
             fullscreen -> fullscreen = false
-            enhance -> enhance = false
-            else -> thumbnails = false
+            else -> enhance = false
         }
     }
     LaunchedEffect(pager.currentPage) {
@@ -98,6 +106,8 @@ fun ScanEditorLayout(
                             if (LocalDensity.current.fontScale <= 1.5f)
                                 Text(
                                     "整理扫描 · 点击名称重命名",
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -129,41 +139,69 @@ fun ScanEditorLayout(
             if (!fullscreen)
                 Surface(color = MaterialTheme.colorScheme.surface) {
                     Column(Modifier.navigationBarsPadding()) {
+                        // #31: one row of six primary actions. Adding a page is still one tap to
+                        // the camera; long-press opens the alternative add-page sheet.
+                        val showLabel = LocalDensity.current.fontScale <= 1.3f
                         Row(
-                            Modifier.fillMaxWidth().padding(top = 4.dp),
+                            Modifier.fillMaxWidth().padding(vertical = 4.dp),
                             horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            ToolAction(Icons.Default.Crop, "裁切", active != null && !busy) {
+                            ToolAction(
+                                Icons.Default.Add,
+                                "加页",
+                                !busy,
+                                Modifier.weight(1f),
+                                showLabel,
+                                longPressLabel = "更多加页方式",
+                                onLongPress = { if (!busy) onAction("addPageSheet") },
+                            ) {
+                                onAction("capture")
+                            }
+                            ToolAction(
+                                Icons.Default.Crop,
+                                "裁剪",
+                                active != null && !busy,
+                                Modifier.weight(1f),
+                                showLabel,
+                            ) {
                                 onAction("crop")
                             }
-                            ToolAction(Icons.Default.AutoFixHigh, "增强", active != null && !busy) {
+                            ToolAction(
+                                Icons.Default.AutoFixHigh,
+                                "滤镜",
+                                active != null && !busy,
+                                Modifier.weight(1f),
+                                showLabel,
+                            ) {
                                 enhance = !enhance
-                                thumbnails = false
                             }
-                            ToolAction(Icons.Default.TextFields, "识字", active != null && !busy) {
+                            ToolAction(
+                                Icons.Default.TextFields,
+                                "识字",
+                                active != null && !busy,
+                                Modifier.weight(1f),
+                                showLabel,
+                            ) {
                                 onAction("ocr")
                             }
-                            ToolAction(Icons.Default.MoreHoriz, "更多", active != null && !busy) {
-                                onAction("more")
-                            }
-                        }
-                        FlowRow(
-                            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        ) {
-                            OutlinedButton(onClick = { onAction("capture") }, enabled = !busy) {
-                                Icon(Icons.Default.Add, null, Modifier.size(18.dp))
-                                Text("继续拍")
-                            }
-                            OutlinedButton(onClick = { onAction("import") }, enabled = !busy) {
-                                Text("导图")
-                            }
-                            Button(
-                                onClick = { onAction("export") },
-                                enabled = active != null && !busy,
-                                modifier = Modifier.weight(1f),
+                            ToolAction(
+                                Icons.Default.Delete,
+                                "删除",
+                                active != null && !busy,
+                                Modifier.weight(1f),
+                                showLabel,
                             ) {
-                                Text("导出")
+                                onAction("delete")
+                            }
+                            ToolAction(
+                                Icons.Default.MoreHoriz,
+                                "更多",
+                                active != null && !busy,
+                                Modifier.weight(1f),
+                                showLabel,
+                            ) {
+                                onAction("more")
                             }
                         }
                     }
@@ -241,60 +279,33 @@ fun ScanEditorLayout(
                     ) {
                         Icon(Icons.Default.FullscreenExit, "退出全屏检查")
                     }
-                if (active != null)
+                // #31 decision 5: the page badge stays; it also expands/collapses the strip.
+                if (active != null && !fullscreen)
                     Surface(
                         modifier = Modifier.align(Alignment.BottomCenter).padding(10.dp),
-                        onClick = {
-                            if (!fullscreen) {
-                                thumbnails = !thumbnails
-                                enhance = false
-                            }
-                        },
+                        onClick = { thumbnails = !thumbnails },
                         color = MaterialTheme.colorScheme.surface.copy(alpha = .94f),
                         shape = RoundedCornerShape(20.dp),
                     ) {
                         Text(
-                            "${pager.currentPage + 1} / ${pages.size}",
+                            "${stripIndex + 1} / ${pages.size}",
                             Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                             style = MaterialTheme.typography.labelLarge,
                         )
                     }
             }
-            if (!fullscreen && thumbnails)
-                LazyRow(
-                    Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface),
-                    contentPadding = PaddingValues(10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    itemsIndexed(pages, key = { _, page -> page.id }) { index, page ->
-                        Surface(
-                            onClick = { scope.launch { pager.animateScrollToPage(index) } },
-                            border =
-                                BorderStroke(
-                                    if (index == pager.currentPage) 2.dp else 1.dp,
-                                    if (index == pager.currentPage)
-                                        MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.outlineVariant,
-                                ),
-                            shape = RoundedCornerShape(8.dp),
-                        ) {
-                            Column(
-                                Modifier.width(52.dp).padding(4.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                            ) {
-                                pageBitmap(page, 180)?.let {
-                                    Image(
-                                        it.asImageBitmap(),
-                                        "第 ${index + 1} 页",
-                                        Modifier.height(58.dp),
-                                    )
-                                }
-                                Text("${index + 1}", style = MaterialTheme.typography.labelSmall)
-                            }
-                        }
-                    }
-                    item { TextButton(onClick = { onAction("pages") }) { Text("页面管理") } }
-                }
+            if (!fullscreen && thumbnails && pages.isNotEmpty())
+                ThumbnailStrip(
+                    pages = pages,
+                    current = stripIndex,
+                    onSelect = { index ->
+                        // #23 guard: the strip can outlive a page removal for one frame.
+                        val target = index.coerceIn(0, pages.lastIndex)
+                        scope.launch { pager.animateScrollToPage(target) }
+                    },
+                    onManage = { onAction("pages") },
+                    onCollapse = { thumbnails = false },
+                )
             if (!fullscreen && enhance && active != null)
                 Column(Modifier.background(MaterialTheme.colorScheme.surface)) {
                     LazyRow(
@@ -343,6 +354,12 @@ fun ScanEditorLayout(
                         }
                         TextButton(onClick = { enhance = false }) { Text("收起") }
                     }
+                    Text(
+                        "按住画布可临时查看原图；「应用全部」沿用既有语义（一次撤销回退一页）",
+                        Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                     TextButton(
                         onClick = { onAction("retouch") },
                         enabled = !busy,
@@ -386,5 +403,62 @@ fun ScanEditorLayout(
             },
             dismissButton = { TextButton(onClick = { rename = false }) { Text("取消") } },
         )
+    }
+}
+
+/** #31: always-on filmstrip under the canvas. Tap = jump (coerced), icons = grid / collapse. */
+@Composable
+private fun ThumbnailStrip(
+    pages: List<PageRow>,
+    current: Int,
+    onSelect: (Int) -> Unit,
+    onManage: () -> Unit,
+    onCollapse: () -> Unit,
+) {
+    Surface(color = MaterialTheme.colorScheme.surface) {
+        Row(
+            Modifier.fillMaxWidth().testTag("thumbnail-strip"),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            LazyRow(
+                Modifier.weight(1f),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                itemsIndexed(pages, key = { _, page -> page.id }) { index, page ->
+                    val selected = index == current
+                    Surface(
+                        onClick = { onSelect(index) },
+                        border =
+                            BorderStroke(
+                                if (selected) 2.dp else 1.dp,
+                                if (selected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.outlineVariant,
+                            ),
+                        shape = RoundedCornerShape(8.dp),
+                    ) {
+                        Column(
+                            Modifier.width(48.dp).padding(3.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            pageBitmap(page, 180)?.let {
+                                Image(
+                                    it.asImageBitmap(),
+                                    "第 ${index + 1} 页",
+                                    Modifier.height(44.dp),
+                                )
+                            }
+                            Text("${index + 1}", style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                }
+            }
+            IconButton(onClick = onManage) {
+                Icon(Icons.Default.GridView, "页面管理")
+            }
+            IconButton(onClick = onCollapse) {
+                Icon(Icons.Default.KeyboardArrowDown, "收起缩略图条")
+            }
+        }
     }
 }
