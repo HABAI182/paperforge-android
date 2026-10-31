@@ -102,7 +102,7 @@ class EditorExperienceTest {
             screenshot.recycle()
             compose.onNodeWithContentDescription("退出全屏检查").performClick()
             compose.onNodeWithText("增强", useUnmergedTree = true).performClick()
-            compose.onNodeWithText("清晰").performClick()
+            compose.onNodeWithText("清晰文字").performClick()
             compose.waitUntil(10000) {
                 !model.busy.value && model.pages.value.first().filter == "TEXT"
             }

@@ -29,11 +29,12 @@ import org.opencv.imgproc.Imgproc
 object PdfImageEnhancement {
     val presets =
         linkedMapOf(
-            "AUTO" to "自动",
+            "AUTO" to "自然",
+            "TEXT" to "清晰文字",
+            "WORKBOOK" to "练习册",
             "BW" to "柔和黑白",
+            "CLEAN" to "强力去背景",
             "GRAY" to "灰度",
-            "TEXT" to "清晰",
-            "CLEAN" to "去阴影",
         )
 
     data class Inspection(
