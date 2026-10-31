@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import cn.paperforge.app.data.PageRow
 import cn.paperforge.app.imaging.ScanProcessor
 import cn.paperforge.app.model.PointN
+import cn.paperforge.app.model.SmartNaming
 import kotlinx.coroutines.launch
 
 fun scanFilterName(filter: String) =
@@ -50,6 +51,7 @@ fun ScanEditorLayout(
     onAction: (String) -> Unit,
     onRename: (String) -> Unit,
     onFilter: (PageRow, String) -> Unit,
+    suggestName: (suspend () -> SmartNaming.Suggestion?)? = null,
     highlights: Map<String, List<List<PointN>>> = emptyMap(),
     taskStatus: String? = null,
 ) {
@@ -358,7 +360,19 @@ fun ScanEditorLayout(
         AlertDialog(
             onDismissRequest = { rename = false },
             title = { Text("文档名称") },
-            text = { OutlinedTextField(draft, { draft = it }, singleLine = true) },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        draft,
+                        { draft = it },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    suggestName?.let {
+                        SmartNamingAssist(load = it, onPick = { name -> draft = name })
+                    }
+                }
+            },
             confirmButton = {
                 TextButton(
                     onClick = {

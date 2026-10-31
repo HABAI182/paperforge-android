@@ -165,6 +165,7 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
             doc?.let { vm.rename(it, value) }
         },
         onFilter = { page, filter -> vm.save(page.copy(filter = filter)) },
+        suggestName = { doc?.let { vm.namingSuggestion(it) } },
         highlights = highlights,
         taskStatus =
             tasks

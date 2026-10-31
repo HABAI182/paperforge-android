@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.room.withTransaction
 import androidx.work.*
 import cn.paperforge.app.data.*
+import cn.paperforge.app.model.OcrLayout
+import cn.paperforge.app.model.SmartNaming
 import cn.paperforge.app.model.safeFileName
 import cn.paperforge.app.pdf.*
 import cn.paperforge.app.share.ShareEnhance
@@ -976,6 +978,28 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         perform("正在重命名") {
             repo.rename(doc, title)
             selected.value = doc.copy(title = safeFileName(title))
+        }
+
+    /**
+     * #25: pure local rules over the first page's cached OCR. Returns null when the document has no
+     * recognized text at all; an empty Suggestion is the "no evidence" answer.
+     */
+    suspend fun namingSuggestion(doc: DocumentRow): SmartNaming.Suggestion? =
+        withContext(Dispatchers.IO) {
+            val pages = repo.dao.pages(doc.id)
+            val first = pages.firstOrNull() ?: return@withContext null
+            val layoutText =
+                first.ocrLayout?.let { runCatching { OcrLayout.decode(it).text }.getOrNull() }
+            val text =
+                layoutText?.takeIf { it.isNotBlank() } ?: first.ocrText.orEmpty()
+            if (text.isBlank()) return@withContext null
+            SmartNaming.suggest(
+                SmartNaming.Input(
+                    ocrText = text,
+                    pageCount = pages.size,
+                    currentName = doc.title,
+                )
+            )
         }
 
     fun exportWithOptions(

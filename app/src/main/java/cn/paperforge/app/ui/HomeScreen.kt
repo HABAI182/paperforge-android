@@ -1375,7 +1375,18 @@ fun HomeScreen(
             onDismissRequest = { renaming = null },
             title = { Text("重命名文档") },
             text = {
-                OutlinedTextField(value = name, onValueChange = { name = it }, singleLine = true)
+                Column {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    SmartNamingAssist(
+                        load = { vm.namingSuggestion(d) },
+                        onPick = { name = it },
+                    )
+                }
             },
             confirmButton = {
                 TextButton(
