@@ -371,7 +371,12 @@ class MainActivity : ComponentActivity() {
                             }
                             Intent.ACTION_SEND ->
                                 source.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)?.let {
-                                    if (source.type == "application/pdf") vm.importPdf(it)
+                                    if (
+                                        source.type == "application/pdf" &&
+                                            UserSettings[SettingKeys.ShareProcess]
+                                    )
+                                        vm.processSharedPdf(it)
+                                    else if (source.type == "application/pdf") vm.importPdf(it)
                                     else vm.importImages(listOf(it))
                                 }
                             Intent.ACTION_SEND_MULTIPLE ->
@@ -385,6 +390,59 @@ class MainActivity : ComponentActivity() {
                                 }
                         }
                         incoming = null
+                    }
+                }
+                val shareProcessing by vm.shareProcessing.collectAsState()
+                val shareStatus by vm.shareStatus.collectAsState()
+                val shareReady by vm.shareReady.collectAsState()
+                LaunchedEffect(shareReady) {
+                    val file = shareReady ?: return@LaunchedEffect
+                    vm.shareReady.value = null
+                    runCatching {
+                            val uri =
+                                FileProvider.getUriForFile(
+                                    this@MainActivity,
+                                    "$packageName.files",
+                                    file,
+                                )
+                            val send =
+                                Intent(Intent.ACTION_SEND)
+                                    .setType("application/pdf")
+                                    .putExtra(Intent.EXTRA_STREAM, uri)
+                                    .putExtra(Intent.EXTRA_TITLE, file.name)
+                                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            val wechat = UserSettings[SettingKeys.ShareForward] == "wechat"
+                            val explicit =
+                                wechat &&
+                                    runCatching {
+                                            startActivity(
+                                                Intent(send)
+                                                    .setPackage("com.tencent.mm")
+                                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                            )
+                                            true
+                                        }
+                                        .getOrDefault(false)
+                            if (!explicit)
+                                startActivity(Intent.createChooser(send, "转发处理后的 PDF"))
+                        }
+                        .onFailure { vm.messages.trySend(it.message ?: "无法转发处理后的 PDF") }
+                }
+                if (shareProcessing) {
+                    androidx.compose.ui.window.Dialog(onDismissRequest = {}) {
+                        Surface(
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
+                            tonalElevation = 6.dp,
+                        ) {
+                            Column(
+                                Modifier.padding(horizontal = 28.dp, vertical = 24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                CircularProgressIndicator()
+                                Spacer(Modifier.height(14.dp))
+                                Text(shareStatus.ifBlank { "正在处理…" })
+                            }
+                        }
                     }
                 }
                 BackHandler(screen != "home" && !busy) {

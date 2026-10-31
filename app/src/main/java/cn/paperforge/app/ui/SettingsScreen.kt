@@ -172,6 +172,19 @@ fun SettingsScreen(vm: MainViewModel) {
                     SettingSlider("默认曲面校正强度", "dewarpStrength", 1f, 0f..1f, "%", 100f)
                 }
             }
+            if (visible("分享 去水印 压缩 微信 转发 PDF", "export")) {
+                PreferenceBlock("分享处理") {
+                    SettingToggle("收到 PDF 时自动处理并转发", "shareProcess", true)
+                    SettingToggle("自动去水印（通用对象处理）", "shareRemoveWatermark", true)
+                    SettingToggle("自动压缩 PDF", "shareCompress", false)
+                    SettingChoices(
+                        "转发目标",
+                        "shareForward",
+                        "wechat",
+                        listOf("wechat" to "微信", "system" to "系统分享面板"),
+                    )
+                }
+            }
             if (visible("导出 PDF OCR 文字 识别 DPI 竖排 多栏 排序 脚本 vertical order", "ocr")) {
                 PreferenceBlock("文字识别") {
                     OcrOptionsControl()
