@@ -132,21 +132,39 @@ object LearnedDocumentDetector {
         }
     }
 
+    /**
+     * A full-frame quad is the absence of a crop, not a located page. Collapsing it here keeps every
+     * engine honest: the caller sees "nothing detected", the capture still falls back to the full
+     * frame, and confidence gates never treat a blank desk as a verified document.
+     */
+    private fun frameOnly(result: DetectionResult): DetectionResult {
+        val quad = result.quad ?: return result
+        if (!quad.hugsFrame()) return result
+        return DetectionResult(
+            null,
+            min(result.confidence, .2f),
+            result.method + "-frame-only",
+            result.diagnostics + mapOf("frameOnly" to 1f),
+            result.elapsedMs,
+        )
+    }
+
     fun detect(
         source: Mat,
         preview: Boolean = false,
         engineOverride: String? = null,
     ): DetectionResult {
         val engine = engineOverride ?: UserSettings[SettingKeys.Detector]
-        if (engine == "STANDARD") return DocumentDetector.detect(source, preview)
+        if (engine == "STANDARD") return frameOnly(DocumentDetector.detect(source, preview))
         // HYBRID must not bypass the paper-edge model. The older fallback preferred high-score
         // background rectangles when DocQuad corner scores were low on small/curved documents.
         if ((engine == "NEURAL" || engine == "HYBRID") && !neuralFailure) {
             try {
                 val result = NeuralEdgeDetector.detect(source, preview)
                 if (result.quad != null)
-                    return if (engine == "HYBRID") result.copy(method = "auto-" + result.method)
-                    else result
+                    return frameOnly(
+                        if (engine == "HYBRID") result.copy(method = "auto-" + result.method) else result
+                    )
             } catch (e: Exception) {
                 neuralFailure = true
                 android.util.Log.w("PaperForgeDetector", "Edge model unavailable; using hybrid", e)
@@ -168,7 +186,7 @@ object LearnedDocumentDetector {
                 bitmap.recycle()
             }
         val standard = DocumentDetector.detect(source, preview)
-        if (learned.quad == null || learned.confidence < .55f) return standard
+        if (learned.quad == null || learned.confidence < .55f) return frameOnly(standard)
         fun refined() =
             if (preview) learned
             else
@@ -176,7 +194,7 @@ object LearnedDocumentDetector {
                     quad = DocumentDetector.refine(source, requireNotNull(learned.quad)),
                     method = learned.method + "+refined",
                 )
-        if (standard.quad == null) return refined()
+        if (standard.quad == null) return frameOnly(refined())
         val shift =
             learned.quad.points.zip(standard.quad.points).maxOf { (a, b) ->
                 hypot(a.x - b.x, a.y - b.y)
@@ -184,10 +202,12 @@ object LearnedDocumentDetector {
         // Consensus keeps the high-resolution edge fit. A confident semantic model
         // can resolve a background rectangle that the edge-only detector preferred.
         if (shift < .055f)
-            return standard.copy(
-                method = "ai+" + standard.method,
-                confidence = max(standard.confidence, learned.confidence),
+            return frameOnly(
+                standard.copy(
+                    method = "ai+" + standard.method,
+                    confidence = max(standard.confidence, learned.confidence),
+                )
             )
-        return if (learned.confidence >= .72f) refined() else standard
+        return frameOnly(if (learned.confidence >= .72f) refined() else standard)
     }
 }

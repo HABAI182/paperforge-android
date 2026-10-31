@@ -1,0 +1,123 @@
+{
+  "engine": "app-current",
+  "dataset": "synthetic-v1",
+  "environment": "API35 x86_64 emulator (aosp_atd, software GPU)",
+  "physical_device": false,
+  "detection_cases": 74,
+  "negative_cases": 8,
+  "mean_iou": 0.9950148018005466,
+  "median_iou": 0.9955662001932334,
+  "mean_corner_error_pct": 0.13248142274606037,
+  "failure_rate_iou_lt_070": 0.0,
+  "failure_rate_iou_lt_050": 0.0,
+  "detect_ms_p50": 283.94190000000003,
+  "detect_ms_p95": 436.61416999999994,
+  "false_positive_rate": 0.625,
+  "false_positive_files": [
+    "negative-0.jpg",
+    "negative-1.jpg",
+    "negative-2.jpg",
+    "negative-3.jpg",
+    "negative-7.jpg"
+  ],
+  "negative_predictions": [
+    {
+      "file": "negative-0.jpg",
+      "confidence": 0.99,
+      "method": "auto-neural-edge+refined",
+      "pred_area_fraction": 0.9985421875
+    },
+    {
+      "file": "negative-1.jpg",
+      "confidence": 0.99,
+      "method": "auto-neural-edge+refined",
+      "pred_area_fraction": 0.9985421875
+    },
+    {
+      "file": "negative-2.jpg",
+      "confidence": 0.99,
+      "method": "auto-neural-edge+refined",
+      "pred_area_fraction": 0.9985421875
+    },
+    {
+      "file": "negative-3.jpg",
+      "confidence": 0.99,
+      "method": "auto-neural-edge+refined",
+      "pred_area_fraction": 0.9985421875
+    },
+    {
+      "file": "negative-7.jpg",
+      "confidence": 0.99,
+      "method": "auto-neural-edge+refined",
+      "pred_area_fraction": 0.9870169579013455
+    }
+  ],
+  "scenes": {
+    "dark-desk": {
+      "n": 8,
+      "mean_iou": 0.9960403268602448,
+      "mean_corner_error_pct": 0.10658189884862998,
+      "failures": 0
+    },
+    "white-desk": {
+      "n": 8,
+      "mean_iou": 0.9951477974621876,
+      "mean_corner_error_pct": 0.11428545333977175,
+      "failures": 0
+    },
+    "wood": {
+      "n": 8,
+      "mean_iou": 0.9950519008833322,
+      "mean_corner_error_pct": 0.14469572135912717,
+      "failures": 0
+    },
+    "clutter": {
+      "n": 8,
+      "mean_iou": 0.9953492809174334,
+      "mean_corner_error_pct": 0.15071804167137864,
+      "failures": 0
+    },
+    "shadow": {
+      "n": 8,
+      "mean_iou": 0.9956145228395225,
+      "mean_corner_error_pct": 0.13605439835661892,
+      "failures": 0
+    },
+    "glare": {
+      "n": 8,
+      "mean_iou": 0.9956428291511216,
+      "mean_corner_error_pct": 0.11538439736477808,
+      "failures": 0
+    },
+    "fills-frame": {
+      "n": 8,
+      "mean_iou": 0.9905894461508529,
+      "mean_corner_error_pct": 0.20139545094529127,
+      "failures": 0
+    },
+    "similar-luminance-color": {
+      "n": 8,
+      "mean_iou": 0.9963361251566832,
+      "mean_corner_error_pct": 0.11998053400882991,
+      "failures": 0
+    },
+    "ocr-mixed": {
+      "n": 8,
+      "mean_iou": 1.0,
+      "mean_corner_error_pct": 0.0,
+      "failures": 0
+    },
+    "ocr-regression": {
+      "n": 1,
+      "mean_iou": 0.9954246695002823,
+      "mean_corner_error_pct": 0.09148033432220727,
+      "failures": 0
+    },
+    "resolution-12mp": {
+      "n": 1,
+      "mean_iou": 0.9574928283691406,
+      "mean_corner_error_pct": 0.9993777817308549,
+      "failures": 0
+    }
+  }
+}

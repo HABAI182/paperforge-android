@@ -27,6 +27,35 @@ data class Quad(val points: List<PointN>) {
 
     fun encode() = points.joinToString(";") { "${it.x},${it.y}" }
 
+    /**
+     * A quad that only traces the sensor/letterbox frame carries no crop information: a real page
+     * fit keeps a visible inset, while blank or border-heavy scenes produce a ring glued to the
+     * frame. Treated as "nothing detected" so a full-frame capture is not reported as a located
+     * document (and does not feed confidence gates or auto-capture).
+     */
+    fun hugsFrame(tolerance: Float = .012f): Boolean {
+        if (area < .9f) return false
+        return points.all { p ->
+            p.x <= tolerance || p.x >= 1f - tolerance || p.y <= tolerance || p.y >= 1f - tolerance
+        }
+    }
+
+    /** Sides whose two corners both sit on a frame border: the sheet is cut off there. */
+    fun cutOffEdges(margin: Float = .02f): Int {
+        var count = 0
+        for (i in 0..3) {
+            val a = points[i]
+            val b = points[(i + 1) % 4]
+            when {
+                a.x <= margin && b.x <= margin -> count++
+                a.x >= 1f - margin && b.x >= 1f - margin -> count++
+                a.y <= margin && b.y <= margin -> count++
+                a.y >= 1f - margin && b.y >= 1f - margin -> count++
+            }
+        }
+        return count
+    }
+
     companion object {
         val Full = Quad(listOf(PointN(0f, 0f), PointN(1f, 0f), PointN(1f, 1f), PointN(0f, 1f)))
 

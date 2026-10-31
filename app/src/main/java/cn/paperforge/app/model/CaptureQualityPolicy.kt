@@ -10,6 +10,8 @@ object CaptureQualityPolicy {
         val brightness: Double,
         val detailTiles: Int,
         val glareFraction: Double = 0.0,
+        /** Lowest local sharpness among tiles that actually contain detail; 0 when none do. */
+        val minDetailedSharpness: Double = 0.0,
     )
 
     fun acceptable(
@@ -79,5 +81,40 @@ class CaptureQualityTracker {
         signature = null
         reference = null
         last = 0
+    }
+}
+
+/** Actionable, non-blocking capture problems. User-facing text lives in the UI layer. */
+enum class CaptureHint {
+    BLUR,
+    MOTION,
+    GLARE,
+    MISSING_EDGE,
+    DARK,
+    BRIGHT,
+}
+
+object CaptureHints {
+    /**
+     * Classification shared by the viewfinder and the post-capture check on the real photo.
+     * Localised blur is only reported when a detailed tile is clearly softer than the frame, so
+     * blank page margins do not trigger it.
+     */
+    fun of(
+        sample: CaptureQualityPolicy.Sample?,
+        cutOffEdges: Int = 0,
+        sharpnessFloor: Double = 60.0,
+    ): List<CaptureHint> {
+        val s = sample ?: return emptyList()
+        val hints = mutableListOf<CaptureHint>()
+        if (!s.sharpness.isFinite() || s.sharpness < sharpnessFloor) hints += CaptureHint.BLUR
+        else if (s.minDetailedSharpness > 0.0 && s.minDetailedSharpness < sharpnessFloor * .5)
+            hints += CaptureHint.MOTION
+        if (s.glareFraction in .03..0.45) hints += CaptureHint.GLARE
+        else if (s.glareFraction > 0.45) hints += CaptureHint.BRIGHT
+        if (cutOffEdges > 0) hints += CaptureHint.MISSING_EDGE
+        if (s.brightness < .25) hints += CaptureHint.DARK
+        if (s.brightness > .96) hints += CaptureHint.BRIGHT
+        return hints.distinct()
     }
 }

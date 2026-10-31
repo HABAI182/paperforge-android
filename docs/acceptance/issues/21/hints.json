@@ -1,0 +1,14 @@
+{
+  "synthetic": true,
+  "physicalCamera": false,
+  "clean": [],
+  "blur": [
+    "BLUR"
+  ],
+  "glare": [
+    "GLARE"
+  ],
+  "cut": [
+    "MISSING_EDGE"
+  ]
+}
