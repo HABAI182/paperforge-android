@@ -9,6 +9,7 @@ import androidx.work.*
 import cn.paperforge.app.data.*
 import cn.paperforge.app.model.safeFileName
 import cn.paperforge.app.pdf.*
+import cn.paperforge.app.share.ShareEnhance
 import java.io.File
 import java.util.UUID
 import kotlinx.coroutines.*
@@ -455,6 +456,37 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             if (recognizeFirst) {
                 progress.value = "正在离线识别文字"
                 repo.dao.pages(doc.id).lastOrNull()?.let { showOcr(it, true) }
+            }
+        }
+    }
+
+    val shareProcessing = MutableStateFlow(false)
+    val shareStatus = MutableStateFlow("")
+    val shareReady = MutableStateFlow<File?>(null)
+
+    /** #28: handed over by another app, processed in place and returned for forwarding. */
+    fun processSharedPdf(uri: Uri) {
+        if (shareProcessing.value) return
+        shareProcessing.value = true
+        shareStatus.value = "正在读取分享的文件…"
+        viewModelScope.launch {
+            try {
+                ShareEnhance.prune(getApplication())
+                val result =
+                    ShareEnhance.process(
+                        getApplication(),
+                        uri,
+                        removeWatermark = UserSettings[SettingKeys.ShareRemoveWatermark],
+                        compress = UserSettings[SettingKeys.ShareCompress],
+                    ) { stage ->
+                        shareStatus.value = stage
+                    }
+                shareReady.value = result.file
+            } catch (e: Exception) {
+                messages.trySend("分享处理失败：" + (e.message ?: "未知错误"))
+            } finally {
+                shareProcessing.value = false
+                shareStatus.value = ""
             }
         }
     }
