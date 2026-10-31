@@ -14,6 +14,19 @@ object PageDecoder {
         val aspect: Float,
     )
 
+    /**
+     * Upright pixel size of [file] without decoding pixels, or null when the header cannot be read.
+     * Callers use it to convert `CropSafety`'s pixel ring back into a normalized offset.
+     */
+    fun uprightSize(file: File): Pair<Int, Int>? {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(file.path, bounds)
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+        val orientation = ExifInterface(file).getAttributeInt(ExifInterface.TAG_ORIENTATION, 1)
+        return if (orientation in 5..8) bounds.outHeight to bounds.outWidth
+        else bounds.outWidth to bounds.outHeight
+    }
+
     @Suppress("DEPRECATION")
     fun crop(file: File, quad: Quad, target: Int): Decoded {
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }

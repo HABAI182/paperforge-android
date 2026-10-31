@@ -2631,12 +2631,52 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 messages.send("未检测到书脊：${detection.reason}。本页未拆分。")
                 return@perform
             }
-            repo.splitBook(page, detection.top, detection.bottom, "both")
+            val leftEdge = detection.seamLeft
+            val rightEdge = detection.seamRight
+            if (leftEdge == null || rightEdge == null) {
+                messages.send("未检测到书脊：${detection.reason}。本页未拆分。")
+                return@perform
+            }
+            // #23 follow-up: the left page ends on the gutter's left edge and the right page starts
+            // on its right edge, so neither half keeps the shadow. Each stored inner edge is inset
+            // by the render-time CropSafety ring: the render grows the quad back out by that ring,
+            // so an edge stored exactly on the seam would pick the gutter up again (see
+            // innerEdgeSafetyInset).
+            val inset = innerEdgeSafetyInset(page)
+            repo.splitBook(
+                page,
+                leftEdge.top - inset,
+                leftEdge.bottom - inset,
+                "both",
+                rightEdge.top + inset,
+                rightEdge.bottom + inset,
+            )
             messages.send(
                 "已拆分双页：左页在前，右页在后（书脊在 ${(x * 100).toInt()}% 处，" +
                     "置信度 ${(detection.confidence * 100).toInt()}%）"
             )
         }
+
+    /**
+     * `PageDecoder.crop` grows every page quad by `CropSafety` (1% of the shorter source side)
+     * before warping. A stored inner edge sitting exactly on the gutter edge would therefore still
+     * show a strip of the gutter after rendering, so the auto split insets each stored inner edge by
+     * that same pixel ring and lets the render grow it back onto the seam. Returns the ring width as
+     * a fraction of the source width; 0 when the header cannot be read (the render then also keeps
+     * its default, so the page still renders).
+     */
+    private fun innerEdgeSafetyInset(page: PageRow): Float {
+        val size =
+            cn.paperforge.app.imaging.PageDecoder.uprightSize(File(page.original)) ?: return 0f
+        val uprightWidth = size.first
+        if (uprightWidth < 2) return 0f
+        val margin =
+            cn.paperforge.app.imaging.ScanConfig.float(
+                "cropSafetyMargin",
+                cn.paperforge.app.model.CropSafety.Margin,
+            )
+        return margin * minOf(uprightWidth, size.second) / (uprightWidth - 1)
+    }
 
     fun applyAll(page: PageRow) =
         perform("应用到所有页") {

@@ -441,11 +441,19 @@ class Repository(val context: Context, val database: PaperDatabase) {
             replacePages(page.documentId, all, next, page.id)
         }
 
+    /**
+     * Split one spread into left (position 0) and right (position 1) pages sharing the original
+     * file. [topFraction]/[bottomFraction] are the left page's inner edge; the optional
+     * [rightTopFraction]/[rightBottomFraction] are the right page's inner edge and default to the
+     * same line, which keeps the historical single-seam behavior for the manual split.
+     */
     suspend fun splitBook(
         page: PageRow,
         topFraction: Float = .5f,
         bottomFraction: Float = .5f,
         keep: String = "both",
+        rightTopFraction: Float = topFraction,
+        rightBottomFraction: Float = bottomFraction,
     ) =
         database.withTransaction {
             val (leftQuad, rightQuad) =
@@ -453,6 +461,8 @@ class Repository(val context: Context, val database: PaperDatabase) {
                     cn.paperforge.app.model.Quad.decode(page.corners),
                     topFraction,
                     bottomFraction,
+                    rightTopFraction,
+                    rightBottomFraction,
                 )
             require(leftQuad.valid() && rightQuad.valid()) { "书脊位置不合法" }
             require(keep in setOf("both", "left", "right"))

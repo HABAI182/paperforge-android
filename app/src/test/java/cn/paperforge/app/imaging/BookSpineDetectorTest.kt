@@ -181,4 +181,25 @@ class BookSpineDetectorTest {
         val rightCenter = right.points.map { it.x }.average()
         assertTrue("左页整体应在右页左侧: $leftCenter / $rightCenter", leftCenter < rightCenter)
     }
+
+    /** #23 follow-up: the detection carries both gutter edges so each half can be trimmed. */
+    @Test
+    fun detectedSeamExposesBothBandEdgesForInnerTrimming() {
+        val image = SyntheticImage(seam = .46f, seamLuma = 72)
+        val result = detect(image).also { report("edges", it) }
+        assertTrue("未检出书脊: ${result.reason}", result.found)
+        val left = requireNotNull(result.seamLeft) { "缺少缝左缘" }
+        val right = requireNotNull(result.seamRight) { "缺少缝右缘" }
+        val center = requireNotNull(result.x) { "缺少中心线" }
+        assertTrue("左缘 ${left.top} 应在中心 $center 左侧", left.top < center)
+        assertTrue("右缘 ${right.top} 应在中心 $center 右侧", right.top > center)
+        // 14 px dark seam on a 1400 px image; the run edge may sit a few px outside because the
+        // column means are smoothed (radius 2 px) and the edge threshold is 6 luma levels.
+        val bandPx = (right.top - left.top) * (image.width - 1)
+        println("edges left=${left.top} right=${right.top} bandPx=$bandPx")
+        assertTrue("检出中缝宽度 ${bandPx}px", bandPx in image.seamWidth - 2f..image.seamWidth + 8f)
+        // Straight seam here: both sample bands must report the same edges up to quantization.
+        assertEquals(left.top, left.bottom, .002f)
+        assertEquals(right.top, right.bottom, .002f)
+    }
 }

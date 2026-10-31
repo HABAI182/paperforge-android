@@ -7,6 +7,10 @@ import kotlin.math.*
  * One spine search result. [x], [top] and [bottom] are normalized to 0..1 of the rendered page
  * width; [top] and [bottom] are the fractions to hand to `CropGeometry.split` so each half keeps
  * the full page height. [x] is null when nothing was found and [reason] says why.
+ *
+ * [seamLeft]/[seamRight] are the two edges of the detected gutter band at the upper and lower
+ * sample bands. The auto split trims the left page to [seamLeft] and the right page to [seamRight],
+ * so neither page keeps half of the shadow. Both are null when nothing was found.
  */
 data class SpineDetection(
     val x: Float?,
@@ -16,10 +20,15 @@ data class SpineDetection(
     val method: String = BookSpineDetector.MethodNone,
     val reason: String = "",
     val evidence: Map<String, Float> = emptyMap(),
+    val seamLeft: SpineEdge? = null,
+    val seamRight: SpineEdge? = null,
 ) {
     val found: Boolean
         get() = x != null
 }
+
+/** One gutter edge as page-width fractions at the upper ([top]) and lower ([bottom]) band. */
+data class SpineEdge(val top: Float, val bottom: Float)
 
 /**
  * #23: locate the vertical fold / gutter of a scanned two-page spread.
@@ -156,6 +165,8 @@ object BookSpineDetector {
             confidence = confidence.coerceIn(0f, 1f),
             method = topPeak.method,
             evidence = evidence,
+            seamLeft = SpineEdge(topPeak.left / maxX, bottomPeak.left / maxX),
+            seamRight = SpineEdge(topPeak.right / maxX, bottomPeak.right / maxX),
         )
     }
 
@@ -174,6 +185,8 @@ object BookSpineDetector {
         val coverage: Float,
         val bandFraction: Float,
         val score: Float,
+        val left: Int,
+        val right: Int,
     )
 
     private fun band(luma: IntArray, width: Int, yFrom: Int, yTo: Int, rowStep: Int): Band {
@@ -285,6 +298,8 @@ object BookSpineDetector {
                     coverage,
                     widthFraction,
                     score,
+                    left,
+                    right,
                 )
             )
         }

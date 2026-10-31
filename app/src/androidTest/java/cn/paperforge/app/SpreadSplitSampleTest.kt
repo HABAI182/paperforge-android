@@ -86,10 +86,19 @@ class SpreadSplitSampleTest {
             assertEquals("原图必须一字节不变", sourceSha, sha256(File(left.original)))
             val leftQuad = Quad.decode(left.corners)
             val rightQuad = Quad.decode(right.corners)
-            assertEquals(detection.top, leftQuad.points[1].x, .0001f)
-            assertEquals(detection.bottom, leftQuad.points[2].x, .0001f)
-            assertEquals(leftQuad.points[1], rightQuad.points[0])
-            assertEquals(leftQuad.points[2], rightQuad.points[3])
+            val leftEdge = requireNotNull(detection.seamLeft) { "缺少缝左缘" }
+            val rightEdge = requireNotNull(detection.seamRight) { "缺少缝右缘" }
+            // Inner-edge trim: each half ends on its own side of the gutter instead of sharing one
+            // center line. The stored edge is inset into the page by the render's CropSafety ring
+            // (1% of the shorter source side) because the render grows the quad back out by it.
+            assertEquals("左页内侧应在缝左缘附近", leftEdge.top, leftQuad.points[1].x, .01f)
+            assertEquals("左页内侧应在缝左缘附近", leftEdge.bottom, leftQuad.points[2].x, .01f)
+            assertEquals("右页内侧应在缝右缘附近", rightEdge.top, rightQuad.points[0].x, .01f)
+            assertEquals("右页内侧应在缝右缘附近", rightEdge.bottom, rightQuad.points[3].x, .01f)
+            assertTrue(
+                "两页内侧不应共享缝中心线: ${leftQuad.points[1].x} / ${rightQuad.points[0].x}",
+                rightQuad.points[0].x > leftQuad.points[1].x,
+            )
             val leftCenter = leftQuad.points.map { it.x }.average()
             val rightCenter = rightQuad.points.map { it.x }.average()
             assertTrue("左页应在右页前: $leftCenter / $rightCenter", leftCenter < rightCenter)
@@ -134,6 +143,48 @@ class SpreadSplitSampleTest {
                         .put("rightHeight", rightImage.height)
                         .put("leftShare", share.toDouble())
 
+                // Inner-edge check: the left page's inner edge is its right border, and the right
+                // page's inner edge is its left border. Column projection over the middle rows of
+                // the rendered page; a column counts as dark when its mean luma is at least
+                // [InnerDarkDelta] below the page's paper level. Only the dark run closest to the
+                // inner edge inside the inner 10% of the page is measured, so text columns away
+                // from the gutter do not count and a leftover paper column from the render's
+                // safety ring does not hide the band.
+                val leftMeans = columnMeans(leftImage)
+                val rightMeans = columnMeans(rightImage)
+                val (leftGap, leftDark) = innerDarkBand(leftMeans, fromRight = true)
+                val (rightGap, rightDark) = innerDarkBand(rightMeans, fromRight = false)
+                val leftPaper = paperLevel(leftMeans)
+                val rightPaper = paperLevel(rightMeans)
+                val innerEdge =
+                    JSONObject()
+                        .put(
+                            "leftPage",
+                            JSONObject()
+                                .put("innerEdge", "right")
+                                .put("darkColumns", leftDark)
+                                .put("gapFromEdge", leftGap)
+                                .put("paperLuma", leftPaper.toDouble())
+                                .put("darkThresholdLuma", (leftPaper - InnerDarkDelta).toDouble())
+                                .put(
+                                    "innerColumnMeans",
+                                    JSONArray(leftMeans.takeLast(8).map { it.toDouble() }),
+                                ),
+                        )
+                        .put(
+                            "rightPage",
+                            JSONObject()
+                                .put("innerEdge", "left")
+                                .put("darkColumns", rightDark)
+                                .put("gapFromEdge", rightGap)
+                                .put("paperLuma", rightPaper.toDouble())
+                                .put("darkThresholdLuma", (rightPaper - InnerDarkDelta).toDouble())
+                                .put(
+                                    "innerColumnMeans",
+                                    JSONArray(rightMeans.take(8).map { it.toDouble() }),
+                                ),
+                        )
+
                 runBlocking { repo.undo(doc.id) }
                 val restored = runBlocking { repo.dao.pages(doc.id) }
                 assertEquals("撤销后应回到 1 页", 1, restored.size)
@@ -171,6 +222,18 @@ class SpreadSplitSampleTest {
                                 .put("bottom", detection.bottom.toDouble())
                                 .put("confidence", detection.confidence.toDouble())
                                 .put(
+                                    "seamLeft",
+                                    JSONObject()
+                                        .put("top", leftEdge.top.toDouble())
+                                        .put("bottom", leftEdge.bottom.toDouble()),
+                                )
+                                .put(
+                                    "seamRight",
+                                    JSONObject()
+                                        .put("top", rightEdge.top.toDouble())
+                                        .put("bottom", rightEdge.bottom.toDouble()),
+                                )
+                                .put(
                                     "evidence",
                                     JSONObject(detection.evidence.mapValues { it.value.toDouble() }),
                                 ),
@@ -179,6 +242,7 @@ class SpreadSplitSampleTest {
                         .put("pagesAfter", after.size)
                         .put("pages", pagesJson)
                         .put("rendered", rendered)
+                        .put("innerEdgeDarkBand", innerEdge)
                         .put(
                             "assertions",
                             JSONObject()
@@ -190,9 +254,19 @@ class SpreadSplitSampleTest {
                                     sha256(File(left.original)) == sourceSha,
                                 )
                                 .put("leftNarrowerThanRight", leftImage.width < rightImage.width)
+                                .put(
+                                    "innerEdgeTrimmed",
+                                    rightQuad.points[0].x > leftQuad.points[1].x,
+                                )
                                 .put("undoRestoredOnePage", restored.size == 1),
                         )
                 File(evidence, "result.json").writeText(result.toString(2))
+                // After the inner-edge trim each page must end on its own side of the gutter; the
+                // rendered page may keep at most a 2 px dark fringe (warp/JPEG edge softening).
+                val leftGapText = if (leftGap < 0) "内 10% 无暗带" else "距内边 ${leftGap}px"
+                val rightGapText = if (rightGap < 0) "内 10% 无暗带" else "距内边 ${rightGap}px"
+                assertTrue("左页内边暗带 ${leftDark}px（$leftGapText，目标 ≤2）", leftDark <= 2)
+                assertTrue("右页内边暗带 ${rightDark}px（$rightGapText，目标 ≤2）", rightDark <= 2)
             } finally {
                 leftImage.recycle()
                 rightImage.recycle()
@@ -257,5 +331,68 @@ class SpreadSplitSampleTest {
             }
         }
         return digest.digest().joinToString("") { "%02x".format(it.toInt() and 255) }
+    }
+
+    /** Mean luma of every column over rows 15%–85%, so a full-height gutter dominates text rows. */
+    private fun columnMeans(page: Bitmap): FloatArray {
+        val width = page.width
+        val height = page.height
+        val from = (height * .15f).toInt()
+        val to = (height * .85f).toInt()
+        val means = FloatArray(width)
+        val row = IntArray(width)
+        for (y in from until to) {
+            page.getPixels(row, 0, width, 0, y, width, 1)
+            for (x in 0 until width) {
+                val pixel = row[x]
+                val red = pixel shr 16 and 0xff
+                val green = pixel shr 8 and 0xff
+                val blue = pixel and 0xff
+                means[x] += (red * 299 + green * 587 + blue * 114) / 1000f
+            }
+        }
+        val rows = (to - from).coerceAtLeast(1).toFloat()
+        for (x in 0 until width) means[x] /= rows
+        return means
+    }
+
+    /** Paper level = 90th percentile of the column means; ink and gutter columns sit far below. */
+    private fun paperLevel(means: FloatArray): Float {
+        val sorted = means.sorted()
+        return sorted[(sorted.size * .9f).toInt().coerceIn(0, sorted.lastIndex)]
+    }
+
+    /**
+     * Nearest dark run to the inner edge, scanning at most the inner 10% of the page. Returns
+     * (paper columns before the run, dark columns in the run); (-1, 0) when the inner 10% is paper
+     * only, i.e. there is no inner dark band at all.
+     */
+    private fun innerDarkBand(means: FloatArray, fromRight: Boolean): Pair<Int, Int> {
+        val threshold = paperLevel(means) - InnerDarkDelta
+        val window = (means.size * .10f).toInt().coerceAtLeast(8)
+        val start = if (fromRight) means.lastIndex else 0
+        val stop = if (fromRight) means.lastIndex - window else window
+        val step = if (fromRight) -1 else 1
+        var gap = 0
+        var dark = 0
+        var inBand = false
+        var index = start
+        while (index in means.indices && (if (fromRight) index >= stop else index <= stop)) {
+            if (means[index] < threshold) {
+                inBand = true
+                dark++
+            } else if (inBand) {
+                break
+            } else {
+                gap++
+            }
+            index += step
+        }
+        return (if (dark == 0) -1 else gap) to dark
+    }
+
+    private companion object {
+        /** A column is "inner dark band" when it is this many luma levels below the paper level. */
+        const val InnerDarkDelta = 40f
     }
 }

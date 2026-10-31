@@ -19,6 +19,14 @@
     "top": 0.4599427878856659,
     "bottom": 0.4599427878856659,
     "confidence": 0.9415367245674133,
+    "seamLeft": {
+      "top": 0.4520743787288666,
+      "bottom": 0.4520743787288666
+    },
+    "seamRight": {
+      "top": 0.4678111672401428,
+      "bottom": 0.4678111672401428
+    },
     "evidence": {
       "topFraction": 0.4599427878856659,
       "bottomFraction": 0.4599427878856659,
@@ -38,31 +46,67 @@
   "pages": [
     {
       "position": 0,
-      "id": "728fd38e-b5de-4e10-9654-30ebe3b784ba",
+      "id": "e517d14e-667a-4b8b-b5a7-fddc410a8cf9",
       "original": "spread-source.jpg",
       "sha256": "17f4a7837739e5559097afcf3e59864d5a994c9d9057755bdc2f843c990e78d0",
-      "area": 0.4599427878856659,
-      "centerX": 0.22997139394283295,
-      "topFraction": 0.4599427878856659,
-      "bottomFraction": 0.4599427878856659
+      "area": 0.4449264109134674,
+      "centerX": 0.2224632054567337,
+      "topFraction": 0.4449264109134674,
+      "bottomFraction": 0.4449264109134674
     },
     {
       "position": 1,
-      "id": "8b140536-bb5b-4bd4-b44d-a413ffe37c3c",
+      "id": "358ffbd4-a180-4d44-b33e-f9e3b409b6d1",
       "original": "spread-source.jpg",
       "sha256": "17f4a7837739e5559097afcf3e59864d5a994c9d9057755bdc2f843c990e78d0",
-      "area": 0.5400571823120117,
-      "centerX": 0.729971393942833,
+      "area": 0.525040864944458,
+      "centerX": 0.737479567527771,
       "topFraction": 1,
       "bottomFraction": 1
     }
   ],
   "rendered": {
-    "leftWidth": 579,
+    "leftWidth": 560,
     "leftHeight": 900,
-    "rightWidth": 681,
+    "rightWidth": 662,
     "rightHeight": 900,
-    "leftShare": 0.4595237970352173
+    "leftShare": 0.45826512575149536
+  },
+  "innerEdgeDarkBand": {
+    "leftPage": {
+      "innerEdge": "right",
+      "darkColumns": 0,
+      "gapFromEdge": -1,
+      "paperLuma": 243.77194213867188,
+      "darkThresholdLuma": 203.77194213867188,
+      "innerColumnMeans": [
+        224.1317901611328,
+        224.1317901611328,
+        224.1317901611328,
+        224.1317901611328,
+        224.1317901611328,
+        224.1317901611328,
+        223.13185119628906,
+        222.7725372314453
+      ]
+    },
+    "rightPage": {
+      "innerEdge": "left",
+      "darkColumns": 0,
+      "gapFromEdge": -1,
+      "paperLuma": 220.1319122314453,
+      "darkThresholdLuma": 180.1319122314453,
+      "innerColumnMeans": [
+        223.13185119628906,
+        223.13185119628906,
+        223.13185119628906,
+        223.13185119628906,
+        222.13186645507812,
+        222.13186645507812,
+        222.13186645507812,
+        222.13186645507812
+      ]
+    }
   },
   "assertions": {
     "pageCountPlusOne": true,
@@ -70,6 +114,7 @@
     "originalFileKept": true,
     "originalShaUnchanged": true,
     "leftNarrowerThanRight": true,
+    "innerEdgeTrimmed": true,
     "undoRestoredOnePage": true
   }
 }
