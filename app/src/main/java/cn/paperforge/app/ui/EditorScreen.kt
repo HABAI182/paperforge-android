@@ -221,6 +221,7 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
             }
         var previewStrength by remember { mutableFloatStateOf(strength) }
         var previewError by remember { mutableStateOf<String?>(null) }
+        var dewarpNote by remember { mutableStateOf("") }
         val preview by
             produceState<Bitmap?>(null, page, previewStrength) {
                 value = null
@@ -238,10 +239,13 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                                         1000,
                                     )
                                 try {
-                                    cn.paperforge.app.imaging.PageDewarp.apply(
-                                        image,
-                                        previewStrength,
-                                    )
+                                    val result =
+                                        cn.paperforge.app.imaging.PageDewarp.process(
+                                            image,
+                                            previewStrength,
+                                        )
+                                    dewarpNote = result.note
+                                    result.bitmap
                                 } finally {
                                     image.recycle()
                                 }
@@ -278,7 +282,10 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                         valueRange = 0f..1f,
                         onValueChangeFinished = { previewStrength = strength },
                     )
-                    Text("适合弯曲书页。预览满意后应用，可用撤销恢复。", style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        dewarpNote.ifBlank { "正在估计文字行曲率" } + "；预览满意后应用，可撤销。",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
                 }
             },
             confirmButton = {

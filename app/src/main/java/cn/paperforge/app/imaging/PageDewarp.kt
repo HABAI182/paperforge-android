@@ -8,11 +8,39 @@ import org.opencv.imgproc.Imgproc
 
 /** Recovered displacement model and dense-grid core. Applied explicitly, with undo support. */
 object PageDewarp {
-    data class Result(val bitmap: Bitmap, val grid: DewarpGrid)
+    data class Result(
+        val bitmap: Bitmap,
+        val grid: DewarpGrid,
+        val note: String = "现有曲面校正",
+        val lines: Int = 0,
+        val algorithm: String = "mnn-displacement-240-v2",
+    )
 
     fun apply(bitmap: Bitmap, strength: Float): Bitmap = process(bitmap, strength).bitmap
 
-    fun process(bitmap: Bitmap, strength: Float): Result {
+    fun fingerprint(): String =
+        if (
+            cn.paperforge.app.UserSettings[cn.paperforge.app.SettingKeys.DewarpEngine] ==
+                "INDEPENDENT"
+        )
+            IndependentPageDewarp.VERSION
+        else ScanModel.fingerprint(true)
+
+    fun process(bitmap: Bitmap, strength: Float, engineOverride: String? = null): Result {
+        if (
+            (engineOverride
+                ?: cn.paperforge.app.UserSettings[cn.paperforge.app.SettingKeys.DewarpEngine]) ==
+                "INDEPENDENT"
+        ) {
+            val result = IndependentPageDewarp.process(bitmap, strength)
+            return Result(
+                result.bitmap,
+                result.grid,
+                result.note,
+                result.lines,
+                IndependentPageDewarp.VERSION,
+            )
+        }
         if (strength <= 0f)
             return Result(
                 checkNotNull(bitmap.copy(bitmap.config ?: Bitmap.Config.ARGB_8888, false)),

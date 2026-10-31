@@ -4,7 +4,7 @@ PaperForge是个人非营利的Android文档工具，无账户、广告、水印
 
 ## 下载安装
 
-打开[1.2.0发布页](https://github.com/HABAI182/paperforge-android/releases/tag/v1.2.0)，下载`PaperForge-1.2.0-full-arm64-v8a.apk`并安装。`release-manifest.json`和`SHA256SUMS.txt`是核对文件，无需安装。GitHub自动提供的源码压缩包也不是安装包。
+1.2.0 目前是待机主审核的候选包，尚未发布。审核安装使用交付的 `PaperForge-1.2.0-full-arm64-v8a.apk`，正式用户从[最新公开发布页](https://github.com/HABAI182/paperforge-android/releases/latest)选择实际存在的版本。`release-manifest.json`和`SHA256SUMS.txt`是核对文件，无需安装。GitHub自动提供的源码压缩包也不是安装包。
 
 一个完整APK已包含扫描、OCR、阅读、Office排版、表格重建、特殊格式和联网工具。系统桌面只有一个PaperForge图标。可覆盖原主应用并保留文档，不需要先卸载。旧Office、格式和联网扩展已不是运行依赖；旧联网工具中的历史结果需自行另存后再决定是否卸载。
 

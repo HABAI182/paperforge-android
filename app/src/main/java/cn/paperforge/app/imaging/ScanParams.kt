@@ -13,6 +13,21 @@ object ScanConfig {
         require(values.getInt("schema") == 1)
     }
 
+    /** Benchmark-only overlay; callers restore the returned snapshot after a sweep. */
+    @Synchronized
+    fun replaceForBenchmark(overrides: JSONObject): JSONObject {
+        val previous = JSONObject(values.toString())
+        val next = JSONObject(values.toString())
+        overrides.keys().forEach { next.put(it, overrides.get(it)) }
+        values = next
+        return previous
+    }
+
+    @Synchronized
+    fun restoreAfterBenchmark(snapshot: JSONObject) {
+        values = JSONObject(snapshot.toString())
+    }
+
     fun int(name: String, fallback: Int) = values.optInt(name, fallback)
 
     fun float(name: String, fallback: Float) = values.optDouble(name, fallback.toDouble()).toFloat()

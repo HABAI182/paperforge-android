@@ -66,6 +66,7 @@ object PageResources {
         output: File,
         strength: Float,
         modelSha256: String,
+        algorithm: String = "mnn-displacement-240-v2",
     ): String {
         val json = metadata(page).put("format", 1)
         val resources =
@@ -83,8 +84,11 @@ object PageResources {
         steps.put(
             JSONObject()
                 .put("kind", "dewarp")
-                .put("algorithm", "mnn-displacement-240-v2")
-                .put("modelSha256", modelSha256)
+                .put("algorithm", algorithm)
+                .apply {
+                    if (modelSha256.matches(Regex("[0-9a-f]{64}"))) put("modelSha256", modelSha256)
+                    else put("implementationVersion", modelSha256)
+                }
                 .put("strength", strength)
                 .put("created", System.currentTimeMillis())
                 .put("original", source)

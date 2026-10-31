@@ -2,7 +2,7 @@
 
 手机本地的扫描、PDF阅读与文件转换工作台。个人非营利项目，无账户、广告、水印或订阅。
 
-**1.2.0 · 完整功能版**，Android 8.0及以上，普通64位ARM手机只需安装一个APK。Office、特殊格式和联网工具均已内置，日常文档处理无需电脑。
+**1.2.0 · 待机主审核的完整功能候选版（未发布）**，Android 8.0及以上，普通64位ARM手机只需安装一个APK。Office、特殊格式和联网工具均已内置，日常文档处理无需电脑。
 
 [下载最新版](https://github.com/HABAI182/paperforge-android/releases/latest) · [安装与手机更新](docs/INSTALL.md) · [版本记录](CHANGELOG.md) · [能力与验证范围](docs/quality/V1.2.0-STATUS.md)
 
@@ -14,7 +14,7 @@
 
 ## 下载与更新
 
-在[发布页](https://github.com/HABAI182/paperforge-android/releases/latest)下载`PaperForge-1.2.0-full-arm64-v8a.apk`。只安装这个APK；`release-manifest.json`和`SHA256SUMS.txt`是核对文件，源码压缩包也不是安装包。沿用原应用身份和证书，可覆盖更新并保留文档。
+1.2.0 仅交付机主审核包，审核通过后才创建正式标签和 Release。当前公开版本请从[发布页](https://github.com/HABAI182/paperforge-android/releases/latest)下载；请以发布页实际附件版本为准。只安装这个APK；`release-manifest.json`和`SHA256SUMS.txt`是核对文件，源码压缩包也不是安装包。沿用原应用身份和证书，可覆盖更新并保留文档。
 
 手机内进入**设置 → 检查更新**，会明确显示最新版本、发现更新或连接失败。发现新版后由你选择下载，核对完成再交给Android系统安装器确认。不定时检查，不静默安装。公开仓库无需GitHub令牌；自定义私有仓库可在更新页配置只读凭据。
 

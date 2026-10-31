@@ -133,9 +133,9 @@ object LearnedDocumentDetector {
     }
 
     /**
-     * A full-frame quad is the absence of a crop, not a located page. Collapsing it here keeps every
-     * engine honest: the caller sees "nothing detected", the capture still falls back to the full
-     * frame, and confidence gates never treat a blank desk as a verified document.
+     * A full-frame quad is the absence of a crop, not a located page. Collapsing it here keeps
+     * every engine honest: the caller sees "nothing detected", the capture still falls back to the
+     * full frame, and confidence gates never treat a blank desk as a verified document.
      */
     private fun frameOnly(result: DetectionResult): DetectionResult {
         val quad = result.quad ?: return result
@@ -155,6 +155,7 @@ object LearnedDocumentDetector {
         engineOverride: String? = null,
     ): DetectionResult {
         val engine = engineOverride ?: UserSettings[SettingKeys.Detector]
+        if (engine == "INDEPENDENT") return IndependentDocumentDetector.detect(source, preview)
         if (engine == "STANDARD") return frameOnly(DocumentDetector.detect(source, preview))
         // HYBRID must not bypass the paper-edge model. The older fallback preferred high-score
         // background rectangles when DocQuad corner scores were low on small/curved documents.
@@ -163,7 +164,8 @@ object LearnedDocumentDetector {
                 val result = NeuralEdgeDetector.detect(source, preview)
                 if (result.quad != null)
                     return frameOnly(
-                        if (engine == "HYBRID") result.copy(method = "auto-" + result.method) else result
+                        if (engine == "HYBRID") result.copy(method = "auto-" + result.method)
+                        else result
                     )
             } catch (e: Exception) {
                 neuralFailure = true

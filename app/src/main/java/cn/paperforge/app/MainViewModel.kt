@@ -884,7 +884,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                                 gridFile,
                                 file,
                                 result.grid.strength,
-                                cn.paperforge.app.imaging.ScanModel.fingerprint(true),
+                                cn.paperforge.app.imaging.PageDewarp.fingerprint(),
+                                result.algorithm,
                             ),
                     )
                 )

@@ -18,7 +18,7 @@
     "cn.paperforge.formats",
     "cn.paperforge.network"
   ],
-  "releaseHold": false,
+  "releaseHold": true,
   "fullDistribution": {
     "module": "full-app",
     "applicationId": "cn.paperforge.app",
@@ -31,5 +31,5 @@
     "declaresInternet": true,
     "oneLauncher": true
   },
-  "ownerReleaseAuthorization": "2026-10-30: owner authorized publishing 1.1.0 and documentation updates without repeating functional tests"
+  "ownerReleaseAuthorization": "2026-11-01: prepare PaperForge 1.2.0 review candidate; tag and public Release require owner review approval"
 }

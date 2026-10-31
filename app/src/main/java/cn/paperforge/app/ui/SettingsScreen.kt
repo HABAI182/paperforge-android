@@ -137,7 +137,17 @@ fun SettingsScreen(vm: MainViewModel) {
                         "纸张定位",
                         "detector",
                         "NEURAL",
-                        listOf("HYBRID" to "自动识边", "STANDARD" to "传统识边"),
+                        listOf(
+                            "HYBRID" to "自动识边",
+                            "STANDARD" to "传统识边",
+                            "INDEPENDENT" to "独立识边（试用）",
+                        ),
+                    )
+                    SettingChoices(
+                        "曲面校正引擎",
+                        "dewarpEngine",
+                        "CURRENT",
+                        listOf("CURRENT" to "现有引擎", "INDEPENDENT" to "独立文字行展开（试用）"),
                     )
                     SettingSlider("纸框平滑程度", "outlineWeight", 3f, 1f..8f, "")
                     SettingSlider("切换纸框确认帧数", "outlineSwitchFrames", 2f, 1f..6f, "帧")

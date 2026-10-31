@@ -210,8 +210,16 @@ object EnhancePipeline {
             threshold.get(0, 0, thresholds)
             val output = ByteArray(grayBytes.size)
             for (i in output.indices) {
-                val ink = (thresholds[i] - (grayBytes[i].toInt() and 255)).coerceAtLeast(0f)
-                output[i] = (255f - ink * 10f).roundToInt().coerceIn(0, 255).toByte()
+                val ink =
+                    (thresholds[i] -
+                            (grayBytes[i].toInt() and 255) -
+                            ScanConfig.float("softMonoNoiseFloor", 2f))
+                        .coerceAtLeast(0f)
+                output[i] =
+                    (255f - ink * ScanConfig.float("softMonoInkScale", 8f))
+                        .roundToInt()
+                        .coerceIn(0, 255)
+                        .toByte()
             }
             destination.create(gray.rows(), gray.cols(), CvType.CV_8UC1)
             destination.put(0, 0, output)
@@ -237,8 +245,9 @@ object EnhancePipeline {
             gray.get(0, 0, values)
             paper.get(0, 0, paperValues)
             // A lower slider value must preserve more ink, not raise the erasure threshold.
-            val floor = Workbook.ghostFloor * strength
-            val gain = Workbook.inkGain * (.85f + .15f * strength)
+            val floor = ScanConfig.float("workbookGhostKnee", Workbook.ghostFloor) * strength
+            val gain =
+                ScanConfig.float("workbookInkGain", Workbook.inkGain) * (.85f + .15f * strength)
             for (i in values.indices) {
                 // Compare corrected ink against the corrected paper level, not the raw tile value:
                 // the illumination correction has already lifted both, so mixing the scales would
@@ -295,14 +304,18 @@ object EnhancePipeline {
                 clahe.apply(original, channels[0])
                 // Blend avoids flattening pencil and avoids amplifying noise like full CLAHE.
                 val blend =
-                    strength * (if (mode == "TEXT") .32 else if (mode == "COLOR") .42 else .28)
+                    strength *
+                        (if (mode == "TEXT") ScanConfig.float("textContrastBlend", .32f).toDouble()
+                        else if (mode == "COLOR") .42 else .28)
                 Core.addWeighted(channels[0], blend, original, 1.0 - blend, 0.0, channels[0])
                 Imgproc.GaussianBlur(channels[0], blurred, Size(0.0, 0.0), .85)
                 val data = ByteArray(channels[0].rows() * channels[0].cols())
                 val low = ByteArray(data.size)
                 channels[0].get(0, 0, data)
                 blurred.get(0, 0, low)
-                val amount = (if (mode == "TEXT") .28f else .22f) * strength
+                val amount =
+                    (if (mode == "TEXT") ScanConfig.float("textSharpenAmount", .28f) else .22f) *
+                        strength
                 for (i in data.indices) {
                     val value = data[i].toInt() and 255
                     val detail = value - (low[i].toInt() and 255)

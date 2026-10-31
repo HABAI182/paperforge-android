@@ -1,6 +1,6 @@
 # 构建、签名与手机交付
 
-当前发行 **1.0.1完整功能版 / code10004**，所有者授权后`releaseHold=false`。普通手机从[Release](https://github.com/HABAI182/paperforge-android/releases/tag/v1.0.1)下载一个ARM64完整APK即可。脚本和CI负责构建与核对，不自动创建tag/Release。历史模块化构建仍可按需使用。
+当前公开版为 1.1.0；1.2.0 为待机主审核的完整 ARM64 候选包，`releaseHold=true`，不得创建正式 tag/Release。候选用 development 通道构建，机主审核后再变更发布状态。普通手机安装单个完整 APK 即可。
 
 推荐完整包构建命令：`python scripts/build_distribution.py --abi arm64-v8a --channel stable --full`。产物在`build/distributions/full/arm64-v8a/`，只有完整APK、清单和SHA256SUMS。完整包声明网络权限，更新、传输与远程服务由用户发起；原模块化离线主包继续移除网络权限。完整包新增修订通过基础版本码和`fullDistribution.versionCodeOffset`连续增加，以便覆盖安装。
 

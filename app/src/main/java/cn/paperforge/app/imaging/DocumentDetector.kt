@@ -599,7 +599,8 @@ object DocumentDetector {
             Quad(corners.map { PointN((it.x / (w - 1)).toFloat(), (it.y / (h - 1)).toFloat()) })
         if (
             !result.valid() ||
-                result.area / quad.area !in .96f..1.06f ||
+                result.area / quad.area !in
+                    ScanConfig.float("refineMinimumAreaRatio", .96f)..1.06f ||
                 result.points.zip(quad.points).any { (a, b) -> hypot(a.x - b.x, a.y - b.y) > .025f }
         )
             return quad

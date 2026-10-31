@@ -33,7 +33,9 @@ sealed class SettingKey<T : Any>(val name: String, val default: T) {
 }
 
 object SettingKeys {
-    val Detector = SettingKey.Text("detector", "NEURAL", setOf("NEURAL", "HYBRID", "STANDARD"))
+    val DewarpEngine = SettingKey.Text("dewarpEngine", "CURRENT", setOf("CURRENT", "INDEPENDENT"))
+    val Detector =
+        SettingKey.Text("detector", "NEURAL", setOf("NEURAL", "HYBRID", "STANDARD", "INDEPENDENT"))
     val OutlineWeight = SettingKey.Number("outlineWeight", 3f, 1f..8f)
     val OutlineSwitchFrames = SettingKey.Number("outlineSwitchFrames", 2f, 1f..6f)
     val DewarpStrength = SettingKey.Number("dewarpStrength", 1f, 0f..1f)
@@ -126,6 +128,7 @@ object SettingKeys {
     val all: List<SettingKey<*>> =
         listOf(
             Detector,
+            DewarpEngine,
             OutlineWeight,
             OutlineSwitchFrames,
             DewarpStrength,
