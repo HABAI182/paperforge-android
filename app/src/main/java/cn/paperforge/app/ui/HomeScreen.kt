@@ -100,6 +100,7 @@ fun HomeScreen(
     var showTrash by remember { mutableStateOf(false) }
     var favoritesOnly by rememberSaveable { mutableStateOf(savedView.favorites) }
     var folder by rememberSaveable { mutableStateOf(savedView.folder) }
+    var groupKey by rememberSaveable { mutableStateOf<String?>(null) }
     val annotated by
         produceState(emptySet<String>(), docs) {
             value =
@@ -143,6 +144,15 @@ fun HomeScreen(
     var groupSelection by remember { mutableStateOf<List<String>?>(null) }
     val inTrash = showTrash && tab == 1
     val folderPath = libraryFolder(folder)
+    val groups = remember(docs) { documentGroups(docs) }
+    val activeGroup = groupKey
+    fun inGroup(doc: DocumentRow): Boolean =
+        activeGroup == null ||
+            if (activeGroup.isEmpty()) libraryFolder(doc.folder).isEmpty()
+            else
+                libraryFolder(doc.folder).let { path ->
+                    path == activeGroup || path.startsWith("$activeGroup/")
+                }
     val filtered =
         (if (inTrash) trash else docs)
             .filter {
@@ -165,6 +175,7 @@ fun HomeScreen(
                         folderPath.isEmpty() ||
                         libraryFolder(it.folder) == folderPath ||
                         libraryFolder(it.folder).startsWith("$folderPath/")) &&
+                    (tab != 1 || inTrash || inGroup(it)) &&
                     (tab == 0 ||
                         inTrash ||
                         tagQuery.isBlank() ||
@@ -370,6 +381,7 @@ fun HomeScreen(
                                     showTrash = true
                                     favoritesOnly = false
                                     folder = ""
+                                    groupKey = null
                                     vm.query.value = ""
                                 }
                             ) {
@@ -637,6 +649,7 @@ fun HomeScreen(
                                 favoritesOnly = false
                                 folder = ""
                                 tagQuery = ""
+                                groupKey = null
                             },
                             label = { Text("全部") },
                         )
@@ -649,6 +662,7 @@ fun HomeScreen(
                                     favoritesOnly = true
                                     folder = ""
                                     tagQuery = ""
+                                    groupKey = null
                                 },
                                 label = { Text("收藏") },
                             )
@@ -897,26 +911,40 @@ fun HomeScreen(
                         search.isBlank()
                 )
                     item(key = "continue-reading") { ContinueReadingCard(vm, docs, busy) }
-                item {
-                    LibraryCollectionHeader(
-                        title =
-                            if (inTrash) "已移入回收站"
-                            else if (search.isNotBlank()) "搜索结果"
-                            else if (tab == 0)
-                                when (homeCollection) {
-                                    "FAVORITES" -> "收藏文档"
-                                    "INBOX" -> "未整理文档"
-                                    "NO_OCR" -> "未识字文档"
-                                    "NEEDS_EXPORT" -> "待导出文档"
-                                    else -> "最近文档"
-                                }
-                            else "全部文档",
-                        selecting = selecting,
-                        count = filtered.size,
-                        largeFont = fontScale > 1.3f,
-                        onSelect = { selecting = true },
-                        onAll = null,
-                    )
+                if (tab == 1 && !inTrash && !selecting && docs.isNotEmpty())
+                    item(key = "folder-groups") {
+                        FolderGroupRow(
+                            groups = groups,
+                            total = docs.size,
+                            selectedKey = groupKey,
+                            onSelect = {
+                                groupKey = it
+                                folder = ""
+                            },
+                        )
+                    }
+                item(key = "collection-header") {
+                    Box(Modifier.testTag("collection-header")) {
+                        LibraryCollectionHeader(
+                            title =
+                                if (inTrash) "已移入回收站"
+                                else if (search.isNotBlank()) "搜索结果"
+                                else if (tab == 0)
+                                    when (homeCollection) {
+                                        "FAVORITES" -> "收藏文档"
+                                        "INBOX" -> "未整理文档"
+                                        "NO_OCR" -> "未识字文档"
+                                        "NEEDS_EXPORT" -> "待导出文档"
+                                        else -> "最近文档"
+                                    }
+                                else "全部文档",
+                            selecting = selecting,
+                            count = filtered.size,
+                            largeFont = fontScale > 1.3f,
+                            onSelect = { selecting = true },
+                            onAll = null,
+                        )
+                    }
                 }
                 if (tab == 1 && !inTrash && filtersExpanded) {
                     item {
@@ -962,6 +990,7 @@ fun HomeScreen(
                                             folder = preset.folder
                                             tagQuery = preset.tags
                                             favoritesOnly = preset.favorites
+                                            groupKey = null
                                             vm.query.value = preset.query
                                         },
                                         label = { Text(preset.name) },
@@ -1001,6 +1030,7 @@ fun HomeScreen(
                                     favoritesOnly = false
                                     folder = ""
                                     tagQuery = ""
+                                    groupKey = null
                                     vm.query.value = ""
                                 }
                             ) {
@@ -1011,7 +1041,10 @@ fun HomeScreen(
                     item {
                         FolderField(
                             value = folder,
-                            onValueChange = { folder = it },
+                            onValueChange = {
+                                folder = it
+                                groupKey = null
+                            },
                             paths = docs.map { it.folder },
                             label = "按文件夹筛选，含下级",
                             rootLabel = "全部文档",
@@ -1053,6 +1086,7 @@ fun HomeScreen(
                                             favoritesOnly = false
                                             folder = ""
                                             tagQuery = ""
+                                            groupKey = null
                                         }
                                     ) {
                                         Text("查看全部文档")
