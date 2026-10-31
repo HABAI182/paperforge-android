@@ -8,6 +8,7 @@ import androidx.room.withTransaction
 import androidx.work.*
 import cn.paperforge.app.data.*
 import cn.paperforge.app.model.OcrLayout
+import cn.paperforge.app.model.ReceiptFields
 import cn.paperforge.app.model.SmartNaming
 import cn.paperforge.app.model.safeFileName
 import cn.paperforge.app.pdf.*
@@ -1001,6 +1002,38 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 )
             )
         }
+
+    /**
+     * #26: extraction draft for the confirmation form. Only the OCR text already cached on the
+     * document's pages is read; nothing is recognised or downloaded here.
+     */
+    suspend fun receiptDraft(doc: DocumentRow): ReceiptFields.Record? =
+        withContext(Dispatchers.IO) {
+            val text = ReceiptLedger.sourceText(repo, doc)
+            if (text.isBlank()) null else ReceiptFields.parse(text)
+        }
+
+    /**
+     * #26: writes the ledger only when the user pressed an export button. The CSV is append-only and
+     * the XLSX is rebuilt from the CSV, so switching formats keeps every earlier row.
+     */
+    fun exportReceipt(record: ReceiptFields.Record, source: DocumentRow?, xlsx: Boolean) {
+        if (record.isBlank) {
+            viewModelScope.launch { messages.send("没有可导出的字段，请先填写至少一项") }
+            return
+        }
+        perform(if (xlsx) "正在导出票据记录 XLSX" else "正在追加票据记录 CSV") {
+            val csv = ReceiptLedger.append(repo, record, source?.title.orEmpty())
+            val file = if (xlsx) ReceiptLedger.exportXlsx(repo) else csv
+            // The ledger is one shared, append-only file, so it is recorded as an independent
+            // export instead of being re-attributed to whichever document exported last.
+            publishOutput(file, notice = "已写入 ${ReceiptLedger.DIRECTORY}/${file.name}")
+            messages.send(
+                if (xlsx) "已追加 1 条记录，并重建 ${ReceiptLedger.XLSX_NAME}"
+                else "已追加 1 条记录到 ${ReceiptLedger.CSV_NAME}"
+            )
+        }
+    }
 
     fun exportWithOptions(
         title: String,

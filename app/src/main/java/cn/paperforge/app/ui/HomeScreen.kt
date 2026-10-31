@@ -27,6 +27,7 @@ import cn.paperforge.app.MainViewModel
 import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
 import cn.paperforge.app.data.*
+import cn.paperforge.app.model.ReceiptFields
 import cn.paperforge.app.model.ToolCatalog
 import java.io.File
 import java.text.SimpleDateFormat
@@ -130,6 +131,7 @@ fun HomeScreen(
     var categorizing by remember { mutableStateOf<DocumentRow?>(null) }
     var deleting by remember { mutableStateOf<DocumentRow?>(null) }
     var renaming by remember { mutableStateOf<DocumentRow?>(null) }
+    var receipts by remember { mutableStateOf<DocumentRow?>(null) }
     var selecting by rememberSaveable { mutableStateOf(false) }
     var selection by rememberSaveable { mutableStateOf(emptyList<String>()) }
     var bulkDelete by remember { mutableStateOf(emptyList<String>()) }
@@ -1131,6 +1133,13 @@ fun HomeScreen(
                                                             },
                                                         )
                                                         DropdownMenuItem(
+                                                            text = { Text("票据信息") },
+                                                            onClick = {
+                                                                menu = false
+                                                                receipts = doc
+                                                            },
+                                                        )
+                                                        DropdownMenuItem(
                                                             text = { Text("导出记录") },
                                                             onClick = {
                                                                 menu = false
@@ -1400,6 +1409,41 @@ fun HomeScreen(
             },
             dismissButton = { TextButton(onClick = { renaming = null }) { Text("取消") } },
         )
+    }
+    receipts?.let { d ->
+        var draft by remember(d.id) { mutableStateOf<ReceiptFields.Record?>(null) }
+        var loaded by remember(d.id) { mutableStateOf(false) }
+        LaunchedEffect(d.id) {
+            draft = runCatching { vm.receiptDraft(d) }.getOrNull()
+            loaded = true
+        }
+        val current = draft
+        if (current != null) {
+            ReceiptReviewDialog(
+                initial = current,
+                sourceTitle = d.title,
+                busy = busy,
+                onDismiss = { receipts = null },
+                onExport = { record, xlsx ->
+                    vm.exportReceipt(record, d, xlsx)
+                    receipts = null
+                },
+            )
+        } else {
+            AlertDialog(
+                onDismissRequest = { receipts = null },
+                title = { Text("票据信息") },
+                text = {
+                    Text(
+                        if (!loaded) "正在读取本机已缓存的离线 OCR…"
+                        else "这份文档还没有可用的离线 OCR 文字，无法抽取票据字段。请先识别文字后再试。"
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = { receipts = null }) { Text(if (loaded) "知道了" else "取消") }
+                },
+            )
+        }
     }
     categorizing?.let { d ->
         var f by remember { mutableStateOf(d.folder) }
