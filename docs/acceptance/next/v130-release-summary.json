@@ -1,0 +1,20 @@
+{
+  "version": "1.3.0",
+  "versionCode": 10303,
+  "sourceCommit": "ed61b24",
+  "tag": "v1.3.0",
+  "releaseId": 429841248,
+  "releaseUrl": "https://github.com/HABAI182/paperforge-android/releases/tag/v1.3.0",
+  "latest": true,
+  "oneApk": true,
+  "sourceCleanAtBuild": true,
+  "channel": "stable",
+  "assets": {
+    "PaperForge-1.3.0-full-arm64-v8a.apk": {"bytes": 156004617, "sha256": "a6f72d8421e57e9f20e6d2ee9087ceb8dd578741239d3042dc16256697b184a7"},
+    "PaperForge-1.3.0-full-arm64-v8a-r8-mapping.zip": {"bytes": 11315833, "sha256": "500bb13f9812a2eb13839e03c56392d47d1df2d3d16dbe66924a2ed48ff4dcf6"},
+    "release-manifest.json": {"bytes": 14530, "sha256": "36f5d3653aba479b3f34f7c8891110b3d6bd387a4efb514f8614db2354931886"},
+    "SHA256SUMS.txt": {"bytes": 217, "sha256": "7a09bc47ba2bcde965ea2cecaf9ab31c47953017f34455830a76aa9844ee96c5"}
+  },
+  "signingCertificate": "d5232e43c2cea64793d92c0b57abea1716577caac320523c30bc27f2c8f8f34e",
+  "verified": {"zipAlignment16KiB": true, "nativeElf16KiBCompatible": true, "singleAbi": "arm64-v8a", "physicalDevice": false}
+}
