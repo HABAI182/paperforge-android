@@ -199,17 +199,21 @@ fun ScanEditorLayout(
                 else
                     HorizontalPager(
                         pager,
-                        key = { pages[it].id },
+                        // Page count can shrink while the pager still holds the previous range
+                        // (split → undo). Read the current list defensively instead of crashing on
+                        // a stale index.
+                        key = { pages.getOrNull(it)?.id ?: "pending-$it" },
                         modifier = Modifier.fillMaxSize(),
                         userScrollEnabled = !zoomed,
                         beyondViewportPageCount = 0,
                     ) { index ->
+                        val page = pages.getOrNull(index) ?: return@HorizontalPager
                         ScanPageCanvas(
-                            pages[index],
+                            page,
                             compare && index == pager.currentPage,
                             onTap = { fullscreen = !fullscreen },
                             onZoom = { if (index == pager.currentPage) zoomed = it },
-                            highlights = highlights[pages[index].id].orEmpty(),
+                            highlights = highlights[page.id].orEmpty(),
                             previousPage =
                                 if (index > 0)
                                     ({

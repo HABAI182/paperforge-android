@@ -1,0 +1,75 @@
+{
+  "issue": 23,
+  "synthetic": true,
+  "syntheticDescription": "测试内 Canvas 绘制的跨页：左右两页等宽文字、46% 处暗带中缝与横向光照渐变，不是真实照片",
+  "device": "unknown Android SDK built for x86_64",
+  "sdk": 35,
+  "serial": "emulator-5554",
+  "entry": "编辑器 → 更多（扫描页面工具）→ 拆分双页 · 自动书脊",
+  "source": {
+    "file": "spread-source.jpg",
+    "width": 1400,
+    "height": 1000,
+    "sha256": "17f4a7837739e5559097afcf3e59864d5a994c9d9057755bdc2f843c990e78d0"
+  },
+  "detection": {
+    "found": true,
+    "method": "dark-band",
+    "x": 0.4599427878856659,
+    "top": 0.4599427878856659,
+    "bottom": 0.4599427878856659,
+    "confidence": 0.9415367245674133,
+    "evidence": {
+      "topFraction": 0.4599427878856659,
+      "bottomFraction": 0.4599427878856659,
+      "topContrast": 162.39999389648438,
+      "bottomContrast": 162.39999389648438,
+      "topCoverage": 1,
+      "bottomCoverage": 1,
+      "fullCoverage": 1,
+      "bandFraction": 0.016440315172076225,
+      "inkLeft": 0.05397918447852135,
+      "inkRight": 0.03108525089919567,
+      "tiltFraction": 0
+    }
+  },
+  "pagesBefore": 1,
+  "pagesAfter": 2,
+  "pages": [
+    {
+      "position": 0,
+      "id": "728fd38e-b5de-4e10-9654-30ebe3b784ba",
+      "original": "spread-source.jpg",
+      "sha256": "17f4a7837739e5559097afcf3e59864d5a994c9d9057755bdc2f843c990e78d0",
+      "area": 0.4599427878856659,
+      "centerX": 0.22997139394283295,
+      "topFraction": 0.4599427878856659,
+      "bottomFraction": 0.4599427878856659
+    },
+    {
+      "position": 1,
+      "id": "8b140536-bb5b-4bd4-b44d-a413ffe37c3c",
+      "original": "spread-source.jpg",
+      "sha256": "17f4a7837739e5559097afcf3e59864d5a994c9d9057755bdc2f843c990e78d0",
+      "area": 0.5400571823120117,
+      "centerX": 0.729971393942833,
+      "topFraction": 1,
+      "bottomFraction": 1
+    }
+  ],
+  "rendered": {
+    "leftWidth": 579,
+    "leftHeight": 900,
+    "rightWidth": 681,
+    "rightHeight": 900,
+    "leftShare": 0.4595237970352173
+  },
+  "assertions": {
+    "pageCountPlusOne": true,
+    "leftBeforeRight": true,
+    "originalFileKept": true,
+    "originalShaUnchanged": true,
+    "leftNarrowerThanRight": true,
+    "undoRestoredOnePage": true
+  }
+}

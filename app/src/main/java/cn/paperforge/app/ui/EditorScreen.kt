@@ -492,6 +492,14 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                     TextButton(
                         onClick = {
                             more = false
+                            vm.autoSplitSpread(active)
+                        }
+                    ) {
+                        Text("拆分双页 · 自动书脊")
+                    }
+                    TextButton(
+                        onClick = {
+                            more = false
                             bookSplit = true
                         }
                     ) {

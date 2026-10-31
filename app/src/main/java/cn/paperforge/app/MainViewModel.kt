@@ -2595,6 +2595,49 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun splitBook(page: PageRow, top: Float = .5f, bottom: Float = .5f, keep: String = "both") =
         perform("分割双页") { repo.splitBook(page, top, bottom, keep) }
 
+    /**
+     * Last spine search performed by [autoSplitSpread]; exposed for diagnostics and device tests.
+     */
+    val lastSpineDetection = MutableStateFlow<cn.paperforge.app.imaging.SpineDetection?>(null)
+
+    /**
+     * #23: detect the gutter of the current spread and split it through the existing
+     * [Repository.splitBook] path (same document, left half first, original file kept, undo works).
+     * Rendering uses the neutral ORIGINAL filter so a display filter cannot hide the shadow. When
+     * no spine is found nothing is written: the page is never cut at a fallback position.
+     */
+    fun autoSplitSpread(page: PageRow) =
+        perform("检测书脊并拆分双页") {
+            lastSpineDetection.value = null
+            val rotation = ((page.rotation % 360) + 360) % 360
+            if (rotation != 0 || page.deskewDegrees != 0f) {
+                messages.send(
+                    "当前页旋转 $rotation°、去斜 ${page.deskewDegrees}°：" +
+                        "本轮只支持未旋转、未去斜的整页跨页图，未拆分"
+                )
+                return@perform
+            }
+            val analysis = page.copy(filter = "ORIGINAL", brightness = 0f, contrast = 1f)
+            val bitmap = cn.paperforge.app.imaging.ScanProcessor.render(analysis, 1600)
+            val detection =
+                try {
+                    cn.paperforge.app.imaging.BookSpineDetector.detect(bitmap)
+                } finally {
+                    bitmap.recycle()
+                }
+            lastSpineDetection.value = detection
+            val x = detection.x
+            if (!detection.found || x == null) {
+                messages.send("未检测到书脊：${detection.reason}。本页未拆分。")
+                return@perform
+            }
+            repo.splitBook(page, detection.top, detection.bottom, "both")
+            messages.send(
+                "已拆分双页：左页在前，右页在后（书脊在 ${(x * 100).toInt()}% 处，" +
+                    "置信度 ${(detection.confidence * 100).toInt()}%）"
+            )
+        }
+
     fun applyAll(page: PageRow) =
         perform("应用到所有页") {
             repo.dao.pages(page.documentId).forEach {
