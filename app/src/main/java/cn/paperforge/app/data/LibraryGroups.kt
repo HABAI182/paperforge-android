@@ -3,9 +3,9 @@ package cn.paperforge.app.data
 /**
  * One card in the document library's folder row.
  *
- * [key] is the normalised `documents.folder` path; an empty key means "未分类". [count] uses the
- * same "this folder and its subfolders" rule as the existing library folder filter, so tapping a
- * card shows exactly as many documents as the card says.
+ * [key] is the normalised `documents.folder` path; an empty key means "未分类". [count] uses the same
+ * "this folder and its subfolders" rule as the existing library folder filter, so tapping a card
+ * shows exactly as many documents as the card says.
  */
 data class DocumentGroup(
     val key: String,
@@ -14,20 +14,27 @@ data class DocumentGroup(
     val coverDocumentId: String?,
     val documentIds: List<String>,
 ) {
-    val isUnfiled: Boolean get() = key.isEmpty()
+    val isUnfiled: Boolean
+        get() = key.isEmpty()
 }
 
 /**
  * Groups documents by the existing `documents.folder` column. This is presentation only: no new
- * table, migration or folder tree is created. "未分类" always comes last; folder cards are ordered
- * by count and then path so the row is stable between recompositions.
+ * table, migration or folder tree is created. "未分类" always comes last; folder cards are ordered by
+ * count and then path so the row is stable between recompositions.
  */
-fun documentGroups(documents: List<DocumentRow>): List<DocumentGroup> {
-    if (documents.isEmpty()) return emptyList()
+fun documentGroups(
+    documents: List<DocumentRow>,
+    folders: List<String> = emptyList(),
+): List<DocumentGroup> {
     val normalised = documents.map { it to libraryFolder(it.folder) }
     val folderCards =
         normalised
             .map { (_, folder) -> folder }
+            .plus(folders.map(::libraryFolder))
+            .flatMap { path ->
+                path.split('/').indices.map { path.split('/').take(it + 1).joinToString("/") }
+            }
             .filter { it.isNotEmpty() }
             .distinct()
             .map { path ->

@@ -55,6 +55,7 @@ internal fun workspaceSection(tool: HomeTool): String =
     when (tool.id) {
         "action:scan",
         "action:ocr-images",
+        "action:receipts",
         "tool:image-pdf",
         "tool:searchable" -> "capture"
         "action:tasks",

@@ -135,6 +135,41 @@ class LibraryPreferences(context: Context) {
         }
     }
 
+    /**
+     * Explicit entries keep empty folders visible; document paths remain the source of membership.
+     */
+    fun folders(): List<String> =
+        runCatching {
+                val rows = JSONArray(prefs.getString("folders", "[]"))
+                (0 until rows.length())
+                    .map { libraryFolder(rows.getString(it)) }
+                    .filter { it.isNotBlank() }
+                    .distinct()
+                    .sorted()
+            }
+            .getOrDefault(emptyList())
+
+    fun folders(paths: List<String>) {
+        check(
+            prefs
+                .edit()
+                .putString(
+                    "folders",
+                    JSONArray(
+                            paths
+                                .map(::libraryFolder)
+                                .filter { it.isNotBlank() }
+                                .distinct()
+                                .sorted()
+                        )
+                        .toString(),
+                )
+                .commit()
+        ) {
+            "无法保存文件夹"
+        }
+    }
+
     fun view() =
         runCatching { LibraryFilter.decode(JSONObject(prefs.getString("view", "{}") ?: "{}")) }
             .getOrDefault(LibraryFilter())
@@ -180,6 +215,7 @@ class LibraryPreferences(context: Context) {
 
     fun export() =
         JSONObject()
+            .put("folders", JSONArray(folders()))
             .put("view", view().encode())
             .put("saved", JSONArray().apply { saved().forEach { put(it.encode()) } })
             .put("naming", naming().encode())
@@ -187,6 +223,10 @@ class LibraryPreferences(context: Context) {
             .put("families", JSONArray().apply { families().forEach { put(it.encode()) } })
 
     fun restore(j: JSONObject, documentIds: Map<String, String>? = null) {
+        j.optJSONArray("folders")?.let { rows ->
+            val imported = (0 until rows.length()).map { rows.getString(it) }
+            folders(if (documentIds == null) imported else folders() + imported)
+        }
         j.optJSONArray("families")?.let { array ->
             synchronized(familyLock) {
                 val imported =

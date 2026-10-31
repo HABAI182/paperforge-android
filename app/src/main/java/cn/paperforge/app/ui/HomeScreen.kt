@@ -27,7 +27,6 @@ import cn.paperforge.app.MainViewModel
 import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
 import cn.paperforge.app.data.*
-import cn.paperforge.app.model.ReceiptFields
 import cn.paperforge.app.model.ToolCatalog
 import java.io.File
 import java.text.SimpleDateFormat
@@ -132,7 +131,42 @@ fun HomeScreen(
     var categorizing by remember { mutableStateOf<DocumentRow?>(null) }
     var deleting by remember { mutableStateOf<DocumentRow?>(null) }
     var renaming by remember { mutableStateOf<DocumentRow?>(null) }
-    var receipts by remember { mutableStateOf<DocumentRow?>(null) }
+    val receiptsTarget = remember { mutableStateOf<DocumentRow?>(null) }
+    var receipts by receiptsTarget
+    var receiptPicker by rememberSaveable { mutableStateOf(false) }
+    if (receiptPicker)
+        AlertDialog(
+            onDismissRequest = { receiptPicker = false },
+            title = { Text("选择票据文档") },
+            text = {
+                androidx.compose.foundation.lazy.LazyColumn(Modifier.heightIn(max = 420.dp)) {
+                    items(docs.size) { index ->
+                        val candidate = docs[index]
+                        TextButton(
+                            onClick = {
+                                receiptsTarget.value = candidate
+                                receiptPicker = false
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(candidate.title)
+                        }
+                    }
+                    if (docs.isEmpty()) item { Text("先拍摄或导入一份票据文档，再从这里识别。") }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        receiptPicker = false
+                        vm.newScan()
+                    }
+                ) {
+                    Text("拍摄票据")
+                }
+            },
+            dismissButton = { TextButton(onClick = { receiptPicker = false }) { Text("取消") } },
+        )
     var selecting by rememberSaveable { mutableStateOf(false) }
     var selection by rememberSaveable { mutableStateOf(emptyList<String>()) }
     var bulkDelete by remember { mutableStateOf(emptyList<String>()) }
@@ -144,7 +178,13 @@ fun HomeScreen(
     var groupSelection by remember { mutableStateOf<List<String>?>(null) }
     val inTrash = showTrash && tab == 1
     val folderPath = libraryFolder(folder)
-    val groups = remember(docs) { documentGroups(docs) }
+    val folderPaths by vm.libraryFolderPaths.collectAsState()
+    var manageFolders by rememberSaveable { mutableStateOf(false) }
+    val groups = remember(docs, folderPaths) { documentGroups(docs, folderPaths) }
+    if (manageFolders) LibraryFolderDialog(vm, groups) { manageFolders = false }
+    LaunchedEffect(groups) {
+        if (groupKey != null && groups.none { it.key == groupKey }) groupKey = null
+    }
     val activeGroup = groupKey
     fun inGroup(doc: DocumentRow): Boolean =
         activeGroup == null ||
@@ -175,7 +215,7 @@ fun HomeScreen(
                         folderPath.isEmpty() ||
                         libraryFolder(it.folder) == folderPath ||
                         libraryFolder(it.folder).startsWith("$folderPath/")) &&
-                    (tab != 1 || inTrash || inGroup(it)) &&
+                    (inTrash || search.isNotBlank() || inGroup(it)) &&
                     (tab == 0 ||
                         inTrash ||
                         tagQuery.isBlank() ||
@@ -783,6 +823,14 @@ fun HomeScreen(
                             action = onImages,
                         ),
                         HomeTool(
+                            "action:receipts",
+                            "票据与发票",
+                            "离线识别、字段核对、CSV / Excel 导出",
+                            Icons.Default.ReceiptLong,
+                        ) {
+                            receiptPicker = true
+                        },
+                        HomeTool(
                             "action:ocr-images",
                             "离线 OCR 图片识字",
                             "导入图片，识别中英文",
@@ -903,6 +951,23 @@ fun HomeScreen(
                     onInfo = { toolCapability = it },
                 )
             } else {
+                if (tab in 0..1 && !inTrash && !selecting && search.isBlank())
+                    item(key = "folder-groups") {
+                        FolderGroupRow(
+                            groups = groups,
+                            onManage = { manageFolders = true },
+                            total = docs.size,
+                            selectedKey = groupKey,
+                            onSelect = {
+                                groupKey = it
+                                folder = ""
+                                collection = "ALL"
+                                favoritesOnly = false
+                                tagQuery = ""
+                                vm.homeTab.value = 1
+                            },
+                        )
+                    }
                 if (
                     tab == 0 &&
                         homeCollection == "RECENT" &&
@@ -911,18 +976,6 @@ fun HomeScreen(
                         search.isBlank()
                 )
                     item(key = "continue-reading") { ContinueReadingCard(vm, docs, busy) }
-                if (tab == 1 && !inTrash && !selecting && docs.isNotEmpty())
-                    item(key = "folder-groups") {
-                        FolderGroupRow(
-                            groups = groups,
-                            total = docs.size,
-                            selectedKey = groupKey,
-                            onSelect = {
-                                groupKey = it
-                                folder = ""
-                            },
-                        )
-                    }
                 item(key = "collection-header") {
                     Box(Modifier.testTag("collection-header")) {
                         LibraryCollectionHeader(
@@ -1045,7 +1098,7 @@ fun HomeScreen(
                                 folder = it
                                 groupKey = null
                             },
-                            paths = docs.map { it.folder },
+                            paths = docs.map { it.folder } + folderPaths,
                             label = "按文件夹筛选，含下级",
                             rootLabel = "全部文档",
                         )
@@ -1360,7 +1413,7 @@ fun HomeScreen(
                         FolderField(
                             targetFolder,
                             { targetFolder = it },
-                            docs.map { it.folder },
+                            docs.map { it.folder } + folderPaths,
                             label = "目标文件夹，留空移至未分类",
                         )
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1425,10 +1478,7 @@ fun HomeScreen(
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    SmartNamingAssist(
-                        load = { vm.namingSuggestion(d) },
-                        onPick = { name = it },
-                    )
+                    SmartNamingAssist(load = { vm.namingSuggestion(d) }, onPick = { name = it })
                 }
             },
             confirmButton = {
@@ -1444,41 +1494,7 @@ fun HomeScreen(
             dismissButton = { TextButton(onClick = { renaming = null }) { Text("取消") } },
         )
     }
-    receipts?.let { d ->
-        var draft by remember(d.id) { mutableStateOf<ReceiptFields.Record?>(null) }
-        var loaded by remember(d.id) { mutableStateOf(false) }
-        LaunchedEffect(d.id) {
-            draft = runCatching { vm.receiptDraft(d) }.getOrNull()
-            loaded = true
-        }
-        val current = draft
-        if (current != null) {
-            ReceiptReviewDialog(
-                initial = current,
-                sourceTitle = d.title,
-                busy = busy,
-                onDismiss = { receipts = null },
-                onExport = { record, xlsx ->
-                    vm.exportReceipt(record, d, xlsx)
-                    receipts = null
-                },
-            )
-        } else {
-            AlertDialog(
-                onDismissRequest = { receipts = null },
-                title = { Text("票据信息") },
-                text = {
-                    Text(
-                        if (!loaded) "正在读取本机已缓存的离线 OCR…"
-                        else "这份文档还没有可用的离线 OCR 文字，无法抽取票据字段。请先识别文字后再试。"
-                    )
-                },
-                confirmButton = {
-                    TextButton(onClick = { receipts = null }) { Text(if (loaded) "知道了" else "取消") }
-                },
-            )
-        }
-    }
+    receipts?.let { d -> ReceiptDocumentDialog(vm, d) { receipts = null } }
     categorizing?.let { d ->
         var f by remember { mutableStateOf(d.folder) }
         var tags by remember { mutableStateOf(d.tags) }
@@ -1487,7 +1503,7 @@ fun HomeScreen(
             title = { Text("文件夹与标签") },
             text = {
                 Column {
-                    FolderField(f, { f = it }, docs.map { it.folder })
+                    FolderField(f, { f = it }, docs.map { it.folder } + folderPaths)
                     OutlinedTextField(tags, { tags = it }, label = { Text("标签，逗号分隔") })
                 }
             },

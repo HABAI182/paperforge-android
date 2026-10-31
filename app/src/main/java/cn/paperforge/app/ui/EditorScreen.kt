@@ -316,30 +316,67 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
         var brightness by rememberSaveable(active.id) { mutableFloatStateOf(active.brightness) }
         var contrast by rememberSaveable(active.id) { mutableFloatStateOf(active.contrast) }
         var strength by rememberSaveable(active.id) { mutableFloatStateOf(active.enhanceStrength) }
+        val adjusted =
+            active.copy(brightness = brightness, contrast = contrast, enhanceStrength = strength)
+        // Debounce expensive rendering while dragging, without persisting preview edits.
+        var previewPage by remember(active.id) { mutableStateOf(adjusted) }
+        LaunchedEffect(adjusted) {
+            kotlinx.coroutines.delay(100)
+            previewPage = adjusted
+        }
+        val preview = pagePreview(previewPage, edge = 1000)
         SpaciousToolDialog(
             onDismissRequest = { adjust = false },
             title = { Text("增强与明暗") },
             text = {
-                Column(Modifier.verticalScroll(rememberScrollState())) {
-                    Text("去阴影强度 %.0f%%".format(strength * 100))
-                    Slider(
-                        value = strength,
-                        onValueChange = { strength = it },
-                        valueRange = 0f..1f,
-                        enabled = active.filter != "ORIGINAL",
-                    )
-                    Text("亮度 %+.0f".format(brightness * 100))
-                    Slider(
-                        value = brightness,
-                        onValueChange = { brightness = it },
-                        valueRange = -0.5f..0.5f,
-                    )
-                    Text("对比度 %.2f".format(contrast))
-                    Slider(
-                        value = contrast,
-                        onValueChange = { contrast = it },
-                        valueRange = 0.5f..1.8f,
-                    )
+                BoxWithConstraints(Modifier.fillMaxSize()) {
+                    val controlsHeight = maxHeight * .48f
+                    val previewContent: @Composable (Modifier) -> Unit = { modifier ->
+                        Box(modifier, contentAlignment = Alignment.Center) {
+                            preview.bitmap?.let {
+                                Image(
+                                    it.asImageBitmap(),
+                                    "增强效果实时预览",
+                                    Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Fit,
+                                )
+                            }
+                            if (preview.error != null) Text(preview.error)
+                            else if (preview.bitmap == null) CircularProgressIndicator()
+                        }
+                    }
+                    val controls: @Composable (Modifier) -> Unit = { modifier ->
+                        Column(modifier.verticalScroll(rememberScrollState())) {
+                            Text("去阴影强度 %.0f%%".format(strength * 100))
+                            Slider(
+                                strength,
+                                { strength = it },
+                                valueRange = 0f..1f,
+                                enabled = active.filter != "ORIGINAL",
+                            )
+                            Text("亮度 %+.0f".format(brightness * 100))
+                            Slider(brightness, { brightness = it }, valueRange = -0.5f..0.5f)
+                            Text("对比度 %.2f".format(contrast))
+                            Slider(contrast, { contrast = it }, valueRange = 0.5f..1.8f)
+                        }
+                    }
+                    if (maxWidth > 500.dp && maxWidth > maxHeight) {
+                        Row(
+                            Modifier.fillMaxSize(),
+                            horizontalArrangement = Arrangement.spacedBy(20.dp),
+                        ) {
+                            previewContent(Modifier.weight(1f).fillMaxHeight())
+                            controls(Modifier.weight(1f).fillMaxHeight())
+                        }
+                    } else {
+                        Column(
+                            Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            previewContent(Modifier.fillMaxWidth().weight(1f))
+                            controls(Modifier.fillMaxWidth().heightIn(max = controlsHeight))
+                        }
+                    }
                 }
             },
             confirmButton = {
@@ -377,7 +414,9 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
             onBookSplit = { bookSplit = true },
             onStitch = { vm.stitchScanPages() },
             onOrigins = { origins = true },
-            onRotate = { degrees -> vm.save(active.copy(rotation = (active.rotation + degrees) % 360)) },
+            onRotate = { degrees ->
+                vm.save(active.copy(rotation = (active.rotation + degrees) % 360))
+            },
             onAutoDetect = { vm.detectPage(active) },
             onDewarp = { dewarp = true },
             onDewarpTrace = { trace = true },
@@ -403,45 +442,8 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
             },
             onDuplicate = { active?.let { vm.duplicate(it) } },
         )
-    // #31 decision 4: receipt fields are reachable from the editor. The draft reuses the cached
-    // offline OCR through the existing vm.receiptDraft; nothing is recognised here.
     val document = doc
-    if (receipts && document != null) {
-        var receipt by remember(document.id) { mutableStateOf<ReceiptFields.Record?>(null) }
-        var loaded by remember(document.id) { mutableStateOf(false) }
-        LaunchedEffect(document.id, receipts) {
-            receipt = runCatching { vm.receiptDraft(document) }.getOrNull()
-            loaded = true
-        }
-        val current = receipt
-        if (current != null)
-            ReceiptReviewDialog(
-                initial = current,
-                sourceTitle = document.title,
-                busy = busy,
-                onDismiss = { receipts = false },
-                onExport = { record, xlsx ->
-                    vm.exportReceipt(record, document, xlsx)
-                    receipts = false
-                },
-            )
-        else
-            AlertDialog(
-                onDismissRequest = { receipts = false },
-                title = { Text("票据信息") },
-                text = {
-                    Text(
-                        if (!loaded) "正在读取本机已缓存的离线 OCR…"
-                        else "这份文档还没有可用的离线 OCR 文字，无法抽取票据字段。请先识别文字后再试。"
-                    )
-                },
-                confirmButton = {
-                    TextButton(onClick = { receipts = false }) {
-                        Text(if (loaded) "知道了" else "取消")
-                    }
-                },
-            )
-    }
+    if (receipts && document != null) ReceiptDocumentDialog(vm, document) { receipts = false }
 }
 
 @OptIn(ExperimentalFoundationApi::class)

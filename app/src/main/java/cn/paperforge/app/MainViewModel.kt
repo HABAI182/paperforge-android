@@ -41,6 +41,95 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         screen.value = "convert"
     }
 
+    val libraryFolderPaths = MutableStateFlow(LibraryPreferences(repo.context).folders())
+    val folderNotice = MutableStateFlow<String?>(null)
+
+    private data class FolderUndo(
+        val paths: List<String>,
+        val changes: Map<String, Pair<String, String>>,
+    )
+
+    private var folderUndo: FolderUndo? = null
+
+    fun createLibraryFolder(path: String) =
+        perform("新建文件夹") {
+            val normalized = libraryFolder(path)
+            require(normalized.isNotBlank()) { "请输入文件夹名称" }
+            val preferences = LibraryPreferences(repo.context)
+            val known =
+                preferences.folders() + repo.dao.allDocuments().map { libraryFolder(it.folder) }
+            require(normalized !in known) { "文件夹已存在" }
+            folderUndo = FolderUndo(preferences.folders(), emptyMap())
+            preferences.folders(preferences.folders() + normalized)
+            libraryFolderPaths.value = preferences.folders()
+            folderNotice.value = "已新建 $normalized"
+        }
+
+    /** Rename/move a whole subtree; delete only removes classification, never document files. */
+    fun changeLibraryFolder(source: String, destination: String?) =
+        perform("整理文件夹") {
+            val from = libraryFolder(source)
+            val to = destination?.let(::libraryFolder)
+            require(from.isNotBlank()) { "未分类不能重命名" }
+            require(to == null || (to.isNotBlank() && to != from && !to.startsWith("$from/"))) {
+                "请选择文件夹以外的新位置"
+            }
+            val preferences = LibraryPreferences(repo.context)
+            val oldPaths = preferences.folders()
+            val all = repo.dao.allDocuments()
+            val known = (oldPaths + all.map { libraryFolder(it.folder) }).distinct()
+            require(to == null || known.none { it == to || it.startsWith("$to/") }) { "目标文件夹已存在" }
+            fun mapped(path: String): String =
+                if (to == null) from.substringBeforeLast('/', "") else to + path.removePrefix(from)
+            val members =
+                all.filter {
+                    libraryFolder(it.folder).let { p -> p == from || p.startsWith("$from/") }
+                }
+            repo.database.withTransaction {
+                members.forEach { doc ->
+                    repo.dao.putDocument(
+                        doc.copy(
+                            folder = mapped(libraryFolder(doc.folder)),
+                            modified = System.currentTimeMillis(),
+                        )
+                    )
+                }
+            }
+            val replacement =
+                known.filterNot { it == from || it.startsWith("$from/") } +
+                    if (to == null) emptyList()
+                    else known.filter { it == from || it.startsWith("$from/") }.map(::mapped)
+            preferences.folders(replacement)
+            folderUndo =
+                FolderUndo(
+                    oldPaths,
+                    members.associate { it.id to (it.folder to mapped(libraryFolder(it.folder))) },
+                )
+            libraryFolderPaths.value = preferences.folders()
+            folderNotice.value = if (to == null) "已移除文件夹，文档保留在上一级" else "已更新文件夹 $to"
+        }
+
+    fun undoLibraryFolder() =
+        perform("撤销文件夹操作") {
+            val undo = folderUndo ?: return@perform
+            repo.database.withTransaction {
+                undo.changes.forEach { (id, paths) ->
+                    repo.dao
+                        .document(id)
+                        ?.takeIf { it.folder == paths.second }
+                        ?.let {
+                            repo.dao.putDocument(
+                                it.copy(folder = paths.first, modified = System.currentTimeMillis())
+                            )
+                        }
+                }
+            }
+            LibraryPreferences(repo.context).folders(undo.paths)
+            libraryFolderPaths.value = undo.paths
+            folderUndo = null
+            folderNotice.value = null
+        }
+
     val renameSelection = MutableStateFlow<List<String>>(emptyList())
     val canUndoNames = MutableStateFlow(LibraryPreferences(repo.context).renameUndo().isNotEmpty())
     val renameNotice = MutableStateFlow<Pair<String, Int>?>(null)
@@ -878,13 +967,22 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun categorizeDocuments(ids: Set<String>, folder: String?, tags: String?) =
         perform("批量分类") {
+            val before = repo.dao.allDocuments().filter { it.id in ids }
+            val target = folder?.let(::libraryFolder)
+            if (target != null)
+                folderUndo =
+                    FolderUndo(
+                        LibraryPreferences(repo.context).folders(),
+                        before.associate { it.id to (it.folder to target) },
+                    )
             repo.editDocuments(ids) {
                 it.copy(
-                    folder = folder?.let(::libraryFolder) ?: it.folder,
+                    folder = target ?: it.folder,
                     tags = tags?.let(::libraryTags) ?: it.tags,
                     modified = System.currentTimeMillis(),
                 )
             }
+            if (target != null) folderNotice.value = "已移动 ${before.size} 份文档"
         }
 
     fun mergeDocuments(ids: List<String>) =
@@ -962,15 +1060,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
 
     fun categorize(doc: DocumentRow, folder: String, tags: String) =
-        perform("保存分类") {
-            repo.editDocuments(setOf(doc.id)) {
-                it.copy(
-                    folder = libraryFolder(folder),
-                    tags = libraryTags(tags),
-                    modified = System.currentTimeMillis(),
-                )
-            }
-        }
+        categorizeDocuments(setOf(doc.id), folder, tags)
 
     fun favorite(doc: DocumentRow) =
         perform("更新收藏") { repo.dao.updateDocument(doc.copy(favorite = !doc.favorite)) }
@@ -991,31 +1081,72 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             val first = pages.firstOrNull() ?: return@withContext null
             val layoutText =
                 first.ocrLayout?.let { runCatching { OcrLayout.decode(it).text }.getOrNull() }
-            val text =
-                layoutText?.takeIf { it.isNotBlank() } ?: first.ocrText.orEmpty()
+            val text = layoutText?.takeIf { it.isNotBlank() } ?: first.ocrText.orEmpty()
             if (text.isBlank()) return@withContext null
             SmartNaming.suggest(
-                SmartNaming.Input(
-                    ocrText = text,
-                    pageCount = pages.size,
-                    currentName = doc.title,
-                )
+                SmartNaming.Input(ocrText = text, pageCount = pages.size, currentName = doc.title)
             )
         }
 
-    /**
-     * #26: extraction draft for the confirmation form. Only the OCR text already cached on the
-     * document's pages is read; nothing is recognised or downloaded here.
-     */
-    suspend fun receiptDraft(doc: DocumentRow): ReceiptFields.Record? =
+    /** Reuse corrected/cache text; recognise missing pages only when explicitly requested. */
+    suspend fun receiptDraft(
+        doc: DocumentRow,
+        recognizeMissing: Boolean = false,
+        onProgress: (String) -> Unit = {},
+    ): ReceiptFields.Record? =
         withContext(Dispatchers.IO) {
-            val text = ReceiptLedger.sourceText(repo, doc)
+            val text =
+                if (doc.kind == "scan") {
+                    val pages = repo.dao.pages(doc.id)
+                    if (recognizeMissing)
+                        pages.forEachIndexed { index, page ->
+                            currentCoroutineContext().ensureActive()
+                            if (page.ocrText.isNullOrBlank() && page.ocrLayout.isNullOrBlank()) {
+                                onProgress("正在离线识别 ${index + 1}/${pages.size} 页")
+                                repo.cacheOcr(
+                                    page,
+                                    ocrEngine.layout(
+                                        page,
+                                        UserSettings[SettingKeys.OcrLanguage] != "LATIN",
+                                    ),
+                                )
+                            }
+                        }
+                    ReceiptLedger.sourceText(repo, doc)
+                } else {
+                    val file = doc.pdfPath?.let(::File) ?: return@withContext null
+                    val count =
+                        android.os.ParcelFileDescriptor.open(
+                                file,
+                                android.os.ParcelFileDescriptor.MODE_READ_ONLY,
+                            )
+                            .use {
+                                android.graphics.pdf.PdfRenderer(it).use { pdf -> pdf.pageCount }
+                            }
+                    buildString {
+                            for (index in 0 until count) {
+                                currentCoroutineContext().ensureActive()
+                                onProgress("正在读取票据 ${index + 1}/$count 页")
+                                val blocks =
+                                    cn.paperforge.app.pdf.PageTextSource.load(
+                                        repo.context,
+                                        file,
+                                        index,
+                                        ocrEngine,
+                                    )
+                                append(blocks.joinToString("\n") { it.text })
+                                append('\n')
+                                if (length >= ReceiptLedger.MAX_SOURCE_CHARS) break
+                            }
+                        }
+                        .take(ReceiptLedger.MAX_SOURCE_CHARS)
+                }
             if (text.isBlank()) null else ReceiptFields.parse(text)
         }
 
     /**
-     * #26: writes the ledger only when the user pressed an export button. The CSV is append-only and
-     * the XLSX is rebuilt from the CSV, so switching formats keeps every earlier row.
+     * #26: writes the ledger only when the user pressed an export button. The CSV is append-only
+     * and the XLSX is rebuilt from the CSV, so switching formats keeps every earlier row.
      */
     fun exportReceipt(record: ReceiptFields.Record, source: DocumentRow?, xlsx: Boolean) {
         if (record.isBlank) {
@@ -2545,7 +2676,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /**
      * #27 in-app entry: scan the current PDF first, then clean object-level watermarks into a copy.
-     * The source file is only read; a PDF without recognised candidates never produces an empty copy.
+     * The source file is only read; a PDF without recognised candidates never produces an empty
+     * copy.
      */
     fun removeObjectWatermarks() =
         perform("正在检查对象级水印") {
@@ -2559,8 +2691,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 messages.send("未检测到可识别的对象级水印")
                 return@perform
             }
-            progress.value =
-                "正在处理 ${scan.images.size} 个图片水印与 ${scan.texts.size} 处文字水印"
+            progress.value = "正在处理 ${scan.images.size} 个图片水印与 ${scan.texts.size} 处文字水印"
             val file = OutputNames.create(repo, UUID.randomUUID().toString(), doc.title, "pdf")
             var published = false
             try {
@@ -2669,8 +2800,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             val rotation = ((page.rotation % 360) + 360) % 360
             if (rotation != 0 || page.deskewDegrees != 0f) {
                 messages.send(
-                    "当前页旋转 $rotation°、去斜 ${page.deskewDegrees}°：" +
-                        "本轮只支持未旋转、未去斜的整页跨页图，未拆分"
+                    "当前页旋转 $rotation°、去斜 ${page.deskewDegrees}°：" + "本轮只支持未旋转、未去斜的整页跨页图，未拆分"
                 )
                 return@perform
             }
@@ -2717,10 +2847,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /**
      * `PageDecoder.crop` grows every page quad by `CropSafety` (1% of the shorter source side)
      * before warping. A stored inner edge sitting exactly on the gutter edge would therefore still
-     * show a strip of the gutter after rendering, so the auto split insets each stored inner edge by
-     * that same pixel ring and lets the render grow it back onto the seam. Returns the ring width as
-     * a fraction of the source width; 0 when the header cannot be read (the render then also keeps
-     * its default, so the page still renders).
+     * show a strip of the gutter after rendering, so the auto split insets each stored inner edge
+     * by that same pixel ring and lets the render grow it back onto the seam. Returns the ring
+     * width as a fraction of the source width; 0 when the header cannot be read (the render then
+     * also keeps its default, so the page still renders).
      */
     private fun innerEdgeSafetyInset(page: PageRow): Float {
         val size =

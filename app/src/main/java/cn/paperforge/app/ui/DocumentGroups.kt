@@ -32,23 +32,17 @@ fun FolderGroupRow(
     total: Int,
     selectedKey: String?,
     onSelect: (String?) -> Unit,
+    onManage: () -> Unit = {},
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Row(
-            Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 "文件夹",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.weight(1f))
-            Text(
-                "左右滑动 · 点按筛选",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.outline,
-            )
+            TextButton(onClick = onManage) { Text("新建 / 管理") }
         }
         LazyRow(
             Modifier.fillMaxWidth().testTag("home-folder-groups"),
@@ -71,9 +65,7 @@ fun FolderGroupRow(
                     count = group.count,
                     selected = selectedKey == group.key,
                     icon = if (group.isUnfiled) Icons.Default.Inbox else Icons.Default.Folder,
-                    tag =
-                        if (group.isUnfiled) "home-group-unfiled"
-                        else "home-group-${group.key}",
+                    tag = if (group.isUnfiled) "home-group-unfiled" else "home-group-${group.key}",
                 ) {
                     onSelect(if (selectedKey == group.key) null else group.key)
                 }
@@ -100,10 +92,9 @@ private fun FolderGroupCard(
     Surface(
         onClick = onClick,
         modifier =
-            Modifier.width(152.dp)
-                .height(64.dp)
-                .testTag(tag)
-                .semantics { contentDescription = "$label，$count 份文档" },
+            Modifier.width(152.dp).heightIn(min = 72.dp).testTag(tag).semantics {
+                contentDescription = "$label，$count 份文档"
+            },
         shape = RoundedCornerShape(16.dp),
         color = container,
         border =
