@@ -2,7 +2,7 @@
 
 ## 1.2.0 完整功能版
 
-本版交付 #22 练习册增强与预设改名、#21 满幅伪检测修复与拍后质检、#7 扫描质量基准。`releaseHold=false`，正式交付为`PaperForge-1.2.0-full-arm64-v8a.apk`，沿用原应用ID与证书，版本码10203，单ARM64。只核对版本、签名、ABI、ZIP/ELF 16KiB对齐与四个附件digest，记录干净源提交、SHA256与文件字节数。发布正文归档见[1.2.0说明](releases/1.2.0.md)，实证见[发布实证](acceptance/next/v120-release-summary.json)，能力与剩余设备验收见[1.2.0状态](quality/V1.2.0-STATUS.md)，安装见[INSTALL](INSTALL.md)。
+本版交付 #22 练习册增强与预设改名、#21 满幅伪检测修复与拍后质检、#7 扫描质量基准，以及 #28 分享即处理（去水印＋可选压缩＋微信/系统面板转发）。`releaseHold=false`，正式交付为`PaperForge-1.2.0-full-arm64-v8a.apk`，沿用原应用ID与证书，版本码10203，单ARM64。只核对版本、签名、ABI、ZIP/ELF 16KiB对齐与四个附件digest，记录干净源提交、SHA256与文件字节数。发布正文归档见[1.2.0说明](releases/1.2.0.md)，实证见[发布实证](acceptance/next/v120-release-summary.json)，能力与剩余设备验收见[1.2.0状态](quality/V1.2.0-STATUS.md)，安装见[INSTALL](INSTALL.md)。
 
 ## 1.1.0 完整功能版
 
