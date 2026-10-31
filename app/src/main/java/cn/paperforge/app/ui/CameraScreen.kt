@@ -47,13 +47,16 @@ import cn.paperforge.app.imaging.CameraQualityAnalyzer
 import cn.paperforge.app.imaging.LearnedDocumentDetector
 import cn.paperforge.app.imaging.ScanConfig
 import cn.paperforge.app.model.*
+import android.widget.Toast
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.hypot
 import kotlin.math.roundToInt
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.opencv.core.*
 
 @androidx.annotation.OptIn(androidx.camera.view.TransformExperimental::class)
@@ -204,6 +207,30 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                             override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                                 snapping.set(false)
                                 vm.captureReady(row)
+                                // Advisory check on the actual saved photo (#21). The page is
+                                // already queued, so nothing here can block or discard it.
+                                val saved = cn.paperforge.app.imaging.CaptureTasks.raw(row)
+                                captureScope.launch {
+                                    val hints =
+                                        withContext(Dispatchers.IO) {
+                                            runCatching {
+                                                val bitmap =
+                                                    cn.paperforge.app.imaging.ScanProcessor.decode(
+                                                        saved,
+                                                        1600,
+                                                    )
+                                                try {
+                                                    CameraQualityAnalyzer.postCapture(bitmap, snapshot)
+                                                } finally {
+                                                    bitmap.recycle()
+                                                }
+                                            }
+                                                .getOrNull()
+                                        } ?: emptyList()
+                                    val text = postCaptureHintText(hints)
+                                    if (text.isNotBlank())
+                                        Toast.makeText(context, text, Toast.LENGTH_LONG).show()
+                                }
                             }
 
                             override fun onError(exception: ImageCaptureException) {
@@ -724,26 +751,21 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                                                                     SettingKeys
                                                                                         .CaptureConfidence]
                                                                     qualityHint =
-                                                                        when {
-                                                                            detected == null -> ""
-                                                                            quality.sample !=
-                                                                                null &&
-                                                                                quality.sample
-                                                                                    .sharpness <
+                                                                        if (detected == null) ""
+                                                                        else
+                                                                            frameHintText(
+                                                                                CaptureHints.of(
+                                                                                    quality.sample,
+                                                                                    detected
+                                                                                        .cutOffEdges(),
                                                                                     ScanConfig
                                                                                         .float(
                                                                                             "captureSharpnessFloor",
                                                                                             60f,
-                                                                                        ) ->
-                                                                                "点击文字对焦"
-                                                                            quality.sample !=
-                                                                                null &&
-                                                                                quality.sample
-                                                                                    .glareFraction in
-                                                                                    0.03..0.45 ->
-                                                                                "调整角度可减少反光"
-                                                                            else -> ""
-                                                                        }
+                                                                                        )
+                                                                                        .toDouble(),
+                                                                                )
+                                                                            )
                                                                     val fire =
                                                                         if (
                                                                             latestAuto &&
@@ -1013,3 +1035,27 @@ private fun CameraLayout(
         if (!landscape) actions()
     }
 }
+
+/** Viewfinder phrasing: actionable before the shutter. */
+private fun frameHintText(hints: List<CaptureHint>): String =
+    when {
+        CaptureHint.BLUR in hints -> "点击文字对焦"
+        CaptureHint.MOTION in hints -> "局部模糊，保持稳定"
+        CaptureHint.GLARE in hints -> "调整角度可减少反光"
+        CaptureHint.MISSING_EDGE in hints -> "纸张边缘未入镜，请退后一点"
+        CaptureHint.DARK in hints -> "光线偏暗，建议补光"
+        CaptureHint.BRIGHT in hints -> "页面过亮，避开强光"
+        else -> ""
+    }
+
+/** Post-capture phrasing: the photo is already saved, so only a retake suggestion remains. */
+private fun postCaptureHintText(hints: List<CaptureHint>): String =
+    when {
+        CaptureHint.BLUR in hints -> "照片模糊，建议重拍"
+        CaptureHint.MOTION in hints -> "照片局部模糊，建议重拍"
+        CaptureHint.GLARE in hints -> "照片有反光，建议调整角度重拍"
+        CaptureHint.MISSING_EDGE in hints -> "纸张可能有缺边，建议退后重拍"
+        CaptureHint.DARK in hints -> "照片偏暗，建议补光重拍"
+        CaptureHint.BRIGHT in hints -> "照片过亮，建议避开强光重拍"
+        else -> ""
+    }

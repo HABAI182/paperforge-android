@@ -1,7 +1,9 @@
 package cn.paperforge.app.imaging
 
+import android.graphics.Bitmap
 import cn.paperforge.app.model.*
 import kotlin.math.*
+import org.opencv.android.Utils
 import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
 
@@ -67,6 +69,7 @@ object CameraQualityAnalyzer {
             Core.meanStdDev(laplacian, mean, deviation)
             val sharpness = deviation.toArray()[0].pow(2)
             var detailed = 0
+            var minDetailed = 0.0
             for (y in 0..2) for (x in 0..2) {
                 val tile = paper.submat(y * 200, (y + 1) * 200, x * 150, (x + 1) * 150)
                 val detail = laplacian.submat(y * 200, (y + 1) * 200, x * 150, (x + 1) * 150)
@@ -74,7 +77,13 @@ object CameraQualityAnalyzer {
                     Core.meanStdDev(tile, mean, deviation)
                     val contrast = deviation.toArray()[0]
                     Core.meanStdDev(detail, mean, deviation)
-                    if (contrast > 12 && deviation.toArray()[0].pow(2) > 20) detailed++
+                    val variance = deviation.toArray()[0].pow(2)
+                    // Only tiles that hold real detail can speak about local blur; blank margins
+                    // would otherwise look soft and raise a false motion hint.
+                    if (contrast > 12 && variance > 20) {
+                        detailed++
+                        if (minDetailed == 0.0 || variance < minDetailed) minDetailed = variance
+                    }
                 } finally {
                     tile.release()
                     detail.release()
@@ -92,6 +101,7 @@ object CameraQualityAnalyzer {
                     Core.mean(paper).`val`[0] / 255,
                     detailed,
                     glare,
+                    minDetailed,
                 ),
                 paperSignature.map { (it.toInt() and 255) / 255f },
                 values,
@@ -103,6 +113,18 @@ object CameraQualityAnalyzer {
             laplacian.release()
             mean.release()
             deviation.release()
+        }
+    }
+
+    /** Post-capture check on the saved photo. Advisory only: it never blocks saving. */
+    fun postCapture(bitmap: Bitmap, quad: Quad?): List<CaptureHint> {
+        val mat = Mat()
+        return try {
+            Utils.bitmapToMat(bitmap, mat)
+            val result = analyze(mat, quad ?: Quad.Full)
+            CaptureHints.of(result.sample, quad?.cutOffEdges() ?: 0)
+        } finally {
+            mat.release()
         }
     }
 }
