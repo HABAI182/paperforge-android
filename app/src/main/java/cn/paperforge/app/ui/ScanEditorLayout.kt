@@ -57,6 +57,8 @@ fun ScanEditorLayout(
     renameRequest: Int = 0,
     fullscreenRequest: Int = 0,
 ) {
+    val compactHeight = androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp < 480
+    val motion = LocalPaperMotion.current
     var fullscreen by rememberSaveable { mutableStateOf(false) }
     var enhance by rememberSaveable { mutableStateOf(false) }
     // #31: the thumbnail strip is persistent (collapsed only on explicit request or fullscreen).
@@ -294,82 +296,113 @@ fun ScanEditorLayout(
                         )
                     }
             }
-            if (!fullscreen && thumbnails && pages.isNotEmpty())
+            if (!fullscreen && thumbnails && !enhance && !compactHeight && pages.isNotEmpty())
                 ThumbnailStrip(
                     pages = pages,
                     current = stripIndex,
                     onSelect = { index ->
                         // #23 guard: the strip can outlive a page removal for one frame.
                         val target = index.coerceIn(0, pages.lastIndex)
-                        scope.launch { pager.animateScrollToPage(target) }
+                        scope.launch {
+                            if (motion.reduced) pager.scrollToPage(target)
+                            else pager.animateScrollToPage(target)
+                        }
                     },
                     onManage = { onAction("pages") },
                     onCollapse = { thumbnails = false },
                 )
-            if (!fullscreen && enhance && active != null)
-                Column(Modifier.background(MaterialTheme.colorScheme.surface)) {
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        itemsIndexed(ScanProcessor.filters) { _, filter ->
-                            Surface(
-                                onClick = { if (!busy) onFilter(active, filter) },
-                                enabled = !busy,
-                                modifier =
-                                    Modifier.semantics { selected = active.filter == filter },
-                                shape = RoundedCornerShape(10.dp),
-                                border =
-                                    BorderStroke(
-                                        if (active.filter == filter) 2.dp else 1.dp,
-                                        if (active.filter == filter)
-                                            MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.outlineVariant,
-                                    ),
-                            ) {
-                                Column(
-                                    Modifier.width(62.dp).padding(4.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
+            androidx.compose.animation.AnimatedVisibility(
+                visible = !fullscreen && enhance && active != null,
+                enter =
+                    androidx.compose.animation.expandVertically(
+                        androidx.compose.animation.core.tween(motion.panelMs)
+                    ) +
+                        androidx.compose.animation.fadeIn(
+                            androidx.compose.animation.core.tween(motion.stateMs)
+                        ),
+                exit =
+                    androidx.compose.animation.shrinkVertically(
+                        androidx.compose.animation.core.tween(motion.panelMs)
+                    ) +
+                        androidx.compose.animation.fadeOut(
+                            androidx.compose.animation.core.tween(motion.stateMs)
+                        ),
+            ) {
+                val filterPage = active
+                if (filterPage != null)
+                    Column(Modifier.background(MaterialTheme.colorScheme.surface)) {
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            itemsIndexed(ScanProcessor.filters) { _, filter ->
+                                Surface(
+                                    onClick = { if (!busy) onFilter(filterPage, filter) },
+                                    enabled = !busy,
+                                    modifier =
+                                        Modifier.semantics {
+                                            selected = filterPage.filter == filter
+                                        },
+                                    shape = RoundedCornerShape(10.dp),
+                                    border =
+                                        BorderStroke(
+                                            if (filterPage.filter == filter) 2.dp else 1.dp,
+                                            if (filterPage.filter == filter)
+                                                MaterialTheme.colorScheme.primary
+                                            else MaterialTheme.colorScheme.outlineVariant,
+                                        ),
                                 ) {
-                                    pageBitmap(active.copy(filter = filter), 130)?.let {
-                                        Image(it.asImageBitmap(), null, Modifier.height(54.dp))
+                                    Column(
+                                        Modifier.width(62.dp).padding(4.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                    ) {
+                                        pageBitmap(filterPage.copy(filter = filter), 130)?.let {
+                                            Image(
+                                                it.asImageBitmap(),
+                                                null,
+                                                Modifier.height(if (compactHeight) 28.dp else 54.dp),
+                                            )
+                                        }
+                                        Text(
+                                            scanFilterName(filter),
+                                            style = MaterialTheme.typography.labelMedium,
+                                        )
                                     }
-                                    Text(
-                                        scanFilterName(filter),
-                                        style = MaterialTheme.typography.labelMedium,
-                                    )
                                 }
                             }
                         }
-                    }
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                        TextButton(onClick = { compare = !compare }) {
-                            Text(if (compare) "查看增强" else "对比原图")
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                        ) {
+                            TextButton(onClick = { compare = !compare }) {
+                                Text(if (compare) "查看增强" else "对比原图")
+                            }
+                            TextButton(onClick = { onAction("adjust") }, enabled = !busy) {
+                                Text("调节强度")
+                            }
+                            TextButton(onClick = { onAction("applyAll") }, enabled = !busy) {
+                                Text("应用全部")
+                            }
+                            TextButton(onClick = { enhance = false }) { Text("收起") }
                         }
-                        TextButton(onClick = { onAction("adjust") }, enabled = !busy) {
-                            Text("调节强度")
+                        Text(
+                            "按住画布可临时查看原图；「应用全部」沿用既有语义（一次撤销回退一页）",
+                            Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        TextButton(
+                            onClick = { onAction("retouch") },
+                            enabled = !busy,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Icon(Icons.Default.AutoFixHigh, null, Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("清理与修复 · 涂抹、去噪、超分")
                         }
-                        TextButton(onClick = { onAction("applyAll") }, enabled = !busy) {
-                            Text("应用全部")
-                        }
-                        TextButton(onClick = { enhance = false }) { Text("收起") }
                     }
-                    Text(
-                        "按住画布可临时查看原图；「应用全部」沿用既有语义（一次撤销回退一页）",
-                        Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    TextButton(
-                        onClick = { onAction("retouch") },
-                        enabled = !busy,
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Icon(Icons.Default.AutoFixHigh, null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text("清理与修复 · 涂抹、去噪、超分")
-                    }
-                }
+            }
         }
     }
     if (rename) {
@@ -453,12 +486,8 @@ private fun ThumbnailStrip(
                     }
                 }
             }
-            IconButton(onClick = onManage) {
-                Icon(Icons.Default.GridView, "页面管理")
-            }
-            IconButton(onClick = onCollapse) {
-                Icon(Icons.Default.KeyboardArrowDown, "收起缩略图条")
-            }
+            IconButton(onClick = onManage) { Icon(Icons.Default.GridView, "页面管理") }
+            IconButton(onClick = onCollapse) { Icon(Icons.Default.KeyboardArrowDown, "收起缩略图条") }
         }
     }
 }

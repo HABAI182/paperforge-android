@@ -1,6 +1,5 @@
 package cn.paperforge.app.ui
 
-import android.graphics.Bitmap
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -349,12 +348,38 @@ fun CropDialog(page: PageRow, onDismiss: () -> Unit, onSave: (Quad, Float) -> Un
                     ) {
                         TextButton(onClick = { points = Quad.Full.points }) { Text("全图") }
                         TextButton(
+                            onClick = {
+                                points = CropGeometry.expand(Quad(points), .02f).points
+                                notice = "已向外留边，避免裁掉页边文字。"
+                            }
+                        ) {
+                            Text("向外留边")
+                        }
+                        TextButton(
                             enabled = bitmap != null && !detecting,
                             onClick = {
                                 detecting = true
-                                scope.launchIoDetect(bitmap!!) { q ->
-                                    q?.let { points = it.points }
-                                    detecting = false
+                                scope.launch {
+                                    try {
+                                        val result =
+                                            withContext(Dispatchers.Default) {
+                                                ScanProcessor.detectFile(
+                                                    java.io.File(page.original),
+                                                    lockReference = false,
+                                                )
+                                            }
+                                        result.quad?.let { points = it.points }
+                                        notice =
+                                            if (result.quad == null) "未找到完整纸边，已保留当前四角；可手动微调。"
+                                            else if (result.confidence < .6f) "已从原图重检，边缘较弱，请检查四角。"
+                                            else "已从原始照片重新检测纸边。"
+                                    } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                                        throw cancelled
+                                    } catch (failure: Exception) {
+                                        notice = failure.message ?: "重新检测失败，当前四角已保留。"
+                                    } finally {
+                                        detecting = false
+                                    }
                                 }
                             },
                         ) {
@@ -372,15 +397,4 @@ fun CropDialog(page: PageRow, onDismiss: () -> Unit, onSave: (Quad, Float) -> Un
             }
         }
     }
-}
-
-private fun kotlinx.coroutines.CoroutineScope.launchIoDetect(
-    bitmap: Bitmap,
-    done: (Quad?) -> Unit,
-) = launch {
-    done(
-        withContext(Dispatchers.Default) {
-            runCatching { ScanProcessor.detect(bitmap) }.getOrNull()
-        }
-    )
 }

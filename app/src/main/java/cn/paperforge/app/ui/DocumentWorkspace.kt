@@ -1,6 +1,8 @@
 package cn.paperforge.app.ui
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
@@ -41,6 +44,21 @@ fun DocumentWorkspace(vm: MainViewModel, screen: String, content: @Composable ()
     val enabled = remember(revision) { UserSettings[SettingKeys.DocumentSidebar] }
     var focus by rememberSaveable { mutableStateOf(false) }
     val motion = LocalPaperMotion.current
+    val tab by vm.homeTab.collectAsState()
+    val group by vm.workspaceGroup.collectAsState()
+    val entrance = remember { Animatable(1f) }
+    LaunchedEffect(
+        screen,
+        if (screen == "home") tab else -1,
+        if (screen == "home") group else "",
+        motion.reduced,
+    ) {
+        if (motion.reduced || screen == "capture") entrance.snapTo(1f)
+        else {
+            entrance.snapTo(0f)
+            entrance.animateTo(1f, tween(motion.screenMs, easing = FastOutSlowInEasing))
+        }
+    }
     val font = LocalDensity.current.fontScale
     val density = LocalDensity.current
     val fold = rememberWorkspaceFold()
@@ -114,7 +132,16 @@ fun DocumentWorkspace(vm: MainViewModel, screen: String, content: @Composable ()
                             Modifier.fillMaxSize()
                                 .padding(start = (320 * font.coerceIn(1f, 1.2f)).dp + 1.dp)
                 }
-            Box(documentModifier) { pane() }
+            // Animate the same content tree; outgoing screens never run duplicate camera/OCR
+            // effects.
+            Box(
+                documentModifier.graphicsLayer {
+                    alpha = entrance.value
+                    translationY = 12.dp.toPx() * (1f - entrance.value)
+                }
+            ) {
+                pane()
+            }
         }
     }
 }
