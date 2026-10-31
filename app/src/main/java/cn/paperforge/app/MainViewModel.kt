@@ -10,6 +10,8 @@ import cn.paperforge.app.data.*
 import cn.paperforge.app.model.safeFileName
 import cn.paperforge.app.pdf.*
 import cn.paperforge.app.share.ShareEnhance
+import com.tom_roush.pdfbox.io.MemoryUsageSetting
+import com.tom_roush.pdfbox.pdmodel.PDDocument
 import java.io.File
 import java.util.UUID
 import kotlinx.coroutines.*
@@ -2482,6 +2484,43 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             PdfTools.encrypt(File(doc.pdfPath!!), file, password, printing, copying)
             outputLocked.value = true
             publishOutput(file, doc)
+        }
+
+    /**
+     * #27 in-app entry: scan the current PDF first, then clean object-level watermarks into a copy.
+     * The source file is only read; a PDF without recognised candidates never produces an empty copy.
+     */
+    fun removeObjectWatermarks() =
+        perform("正在检查对象级水印") {
+            val doc = selected.value ?: return@perform
+            val input = doc.pdfPath?.let(::File) ?: return@perform
+            val scan =
+                PDDocument.load(input, MemoryUsageSetting.setupTempFileOnly()).use {
+                    PdfWatermarks.scan(it)
+                }
+            if (!scan.found) {
+                messages.send("未检测到可识别的对象级水印")
+                return@perform
+            }
+            progress.value =
+                "正在处理 ${scan.images.size} 个图片水印与 ${scan.texts.size} 处文字水印"
+            val file = OutputNames.create(repo, UUID.randomUUID().toString(), doc.title, "pdf")
+            var published = false
+            try {
+                val report = PdfWatermarks.remove(input, file)
+                outputLocked.value = false
+                publishOutput(
+                    file,
+                    doc,
+                    "已移除 ${report.imagesRemoved} 个图片水印，删除/遮盖 ${report.textCovers} 处文字水印",
+                )
+                published = true
+            } finally {
+                if (!published) {
+                    file.delete()
+                    File(file.path + ".part").delete()
+                }
+            }
         }
 
     fun forms() = queueTool("forms")

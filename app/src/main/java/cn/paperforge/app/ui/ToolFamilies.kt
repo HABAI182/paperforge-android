@@ -27,7 +27,8 @@ internal fun pdfFamily(mode: String): String =
         "annotate",
         "native-edit",
         "forms",
-        "watermark" -> "edit"
+        "watermark",
+        "watermark-clean" -> "edit"
         "encrypt",
         "redact",
         "certificates",

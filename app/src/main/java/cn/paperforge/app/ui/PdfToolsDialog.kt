@@ -209,6 +209,12 @@ internal fun PdfToolsDialog(
                             },
                         )
                     if (mode == "crop") Text("调整 CropBox，可见范围外的内容仍保留。")
+                    if (mode == "watermark-clean")
+                        Text(
+                            "整篇检查重复小图与角落短文字；检测到候选才生成新副本，不覆盖原件。" +
+                                "文字水印优先删除文字层内容，无法解码时遮盖。" +
+                                "已栅格化的 logo / 平铺水印不在本次范围。"
+                        )
                     if (mode == "encrypt") {
                         OutlinedTextField(
                             value = text,
@@ -277,6 +283,10 @@ internal fun PdfToolsDialog(
                     enabled = mode != "long-image" || longValid,
                     onClick = {
                         when (mode) {
+                            "watermark-clean" -> {
+                                vm.removeObjectWatermarks()
+                                onDismiss()
+                            }
                             "encrypt" ->
                                 if (text.isNotEmpty()) {
                                     vm.encrypt(text, printAllowed, copyAllowed)
