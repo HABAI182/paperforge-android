@@ -1,0 +1,89 @@
+{
+  "engine": "app-current",
+  "dataset": "synthetic-v1",
+  "environment": "API35 x86_64 emulator (aosp_atd, software GPU)",
+  "physical_device": false,
+  "detection_cases": 74,
+  "negative_cases": 8,
+  "mean_iou": 0.9906321972441199,
+  "median_iou": 0.9955662001932334,
+  "mean_corner_error_pct": 0.252864839851223,
+  "failure_rate_iou_lt_070": 0.0,
+  "detection_rate": 0.7702702702702703,
+  "full_frame_fallbacks": 17,
+  "failure_rate_iou_lt_050": 0.0,
+  "detect_ms_p50": 290.50784999999996,
+  "detect_ms_p95": 439.38797999999997,
+  "false_positive_rate_at_auto_capture_confidence": 0.0,
+  "false_positive_rule": "negative case accepted when a quad is returned with confidence >= 0.8",
+  "false_positive_files": [],
+  "negative_predictions": [],
+  "scenes": {
+    "dark-desk": {
+      "n": 8,
+      "mean_iou": 0.9960403268602448,
+      "mean_corner_error_pct": 0.10658189884862998,
+      "failures": 0
+    },
+    "white-desk": {
+      "n": 8,
+      "mean_iou": 0.9951477974621876,
+      "mean_corner_error_pct": 0.11428545333977175,
+      "failures": 0
+    },
+    "wood": {
+      "n": 8,
+      "mean_iou": 0.9950519008833322,
+      "mean_corner_error_pct": 0.14469572135912717,
+      "failures": 0
+    },
+    "clutter": {
+      "n": 8,
+      "mean_iou": 0.9953492809174334,
+      "mean_corner_error_pct": 0.15071804167137864,
+      "failures": 0
+    },
+    "shadow": {
+      "n": 8,
+      "mean_iou": 0.9956145228395225,
+      "mean_corner_error_pct": 0.13605439835661892,
+      "failures": 0
+    },
+    "glare": {
+      "n": 8,
+      "mean_iou": 0.9956428291511216,
+      "mean_corner_error_pct": 0.11538439736477808,
+      "failures": 0
+    },
+    "fills-frame": {
+      "n": 8,
+      "mean_iou": 0.9500503540039062,
+      "mean_corner_error_pct": 1.3149420591680456,
+      "failures": 0
+    },
+    "similar-luminance-color": {
+      "n": 8,
+      "mean_iou": 0.9963361251566832,
+      "mean_corner_error_pct": 0.11998053400882991,
+      "failures": 0
+    },
+    "ocr-mixed": {
+      "n": 8,
+      "mean_iou": 1.0,
+      "mean_corner_error_pct": 0.0,
+      "failures": 0
+    },
+    "ocr-regression": {
+      "n": 1,
+      "mean_iou": 0.9954246695002823,
+      "mean_corner_error_pct": 0.09148033432220727,
+      "failures": 0
+    },
+    "resolution-12mp": {
+      "n": 1,
+      "mean_iou": 0.9574928283691406,
+      "mean_corner_error_pct": 0.9993777817308549,
+      "failures": 0
+    }
+  }
+}

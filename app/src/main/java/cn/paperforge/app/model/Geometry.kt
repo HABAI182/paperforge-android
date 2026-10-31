@@ -27,6 +27,19 @@ data class Quad(val points: List<PointN>) {
 
     fun encode() = points.joinToString(";") { "${it.x},${it.y}" }
 
+    /**
+     * A quad that only traces the sensor/letterbox frame carries no crop information: a real page
+     * fit keeps a visible inset, while blank or border-heavy scenes produce a ring glued to the
+     * frame. Treated as "nothing detected" so a full-frame capture is not reported as a located
+     * document (and does not feed confidence gates or auto-capture).
+     */
+    fun hugsFrame(tolerance: Float = .012f): Boolean {
+        if (area < .9f) return false
+        return points.all { p ->
+            p.x <= tolerance || p.x >= 1f - tolerance || p.y <= tolerance || p.y >= 1f - tolerance
+        }
+    }
+
     companion object {
         val Full = Quad(listOf(PointN(0f, 0f), PointN(1f, 0f), PointN(1f, 1f), PointN(0f, 1f)))
 
