@@ -91,6 +91,15 @@ fun SettingsScreen(vm: MainViewModel) {
                 OutlinedButton(onClick = vm::openOcrModels, modifier = Modifier.fillMaxWidth()) {
                     Text("离线 OCR 与模型包")
                 }
+            if (visible("OCR 识字 识别 校对 置信度 高亮 阈值 审核", "ocr")) {
+                PreferenceBlock("文字校对") {
+                    SettingSlider("低置信度高亮阈值", "ocrProofreadThreshold", .6f, .3f..0.9f, "%", 100f)
+                    Text(
+                        "校对页把低于该值的行/词标为待核对，可「上一个/下一个」跳转。模型没有给出置信度的片段不会高亮。",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
             if (visible("档案 配置 预设 扫描 默认", "scan"))
                 OutlinedButton(
                     onClick = { vm.openProfiles("settings") },

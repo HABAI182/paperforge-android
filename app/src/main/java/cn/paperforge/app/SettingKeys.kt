@@ -76,6 +76,7 @@ object SettingKeys {
             "AUTO",
             setOf("AUTO", "ROWS", "COLUMNS_LTR", "COLUMNS_RTL", "VERTICAL_RTL", "VERTICAL_LTR"),
         )
+    val OcrProofreadThreshold = SettingKey.Number("ocrProofreadThreshold", .6f, .3f..0.9f)
     val Searchable = SettingKey.Bool("searchable", false)
     val Paper = SettingKey.Text("paper", "Auto", setOf("Auto", "A4", "A5", "Letter", "ID"))
     val Resolution =
@@ -153,6 +154,7 @@ object SettingKeys {
             OcrMode,
             OcrVoting,
             OcrOrder,
+            OcrProofreadThreshold,
             Searchable,
             Paper,
             Resolution,

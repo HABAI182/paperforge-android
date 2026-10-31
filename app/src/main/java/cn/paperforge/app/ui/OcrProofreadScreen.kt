@@ -25,7 +25,10 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
+import cn.paperforge.app.SettingKeys
+import cn.paperforge.app.UserSettings
 import cn.paperforge.app.model.*
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,13 +54,35 @@ fun OcrProofreadScreen(vm: MainViewModel) {
             mutableStateOf(OcrRegion(.1f, .1f, .9f, .3f))
         }
     val layout = remember(page?.ocrLayout) { page?.ocrLayout?.let(OcrLayout::decode) }
+    val settingsRevision by UserSettings.revision.collectAsState()
+    val threshold =
+        remember(settingsRevision) {
+            OcrConfidence.threshold(UserSettings[SettingKeys.OcrProofreadThreshold])
+        }
+    val flagged =
+        remember(layout, threshold) {
+            layout?.let { OcrConfidence.lowLines(it, threshold) }.orEmpty()
+        }
     val line = layout?.lines?.getOrNull(lineIndex)
     val sourceText = wordIndex?.let { line?.elements?.getOrNull(it)?.text } ?: line?.text.orEmpty()
     var draft by
         rememberSaveable(page?.id, lineIndex, wordIndex, sourceText) { mutableStateOf(sourceText) }
     LaunchedEffect(page?.ocrLayout, lineIndex, wordIndex) {
-        if (layout != null && lineIndex > layout.lines.lastIndex)
-            lineIndex = layout.lines.lastIndex.coerceAtLeast(0)
+        val current = layout ?: return@LaunchedEffect
+        if (lineIndex > current.lines.lastIndex)
+            lineIndex = current.lines.lastIndex.coerceAtLeast(0)
+        val words = current.lines.getOrNull(lineIndex)?.elements?.size ?: 0
+        val selectedWord = wordIndex
+        // A whole-line correction clears the element list; do not keep a stale word selection.
+        if (selectedWord != null && selectedWord >= words) wordIndex = null
+    }
+    val jumpLowConfidence: (Boolean) -> Unit = { forward ->
+        val current = layout
+        val target = current?.let { OcrConfidence.step(lineIndex, flagged, forward) }
+        if (current != null && target != null) {
+            lineIndex = target
+            wordIndex = OcrConfidence.lowWords(current.lines[target], threshold).firstOrNull()
+        }
     }
     val previewPage =
         page?.copy(
@@ -134,6 +159,7 @@ fun OcrProofreadScreen(vm: MainViewModel) {
                     wordIndex,
                     regional,
                     region,
+                    threshold,
                     onSelect = { index, word ->
                         lineIndex = index
                         wordIndex = word
@@ -214,6 +240,31 @@ fun OcrProofreadScreen(vm: MainViewModel) {
                             }
                         }
                         Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                        ) {
+                            TextButton(
+                                onClick = { jumpLowConfidence(false) },
+                                enabled = flagged.isNotEmpty(),
+                            ) {
+                                Text("上一个低置信度")
+                            }
+                            TextButton(
+                                onClick = { jumpLowConfidence(true) },
+                                enabled = flagged.isNotEmpty(),
+                            ) {
+                                Text("下一个低置信度")
+                            }
+                        }
+                        Text(
+                            "低置信度 ${flagged.size} / ${layout?.lines?.size ?: 0} 行" +
+                                " · 高亮阈值 ${(threshold * 100).roundToInt()}%",
+                            style = MaterialTheme.typography.bodySmall,
+                            color =
+                                if (flagged.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant
+                                else MaterialTheme.colorScheme.error,
+                        )
+                        Row(
                             Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
@@ -229,6 +280,49 @@ fun OcrProofreadScreen(vm: MainViewModel) {
                                     label = { Text(element.text) },
                                 )
                             }
+                        }
+                        val selectedWord = wordIndex
+                        val currentConfidence =
+                            if (selectedWord == null) line.confidence
+                            else line.elements.getOrNull(selectedWord)?.confidence
+                        val currentLow = OcrConfidence.isLow(currentConfidence, threshold)
+                        Text(
+                            "当前${if (wordIndex == null) "行" else "词"}置信度：" +
+                                (currentConfidence?.let { "%.2f".format(it) } ?: "未知") +
+                                if (currentLow) " · 低于阈值" else "",
+                            style = MaterialTheme.typography.bodySmall,
+                            color =
+                                if (currentLow) MaterialTheme.colorScheme.error
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        val candidates =
+                            remember(line, wordIndex) {
+                                if (wordIndex != null) emptyList()
+                                else
+                                    line.hypotheses
+                                        .map { it.text }
+                                        .filter { it.isNotBlank() && it != line.text }
+                                        .distinct()
+                            }
+                        if (candidates.isNotEmpty()) {
+                            Text("引擎给出的候选（点选填入，确认后再保存）", style = MaterialTheme.typography.labelLarge)
+                            Row(
+                                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                candidates.forEach { candidate ->
+                                    FilterChip(
+                                        selected = draft == candidate,
+                                        onClick = { draft = candidate },
+                                        label = { Text(candidate) },
+                                    )
+                                }
+                            }
+                        } else if (currentLow) {
+                            Text(
+                                "当前引擎未给出这一处的候选文本，只能手动修改。",
+                                style = MaterialTheme.typography.bodySmall,
+                            )
                         }
                         OutlinedTextField(
                             draft,
@@ -293,6 +387,7 @@ private fun ProofCanvas(
     word: Int?,
     regional: Boolean,
     region: OcrRegion,
+    threshold: Float,
     onSelect: (Int, Int?) -> Unit,
     onRegion: (OcrRegion) -> Unit,
     error: String? = null,
@@ -300,6 +395,7 @@ private fun ProofCanvas(
     var zoom by remember { mutableFloatStateOf(1f) }
     var anchor by remember { mutableStateOf(PointN(.5f, .5f)) }
     val color = MaterialTheme.colorScheme.primary
+    val warning = MaterialTheme.colorScheme.error
     val line = layout?.lines?.getOrNull(selected)
     val polygon = word?.let { line?.elements?.getOrNull(it)?.corners } ?: line?.corners
     val center =
@@ -414,12 +510,32 @@ private fun ProofCanvas(
                             drawPath(path, tint, style = Stroke(width))
                         }
                         layout?.lines?.forEachIndexed { index, item ->
+                            val low = OcrConfidence.lineIsLow(item, threshold)
                             outline(
                                 item.corners,
-                                if (!regional && index == selected) color
-                                else color.copy(alpha = .25f),
-                                if (index == selected) 1.1.dp.toPx() / zoom else .5.dp.toPx() / zoom,
+                                when {
+                                    !regional && index == selected -> color
+                                    low -> warning
+                                    else -> color.copy(alpha = .25f)
+                                },
+                                when {
+                                    !regional && index == selected -> 1.1.dp.toPx() / zoom
+                                    low -> .9.dp.toPx() / zoom
+                                    else -> .5.dp.toPx() / zoom
+                                },
                             )
+                        }
+                        if (!regional) {
+                            layout?.lines?.forEachIndexed { index, item ->
+                                OcrConfidence.lowWords(item, threshold).forEach { lowWord ->
+                                    if (index != selected || lowWord != word)
+                                        outline(
+                                            item.elements[lowWord].corners,
+                                            warning,
+                                            .9.dp.toPx() / zoom,
+                                        )
+                                }
+                            }
                         }
                         if (!regional && word != null && polygon != null)
                             outline(polygon, color, 1.4.dp.toPx() / zoom)
