@@ -355,6 +355,16 @@ class MainActivity : ComponentActivity() {
                     if (vm.renameNotice.value == notice) vm.renameNotice.value = null
                     if (result == SnackbarResult.ActionPerformed) vm.undoBatchNames()
                 }
+                val folderNotice by vm.folderNotice.collectAsState()
+                LaunchedEffect(folderNotice) {
+                    val notice = folderNotice ?: return@LaunchedEffect
+                    val result =
+                        snackbar.showSnackbar(notice, "撤销", duration = SnackbarDuration.Long)
+                    if (vm.folderNotice.value == notice) {
+                        if (result == SnackbarResult.ActionPerformed) vm.undoLibraryFolder()
+                        else vm.folderNotice.value = null
+                    }
+                }
                 LaunchedEffect(incoming, busy) {
                     if (busy) return@LaunchedEffect
                     incoming?.let { source ->
@@ -395,38 +405,93 @@ class MainActivity : ComponentActivity() {
                 val shareProcessing by vm.shareProcessing.collectAsState()
                 val shareStatus by vm.shareStatus.collectAsState()
                 val shareReady by vm.shareReady.collectAsState()
-                LaunchedEffect(shareReady) {
-                    val file = shareReady ?: return@LaunchedEffect
-                    vm.shareReady.value = null
-                    runCatching {
-                            val uri =
-                                FileProvider.getUriForFile(
-                                    this@MainActivity,
-                                    "$packageName.files",
-                                    file,
-                                )
-                            val send =
-                                Intent(Intent.ACTION_SEND)
-                                    .setType("application/pdf")
-                                    .putExtra(Intent.EXTRA_STREAM, uri)
-                                    .putExtra(Intent.EXTRA_TITLE, file.name)
-                                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            val wechat = UserSettings[SettingKeys.ShareForward] == "wechat"
-                            val explicit =
-                                wechat &&
+                shareReady?.let { file ->
+                    AlertDialog(
+                        onDismissRequest = {
+                            vm.shareReady.value = null
+                            if (intent.action == Intent.ACTION_SEND) finish()
+                        },
+                        title = { Text("PDF 已处理") },
+                        text = { Text("${file.name}\n可保存到手机文件夹，或继续分享到其他应用。") },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    vm.output.value = file
+                                    vm.shareReady.value = null
+                                    save.launch(
+                                        Intent(Intent.ACTION_CREATE_DOCUMENT)
+                                            .addCategory(Intent.CATEGORY_OPENABLE)
+                                            .setType("application/pdf")
+                                            .putExtra(Intent.EXTRA_TITLE, file.name)
+                                    )
+                                }
+                            ) {
+                                Text("保存到本地 PDF")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(
+                                onClick = {
                                     runCatching {
-                                            startActivity(
-                                                Intent(send)
-                                                    .setPackage("com.tencent.mm")
-                                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                            )
-                                            true
+                                            val uri =
+                                                FileProvider.getUriForFile(
+                                                    this@MainActivity,
+                                                    "$packageName.files",
+                                                    file,
+                                                )
+                                            val send =
+                                                Intent(Intent.ACTION_SEND)
+                                                    .setType("application/pdf")
+                                                    .putExtra(Intent.EXTRA_STREAM, uri)
+                                                    .putExtra(Intent.EXTRA_TITLE, file.name)
+                                                    .apply {
+                                                        clipData =
+                                                            android.content.ClipData.newRawUri(
+                                                                file.name,
+                                                                uri,
+                                                            )
+                                                    }
+                                                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                            val forwarded =
+                                                UserSettings[SettingKeys.ShareForward] ==
+                                                    "wechat" &&
+                                                    runCatching {
+                                                            startActivity(
+                                                                Intent(send)
+                                                                    .setPackage("com.tencent.mm")
+                                                            )
+                                                            true
+                                                        }
+                                                        .getOrDefault(false)
+                                            if (!forwarded)
+                                                startActivity(
+                                                    Intent.createChooser(send, "分享处理后的 PDF")
+                                                        .putExtra(
+                                                            Intent.EXTRA_EXCLUDE_COMPONENTS,
+                                                            arrayOf(
+                                                                android.content.ComponentName(
+                                                                    this@MainActivity,
+                                                                    MainActivity::class.java,
+                                                                )
+                                                            ),
+                                                        )
+                                                )
+                                            vm.shareReady.value = null
+                                            // Remove this temporary share entry from the caller's
+                                            // back stack.
+                                            // NEW_TASK previously brought the scanner back through
+                                            // PaperForge.
+                                            if (intent.action == Intent.ACTION_SEND) finish()
                                         }
-                                        .getOrDefault(false)
-                            if (!explicit)
-                                startActivity(Intent.createChooser(send, "转发处理后的 PDF"))
-                        }
-                        .onFailure { vm.messages.trySend(it.message ?: "无法转发处理后的 PDF") }
+                                        .onFailure {
+                                            vm.messages.trySend(it.message ?: "无法分享处理后的 PDF")
+                                        }
+                                }
+                            ) {
+                                Text("继续分享")
+                            }
+                        },
+                    )
                 }
                 if (shareProcessing) {
                     androidx.compose.ui.window.Dialog(onDismissRequest = {}) {
