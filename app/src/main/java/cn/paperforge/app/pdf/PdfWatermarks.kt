@@ -2,6 +2,7 @@ package cn.paperforge.app.pdf
 
 import com.tom_roush.pdfbox.contentstream.operator.Operator
 import com.tom_roush.pdfbox.cos.COSName
+import com.tom_roush.pdfbox.cos.COSString
 import com.tom_roush.pdfbox.io.MemoryUsageSetting
 import com.tom_roush.pdfbox.pdfparser.PDFStreamParser
 import com.tom_roush.pdfbox.pdfwriter.ContentStreamWriter
@@ -147,13 +148,17 @@ object PdfWatermarks {
                                 ContentStreamWriter(it).writeTokens(kept)
                             }
                             target.setContents(stream)
-                            val resources = target.resources ?: continue
-                            for (name in names) resources.cosObject.removeItem(name)
+                            val xobjects =
+                                target.cosObject
+                                    .getCOSDictionary(COSName.RESOURCES)
+                                    ?.getCOSDictionary(COSName.XOBJECT)
+                            if (xobjects != null) for (name in names) xobjects.removeItem(name)
                         }
                     }
                 }
                 for (mark in scan.texts) {
                     val page = pdf.getPage(mark.page)
+                    if (stripText(pdf, page, mark)) continue
                     PDPageContentStream(
                             pdf,
                             page,
@@ -182,6 +187,73 @@ object PdfWatermarks {
             if (part.exists()) part.delete()
         }
     }
+
+    /** Drops the text-showing operator matching the corner stain; false means "cover it instead". */
+    private fun stripText(pdf: PDDocument, page: PDPage, mark: TextMark): Boolean {
+        val resources = page.resources ?: return false
+        val target = normalize(mark.text)
+        if (target.isBlank()) return false
+        return runCatching {
+                val parser = PDFStreamParser(page)
+                parser.parse()
+                val tokens = parser.tokens.toMutableList()
+                val kept = ArrayList<Any>(tokens.size)
+                var font: com.tom_roush.pdfbox.pdmodel.font.PDFont? = null
+                var index = 0
+                while (index < tokens.size) {
+                    val token = tokens[index]
+                    if (token is Operator) {
+                        when (token.name) {
+                            "Tf" ->
+                                font =
+                                    (kept.getOrNull(kept.size - 2) as? COSName)?.let {
+                                        runCatching { resources.getFont(it) }.getOrNull()
+                                    }
+                            "Tj" -> {
+                                val operand = tokens.getOrNull(index - 1)
+                                if (operand is COSString && kept.lastOrNull() === operand) {
+                                    val text = decode(font, operand)
+                                    if (text != null && normalize(text) == target) {
+                                        kept.removeAt(kept.size - 1)
+                                        index++
+                                        continue
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    kept.add(token)
+                    index++
+                }
+                if (kept.size == tokens.size) return false
+                val stream = PDStream(pdf)
+                stream.createOutputStream(COSName.FLATE_DECODE).use {
+                    ContentStreamWriter(it).writeTokens(kept)
+                }
+                page.setContents(stream)
+                true
+            }
+            .getOrDefault(false)
+    }
+
+    private fun decode(font: com.tom_roush.pdfbox.pdmodel.font.PDFont?, value: COSString): String? {
+        font ?: return null
+        val stream = java.io.ByteArrayInputStream(value.bytes)
+        val text = StringBuilder()
+        return runCatching {
+                while (stream.available() > 0) {
+                    val code = font.readCode(stream)
+                    text.append(font.toUnicode(code) ?: return null)
+                }
+                text.toString()
+            }
+            .getOrNull()
+    }
+
+    private fun normalize(value: String): String =
+        java.text.Normalizer.normalize(value, java.text.Normalizer.Form.NFKC)
+            .replace("\\s".toRegex(), "")
+            .lowercase(java.util.Locale.ROOT)
 
     private class ChunkCollector : PDFTextStripper() {
         val chunks = mutableListOf<Chunk>()
