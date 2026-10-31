@@ -63,6 +63,14 @@ class QualityBenchmarkTest {
                     .put("decoded_width", image.width)
                     .put("decoded_height", image.height)
                     .put("confidence", result?.confidence ?: JSONObject.NULL)
+                    .put(
+                        "diagnostics",
+                        result?.let { detectedResult ->
+                            JSONObject(
+                                detectedResult.diagnostics.mapValues { it.value.toDouble() }.toMap()
+                            )
+                        } ?: JSONObject.NULL,
+                    )
                     .put("method", result?.method ?: "v020")
                     .put(
                         "predicted",

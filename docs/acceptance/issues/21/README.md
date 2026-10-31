@@ -35,6 +35,10 @@
 
 `CaptureHintsTest` 单测另覆盖 `MOTION`（局部模糊）、`BRIGHT`、`DARK`、空白页边不误报。
 
+## 已完成 3：检测置信度去饱和
+
+`NeuralEdgeDetector.fit()` 的置信度不再用 0.99 硬顶，改为四边 support 分布、脊线对齐残差、轮廓结构残差、角点峰值与面积/长宽比先验的连续分数；几何与候选选择未改。synthetic-v1 的 IoU / 误裁率 / 无文档误检率与 [after-frame-guard](../../scan-quality/geometry-after-frame-guard.json) 逐项相同；DocUNet 20 张从全 0.99 变为 0.702–0.910。详见 [置信度标定](confidence-calibration.md)。
+
 ## 仍未完成
 
 - **真实照片未验证**：模糊、反光、缺边、淡字、铅笔都要用真实手机照片复测后才能作为发布结论。
