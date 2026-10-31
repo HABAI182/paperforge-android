@@ -4,7 +4,7 @@ PaperForge是个人非营利的Android文档工具，无账户、广告、水印
 
 ## 下载安装
 
-打开[1.2.0发布页](https://github.com/HABAI182/paperforge-android/releases/tag/v1.2.0)，下载`PaperForge-1.2.0-full-arm64-v8a.apk`并安装。`release-manifest.json`和`SHA256SUMS.txt`是核对文件，无需安装。GitHub自动提供的源码压缩包也不是安装包。
+打开[1.3.0发布页](https://github.com/HABAI182/paperforge-android/releases/tag/v1.3.0)，下载`PaperForge-1.3.0-full-arm64-v8a.apk`并安装。`release-manifest.json`和`SHA256SUMS.txt`是核对文件，无需安装。GitHub自动提供的源码压缩包也不是安装包。
 
 一个完整APK已包含扫描、OCR、阅读、Office排版、表格重建、特殊格式和联网工具。系统桌面只有一个PaperForge图标。可覆盖原主应用并保留文档，不需要先卸载。旧Office、格式和联网扩展已不是运行依赖；旧联网工具中的历史结果需自行另存后再决定是否卸载。
 
@@ -30,4 +30,4 @@ PaperForge是个人非营利的Android文档工具，无账户、广告、水印
 
 扫描PDF默认不做OCR，导出原比例纸张、标准清晰度与90%图片质量。需要文字层时再明确开启；文件改名保留输入的名称，真实重名才做冲突处理。已有个人设置不会因升级重置。
 
-扫描、OCR和文件处理在手机运行。翻译首次需下载语言包，可选模型按需导入；自定义远程服务仅在你点击运行时使用。细节见[隐私](PRIVACY.md)、[能力与当前范围](quality/V1.2.0-STATUS.md)、[组件来源与许可](../LICENSE_NOTICES.md)。
+扫描、OCR和文件处理在手机运行。翻译首次需下载语言包，可选模型按需导入；自定义远程服务仅在你点击运行时使用。细节见[隐私](PRIVACY.md)、[能力与当前范围](quality/V1.3.0-STATUS.md)、[组件来源与许可](../LICENSE_NOTICES.md)。
