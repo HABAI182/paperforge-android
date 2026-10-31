@@ -8,6 +8,7 @@ import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.data.PageRow
 import cn.paperforge.app.model.CaptureReference
 import cn.paperforge.app.model.Quad
+import cn.paperforge.app.model.StillCrop
 import java.io.File
 import kotlin.math.*
 import org.opencv.android.Utils
@@ -130,29 +131,80 @@ object ScanProcessor {
                                 signature.signature,
                             )
                         if (reason != "matched") {
-                            mat.release()
-                            return detectResult(image, detectorOverride = detectorOverride).let {
-                                it.copy(
-                                    method = it.method + ";fresh-after-$reason",
-                                    diagnostics =
-                                        it.diagnostics +
-                                            mapOf(
-                                                "referenceAgeMs" to reference.age.toFloat(),
-                                                "referenceReused" to 0f,
-                                            ),
+                            val fresh =
+                                LearnedDocumentDetector.detect(
+                                    mat,
+                                    preview = false,
+                                    engineOverride = detectorOverride,
                                 )
-                            }
+                            val shift =
+                                fresh.quad
+                                    ?.takeIf { it.valid() }
+                                    ?.let { StillCrop.maxCornerShift(previewQuad, it) }
+                                    ?: -1f
+                            return fresh.copy(
+                                method = fresh.method + ";fresh-after-$reason",
+                                diagnostics =
+                                    fresh.diagnostics +
+                                        mapOf(
+                                            "referenceAgeMs" to reference.age.toFloat(),
+                                            "referenceReused" to 0f,
+                                            "stillMaxCornerShift" to shift,
+                                            "stillAdopted" to if (fresh.quad != null) 1f else 0f,
+                                        ),
+                                notes = fresh.notes + mapOf("stillReason" to "reference-$reason"),
+                            )
                         }
                     }
                     val refined = DocumentDetector.refine(mat, previewQuad)
+                    // Callers that only pass a hint (imports, manual retry) keep the exact old
+                    // viewfinder-refine behaviour; there is no capture reference to compare with.
+                    if (reference == null) {
+                        return DetectionResult(
+                            refined,
+                            .85f,
+                            "viewfinder+refined",
+                            mapOf(
+                                "referenceAgeMs" to -1f,
+                                "referenceReused" to 1f,
+                            ),
+                        )
+                    }
+                    // Second, independent detection on the saved still. The viewfinder quad is the
+                    // prior only for the fallback; the still result wins when the two disagree by
+                    // more than the configured shift and it is confident enough (#30).
+                    val still =
+                        LearnedDocumentDetector.detect(
+                            mat,
+                            preview = false,
+                            engineOverride = detectorOverride,
+                        )
+                    val decision =
+                        StillCrop.decide(
+                            previewQuad,
+                            reference.confidence,
+                            still.quad,
+                            still.confidence,
+                            refined,
+                            ScanConfig.float("stillRefineShift", StillCrop.DefaultShiftThreshold),
+                            ScanConfig.float(
+                                "stillRefineMinConfidence",
+                                StillCrop.DefaultMinConfidence,
+                            ),
+                        )
                     DetectionResult(
-                        refined,
-                        reference?.confidence ?: .85f,
-                        if (reference == null) "viewfinder+refined" else "preview-verified+refined",
-                        mapOf(
-                            "referenceAgeMs" to (reference?.age?.toFloat() ?: -1f),
-                            "referenceReused" to 1f,
-                        ),
+                        decision.quad,
+                        if (decision.adoptedStill) still.confidence else reference.confidence,
+                        (if (decision.adoptedStill) "still-verified+" + still.method
+                        else "preview-verified+refined") + ";" + decision.reason,
+                        still.diagnostics +
+                            decision.diagnostics() +
+                            mapOf(
+                                "referenceAgeMs" to reference.age.toFloat(),
+                                "referenceReused" to 1f,
+                                "stillDetectMs" to still.elapsedMs,
+                            ),
+                        notes = mapOf("stillReason" to decision.reason),
                     )
                 } finally {
                     mat.release()

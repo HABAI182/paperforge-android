@@ -11,6 +11,8 @@
   "houghFallbackScore": 0.88,
   "refineBandFraction": 0.008,
   "cropSafetyMargin": 0.01,
+  "stillRefineShift": 0.01,
+  "stillRefineMinConfidence": 0.6,
   "illuminationEdge": 480,
   "illuminationTilePercentile": 0.88,
   "illuminationStrength": 1.0,

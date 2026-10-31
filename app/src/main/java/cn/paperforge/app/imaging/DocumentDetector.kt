@@ -14,6 +14,8 @@ data class DetectionResult(
     val method: String,
     val diagnostics: Map<String, Float> = emptyMap(),
     val elapsedMs: Float = 0f,
+    /** Human-readable decision fields (e.g. why a still quad was or was not adopted). */
+    val notes: Map<String, String> = emptyMap(),
 )
 
 /**
