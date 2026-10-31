@@ -32,7 +32,7 @@ object EnhancePipeline {
         const val maximumGain = 2.9f
 
         /** Reverse-side bleed stays below this paper residual; thin pencil is above it. */
-        const val ghostFloor = 40f
+        const val ghostFloor = 16f
         const val inkGain = 1.35f
         const val sharpenAmount = .3f
     }
@@ -129,8 +129,10 @@ object EnhancePipeline {
                 }
             for (i in input.indices) {
                 val gain =
-                    (paperTarget / max(70, illumination[i].toInt() and 255))
-                        .coerceIn(.85f, maximumGain)
+                    (paperTarget / max(70, illumination[i].toInt() and 255)).coerceIn(
+                        .85f,
+                        maximumGain,
+                    )
                 input[i] =
                     ((input[i].toInt() and 255) * (1 + (gain - 1) * strength))
                         .toInt()
@@ -202,7 +204,17 @@ object EnhancePipeline {
                 Scalar(min(65.0, percentile(gh, grayBytes.size, .85f) * .22)),
                 threshold,
             )
-            Core.compare(f, threshold, destination, Core.CMP_GT)
+            // Keep a soft ink ramp: a hard comparison turns tiny paper fluctuations into
+            // fully black specks. Strong/solid ink remains black; faint edges retain grey.
+            val thresholds = FloatArray(grayBytes.size)
+            threshold.get(0, 0, thresholds)
+            val output = ByteArray(grayBytes.size)
+            for (i in output.indices) {
+                val ink = (thresholds[i] - (grayBytes[i].toInt() and 255)).coerceAtLeast(0f)
+                output[i] = (255f - ink * 10f).roundToInt().coerceIn(0, 255).toByte()
+            }
+            destination.create(gray.rows(), gray.cols(), CvType.CV_8UC1)
+            destination.put(0, 0, output)
         } finally {
             owned.forEach { it.release() }
         }
@@ -224,7 +236,8 @@ object EnhancePipeline {
             val paperValues = ByteArray(values.size)
             gray.get(0, 0, values)
             paper.get(0, 0, paperValues)
-            val floor = Workbook.ghostFloor + (1f - strength) * 40f
+            // A lower slider value must preserve more ink, not raise the erasure threshold.
+            val floor = Workbook.ghostFloor * strength
             val gain = Workbook.inkGain * (.85f + .15f * strength)
             for (i in values.indices) {
                 // Compare corrected ink against the corrected paper level, not the raw tile value:
@@ -236,8 +249,13 @@ object EnhancePipeline {
                     rawPaper *
                         (1f + (paperTarget.coerceIn(.85f, Workbook.maximumGain) - 1f) * strength)
                 val ink = (correctedPaper - (values[i].toInt() and 255)).coerceAtLeast(0f)
-                val kept = (ink - floor).coerceAtLeast(0f) * gain
-                values[i] = (255f - kept).coerceIn(0f, 255f).toInt().toByte()
+                // Attenuate low contrast bleed with a smooth knee rather than subtracting a
+                // fixed residual from every stroke (which erased pencil and washed out print).
+                val retention = if (floor <= 0f) 1f else ink / (ink + floor)
+                val kept = ink * retention * gain
+                val enhanced = (255f - kept).coerceIn(0f, 255f)
+                val original = values[i].toInt() and 255
+                values[i] = (original + (enhanced - original) * strength).roundToInt().toByte()
             }
             out.create(gray.rows(), gray.cols(), CvType.CV_8UC1)
             out.put(0, 0, values)
@@ -268,7 +286,7 @@ object EnhancePipeline {
         val ycc = Mat()
         val blurred = Mat()
         val channels = mutableListOf<Mat>()
-        val clahe = Imgproc.createCLAHE(if (mode == "TEXT") 1.8 else 1.25, Size(8.0, 8.0))
+        val clahe = Imgproc.createCLAHE(if (mode == "TEXT") 1.35 else 1.25, Size(8.0, 8.0))
         try {
             Imgproc.cvtColor(rgb, ycc, Imgproc.COLOR_RGB2YCrCb)
             Core.split(ycc, channels)
@@ -277,14 +295,14 @@ object EnhancePipeline {
                 clahe.apply(original, channels[0])
                 // Blend avoids flattening pencil and avoids amplifying noise like full CLAHE.
                 val blend =
-                    strength * (if (mode == "TEXT") .64 else if (mode == "COLOR") .42 else .28)
+                    strength * (if (mode == "TEXT") .32 else if (mode == "COLOR") .42 else .28)
                 Core.addWeighted(channels[0], blend, original, 1.0 - blend, 0.0, channels[0])
                 Imgproc.GaussianBlur(channels[0], blurred, Size(0.0, 0.0), .85)
                 val data = ByteArray(channels[0].rows() * channels[0].cols())
                 val low = ByteArray(data.size)
                 channels[0].get(0, 0, data)
                 blurred.get(0, 0, low)
-                val amount = (if (mode == "TEXT") .55f else .22f) * strength
+                val amount = (if (mode == "TEXT") .28f else .22f) * strength
                 for (i in data.indices) {
                     val value = data[i].toInt() and 255
                     val detail = value - (low[i].toInt() and 255)
