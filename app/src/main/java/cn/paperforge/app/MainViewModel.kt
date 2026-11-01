@@ -3013,6 +3013,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             assembly.flush()
             val count = BackupStore.restore(repo, uri, policy, applyWorkspace)
             canUndoNames.value = LibraryPreferences(repo.context).renameUndo().isNotEmpty()
+            libraryFolderPaths.value = LibraryPreferences(repo.context).folders()
+            folderUndo = null
+            folderNotice.value = null
             comparison.refreshFamilies()
             assembly.reload()
             val workspace = if (applyWorkspace) "已应用设置和工作区" else "已保留本机设置和工作区"

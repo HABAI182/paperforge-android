@@ -196,5 +196,10 @@
         }
       }
     }
-  ]
+  ],
+  "measurementRuntime": {
+    "opencvPython": "5.0.0.93",
+    "pymupdf": "2.0",
+    "Pillow": "13.0.0"
+  }
 }
