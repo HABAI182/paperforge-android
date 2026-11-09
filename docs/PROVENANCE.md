@@ -2,7 +2,7 @@
 
 ## The rule
 
-Competitor apps are a target for **visible results only**: what their exported pages look like, and how their crops behave on the same photos. PaperForge does not use their decompiled code, recovered pseudocode, disassembly, extracted models or extracted resources, and does not train on models derived from them. This replaces the policy in `docs/reviews/CLAUDE-0.6.0.md`.
+Competitor apps are a target for **visible results only**: what their exported pages look like, and how their crops behave on the same photos. PaperForge does not use their decompiled code, recovered pseudocode, disassembly, extracted models or extracted resources, and does not train on models derived from them. This replaces the policy in `docs/reviews/CLAUDE-0.6.0.md` (internal record, kept in the private archive).
 
 Every model in the app must have a recorded licence and a recorded training origin. `scripts/build_distribution.py` refuses to package any `.mnn` file, so the removed models cannot return from a stale local copy.
 
@@ -16,7 +16,7 @@ Running a competitor's app on the same photos and comparing its exported pages i
 | `ScanModel`, `NeuralEdgeDetector`, `ScanDetailModel`, `DocumentDetail`, `WorkbookRestore`, the model path in `PageDewarp`, `scan_runtime.cpp`, the MNN build | Code that existed to run those weights, including recovered preprocessing |
 | `OutlineTracker` as it was | Marked as adapted from recovered code. Rewritten from the Apache-2.0 upstream version in git history (`862fe2a`) and its behaviour tests |
 | Automatic removal of one vendor's watermark from shared PDFs | Targeted that vendor's brand automatically. The manual PDF tool stays, for documents the user may modify |
-| `docs/research/LOCAL-SCAN-APP-ANALYSIS.md`, `docs/research/DOCUMENT-DETAIL.md` | Records of the static analysis |
+| `docs/research/LOCAL-SCAN-APP-ANALYSIS.md` (deleted; not archived), `docs/research/DOCUMENT-DETAIL.md` (deleted; not archived) | Records of the static analysis |
 
 ## Current models
 
@@ -35,9 +35,9 @@ Running a competitor's app on the same photos and comparing its exported pages i
 2. **Builds already shared.** Any APK up to 20021 contains the three removed models, including the public release APKs above.
 3. **Code written after reading recovered material.** These records say analysis was read while the code was written, though the code itself was written for this project. They cannot prove a clean-room process:
    - an internal quality record of 2026-11-02 (kept by the owner, not published): `paper_pixels.cpp`, the `coherent-ink` compositor, `RuledPageRefinement`
-   - `docs/quality/FEEDBACK-CAMERA-LIBRARY-2026-11-01.md`: paper field and rule protection in `EnhancePipeline`
-   - `docs/quality/FEEDBACK-2026-11-01.md`: ridge fitting and paper curves
-   - `docs/quality/SCAN-EXPERIENCE-0.6.1.md`, `docs/quality/V2.0.0-STATUS.md`: mentions, not yet reviewed in detail
+   - `docs/quality/FEEDBACK-CAMERA-LIBRARY-2026-11-01.md` (internal record, kept in the private archive): paper field and rule protection in `EnhancePipeline`
+   - `docs/quality/FEEDBACK-2026-11-01.md` (internal record, kept in the private archive): ridge fitting and paper curves
+   - `docs/quality/SCAN-EXPERIENCE-0.6.1.md` (internal record, kept in the private archive), `docs/quality/V2.0.0-STATUS.md` (internal record, kept in the private archive): mentions, not yet reviewed in detail
 
    For a commercial release, have a lawyer review these, or have someone who has not seen that material reimplement them from a written specification.
 4. **Other non-open-source components.** Google ML Kit (OCR and translation) is proprietary but licensed for this use under Google's terms. MuPDF is AGPL-3.0, which requires offering the app's source to anyone the app is distributed to.

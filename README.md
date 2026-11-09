@@ -21,7 +21,8 @@ PaperForge 是一款开源的 Android 文档扫描与 PDF 工作台：拍照扫�
 ## v2.0.0 主要改进
 
 - 相机取景框稳定后即显示最终裁剪范围，并平滑移动。
-- 页面检测改用本项目自行训练的 PageNet，移除了全部第三方提取模型。
+- 全新导航、卡片与编辑器布局，页面切换和展开动画更连贯。
+- 页面检测改用本项目训练的 PageNet 模型，并对照照片中的真实纸边。
 - 工程图的构造线、虚线和草图保留更完整；横线本上的笔画跨线不再断开。
 - 封面和彩色图案保持颜色；手动裁剪可超出旧页面向外扩展。
 - 更新支持镜像下载和断点续传。
@@ -47,11 +48,11 @@ PaperForge 是一款开源的 Android 文档扫描与 PDF 工作台：拍照扫�
 - **本地处理：** 扫描、增强、OCR 与 PDF 处理都在手机上完成，不上传文档。
 - **可选的智能工具：** 只有在你自行配置接口地址和密钥后才会联网，并把你选中的文字发送到该接口。
 - **更新检查：** 只访问 GitHub 及其镜像。
-- **模型与第三方组件：** 来源和许可见 [来源记录](docs/PROVENANCE.md) 与 [第三方组件声明](LICENSE_NOTICES.md)。其中 PDF 引擎 MuPDF 采用 AGPL-3.0，Google ML Kit 按 Google 条款使用。
+- **模型与第三方组件：** PaperForge 自有代码开源（AGPL-3.0-or-later），但并非所有运行组件都是开源的——默认的文字识别使用 Google ML Kit（专有组件，在手机本地运行）。来源和许可见 [来源记录](docs/PROVENANCE.md) 与 [第三方组件声明](LICENSE_NOTICES.md)。
 
 ## 开发
 
-构建与测试说明见 [开发文档](docs/INSTALL.md) 与 `scripts/build_distribution.py`；开发过程记录在 `docs/`，旧版说明保存在 [docs/history](docs/history/)。
+构建与测试说明见 [开发文档](docs/INSTALL.md)、[架构说明](docs/ARCHITECTURE.md) 与 `scripts/build_distribution.py`；模型与代码来源见 [来源记录](docs/PROVENANCE.md)。
 
 ## 许可与致谢
 

@@ -32,3 +32,12 @@ hs_err_pid*.log
 replay_pid*.log
 *.part
 scripts/*_lab.py
+
+# Generated acceptance evidence, test reports and build logs stay local (archived privately on 2026-11-09).
+# The low-contrast sample is still read by scripts/bench/generate_fixtures.py.
+docs/acceptance/**
+!docs/acceptance/v020/
+!docs/acceptance/v020/samples/
+!docs/acceptance/v020/samples/**
+docs/quality/
+*.log

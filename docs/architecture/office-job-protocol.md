@@ -22,4 +22,4 @@
 
 ## 本组验证
 
-`OfficeJobFlowTest` 通过真实 DOCX → 两页 PDF 的 WorkManager 流程，检查中文/编号/金额、源 SHA256、结果登记与完成阶段复用。独立 MuPDF 再读和实际任务中心打开结果见 [验收记录](../acceptance/next/office-job-summary.json)。没有额外运行取消、杀进程和多个 OEM 后台策略的压力组合；原生内存峰值/真机帧时仍属于 JOB03 的未完成部分。
+`OfficeJobFlowTest` 通过真实 DOCX → 两页 PDF 的 WorkManager 流程，检查中文/编号/金额、源 SHA256、结果登记与完成阶段复用。独立 MuPDF 再读和实际任务中心打开结果见 验收记录。没有额外运行取消、杀进程和多个 OEM 后台策略的压力组合；原生内存峰值/真机帧时仍属于 JOB03 的未完成部分。

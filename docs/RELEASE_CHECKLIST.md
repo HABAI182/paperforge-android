@@ -2,17 +2,17 @@
 
 ## 1.2.0 完整功能版
 
-本版交付 #22 练习册增强与预设改名、#21 满幅伪检测修复与拍后质检、#7 扫描质量基准，以及 #28 分享即处理（去水印＋可选压缩＋微信/系统面板转发）。`releaseHold=false`，正式交付为`PaperForge-1.2.0-full-arm64-v8a.apk`，沿用原应用ID与证书，版本码10203，单ARM64。只核对版本、签名、ABI、ZIP/ELF 16KiB对齐与四个附件digest，记录干净源提交、SHA256与文件字节数。发布正文归档见[1.2.0说明](releases/1.2.0.md)，实证见[发布实证](acceptance/next/v120-release-summary.json)，能力与剩余设备验收见[1.2.0状态](quality/V1.2.0-STATUS.md)，安装见[INSTALL](INSTALL.md)。
+本版交付 #22 练习册增强与预设改名、#21 满幅伪检测修复与拍后质检、#7 扫描质量基准，以及 #28 分享即处理（去水印＋可选压缩＋微信/系统面板转发）。`releaseHold=false`，正式交付为`PaperForge-1.2.0-full-arm64-v8a.apk`，沿用原应用ID与证书，版本码10203，单ARM64。只核对版本、签名、ABI、ZIP/ELF 16KiB对齐与四个附件digest，记录干净源提交、SHA256与文件字节数。发布正文归档见[1.2.0说明](releases/1.2.0.md)，实证见发布实证，能力与剩余设备验收见1.2.0状态，安装见[INSTALL](INSTALL.md)。
 
 ## 1.1.0 完整功能版
 
-所有者要求直接以 1.1.0 上传并要求高效完成，本轮不重复运行功能测试。`releaseHold=false`，正式交付为`PaperForge-1.1.0-full-arm64-v8a.apk`，沿用原应用ID与证书，版本码10103，单ARM64。只核对版本、签名、ABI、ZIP/ELF 16KiB对齐与四个附件digest，记录干净源提交、SHA256与文件字节数。发布正文归档见[1.1.0说明](releases/1.1.0.md)，实证见[发布实证](acceptance/next/v110-release-summary.json)，能力与剩余设备验收见[1.1.0状态](quality/V1.1.0-STATUS.md)，安装见[INSTALL](INSTALL.md)。
+所有者要求直接以 1.1.0 上传并要求高效完成，本轮不重复运行功能测试。`releaseHold=false`，正式交付为`PaperForge-1.1.0-full-arm64-v8a.apk`，沿用原应用ID与证书，版本码10103，单ARM64。只核对版本、签名、ABI、ZIP/ELF 16KiB对齐与四个附件digest，记录干净源提交、SHA256与文件字节数。发布正文归档见[1.1.0说明](releases/1.1.0.md)，实证见发布实证，能力与剩余设备验收见1.1.0状态，安装见[INSTALL](INSTALL.md)。
 
 ## 1.0.1 完整功能版
 
 所有者已接受当前范围并授权发布单APK，`releaseHold=false`。正式交付为`PaperForge-1.0.0-full-arm64-v8a.apk`，沿用原应用ID与证书；Office、特殊格式与联网工具均内置，桌面只保留一个图标。当前完整包版本码10004。私有/公开是仓库可见性，稳定/预发布是发行渠道，两者分别管理。
 
-发布前检查真实版本、单ABI、所有者证书、ZIP/ELF16KiB对齐；记录干净源提交、SHA256、文件字节数。UI仅针对本次变化检查分类、返回、搜索、设置与分享入口；既有原生转换证据保留版本标记。发布后核对tag/source、三个附件及服务器digest，更新README、CHANGELOG、安装说明与状态文档。能力和剩余设备验收见[1.0.1状态](quality/V1.0.1-STATUS.md)，安装见[INSTALL](INSTALL.md)。构建命令见[DISTRIBUTION](development/DISTRIBUTION.md)。
+发布前检查真实版本、单ABI、所有者证书、ZIP/ELF16KiB对齐；记录干净源提交、SHA256、文件字节数。UI仅针对本次变化检查分类、返回、搜索、设置与分享入口；既有原生转换证据保留版本标记。发布后核对tag/source、三个附件及服务器digest，更新README、CHANGELOG、安装说明与状态文档。能力和剩余设备验收见1.0.1状态，安装见[INSTALL](INSTALL.md)。构建命令见[DISTRIBUTION](development/DISTRIBUTION.md)。
 
 ## 历史开发约定（已被1.0.0授权取代）
 

@@ -6,6 +6,6 @@
 
 实际播放的句段最多 220 字符，按中英文终止标点或换行分段，数字内部的小数点保留。分段不依赖手机界面语言，避免中文系统把连续英文句子合并成一段。引擎提供 `onRangeStart` 时按其真实范围逐词跟读；未提供时，`onStart` 高亮当前真实播放句段，暂停后从该句段继续。没有用估计时间伪造逐词位置。
 
-验收设备另外安装了 [F-Droid eSpeak 1.52.0](https://f-droid.org/packages/com.reecedunn.espeak/)，源代码为 [eSpeak NG](https://github.com/espeak-ng/espeak-ng)。这只是模拟器使用的独立系统引擎，没有加入 PaperForge APK。此版本服务不提供词范围回调，因此实际核对了句段模式；中英文 WAV、PCM 字节、采样参数和回调结果见 [验收记录](../acceptance/next/offline-speech-summary.json)。
+验收设备另外安装了 [F-Droid eSpeak 1.52.0](https://f-droid.org/packages/com.reecedunn.espeak/)，源代码为 [eSpeak NG](https://github.com/espeak-ng/espeak-ng)。这只是模拟器使用的独立系统引擎，没有加入 PaperForge APK。此版本服务不提供词范围回调，因此实际核对了句段模式；中英文 WAV、PCM 字节、采样参数和回调结果见 验收记录。
 
 该记录证明系统服务与真实音频合成，不代表实体手机扬声器音质、所有厂商引擎或所有语言已经验收。

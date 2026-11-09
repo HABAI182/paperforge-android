@@ -1,6 +1,0 @@
-{
-  "scope": "actual Kotlin vs native pixel backend, identical photo/geometry/params; all output channels",
-  "meanAbsoluteDifference": 0.0,
-  "maximumDifference": 0,
-  "fractionChanged": 0.0
-}

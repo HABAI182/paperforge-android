@@ -28,7 +28,8 @@ PaperForge is an open-source Android document scanner and PDF workbench. It scan
 ## Highlights of v2.0.0
 
 - Once the phone is still, the camera outline shows the final crop, and it moves smoothly.
-- Page detection uses PageNet, a model trained by this project. All third-party extracted models were removed.
+- A new navigation, card and editor layout, with smoother page transitions and expanding cards.
+- Page detection uses PageNet, a model trained by this project, checked against the photo's real paper edges.
 - Engineering drawings keep their construction lines, dashes and sketches. On ruled paper, strokes no longer break where they cross a rule.
 - Covers and colour pictures keep their colour. Manual crops can extend past the old page edge.
 - Updates can download from mirrors and resume interrupted downloads.
@@ -54,13 +55,11 @@ Later updates are available under **Settings → Check for updates**.
 - **Local processing.** Scanning, enhancement, OCR and PDF processing run on the phone, and documents are not uploaded.
 - **Optional intelligence tool.** It goes online only after you configure your own endpoint and key. It then sends the text you select to that endpoint.
 - **Update checks.** These contact only GitHub and its mirrors.
-- **Models and third-party components.** Origins and licences are in [provenance](docs/PROVENANCE.md) and the [third-party notices](LICENSE_NOTICES.md).
-  - MuPDF, the PDF engine, is AGPL-3.0.
-  - Google ML Kit is used under Google's terms.
+- **Models and third-party components.** PaperForge's own code is open source (AGPL-3.0-or-later), but not every runtime component is: the default text recognition uses Google ML Kit, a proprietary component that runs on the phone. Origins and licences are in [provenance](docs/PROVENANCE.md) and the [third-party notices](LICENSE_NOTICES.md).
 
 ## Development
 
-For building and testing, see [docs/INSTALL.md](docs/INSTALL.md) and `scripts/build_distribution.py`. Development records are in `docs/`, and earlier READMEs are in [docs/history](docs/history/).
+For building and testing, see [docs/INSTALL.md](docs/INSTALL.md), [architecture](docs/ARCHITECTURE.md) and `scripts/build_distribution.py`. Model and code origins are in [provenance](docs/PROVENANCE.md).
 
 ## Licence and attribution
 
