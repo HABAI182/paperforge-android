@@ -59,6 +59,14 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                 var completed = 0
                 val file: File
                 when (job.input.getString("kind")) {
+                    "DOCUMENT_CLEAN" -> {
+                        file =
+                            DocumentWatermarks.run(repo, job) { p, d ->
+                                DocumentJobs.progress(repo, job, p, d)
+                                setProgress(workDataOf("progress" to p))
+                            }
+                        completed = 1
+                    }
                     "SCAN_RETOUCH" -> {
                         file =
                             RetouchJobs.run(repo, job) { percent, detail ->
@@ -388,6 +396,7 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                                     file,
                                     "${title.substringBeforeLast('.')} · ${when(job.input.getString("kind")) { "OFFICE" -> "PDF"
  "LAYOUT" -> "版面 PDF"
+ "DOCUMENT_CLEAN" -> "去水印"
  else -> "文字 PDF" }}",
                                 )
                             inputs.forEach { input ->
@@ -429,6 +438,10 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                         "partial" to (failed > 0),
                         "completed" to completed,
                         "failed" to failed,
+                        "notice" to
+                            if (job.input.getString("kind") == "DOCUMENT_CLEAN")
+                                DocumentWatermarks.notice(repo, job)
+                            else "",
                     )
                 )
             } catch (cancel: CancellationException) {

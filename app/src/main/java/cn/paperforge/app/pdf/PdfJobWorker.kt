@@ -9,6 +9,9 @@ import java.io.File
 import kotlinx.coroutines.*
 import org.json.JSONObject
 
+/** The name of an annotated copy: the document's own name with "Annotated" at the end, as in "week8la Annotated". */
+internal fun annotatedTitle(title: String?) = (title?.removeSuffix(".pdf")?.trim()?.takeIf { it.isNotEmpty() } ?: "文档") + " Annotated"
+
 class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result =
         withContext(
@@ -78,6 +81,7 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                         File(repo.exports, job.row.id).apply { mkdirs() },
                         OutputNames.withExtension(
                             if (mode == "assemble") p.optString("title", "组合文档")
+                            else if (mode == "marks") annotatedTitle(doc?.title)
                             else doc?.title ?: "合并文档",
                             extension,
                         ),
@@ -504,6 +508,7 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                                 repo.registerPdf(
                                     file,
                                     if (mode == "assemble") p.optString("title", "组合文档")
+                                    else if (mode == "marks") annotatedTitle(doc?.title)
                                     else if (mode == "archive-create")
                                         (doc?.title ?: "文档") +
                                             if (archiveRejected) " · 归档候选（未通过）" else " · PDF/A-2b"
@@ -511,7 +516,8 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                                         (doc?.title ?: "合并文档") +
                                             " · " +
                                             DocumentJobs.modeName(mode),
-                                    listed = doc == null,
+                                    // An annotated copy is a document of its own, found in the library like any other.
+                                    listed = doc == null || mode == "marks",
                                 )
                             origin?.let { metadata ->
                                 val provenance =

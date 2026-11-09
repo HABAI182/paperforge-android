@@ -66,9 +66,9 @@ class LibraryWorkflowTest {
         val model = vm()
         val repo = model.repo
         val previousAuto = UserSettings.bool("autoShutter", true)
-        val previousDetector = UserSettings.string("detector", "NEURAL")
+        val previousDetector = UserSettings.string("detector", "HYBRID")
         UserSettings.set("autoShutter", false)
-        UserSettings.set("detector", "NEURAL")
+        UserSettings.set("detector", "HYBRID")
         compose.runOnIdle { model.newScan() }
         compose.waitUntil(20000) {
             compose.onAllNodesWithContentDescription("拍照").fetchSemanticsNodes().isNotEmpty() &&

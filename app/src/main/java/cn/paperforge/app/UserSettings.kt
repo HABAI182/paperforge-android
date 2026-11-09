@@ -17,13 +17,23 @@ object UserSettings {
 
     fun initialize(context: Context) {
         prefs = context.getSharedPreferences("preferences", 0)
+        if (!prefs.getBoolean("captureMultiDefaultV2", false))
+            prefs
+                .edit()
+                .putBoolean("reviewAfterCapture", false)
+                .putBoolean("captureMultiDefaultV2", true)
+                .apply()
+
+        if (!prefs.getBoolean("workbookScanDefaultV1", false))
+            prefs
+                .edit()
+                .putString("filter", "WORKBOOK")
+                .putBoolean("workbookScanDefaultV1", true)
+                .apply()
         if (!prefs.getBoolean("commonToolsV2", false)) {
             val edit = prefs.edit().putBoolean("commonToolsV2", true)
             if (prefs.getString("pinnedTools", null).isNullOrBlank())
-                edit.putString(
-                    "pinnedTools",
-                    "tool:compress,tool:searchable,tool:images-png,tool:docx-layout",
-                )
+                edit.putString("pinnedTools", SettingKeys.DefaultPinnedTools)
             edit.apply()
         }
         if (!prefs.getBoolean("scanExportOcrOptInV1", false))
@@ -32,6 +42,36 @@ object UserSettings {
                 .putBoolean("searchable", false)
                 .putBoolean("scanExportOcrOptInV1", true)
                 .apply()
+        if (!prefs.getBoolean("quickScanDefaultsV1", false)) {
+            val edit =
+                prefs
+                    .edit()
+                    .putBoolean("scanAiFinish", false)
+                    .putBoolean("quickScanDefaultsV1", true)
+            if (prefs.getFloat("cameraJpeg", 97f) == 97f) edit.putFloat("cameraJpeg", 94f)
+            if (prefs.getFloat("quality", 90f) == 90f) edit.putFloat("quality", 86f)
+            edit.apply()
+        }
+        migrateWatermarkShortcut()
+        if (!prefs.getBoolean("workbookAppearanceV2", false))
+            prefs
+                .edit()
+                .putString("filter", "WORKBOOK")
+                .putBoolean("workbookAppearanceV2", true)
+                .apply()
+        if (!prefs.getBoolean("boundedAiDefaultV1", false))
+            prefs
+                .edit()
+                .putBoolean("scanAiFinish", true)
+                .putBoolean("boundedAiDefaultV1", true)
+                .apply()
+        // .85 was the old default, not a choice: it left 15% of the raw photo in the paper.
+        if (!prefs.getBoolean("fullStrengthDefaultV1", false)) {
+            val edit = prefs.edit().putBoolean("fullStrengthDefaultV1", true)
+            if (prefs.contains("enhanceStrength") && prefs.getFloat("enhanceStrength", 1f) == .85f)
+                edit.putFloat("enhanceStrength", 1f)
+            edit.apply()
+        }
         if (!prefs.contains("autoShutter"))
             prefs
                 .edit()
@@ -40,6 +80,27 @@ object UserSettings {
                     context.getSharedPreferences("camera", 0).getBoolean("auto", true),
                 )
                 .apply()
+    }
+
+    private fun migrateWatermarkShortcut() {
+        if (prefs.getBoolean("watermarkShortcutV3", false)) return
+        val pins =
+            prefs
+                .getString("pinnedTools", SettingKeys.DefaultPinnedTools)
+                .orEmpty()
+                .split(',')
+                .filter { it.isNotBlank() }
+                .map {
+                    if (it == "tool:compress" || it == "action:document-watermarks")
+                        "tool:watermark-clean"
+                    else it
+                }
+                .distinct()
+        prefs
+            .edit()
+            .putString("pinnedTools", pins.joinToString(","))
+            .putBoolean("watermarkShortcutV3", true)
+            .apply()
     }
 
     operator fun <T : Any> get(key: SettingKey<T>): T =
@@ -75,7 +136,7 @@ object UserSettings {
     }
 
     fun pinnedTools() =
-        string("pinnedTools", "tool:compress,tool:searchable,tool:images-png,tool:docx-layout")
+        string("pinnedTools", SettingKeys.DefaultPinnedTools)
             .split(',')
             .filter { it.isNotBlank() }
             .toSet()
@@ -87,9 +148,17 @@ object UserSettings {
     }
 
     fun reset() {
-        prefs.edit().clear().putBoolean("autoShutter", true).apply()
+        reset(SettingKeys.all.map { it.name }.toSet())
+    }
+
+    fun reset(keys: Set<String>) {
+        val editor = prefs.edit()
+        keys.forEach { editor.remove(it) }
+        editor.apply()
         changed()
     }
+
+    fun resetKey(key: String) = reset(setOf(key))
 
     fun exportJson() =
         JSONObject()
@@ -161,7 +230,16 @@ object UserSettings {
                         value
                             .split(',')
                             .filter {
-                                it in setOf("images", "pdf", "ocr", "merge", "compress", "tools")
+                                it in
+                                    setOf(
+                                        "images",
+                                        "pdf",
+                                        "ocr",
+                                        "merge",
+                                        "compress",
+                                        "watermark",
+                                        "tools",
+                                    )
                             }
                             .distinct()
                             .joinToString(","),

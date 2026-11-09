@@ -55,7 +55,7 @@ class SharePipelineSampleTest {
     @Test
     fun processesSharedPdfLikeTheActivity() = runBlocking {
         val app = ApplicationProvider.getApplicationContext<PaperForgeApp>()
-        val sample = File(app.filesDir, "samples/camscanner-sample-3.pdf")
+        val sample = File(app.filesDir, "samples/local-sample-3.pdf")
         assertTrue("缺少设备端样本", sample.exists())
         val result =
             ShareEnhance.process(
@@ -75,7 +75,7 @@ class SharePipelineSampleTest {
         val json =
             JSONObject()
                 .put("synthetic", false)
-                .put("ownerSample", "camscanner-sample-3.pdf")
+                .put("ownerSample", "local-sample-3.pdf")
                 .put("compressed", result.compressed)
                 .put("imagesRemoved", report.imagesRemoved)
                 .put("textCovers", report.textCovers)

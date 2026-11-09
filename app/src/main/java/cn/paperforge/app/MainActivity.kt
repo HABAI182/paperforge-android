@@ -137,48 +137,39 @@ class MainActivity : ComponentActivity() {
                 val passwordRequest by vm.passwordRequest.collectAsState()
                 val snackbar = remember { SnackbarHostState() }
                 val scope = rememberCoroutineScope()
+                val navigationExpansion = remember { NavigationExpansion(scope) }
                 var about by remember { mutableStateOf(false) }
                 var pendingText by remember { mutableStateOf("") }
                 val clipboard = LocalClipboardManager.current
                 var recognizeImport by remember { mutableStateOf(false) }
                 val images =
                     rememberLauncherForActivityResult(
-                        ActivityResultContracts.OpenMultipleDocuments()
+                        ActivityResultContracts.PickMultipleVisualMedia()
                     ) {
                         vm.importImages(it, recognizeImport)
                         recognizeImport = false
                     }
-                val pdf =
-                    rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
-                        if (it != null) vm.importPdf(it) else vm.pdfEntry.value = null
-                    }
-                val merge =
-                    rememberLauncherForActivityResult(
-                        ActivityResultContracts.OpenMultipleDocuments()
-                    ) {
-                        if (it.size >= 2) vm.merge(it)
-                        else if (it.isNotEmpty())
-                            scope.launch { snackbar.showSnackbar("请选择至少两份 PDF") }
-                    }
-                val assemblyImport =
-                    rememberLauncherForActivityResult(
-                        ActivityResultContracts.OpenMultipleDocuments()
-                    ) { uris ->
-                        if (uris.isNotEmpty()) vm.importAssemblySources(uris)
-                    }
-                val diffImport =
-                    rememberLauncherForActivityResult(
-                        ActivityResultContracts.OpenMultipleDocuments()
-                    ) { uris ->
-                        if (uris.size == 2) vm.pdfDiffInputs.value = uris
-                        else if (uris.isNotEmpty())
-                            android.widget.Toast.makeText(
-                                    this,
-                                    "请选择两份 PDF",
-                                    android.widget.Toast.LENGTH_SHORT,
-                                )
-                                .show()
-                    }
+                val conversionImages = rememberPaperDocumentsPicker { vm.importImages(it) }
+                val pdf = rememberPaperDocumentPicker {
+                    if (it != null) vm.importPdf(it) else vm.pdfEntry.value = null
+                }
+                val merge = rememberPaperDocumentsPicker {
+                    if (it.size >= 2) vm.merge(it)
+                    else if (it.isNotEmpty()) scope.launch { snackbar.showSnackbar("请选择至少两份 PDF") }
+                }
+                val assemblyImport = rememberPaperDocumentsPicker { uris ->
+                    if (uris.isNotEmpty()) vm.importAssemblySources(uris)
+                }
+                val diffImport = rememberPaperDocumentsPicker { uris ->
+                    if (uris.size == 2) vm.pdfDiffInputs.value = uris
+                    else if (uris.isNotEmpty())
+                        android.widget.Toast.makeText(
+                                this,
+                                "请选择两份 PDF",
+                                android.widget.Toast.LENGTH_SHORT,
+                            )
+                            .show()
+                }
                 val save =
                     rememberLauncherForActivityResult(
                         ActivityResultContracts.StartActivityForResult()
@@ -221,98 +212,73 @@ class MainActivity : ComponentActivity() {
                     androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("HTML") }
                 var markupOptions by
                     androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("{}") }
-                val markupImport =
-                    rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri
-                        ->
-                        uri?.let {
-                            vm.convertMarkup(it, markupTarget, org.json.JSONObject(markupOptions))
-                        }
+                val markupImport = rememberPaperDocumentPicker { uri ->
+                    uri?.let {
+                        vm.convertMarkup(it, markupTarget, org.json.JSONObject(markupOptions))
                     }
+                }
                 var conversionImageOptions by
                     androidx.compose.runtime.saveable.rememberSaveable {
                         mutableStateOf(
                             cn.paperforge.app.pdf.ImageConversionOptions().json().toString()
                         )
                     }
-                val textImport =
-                    rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
-                        it?.let { uri -> vm.convertText(uri, conversionFont) }
-                    }
-                val formatImport =
-                    rememberLauncherForActivityResult(
-                        ActivityResultContracts.OpenMultipleDocuments()
-                    ) {
-                        if (it.isNotEmpty())
-                            vm.convertImages(
-                                it,
-                                cn.paperforge.app.pdf.ImageConversionOptions.decode(
-                                    org.json.JSONObject(conversionImageOptions)
-                                ),
-                            )
-                    }
+                val textImport = rememberPaperDocumentPicker {
+                    it?.let { uri -> vm.convertText(uri, conversionFont) }
+                }
+                val formatImport = rememberPaperDocumentsPicker {
+                    if (it.isNotEmpty())
+                        vm.convertImages(
+                            it,
+                            cn.paperforge.app.pdf.ImageConversionOptions.decode(
+                                org.json.JSONObject(conversionImageOptions)
+                            ),
+                        )
+                }
                 var longOptionsJson by
                     androidx.compose.runtime.saveable.rememberSaveable {
                         mutableStateOf(cn.paperforge.app.pdf.LongImageOptions().json().toString())
                     }
-                val longImport =
-                    rememberLauncherForActivityResult(
-                        ActivityResultContracts.OpenMultipleDocuments()
-                    ) { uris ->
-                        if (uris.isNotEmpty())
-                            vm.convertLongImages(
-                                uris,
-                                cn.paperforge.app.pdf.LongImageOptions.decode(
-                                    org.json.JSONObject(longOptionsJson)
-                                ),
-                            )
-                    }
+                val longImport = rememberPaperDocumentsPicker { uris ->
+                    if (uris.isNotEmpty())
+                        vm.convertLongImages(
+                            uris,
+                            cn.paperforge.app.pdf.LongImageOptions.decode(
+                                org.json.JSONObject(longOptionsJson)
+                            ),
+                        )
+                }
                 var mobileTarget by
                     androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("pdf") }
                 var mobileOfficeOptions by
                     androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("{}") }
-                val mobileOfficeInput =
-                    rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri
-                        ->
-                        uri?.let {
-                            vm.phoneOffice(
-                                it,
-                                mobileTarget,
-                                org.json.JSONObject(mobileOfficeOptions),
-                            )
-                        }
+                val mobileOfficeInput = rememberPaperDocumentPicker { uri ->
+                    uri?.let {
+                        vm.phoneOffice(it, mobileTarget, org.json.JSONObject(mobileOfficeOptions))
                     }
+                }
                 var mobileTableCsv by
                     androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
                 var mobileTableOptions by
                     androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("{}") }
-                val mobileTableInput =
-                    rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri
-                        ->
-                        uri?.let {
-                            vm.phoneTables(
-                                it,
-                                mobileTableCsv,
-                                org.json.JSONObject(mobileTableOptions),
-                            )
-                        }
+                val mobileTableInput = rememberPaperDocumentPicker { uri ->
+                    uri?.let {
+                        vm.phoneTables(it, mobileTableCsv, org.json.JSONObject(mobileTableOptions))
                     }
+                }
                 var desktopMode by
                     androidx.compose.runtime.saveable.rememberSaveable {
                         mutableStateOf("office-pdf")
                     }
                 var desktopOptions by
                     androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("{}") }
-                val desktopImport =
-                    rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
-                        it?.let { uri ->
-                            vm.desktopTask(uri, desktopMode, org.json.JSONObject(desktopOptions))
-                        }
+                val desktopImport = rememberPaperDocumentPicker {
+                    it?.let { uri ->
+                        vm.desktopTask(uri, desktopMode, org.json.JSONObject(desktopOptions))
                     }
-                val desktopResult =
-                    rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
-                        it?.let(vm::importDesktopResult)
-                    }
-                val share: (File) -> Unit = { file ->
+                }
+                val desktopResult = rememberPaperDocumentPicker { it?.let(vm::importDesktopResult) }
+                val share: (File, Boolean) -> Unit = { file, open ->
                     scope.launch {
                         runCatching {
                                 val copy =
@@ -330,12 +296,22 @@ class MainActivity : ComponentActivity() {
                                     )
                                 startActivity(
                                     Intent.createChooser(
-                                        Intent(Intent.ACTION_SEND)
-                                            .setType(mime(file))
-                                            .putExtra(Intent.EXTRA_STREAM, uri)
-                                            .putExtra(Intent.EXTRA_TITLE, copy.name)
-                                            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
-                                        "分享文件",
+                                        Intent(if (open) Intent.ACTION_VIEW else Intent.ACTION_SEND)
+                                            .apply {
+                                                if (open) setDataAndType(uri, mime(file))
+                                                else {
+                                                    type = mime(file)
+                                                    putExtra(Intent.EXTRA_STREAM, uri)
+                                                }
+                                                putExtra(Intent.EXTRA_TITLE, copy.name)
+                                                clipData =
+                                                    android.content.ClipData.newRawUri(
+                                                        copy.name,
+                                                        uri,
+                                                    )
+                                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                            },
+                                        if (open) "用其他应用打开" else "分享文件",
                                     )
                                 )
                             }
@@ -355,6 +331,20 @@ class MainActivity : ComponentActivity() {
                     if (vm.renameNotice.value == notice) vm.renameNotice.value = null
                     if (result == SnackbarResult.ActionPerformed) vm.undoBatchNames()
                 }
+                val folderNotice by vm.folderNotice.collectAsState()
+                LaunchedEffect(folderNotice, screen) {
+                    val notice = folderNotice ?: return@LaunchedEffect
+                    if (screen != "home") {
+                        vm.folderNotice.value = null
+                        return@LaunchedEffect
+                    }
+                    val result =
+                        snackbar.showSnackbar(notice, "撤销", duration = SnackbarDuration.Long)
+                    if (vm.folderNotice.value == notice) {
+                        if (result == SnackbarResult.ActionPerformed) vm.undoLibraryFolder()
+                        else vm.folderNotice.value = null
+                    }
+                }
                 LaunchedEffect(incoming, busy) {
                     if (busy) return@LaunchedEffect
                     incoming?.let { source ->
@@ -367,16 +357,22 @@ class MainActivity : ComponentActivity() {
                                 vm.screen.value = "home"
                                 vm.selected.value = null
                                 recognizeImport = true
-                                images.launch(arrayOf("image/*"))
+                                images.launch(
+                                    androidx.activity.result.PickVisualMediaRequest(
+                                        ActivityResultContracts.PickVisualMedia.ImageOnly
+                                    )
+                                )
                             }
                             Intent.ACTION_SEND ->
                                 source.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)?.let {
                                     if (
-                                        source.type == "application/pdf" &&
-                                            UserSettings[SettingKeys.ShareProcess]
+                                        source.type == "application/pdf" ||
+                                            contentResolver.getType(it) == "application/pdf" ||
+                                            vm.repo
+                                                .displayName(it)
+                                                .endsWith(".pdf", ignoreCase = true)
                                     )
-                                        vm.processSharedPdf(it)
-                                    else if (source.type == "application/pdf") vm.importPdf(it)
+                                        vm.importSharedPdf(it)
                                     else vm.importImages(listOf(it))
                                 }
                             Intent.ACTION_SEND_MULTIPLE ->
@@ -395,38 +391,93 @@ class MainActivity : ComponentActivity() {
                 val shareProcessing by vm.shareProcessing.collectAsState()
                 val shareStatus by vm.shareStatus.collectAsState()
                 val shareReady by vm.shareReady.collectAsState()
-                LaunchedEffect(shareReady) {
-                    val file = shareReady ?: return@LaunchedEffect
-                    vm.shareReady.value = null
-                    runCatching {
-                            val uri =
-                                FileProvider.getUriForFile(
-                                    this@MainActivity,
-                                    "$packageName.files",
-                                    file,
-                                )
-                            val send =
-                                Intent(Intent.ACTION_SEND)
-                                    .setType("application/pdf")
-                                    .putExtra(Intent.EXTRA_STREAM, uri)
-                                    .putExtra(Intent.EXTRA_TITLE, file.name)
-                                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            val wechat = UserSettings[SettingKeys.ShareForward] == "wechat"
-                            val explicit =
-                                wechat &&
+                shareReady?.let { file ->
+                    AlertDialog(
+                        onDismissRequest = {
+                            vm.shareReady.value = null
+                            if (intent.action == Intent.ACTION_SEND) finish()
+                        },
+                        title = { Text("PDF 已处理") },
+                        text = { Text("${file.name}\n可保存到手机文件夹，或继续分享到其他应用。") },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    vm.output.value = file
+                                    vm.shareReady.value = null
+                                    save.launch(
+                                        Intent(Intent.ACTION_CREATE_DOCUMENT)
+                                            .addCategory(Intent.CATEGORY_OPENABLE)
+                                            .setType("application/pdf")
+                                            .putExtra(Intent.EXTRA_TITLE, file.name)
+                                    )
+                                }
+                            ) {
+                                Text("保存到本地 PDF")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(
+                                onClick = {
                                     runCatching {
-                                            startActivity(
-                                                Intent(send)
-                                                    .setPackage("com.tencent.mm")
-                                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                            )
-                                            true
+                                            val uri =
+                                                FileProvider.getUriForFile(
+                                                    this@MainActivity,
+                                                    "$packageName.files",
+                                                    file,
+                                                )
+                                            val send =
+                                                Intent(Intent.ACTION_SEND)
+                                                    .setType("application/pdf")
+                                                    .putExtra(Intent.EXTRA_STREAM, uri)
+                                                    .putExtra(Intent.EXTRA_TITLE, file.name)
+                                                    .apply {
+                                                        clipData =
+                                                            android.content.ClipData.newRawUri(
+                                                                file.name,
+                                                                uri,
+                                                            )
+                                                    }
+                                                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                            val forwarded =
+                                                UserSettings[SettingKeys.ShareForward] ==
+                                                    "wechat" &&
+                                                    runCatching {
+                                                            startActivity(
+                                                                Intent(send)
+                                                                    .setPackage("com.tencent.mm")
+                                                            )
+                                                            true
+                                                        }
+                                                        .getOrDefault(false)
+                                            if (!forwarded)
+                                                startActivity(
+                                                    Intent.createChooser(send, "分享处理后的 PDF")
+                                                        .putExtra(
+                                                            Intent.EXTRA_EXCLUDE_COMPONENTS,
+                                                            arrayOf(
+                                                                android.content.ComponentName(
+                                                                    this@MainActivity,
+                                                                    MainActivity::class.java,
+                                                                )
+                                                            ),
+                                                        )
+                                                )
+                                            vm.shareReady.value = null
+                                            // Remove this temporary share entry from the caller's
+                                            // back stack.
+                                            // NEW_TASK previously brought the scanner back through
+                                            // PaperForge.
+                                            if (intent.action == Intent.ACTION_SEND) finish()
                                         }
-                                        .getOrDefault(false)
-                            if (!explicit)
-                                startActivity(Intent.createChooser(send, "转发处理后的 PDF"))
-                        }
-                        .onFailure { vm.messages.trySend(it.message ?: "无法转发处理后的 PDF") }
+                                        .onFailure {
+                                            vm.messages.trySend(it.message ?: "无法分享处理后的 PDF")
+                                        }
+                                }
+                            ) {
+                                Text("继续分享")
+                            }
+                        },
+                    )
                 }
                 if (shareProcessing) {
                     androidx.compose.ui.window.Dialog(onDismissRequest = {}) {
@@ -445,19 +496,19 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
-                BackHandler(screen != "home" && !busy) {
+                val navigateBack: () -> Unit = back@{
                     if (screen == "tables") {
                         vm.tableWorkspace.close()
-                        return@BackHandler
+                        return@back
                     }
                     if (screen == "assembly") {
                         vm.closeAssembly()
-                        return@BackHandler
+                        return@back
                     }
                     if (screen != "profiles") vm.replacement.value = null
                     if (screen in listOf("reader", "editor")) {
                         vm.closeDocument()
-                        return@BackHandler
+                        return@back
                     }
                     vm.screen.value =
                         when {
@@ -492,17 +543,34 @@ class MainActivity : ComponentActivity() {
                             else -> "home"
                         }
                 }
+                BackHandler(screen != "home" && !busy) { navigationExpansion.close(navigateBack) }
+
                 Box(
                     Modifier.fillMaxSize().semantics {
                         testTagsAsResourceId = true
                         isTraversalGroup = true
                     }
                 ) {
-                    DocumentWorkspace(vm, screen) {
-                        when (screen) {
-                            "capture" -> CameraScreen(vm) { images.launch(arrayOf("image/*")) }
-                            "editor" -> EditorScreen(vm) { images.launch(arrayOf("image/*")) }
-                            "reader" -> ReaderScreen(vm, share)
+                    DocumentWorkspace(vm, screen, navigationExpansion) {
+                        when (LocalPaperDestination.current?.screen ?: screen) {
+                            "capture" ->
+                                CameraScreen(vm) {
+                                    images.launch(
+                                        androidx.activity.result.PickVisualMediaRequest(
+                                            ActivityResultContracts.PickVisualMedia.ImageOnly
+                                        )
+                                    )
+                                }
+                            "document-watermarks" -> DocumentWatermarkScreen(vm)
+                            "editor" ->
+                                EditorScreen(vm) {
+                                    images.launch(
+                                        androidx.activity.result.PickVisualMediaRequest(
+                                            ActivityResultContracts.PickVisualMedia.ImageOnly
+                                        )
+                                    )
+                                }
+                            "reader" -> ReaderScreen(vm) { share(it, false) }
                             "help" -> UsageGuideScreen(vm)
                             "pdf-diagnostics" -> PdfDiagnosticsScreen(vm)
                             "pdf-native-edit" -> NativePdfEditorScreen(vm)
@@ -552,7 +620,7 @@ class MainActivity : ComponentActivity() {
                                         vm.pdfEntry.value = mode
                                         pdf.launch(arrayOf("application/pdf"))
                                     },
-                                    onImages = { images.launch(arrayOf("image/*")) },
+                                    onImages = { conversionImages.launch(arrayOf("image/*")) },
                                     onMerge = { merge.launch(arrayOf("application/pdf")) },
                                     onText = { size ->
                                         conversionFont = size
@@ -629,7 +697,13 @@ class MainActivity : ComponentActivity() {
                             else ->
                                 HomeScreen(
                                     vm,
-                                    { images.launch(arrayOf("image/*")) },
+                                    {
+                                        images.launch(
+                                            androidx.activity.result.PickVisualMediaRequest(
+                                                ActivityResultContracts.PickVisualMedia.ImageOnly
+                                            )
+                                        )
+                                    },
                                     { pdf.launch(arrayOf("application/pdf")) },
                                     { merge.launch(arrayOf("application/pdf")) },
                                     { about = true },
@@ -644,7 +718,11 @@ class MainActivity : ComponentActivity() {
                                     },
                                     onOcrImages = {
                                         recognizeImport = true
-                                        images.launch(arrayOf("image/*"))
+                                        images.launch(
+                                            androidx.activity.result.PickVisualMediaRequest(
+                                                ActivityResultContracts.PickVisualMedia.ImageOnly
+                                            )
+                                        )
                                     },
                                 )
                         }
@@ -705,6 +783,15 @@ class MainActivity : ComponentActivity() {
                             value =
                                 withContext(Dispatchers.IO) { OutputNames.display(vm.repo, file) }
                         }
+                    // v200 feedback 1: a finished PDF is a library document; the card links to it.
+                    val libraryDocument by
+                        produceState<cn.paperforge.app.data.DocumentRow?>(null, file) {
+                            value =
+                                withContext(Dispatchers.IO) {
+                                    runCatching { vm.repo.dao.documentByPath(file.path) }
+                                        .getOrNull()
+                                }
+                        }
                     val tasks by vm.localTasks.collectAsState()
                     val compareTask =
                         tasks.firstOrNull { row ->
@@ -714,76 +801,64 @@ class MainActivity : ComponentActivity() {
                         }
                     val fileNotice =
                         outputNotice?.takeIf { it.first == file.path }?.second.orEmpty()
-                    SpaciousToolDialog(
-                        onDismissRequest = { vm.output.value = null },
-                        title = { Text(if (file.extension == "pdf") "PDF 已生成" else "文件已生成") },
-                        text = {
-                            val exportRevision by UserSettings.revision.collectAsState()
-                            val destination =
-                                remember(exportRevision) {
+                    val exportRevision by UserSettings.revision.collectAsState()
+                    val destination =
+                        remember(exportRevision) {
+                            cn.paperforge.app.data
+                                .ExportDestinations(this@MainActivity)
+                                .get(UserSettings[SettingKeys.ExportDestination])
+                        }
+                    val saveElsewhere: () -> Unit = {
+                        save.launch(
+                            Intent(Intent.ACTION_CREATE_DOCUMENT)
+                                .addCategory(Intent.CATEGORY_OPENABLE)
+                                .setType(mime(file))
+                                .putExtra(Intent.EXTRA_TITLE, displayName)
+                                .apply {
                                     cn.paperforge.app.data
                                         .ExportDestinations(this@MainActivity)
                                         .get(UserSettings[SettingKeys.ExportDestination])
+                                        ?.let {
+                                            putExtra(
+                                                android.provider.DocumentsContract
+                                                    .EXTRA_INITIAL_URI,
+                                                it.uri,
+                                            )
+                                        }
                                 }
-                            Column(Modifier.verticalScroll(rememberScrollState())) {
-                                Text(
-                                    "${displayName}\n${file.length()/1024} KB\n${if(fileNotice.isNotBlank()) fileNotice+"\n" else ""}已保存在应用中，可另存到系统文件夹。"
-                                )
-                                destination?.let { folder ->
-                                    OutlinedButton(
-                                        onClick = { vm.saveOutputToDirectory(folder.id) },
-                                        modifier = Modifier.fillMaxWidth(),
-                                    ) {
-                                        Text("保存到 ${folder.name}")
-                                    }
-                                }
-                                TextButton(onClick = { exportDirectory.launch(destination?.uri) }) {
-                                    Text(if (destination == null) "选择并记住保存目录" else "重新选择保存目录")
-                                }
-                                if (!locked && compareTask != null)
-                                    TextButton(onClick = { vm.compareConversion(compareTask) }) {
-                                        Text("原件 / 结果对照")
-                                    }
-                            }
+                        )
+                    }
+                    OutputResultDialog(
+                        title = if (file.extension == "pdf") "PDF 已生成" else "文件已生成",
+                        name = displayName,
+                        size =
+                            android.text.format.Formatter.formatShortFileSize(
+                                this@MainActivity,
+                                file.length(),
+                            ),
+                        notice = fileNotice,
+                        destination = destination?.name,
+                        onDismiss = { vm.output.value = null },
+                        onShare = { share(file, false) },
+                        onSave = {
+                            if (destination != null) vm.saveOutputToDirectory(destination.id)
+                            else saveElsewhere()
                         },
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    save.launch(
-                                        Intent(Intent.ACTION_CREATE_DOCUMENT)
-                                            .addCategory(Intent.CATEGORY_OPENABLE)
-                                            .setType(mime(file))
-                                            .putExtra(Intent.EXTRA_TITLE, displayName)
-                                            .apply {
-                                                cn.paperforge.app.data
-                                                    .ExportDestinations(this@MainActivity)
-                                                    .get(
-                                                        UserSettings[SettingKeys.ExportDestination]
-                                                    )
-                                                    ?.let {
-                                                        putExtra(
-                                                            android.provider.DocumentsContract
-                                                                .EXTRA_INITIAL_URI,
-                                                            it.uri,
-                                                        )
-                                                    }
-                                            }
-                                    )
-                                }
-                            ) {
-                                Text("另存为")
-                            }
-                        },
-                        dismissButton = {
-                            FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                TextButton(onClick = { share(file) }) { Text("分享") }
-                                if (file.extension == "pdf" && !locked)
-                                    TextButton(onClick = { vm.previewOutput(file) }) { Text("预览") }
-                                TextButton(onClick = { vm.output.value = null }) { Text("关闭") }
-                            }
-                        },
+                        onSaveAs = saveElsewhere,
+                        onOpen = { share(file, true) },
+                        onPickDirectory = { exportDirectory.launch(destination?.uri) },
+                        onPreview =
+                            if (file.extension == "pdf" && !locked) ({ vm.previewOutput(file) })
+                            else null,
+                        onCompare =
+                            if (!locked && compareTask != null)
+                                ({ vm.compareConversion(compareTask) })
+                            else null,
+                        onLibrary =
+                            libraryDocument?.let { doc -> { vm.open(doc) } },
                     )
                 }
+
                 ocr?.let { result ->
                     var text by rememberSaveable(result) { mutableStateOf(result) }
                     val review by vm.ocrReview.collectAsState()

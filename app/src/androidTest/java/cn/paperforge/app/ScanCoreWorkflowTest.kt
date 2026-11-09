@@ -36,7 +36,7 @@ class ScanCoreWorkflowTest {
             val mat = Mat()
             try {
                 Utils.bitmapToMat(image, mat)
-                val detection = NeuralEdgeDetector.detect(mat, preview = true)
+                val detection = LearnedDocumentDetector.detect(mat, preview = true)
                 assertNotNull("$name: edge network must produce paper corners", detection.quad)
                 val q = detection.quad!!
                 val expected =
@@ -86,8 +86,8 @@ class ScanCoreWorkflowTest {
     fun curvePreviewApplyUndoRedoRetainOriginalAndInvalidateOcr() {
         val model = ViewModelProvider(compose.activity)[MainViewModel::class.java]
         val repo = app.repository
-        val detector = UserSettings.string("detector", "NEURAL")
-        UserSettings.set("detector", "NEURAL")
+        val detector = UserSettings.string("detector", "HYBRID")
+        UserSettings.set("detector", "HYBRID")
         val doc = runBlocking { repo.newScan() }
         val file = repo.captureFile(doc.id)
         InstrumentationRegistry.getInstrumentation()

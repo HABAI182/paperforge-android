@@ -128,6 +128,9 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
     var textPoint by remember { mutableStateOf<PointN?>(null) }
     var textInitial by remember { mutableStateOf<List<ReaderTextBlock>?>(null) }
     var selection by remember { mutableStateOf<cn.paperforge.app.pdf.ReaderTextSelection?>(null) }
+    var shownSelection by remember { mutableStateOf<cn.paperforge.app.pdf.ReaderTextSelection?>(null) }
+    var textView by rememberSaveable { mutableStateOf(ReaderTextView.ORIGINAL) }
+    var allText by rememberSaveable { mutableStateOf(false) }
     var selectionLoading by remember { mutableStateOf(false) }
     var selectionRequestPage by remember { mutableStateOf<Int?>(null) }
     var selectionJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
@@ -685,6 +688,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                                             selection = selection?.move(start, p)
                                         },
                                         regionPicking = regionPage == index,
+                                        pageTextFile = file.takeIf { textView == ReaderTextView.TEXT },
                                         regionDraft =
                                             regionDraft.takeIf {
                                                 regionPage == index ||
@@ -770,6 +774,7 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                                     selection = selection?.move(start, p)
                                 },
                                 regionPicking = regionPage == index,
+                                pageTextFile = file.takeIf { textView == ReaderTextView.TEXT },
                                 regionDraft =
                                     regionDraft.takeIf {
                                         regionPage == index ||
@@ -832,6 +837,24 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                     }
                 if (selectionLoading)
                     LinearProgressIndicator(Modifier.align(Alignment.TopCenter).fillMaxWidth())
+                androidx.compose.animation.AnimatedVisibility(
+                    showChrome && file != null && selection == null && regionPage == null,
+                    Modifier.align(Alignment.TopEnd).padding(8.dp),
+                    enter = androidx.compose.animation.fadeIn(),
+                    exit = androidx.compose.animation.fadeOut(),
+                ) {
+                    ReaderTextSwitch(
+                        textView,
+                        {
+                            textView = it
+                            interaction++
+                        },
+                        {
+                            allText = true
+                            interaction++
+                        },
+                    )
+                }
                 if (regionPage != null)
                     Surface(
                         Modifier.align(Alignment.TopCenter).padding(12.dp),
@@ -849,7 +872,18 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                             }
                         }
                     }
-                selection?.let { current ->
+                selection?.let { shownSelection = it }
+                androidx.compose.animation.AnimatedVisibility(
+                    selection != null,
+                    Modifier.align(Alignment.BottomCenter),
+                    enter =
+                        androidx.compose.animation.fadeIn() +
+                            androidx.compose.animation.slideInVertically { it / 3 },
+                    exit =
+                        androidx.compose.animation.fadeOut() +
+                            androidx.compose.animation.slideOutVertically { it / 3 },
+                ) {
+                    shownSelection?.let { current ->
                     ReaderSelectionBar(
                         current,
                         onChange = { next ->
@@ -886,12 +920,9 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                         },
                         onRegion = { startRegion(current.model.page) },
                         onClose = { selection = null },
-                        modifier =
-                            Modifier.align(Alignment.BottomCenter)
-                                .padding(8.dp)
-                                .widthIn(max = 640.dp)
-                                .fillMaxWidth(),
+                        modifier = Modifier.padding(8.dp).widthIn(max = 640.dp).fillMaxWidth(),
                     )
+                    }
                 }
                 if (s != null && selection == null && regionPage == null)
                     Surface(
@@ -946,6 +977,17 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
         ReaderNavigationSheet(file, documentInfo, bookmarks, page, { navigate(it) }) {
             navigation = false
         }
+    if (allText && file != null && session != null)
+        ReaderAllTextSheet(
+            file,
+            session!!.count,
+            page,
+            onGoTo = {
+                allText = false
+                goTo(it)
+            },
+            onDismiss = { allText = false },
+        )
     textPage?.let { selectedPage ->
         if (file != null && doc != null)
             ReaderTextSheet(
@@ -1182,6 +1224,10 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                         textPage = page
                         textPoint = null
                     },
+                    HomeTool("read:alltext", "全部文字", "一次查看并复制整份文档的文字", Icons.Default.Article) {
+                        tools = false
+                        allText = true
+                    },
                     HomeTool("read:region", "区域识字", "圈选需要识别的文字区域", Icons.Default.CropFree) {
                         tools = false
                         startRegion(page)
@@ -1202,6 +1248,15 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                     HomeTool("read:assembly", "页面编排", "跨文档选页、组合与排序", Icons.Default.ViewModule) {
                         tools = false
                         doc?.let { vm.beginAssembly(listOf(it.id)) }
+                    },
+                    HomeTool(
+                        "read:share-process",
+                        "处理后分享",
+                        "按需清理、压缩，再保存或分享",
+                        Icons.Default.IosShare,
+                    ) {
+                        tools = false
+                        file?.let { vm.processSharedPdf(android.net.Uri.fromFile(it)) }
                     },
                 ),
         ) {

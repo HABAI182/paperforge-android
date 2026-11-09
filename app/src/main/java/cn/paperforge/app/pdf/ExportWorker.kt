@@ -6,7 +6,6 @@ import androidx.work.*
 import cn.paperforge.app.PaperForgeApp
 import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.data.*
-import cn.paperforge.app.model.safeFileName
 import java.io.File
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -38,25 +37,57 @@ class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 if (job.completed)
                     return@withContext Result.success(workDataOf("path" to job.result!!.path))
                 DocumentJobs.progress(repo, job, job.row.progress, "等待后台资源")
-                RuntimeBudget.background.acquire(job.row.id)
-                leased = true
-                DocumentJobs.progress(repo, job, job.row.progress)
                 suspend fun report(percent: Int, detail: String = "正在生成 PDF") {
                     DocumentJobs.progress(repo, job, percent, detail)
                     setProgress(workDataOf("progress" to percent))
                 }
-                var doc =
-                    repo.dao.document(data.getString("document") ?: error("缺少文档")) ?: error("草稿不存在")
-                data.getString("title")?.let { title ->
-                    repo.rename(doc, title)
-                    doc = doc.copy(title = safeFileName(title))
+                val documentId = data.getString("document") ?: error("缺少文档")
+                var lastAdvance = android.os.SystemClock.elapsedRealtime()
+                var previousCaptureProgress = ""
+                var previousWait = ""
+                while (true) {
+                    // Every page waits for its finished appearance: a page exported at 20% has only its
+                    // framing, so it came out unflattened, with curved rules and raw paper.
+                    val waiting =
+                        repo.dao.allTasks().filter {
+                            it.type == "CAPTURE" &&
+                                it.documentId == documentId &&
+                                it.state in LocalTaskRow.active
+                        }
+                    if (waiting.isEmpty()) break
+                    val total = repo.dao.pages(documentId).size.coerceAtLeast(waiting.size)
+                    val ready = (total - waiting.size).coerceAtLeast(0)
+                    val signature = waiting.joinToString { "${it.id}:${it.progress}" }
+                    if (signature != previousCaptureProgress) {
+                        lastAdvance = android.os.SystemClock.elapsedRealtime()
+                        previousCaptureProgress = signature
+                    }
+                    val percent =
+                        ((ready * 100 + waiting.sumOf { it.progress.coerceIn(0, 99) }) * 12 /
+                                (total.coerceAtLeast(1) * 100))
+                            .coerceIn(0, 12)
+                    val detail = "准备扫描页面 $ready/$total，可在任务中心查看"
+                    val displayState = "$detail:$percent"
+                    if (displayState != previousWait) {
+                        report(percent, detail)
+                        previousWait = displayState
+                    }
+                    check(android.os.SystemClock.elapsedRealtime() - lastAdvance < 120000) {
+                        "部分扫描页尚未保存或处理停滞，请到任务中心查看具体页面后重试导出"
+                    }
+                    kotlinx.coroutines.delay(150)
+                    DocumentJobs.checkCurrent(repo, job)
                 }
+                RuntimeBudget.background.acquire(job.row.id)
+                leased = true
+                val doc =
+                    repo.dao.document(data.getString("document") ?: error("缺少文档")) ?: error("草稿不存在")
                 val format = data.getString("format") ?: "PDF"
                 val file =
                     File(
                         File(repo.exports, job.row.id).apply { mkdirs() },
                         OutputNames.withExtension(
-                            data.getString("fileName") ?: doc.title,
+                            data.getString("fileName") ?: data.getString("title") ?: doc.title,
                             if (format == "PDF") "pdf" else "zip",
                         ),
                     )
@@ -100,6 +131,8 @@ class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 val pageStages = JobFileStages(repo, job)
                 val fingerprint =
                     listOf(
+                            PdfImageEncoder.VERSION,
+                            cn.paperforge.app.imaging.ScanConfig.fingerprint(),
                             pages.joinToString { "${it.id}:${it.revision}" },
                             data.getString("paper"),
                             data.getString("resolution"),
@@ -175,13 +208,27 @@ class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 withContext(NonCancellable) {
                     repo.database.withTransaction {
                         DocumentJobs.checkCurrent(repo, job)
-                        if (format == "PDF") repo.registerPdf(file, doc.title, listed = false)
+                        // v200 feedback 1: an exported PDF used to be registered with listed=false,
+                        // and every library query filters listed=1 ("最近" and "全部" both do), so
+                        // the finished PDF existed on disk but could not be found in the app. It is
+                        // now a normal library document under the export name, which also gives the
+                        // result dialog a real "在文档库打开" destination.
+                        if (format == "PDF")
+                            ExportRegistration.pdf(
+                                repo,
+                                file,
+                                data.getString("title") ?: doc.title,
+                            )
                         repo.recordOutput(file, doc)
                         DocumentJobs.complete(repo, job, file)
                         published = true
                     }
                 }
-                Result.success(workDataOf("path" to file.path))
+                Result.success(
+                    workDataOf(
+                        "path" to file.path,
+                    )
+                )
             } catch (e: CancellationException) {
                 if (!published) output?.delete()
                 DocumentJobs.fail(repo, handle, e, true)

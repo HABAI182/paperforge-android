@@ -188,9 +188,6 @@ interface DocumentDao {
     )
     suspend fun reservedCapturePosition(id: String): Int?
 
-    @Query("SELECT COUNT(*) FROM pages WHERE original=:path")
-    suspend fun originalReferences(path: String): Int
-
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun putDocument(doc: DocumentRow)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun putPageRaw(page: PageRow)

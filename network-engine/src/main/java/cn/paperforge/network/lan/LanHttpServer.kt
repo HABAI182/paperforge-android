@@ -331,6 +331,123 @@ class LanHttpServer(private val context: Context, port: Int, bindAddress: String
                 throw HttpFailure(409, "请求已使用或已过期，请刷新后重试")
             connections[client] = peer.id
             lastActivity = System.currentTimeMillis()
+            val library = LanDocumentLibrary(context)
+            if (path == "/api/library" && request.method == "GET") {
+                json(
+                    output,
+                    JSONObject()
+                        .put("available", library.available)
+                        .put("documents", library.list()),
+                )
+                return
+            }
+            if (path.startsWith("/api/library/") && request.method == "GET") {
+                json(output, library.info(path.substringAfterLast('/')))
+                return
+            }
+            if (path.startsWith("/library/") && request.method == "GET") {
+                val parts = path.trim('/').split('/')
+                if (parts.size !in 3..4 || parts[2] !in setOf("pdf", "cover", "preview"))
+                    throw HttpFailure(404, "文档不存在")
+                val id = parts[1]
+                val name = library.name(id)
+                val cover = parts[2] != "pdf"
+                val resource =
+                    if (parts[2] == "preview")
+                        library.previewUri(id, parts.getOrNull(3)?.toIntOrNull() ?: 0)
+                    else library.uri(id, cover)
+                context.contentResolver.openFileDescriptor(resource, "r")?.use { fd ->
+                    val total = fd.statSize
+                    val range = fields["range"]
+                    val match =
+                        range?.let {
+                            Regex("bytes=(\\d+)-(\\d*)").matchEntire(it)
+                                ?: throw HttpFailure(416, "范围不正确")
+                        }
+                    val start = match?.groupValues?.get(1)?.toLongOrNull() ?: 0L
+                    val end =
+                        match?.groupValues?.get(2)?.toLongOrNull()?.coerceAtMost(total - 1)
+                            ?: (total - 1)
+                    if (total <= 0 || start < 0 || start > end || start >= total)
+                        throw HttpFailure(416, "范围不正确")
+                    val extra = mutableMapOf("Accept-Ranges" to "bytes")
+                    if (!cover)
+                        extra["Content-Disposition"] =
+                            "attachment; filename*=UTF-8''" +
+                                URLEncoder.encode(name, "UTF-8").replace("+", "%20")
+                    if (range != null) extra["Content-Range"] = "bytes $start-$end/$total"
+                    headers(
+                        output,
+                        if (range == null) 200 else 206,
+                        end - start + 1,
+                        if (cover) "image/jpeg" else "application/pdf",
+                        extra,
+                    )
+                    java.io.FileInputStream(fd.fileDescriptor).use { source ->
+                        source.channel.position(start)
+                        val buffer = ByteArray(65536)
+                        var remaining = end - start + 1
+                        while (remaining > 0) {
+                            val n =
+                                source.read(
+                                    buffer,
+                                    0,
+                                    minOf(buffer.size.toLong(), remaining).toInt(),
+                                )
+                            if (n < 0) throw EOFException()
+                            output.write(buffer, 0, n)
+                            remaining -= n
+                            lastActivity = System.currentTimeMillis()
+                        }
+                    }
+                    output.flush()
+                } ?: throw HttpFailure(404, "无法打开文档")
+                return
+            }
+            if (
+                (path.startsWith("/api/transfers/") || path.startsWith("/preview/")) &&
+                    request.method == "GET"
+            ) {
+                val parts = path.trim('/').split('/')
+                val id = if (parts[0] == "api") parts.getOrNull(2) else parts.getOrNull(1)
+                val row = id?.let { ledger.item(it) } ?: throw HttpFailure(404, "文件不存在")
+                if (
+                    (row.direction == "OUT" && row.peer.isNotEmpty() && row.peer != peer.id) ||
+                        (row.direction == "IN" && row.peer != peer.id)
+                )
+                    throw HttpFailure(404, "文件不存在")
+                val file = ledger.file(row.id)
+                if (
+                    file.length() != row.total ||
+                        row.state in setOf("ADDING", "RECEIVING", "FAILED", "CANCELLED")
+                )
+                    throw HttpFailure(409, "文件尚未准备完成")
+                if (parts[0] == "api") {
+                    json(
+                        output,
+                        row.json()
+                            .put("title", row.name)
+                            .put("bytes", row.total)
+                            .put("modified", row.created)
+                            .put("pages", LanFilePreview.pages(file, row.mime)),
+                    )
+                } else {
+                    val page = parts.getOrNull(2)?.toIntOrNull() ?: 0
+                    val image =
+                        LanFilePreview.render(file, row.mime, page)
+                            ?: throw HttpFailure(415, "此格式请下载后查看")
+                    try {
+                        val bytes = ByteArrayOutputStream()
+                        image.compress(android.graphics.Bitmap.CompressFormat.JPEG, 92, bytes)
+                        headers(output, 200, bytes.size().toLong(), "image/jpeg")
+                        bytes.writeTo(output)
+                        output.flush()
+                    } finally {
+                        image.recycle()
+                    }
+                }
+                return
+            }
             if (path == "/api/state" && request.method == "GET") {
                 val rows = ledger.items.value
                 json(

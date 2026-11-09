@@ -134,7 +134,7 @@ class GeometryTest {
     @Test
     fun fileNamesCannotEscapeDestination() {
         assertEquals("_.._test_pdf", safeFileName("../../test:pdf"))
-        assertEquals("纸匠文档", safeFileName("..."))
+        assertEquals("PaperForge文档", safeFileName("..."))
         assertTrue(safeFileName("a".repeat(200)).length <= 100)
     }
 }

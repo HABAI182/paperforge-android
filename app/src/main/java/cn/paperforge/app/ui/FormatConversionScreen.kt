@@ -1,7 +1,5 @@
 package cn.paperforge.app.ui
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -47,22 +45,21 @@ fun FormatConversionScreen(vm: MainViewModel) {
         lifecycle.lifecycle.addObserver(observer)
         onDispose { lifecycle.lifecycle.removeObserver(observer) }
     }
-    val picker =
-        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-            uri?.let {
-                vm.convertLayout(
-                    it,
-                    JSONObject()
-                        .put("target", target)
-                        .put("dpi", dpi)
-                        .put("fontSize", bookFont)
-                        .put("includeHeaders", includeHeaders)
-                        .put("mathSource", mathSource)
-                        .put("widthPt", if (bookPaper == "A5") 420 else 595)
-                        .put("heightPt", if (bookPaper == "A5") 595 else 842),
-                )
-            }
+    val picker = rememberPaperDocumentPicker { uri ->
+        uri?.let {
+            vm.convertLayout(
+                it,
+                JSONObject()
+                    .put("target", target)
+                    .put("dpi", dpi)
+                    .put("fontSize", bookFont)
+                    .put("includeHeaders", includeHeaders)
+                    .put("mathSource", mathSource)
+                    .put("widthPt", if (bookPaper == "A5") 420 else 595)
+                    .put("heightPt", if (bookPaper == "A5") 595 else 842),
+            )
         }
+    }
     val history =
         tasks.filter {
             it.type == "CONVERT" &&

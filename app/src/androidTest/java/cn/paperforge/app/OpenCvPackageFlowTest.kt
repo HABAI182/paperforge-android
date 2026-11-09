@@ -42,7 +42,7 @@ class OpenCvPackageFlowTest {
             try {
                 Utils.bitmapToMat(bitmap, mat)
                 val classical = DocumentDetector.detect(mat, true)
-                val neural = NeuralEdgeDetector.detect(mat, true)
+                val neural = LearnedDocumentDetector.detect(mat, true)
                 assertNotNull(classical.quad)
                 assertNotNull(neural.quad)
                 metrics

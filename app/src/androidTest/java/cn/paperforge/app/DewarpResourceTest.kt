@@ -20,6 +20,45 @@ class DewarpResourceTest {
     private val context
         get() = InstrumentationRegistry.getInstrumentation().targetContext
 
+    /** The crop tool edits a finished page on its camera photo, along the crop the page was last finished from. */
+    @Test
+    fun cropToolOpensTheNewestPhotoCrop() {
+        val dir = File(context.cacheDir, "crop-source-${UUID.randomUUID()}").apply { mkdirs() }
+        try {
+            fun file(name: String) = File(dir, name).apply { writeBytes(byteArrayOf(1)) }
+            val photo = file("photo.jpg")
+            val first = "0.1,0.1;0.9,0.1;0.9,0.9;0.1,0.9"
+            val second = "0.0,0.05;1.0,0.05;1.0,0.95;0.0,0.95"
+            fun finish(page: PageRow, output: File) =
+                page.copy(
+                    original = output.path,
+                    corners = Quad.Full.encode(),
+                    processingMetadata =
+                        JSONObject(PageResources.withDewarp(page, file("in-${output.name}"), file("grid-${output.name}"), output, 1f, "test"))
+                            .put("flatDocument", JSONObject())
+                            .toString(),
+                )
+            val captured = PageRow("p", "d", 0, photo.path, corners = first, filter = "WORKBOOK")
+            val once = finish(captured, file("flat1.png"))
+            assertEquals(Quad.decode(first), Quad.decode(PageResources.sourceAppearance(once).corners))
+            // Cropped again in the crop tool: the photo with a new outline, finished from it.
+            val recropped = PageResources.sourceAppearance(once).copy(corners = second, filter = "WORKBOOK")
+            val twice = finish(recropped, file("flat2.png"))
+            PageResources.sourceAppearance(twice).let {
+                assertEquals(photo.path, it.original)
+                assertEquals(Quad.decode(second), Quad.decode(it.corners))
+            }
+            // Finished again from the finished page itself: that step's input is no camera photo.
+            val thrice = finish(twice, file("flat3.png"))
+            PageResources.sourceAppearance(thrice).let {
+                assertEquals(photo.path, it.original)
+                assertEquals(Quad.decode(second), Quad.decode(it.corners))
+            }
+        } finally {
+            dir.deleteRecursively()
+        }
+    }
+
     private val repo
         get() = (context.applicationContext as PaperForgeApp).repository
 
@@ -72,7 +111,7 @@ class DewarpResourceTest {
                             field,
                             out,
                             .65f,
-                            ScanModel.fingerprint(true),
+                            PageDewarp.fingerprint(),
                         ),
                 )
             repo.savePage(changed)

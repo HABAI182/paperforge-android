@@ -14,6 +14,8 @@ data class DetectionResult(
     val method: String,
     val diagnostics: Map<String, Float> = emptyMap(),
     val elapsedMs: Float = 0f,
+    /** Human-readable decision fields (e.g. why a still quad was or was not adopted). */
+    val notes: Map<String, String> = emptyMap(),
 )
 
 /**
@@ -597,7 +599,8 @@ object DocumentDetector {
             Quad(corners.map { PointN((it.x / (w - 1)).toFloat(), (it.y / (h - 1)).toFloat()) })
         if (
             !result.valid() ||
-                result.area / quad.area !in .90f..1.10f ||
+                result.area / quad.area !in
+                    ScanConfig.float("refineMinimumAreaRatio", .96f)..1.06f ||
                 result.points.zip(quad.points).any { (a, b) -> hypot(a.x - b.x, a.y - b.y) > .025f }
         )
             return quad

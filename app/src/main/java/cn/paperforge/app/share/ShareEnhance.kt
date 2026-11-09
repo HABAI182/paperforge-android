@@ -26,8 +26,24 @@ object ShareEnhance {
         quality: Int = 75,
         status: (String) -> Unit = {},
     ): Result {
-        val dir = File(context.cacheDir, "share").apply { mkdirs() }
+        val root = File(context.cacheDir, "share").apply { mkdirs() }
+        val dir = java.nio.file.Files.createTempDirectory(root.toPath(), "job-").toFile()
         val stamp = System.currentTimeMillis()
+        val sourceName =
+            runCatching {
+                    context.contentResolver
+                        .query(
+                            uri,
+                            arrayOf(android.provider.OpenableColumns.DISPLAY_NAME),
+                            null,
+                            null,
+                            null,
+                        )
+                        ?.use { if (it.moveToFirst()) it.getString(0) else null }
+                }
+                .getOrNull() ?: uri.lastPathSegment?.substringAfterLast('/') ?: "分享文档.pdf"
+        val baseName =
+            cn.paperforge.app.model.safeFileName(sourceName.replace(Regex("(?i)\\.pdf$"), ""))
         val input = File(dir, "shared-$stamp.pdf")
         status("正在读取分享的文件…")
         context.contentResolver.openInputStream(uri)?.use { stream ->
@@ -45,11 +61,13 @@ object ShareEnhance {
         if (compress) {
             status("正在压缩 PDF…")
             val target = File(dir, "final-$stamp.pdf")
-            PdfEngine.compress(current, target, quality) { }
+            PdfEngine.compress(current, target, quality) {}
             current = target
             compressed = true
         }
-        return Result(current, report, compressed)
+        val named = File(dir, "$baseName.pdf")
+        check(current.renameTo(named)) { "无法保存处理后的文件" }
+        return Result(named, report, compressed)
     }
 
     /** Drops cached share artefacts older than a day; called before a new share is handled. */
@@ -57,7 +75,9 @@ object ShareEnhance {
         val dir = File(context.cacheDir, "share")
         val cutoff = System.currentTimeMillis() - 24L * 60 * 60 * 1000
         dir.listFiles()?.forEach { file ->
-            if (file.isFile && file.lastModified() < cutoff) file.delete()
+            if (file.lastModified() < cutoff) {
+                if (file.isDirectory) file.deleteRecursively() else file.delete()
+            }
         }
     }
 }

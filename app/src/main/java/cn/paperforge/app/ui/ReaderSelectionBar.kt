@@ -2,8 +2,11 @@ package cn.paperforge.app.ui
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
@@ -29,21 +32,34 @@ internal fun ReaderSelectionBar(
         tonalElevation = 6.dp,
         shadowElevation = 4.dp,
     ) {
-        Column(Modifier.padding(horizontal = 12.dp, vertical = 6.dp)) {
-            Text(
-                selection.text,
-                Modifier.fillMaxWidth().testTag("reader-selected-text"),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodySmall,
-            )
-            FlowRow(Modifier.fillMaxWidth()) {
-                TextButton(onClick = onCopy) { Text("复制") }
-                TextButton(onClick = { onMark("highlight") }) { Text("高亮") }
-                TextButton(onClick = { onChange(selection.line()) }) { Text("选本行") }
-                TextButton(onClick = { onChange(selection.all()) }) { Text("选全页") }
-                Box {
-                    TextButton(onClick = { more = true }) { Text("更多") }
+        Column(Modifier.padding(start = 12.dp, end = 4.dp, top = 2.dp, bottom = 2.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // One line, read as running text: line breaks in a selection only waste the space here.
+                Text(
+                    selection.text.replace(Regex("\\s+"), " ").trim(),
+                    Modifier.weight(1f).testTag("reader-selected-text"),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Text(
+                    "${selection.text.count { !it.isWhitespace() }} 字",
+                    Modifier.padding(start = 8.dp),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                IconButton(onClick = onClose, Modifier.size(40.dp)) {
+                    Icon(Icons.Filled.Close, "完成选择", Modifier.size(20.dp))
+                }
+            }
+            Row(Modifier.fillMaxWidth()) {
+                val tight = PaddingValues(horizontal = 2.dp)
+                TextButton(onClick = onCopy, Modifier.weight(1f), contentPadding = tight) { Text("复制", maxLines = 1) }
+                TextButton(onClick = { onMark("highlight") }, Modifier.weight(1f), contentPadding = tight) { Text("高亮", maxLines = 1) }
+                TextButton(onClick = { onChange(selection.line()) }, Modifier.weight(1f), contentPadding = tight) { Text("选本行", maxLines = 1) }
+                TextButton(onClick = { onChange(selection.all()) }, Modifier.weight(1f), contentPadding = tight) { Text("选全页", maxLines = 1) }
+                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    TextButton(onClick = { more = true }, Modifier.fillMaxWidth(), contentPadding = tight) { Text("更多", maxLines = 1) }
                     DropdownMenu(more, { more = false }) {
                         listOf("下划线" to "underline", "删除线" to "strikeout").forEach { (name, kind) ->
                             DropdownMenuItem(
@@ -101,14 +117,15 @@ internal fun ReaderSelectionBar(
                         )
                     }
                 }
-                TextButton(onClick = onClose) { Text("完成选择") }
             }
-            val precise = selection.model.ordered.any { it.source == "ocr" && it.units.isEmpty() }
-            Text(
-                if (precise) "拖动手柄调整；仅有行框的 OCR 按整行选择" else "拖动两端手柄调整选区 · 双指可放大",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            // Only worth the space when selection really works differently.
+            if (selection.model.ordered.any { it.source == "ocr" && it.units.isEmpty() })
+                Text(
+                    "这页的识别结果只有整行信息，所以按整行选择",
+                    Modifier.padding(bottom = 4.dp),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
         }
     }
 }

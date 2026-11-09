@@ -45,7 +45,7 @@
     "Initial selection/shortcut UI selectors were corrected to scroll lazy content and target labeled checkboxes.",
     "CameraX experimental transform APIs are explicitly opted in; no lint baseline suppression.",
     "One upstream phone photograph is an exploratory check, not held-out evaluation or a new physical-phone run.",
-    "CamScanner APK was statically decompiled locally; packed Java and ARM64 native boundaries prevent claiming recovery of its full algorithm source."
+    "机主提供的本地 APK was statically decompiled locally; packed Java and ARM64 native boundaries prevent claiming recovery of its full algorithm source."
   ],
   "manualExports": {
     "settingsRoundtripCount": 27,

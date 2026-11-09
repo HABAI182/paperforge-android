@@ -33,7 +33,8 @@ sealed class SettingKey<T : Any>(val name: String, val default: T) {
 }
 
 object SettingKeys {
-    val Detector = SettingKey.Text("detector", "NEURAL", setOf("NEURAL", "HYBRID", "STANDARD"))
+    val Detector =
+        SettingKey.Text("detector", "HYBRID", setOf("HYBRID", "STANDARD", "INDEPENDENT"))
     val OutlineWeight = SettingKey.Number("outlineWeight", 3f, 1f..8f)
     val OutlineSwitchFrames = SettingKey.Number("outlineSwitchFrames", 2f, 1f..6f)
     val DewarpStrength = SettingKey.Number("dewarpStrength", 1f, 0f..1f)
@@ -43,6 +44,8 @@ object SettingKeys {
     val CaptureTimer = SettingKey.Number("captureTimer", 0f, 0f..10f)
     val ScanAspect = SettingKey.Number("scanAspect", 0f, 0f..2.5f)
     val ReviewAfterCapture = SettingKey.Bool("reviewAfterCapture", false)
+    val ScanAiFinish = SettingKey.Bool("scanAiFinish", true)
+    val FlatPaper = SettingKey.Text("flatPaper", "ISO", setOf("ISO", "SOURCE"))
     val LockCrop = SettingKey.Bool("lockCrop", true)
     val ShowOutline = SettingKey.Bool("showOutline", true)
     val StrictQuality = SettingKey.Bool("strictQuality", false)
@@ -51,22 +54,32 @@ object SettingKeys {
     val StableMs = SettingKey.Number("stableMs", 600f, 300f..2000f)
     val CooldownMs = SettingKey.Number("cooldownMs", 1500f, 800f..5000f)
     val AnalysisMs = SettingKey.Number("analysisMs", 160f, 100f..500f)
-    val CameraJpeg = SettingKey.Number("cameraJpeg", 97f, 75f..100f)
+    val CameraJpeg = SettingKey.Number("cameraJpeg", 94f, 75f..100f)
     val Filter =
         SettingKey.Text(
             "filter",
-            "AUTO",
-            setOf("ORIGINAL", "AUTO", "TEXT", "CLEAN", "GRAY", "BW", "COLOR", "WHITEBOARD"),
+            "WORKBOOK",
+            setOf(
+                "ORIGINAL",
+                "AUTO",
+                "TEXT",
+                "WORKBOOK",
+                "CLEAN",
+                "GRAY",
+                "BW",
+                "COLOR",
+                "WHITEBOARD",
+            ),
         )
-    val EnhanceStrength = SettingKey.Number("enhanceStrength", .85f, 0f..1f)
+    val EnhanceStrength = SettingKey.Number("enhanceStrength", 1f, 0f..1f)
     val Brightness = SettingKey.Number("brightness", 0f, -0.5f..0.5f)
     val Contrast = SettingKey.Number("contrast", 1f, 0.5f..1.8f)
     val ShareProcess = SettingKey.Bool("shareProcess", true)
-    val ShareRemoveWatermark = SettingKey.Bool("shareRemoveWatermark", true)
+    val ShareRemoveWatermark = SettingKey.Bool("shareRemoveWatermark", false)
     val ShareCompress = SettingKey.Bool("shareCompress", false)
     val ShareForward = SettingKey.Text("shareForward", "wechat", setOf("wechat", "system"))
     val OcrLanguage = SettingKey.Text("ocrLanguage", "CHINESE", setOf("CHINESE", "LATIN"))
-    val OcrBackend = SettingKey.Text("ocrBackend", "MLKIT", setOf("MLKIT", "PADDLE"))
+    val OcrBackend = SettingKey.Text("ocrBackend", "AUTO", setOf("AUTO", "MLKIT", "PADDLE"))
     val OcrPackId = SettingKey.Text("ocrPackId", "")
     val OcrMode = SettingKey.Text("ocrMode", "BALANCED", setOf("FAST", "BALANCED", "DETAILED"))
     val OcrVoting = SettingKey.Bool("ocrVoting", true)
@@ -76,12 +89,13 @@ object SettingKeys {
             "AUTO",
             setOf("AUTO", "ROWS", "COLUMNS_LTR", "COLUMNS_RTL", "VERTICAL_RTL", "VERTICAL_LTR"),
         )
+    val OcrProofreadThreshold = SettingKey.Number("ocrProofreadThreshold", .6f, .3f..0.9f)
     val Searchable = SettingKey.Bool("searchable", false)
     val Paper = SettingKey.Text("paper", "Auto", setOf("Auto", "A4", "A5", "Letter", "ID"))
     val Resolution =
         SettingKey.Text("resolution", "STANDARD", setOf("DRAFT", "STANDARD", "HIGH", "CUSTOM"))
     val CustomDpi = SettingKey.Number("customDpi", 300f, 72f..600f)
-    val Quality = SettingKey.Number("quality", 90f, 40f..100f)
+    val Quality = SettingKey.Number("quality", 86f, 40f..100f)
     val Theme =
         SettingKey.Text(
             "theme",
@@ -114,8 +128,10 @@ object SettingKeys {
     val SpeechVoice = SettingKey.Text("speechVoice", "")
     val SpeechSpeed = SettingKey.Number("speechSpeed", 1f, .5f..2f)
     val RecentCount = SettingKey.Number("recentCount", 6f, 4f..20f)
-    val HomeTools = SettingKey.Text("homeTools", "images,pdf,ocr,merge,compress,tools")
-    val PinnedTools = SettingKey.Text("pinnedTools", "")
+    val HomeTools = SettingKey.Text("homeTools", "images,pdf,ocr,merge,watermark,tools")
+    const val DefaultPinnedTools =
+        "tool:watermark-clean,tool:searchable,tool:images-png,tool:docx-layout"
+    val PinnedTools = SettingKey.Text("pinnedTools", DefaultPinnedTools)
     val ExportFormat = SettingKey.Text("exportFormat", "PDF", setOf("PDF", "JPG", "PNG"))
     val ExportNaming = SettingKey.Text("exportNaming", "{title}")
     val ExportDestination = SettingKey.Text("exportDestination", "")
@@ -134,6 +150,8 @@ object SettingKeys {
             CaptureTimer,
             ScanAspect,
             ReviewAfterCapture,
+            ScanAiFinish,
+            FlatPaper,
             LockCrop,
             ShowOutline,
             StrictQuality,
@@ -153,6 +171,7 @@ object SettingKeys {
             OcrMode,
             OcrVoting,
             OcrOrder,
+            OcrProofreadThreshold,
             Searchable,
             Paper,
             Resolution,

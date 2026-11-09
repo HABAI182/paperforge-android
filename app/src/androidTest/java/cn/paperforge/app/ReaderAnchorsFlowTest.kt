@@ -167,7 +167,10 @@ class ReaderAnchorsFlowTest {
             compose.waitUntil(15000) {
                 compose.onAllNodesWithText("$n / 3").fetchSemanticsNodes().isNotEmpty()
             }
-            compose.onNodeWithTag("reader-viewport-${n-1}").assertExists()
+            // The counter changes first, and the page is composed a moment later.
+            compose.waitUntil(15000) {
+                compose.onAllNodesWithTag("reader-viewport-${n-1}").fetchSemanticsNodes().isNotEmpty()
+            }
         }
         fun transform(n: Int) =
             compose
@@ -223,11 +226,13 @@ class ReaderAnchorsFlowTest {
             assertEquals(origin.panY, returned[2], .002f)
             compose.onNodeWithText("返回阅读处").assertDoesNotExist()
             compose.runOnIdle { model().screen.value = "home" }
-            compose.onNodeWithText("最近文档").assertIsDisplayed()
+            compose.onNodeWithText("全部文档").assertIsDisplayed()
             prefs.save(doc.id, ReaderPosition(horizontal = false, offset = 350))
             compose.runOnIdle { model().open(doc) }
             waitPage(1)
-            compose.onNodeWithContentDescription("目录与链接").performClick()
+            compose.onNodeWithContentDescription("工具").performClick()
+            compose.onNodeWithText("阅读与导航", useUnmergedTree = true).performClick()
+            compose.onNodeWithText("目录与书签", useUnmergedTree = true).performClick()
             compose.onNodeWithText("Exact second anchor").performClick()
             waitPage(2)
             compose.waitUntil(10000) {

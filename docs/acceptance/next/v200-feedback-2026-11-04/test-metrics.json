@@ -1,0 +1,28 @@
+{
+  "scene": "synthetic-grey-thin-paper",
+  "synthetic": true,
+  "physicalDevice": false,
+  "pageLongSide": 1800,
+  "baseline": {
+    "label": "baseline",
+    "paperMean": 255,
+    "nearWhite": 1,
+    "ghostMean": 244.74636499860034,
+    "ghostVisibleBelow245": 0.4942449241713185,
+    "pencilVisibleBelow235": 1,
+    "inkMean": 20.37681475029036,
+    "pencilMean": 181.7984
+  },
+  "fixed": {
+    "label": "paper-white-final",
+    "paperMean": 255,
+    "nearWhite": 1,
+    "ghostMean": 244.74636499860034,
+    "ghostVisibleBelow245": 0.4942449241713185,
+    "pencilVisibleBelow235": 1,
+    "inkMean": 20.37681475029036,
+    "pencilMean": 181.7984
+  },
+  "paperWhite": 1,
+  "ghostStrengthExtra": 10
+}

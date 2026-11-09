@@ -402,18 +402,6 @@ object PdfAssembly {
     private fun rectangle(box: PDRectangle) =
         PDRectangle(box.lowerLeftX, box.lowerLeftY, box.width, box.height)
 
-    private fun targetIndex(document: PDDocument, destination: PDDestination?): Int? {
-        val resolved =
-            if (destination is PDNamedDestination)
-                document.documentCatalog.findNamedDestinationPage(destination)
-            else destination
-        return (resolved as? PDPageDestination)
-            ?.let { target ->
-                target.page?.let { document.pages.indexOf(it) } ?: target.retrievePageNumber()
-            }
-            ?.takeIf { it in 0 until document.numberOfPages }
-    }
-
     private fun drawText(
         stream: PDPageContentStream,
         font: PDType0Font,

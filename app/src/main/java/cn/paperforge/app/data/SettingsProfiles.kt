@@ -142,6 +142,8 @@ class SettingsProfiles(context: Context) {
                         "dewarpStrength",
                         "autoShutter",
                         "reviewAfterCapture",
+                        "scanAiFinish",
+                        "flatPaper",
                         "lockCrop",
                         "showOutline",
                         "strictQuality",
@@ -171,9 +173,21 @@ class SettingsProfiles(context: Context) {
                         "exportNaming",
                         "exportDestination",
                     ),
-                "ocr" to setOf("ocrLanguage", "ocrMode", "ocrVoting", "ocrBackend", "ocrPackId"),
+                "ocr" to
+                    setOf(
+                        "ocrLanguage",
+                        "ocrMode",
+                        "ocrVoting",
+                        "ocrBackend",
+                        "ocrPackId",
+                        "ocrOrder",
+                        "ocrProofreadThreshold",
+                    ),
                 "appearance" to
                     setOf(
+                        "reduceMotion",
+                        "haptics",
+                        "documentSidebar",
                         "theme",
                         "accent",
                         "dynamicColor",

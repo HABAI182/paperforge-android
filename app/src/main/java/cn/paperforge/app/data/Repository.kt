@@ -24,7 +24,7 @@ class Repository(val context: Context, val database: PaperDatabase) {
     suspend fun newScan(): DocumentRow =
         DocumentRow(
                 UUID.randomUUID().toString(),
-                "扫描 ${java.text.SimpleDateFormat("MM-dd HH.mm",java.util.Locale.CHINA).format(java.util.Date())}",
+                "PaperForge ${java.text.SimpleDateFormat("MM-dd-yyyy HH.mm",java.util.Locale.ROOT).format(java.util.Date())}",
                 lastOpened = System.currentTimeMillis(),
             )
             .also { dao.putDocument(it) }
@@ -71,13 +71,50 @@ class Repository(val context: Context, val database: PaperDatabase) {
             }
         }
 
+    /**
+     * Gallery photos take the same durable path as camera captures, including flattening, so a page
+     * looks the same however it arrived. A caller that reads a page at once uses [awaitCaptures].
+     */
+    suspend fun awaitCaptures(id: String) =
+        withContext(Dispatchers.IO) {
+            // Bounded: a stuck worker shows up in the task centre, and must not hold the caller forever.
+            kotlinx.coroutines.withTimeoutOrNull(180_000L) {
+                while (dao.allTasks().any { it.type == "CAPTURE" && it.documentId == id && it.state in LocalTaskRow.active })
+                    kotlinx.coroutines.delay(150)
+            }
+        }
+
     suspend fun importImages(id: String, uris: List<Uri>) =
         withContext(Dispatchers.IO) {
             uris.forEach { uri ->
                 val file = captureFile(id)
                 try {
                     copyUri(uri, file)
-                    addCapture(id, file)
+                    if (uri.authority == "${context.packageName}.library") {
+                        // These are already rendered app pages: preserve framing and avoid a
+                        // second detector/filter pass when reusing them as conversion inputs.
+                        database.withTransaction {
+                            val position =
+                                maxOf(
+                                    dao.pages(id).maxOfOrNull { it.position } ?: -1,
+                                    dao.reservedCapturePosition(id) ?: -1,
+                                ) + 1
+                            dao.putPage(
+                                PageRow(
+                                    UUID.randomUUID().toString(),
+                                    id,
+                                    position,
+                                    file.path,
+                                    filter = "ORIGINAL",
+                                    detectionMethod = "library-rendered",
+                                )
+                            )
+                            dao.touch(id, System.currentTimeMillis())
+                        }
+                    } else {
+                        val task = cn.paperforge.app.imaging.CaptureTasks.prepare(this@Repository, id, null, file = file, galleryImport = true)
+                        cn.paperforge.app.imaging.CaptureTasks.accept(this@Repository, task.id)
+                    }
                 } catch (e: Exception) {
                     file.delete()
                     throw e
@@ -441,11 +478,19 @@ class Repository(val context: Context, val database: PaperDatabase) {
             replacePages(page.documentId, all, next, page.id)
         }
 
+    /**
+     * Split one spread into left (position 0) and right (position 1) pages sharing the original
+     * file. [topFraction]/[bottomFraction] are the left page's inner edge; the optional
+     * [rightTopFraction]/[rightBottomFraction] are the right page's inner edge and default to the
+     * same line, which keeps the historical single-seam behavior for the manual split.
+     */
     suspend fun splitBook(
         page: PageRow,
         topFraction: Float = .5f,
         bottomFraction: Float = .5f,
         keep: String = "both",
+        rightTopFraction: Float = topFraction,
+        rightBottomFraction: Float = bottomFraction,
     ) =
         database.withTransaction {
             val (leftQuad, rightQuad) =
@@ -453,6 +498,8 @@ class Repository(val context: Context, val database: PaperDatabase) {
                     cn.paperforge.app.model.Quad.decode(page.corners),
                     topFraction,
                     bottomFraction,
+                    rightTopFraction,
+                    rightBottomFraction,
                 )
             require(leftQuad.valid() && rightQuad.valid()) { "书脊位置不合法" }
             require(keep in setOf("both", "left", "right"))

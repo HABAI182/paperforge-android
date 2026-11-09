@@ -201,10 +201,6 @@ object NativeTextCoverage {
         return regions
     }
 
-    fun substantial(regions: List<Region>) =
-        regions.sumOf { it.text.count { c -> !c.isWhitespace() } } >= 120 &&
-            regions.sumOf { (it.rectangle.width() * it.rectangle.height()).toDouble() } > .1
-
     private fun normalized(text: String) =
         Normalizer.normalize(text, Normalizer.Form.NFKC).filterNot { it.isWhitespace() }
 

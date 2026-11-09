@@ -15,9 +15,6 @@ data class StorageBucket(
 data class StorageReport(val buckets: List<StorageBucket>, val protectedPaths: Set<String>) {
     val total
         get() = buckets.sumOf { it.bytes }
-
-    val reclaimable
-        get() = buckets.filter { it.cache }.sumOf { it.bytes }
 }
 
 /** Only explicitly regenerable folders can be cleaned, with live/history references excluded. */

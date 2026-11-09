@@ -1,0 +1,205 @@
+{
+  "issue": 21,
+  "part": "crop safety ring + receipt area floor",
+  "date": "2026-10-31",
+  "environment": {
+    "device": "emulator-5554 (AVD paperforge_api35, API 35, x86_64, swiftshader)",
+    "detector": "HYBRID -> neural-edge",
+    "preview": false,
+    "syntheticCorpus": "bench-private/synthetic-v1",
+    "docunetCorpus": "bench-private/docunet/original (first 20, no ground truth)"
+  },
+  "settings": {
+    "cropSafetyMargin": 0.01,
+    "cropSafetyMarginUnit": "fraction of the shorter source-image side per edge (1.0% = 30 px at 3024, 13.5 px at 1350x1800)",
+    "receiptAspect": 1.8,
+    "receiptMinimumArea": 0.04,
+    "captureAreaSetting": 0.08,
+    "captureConfidenceSetting": 0.6
+  },
+  "syntheticGeometry": {
+    "engine": "app-current",
+    "dataset": "synthetic-v1",
+    "mean_iou": 0.9906321972441199,
+    "median_iou": 0.9955662001932334,
+    "mean_corner_error_pct": 0.252864839851223,
+    "failure_rate_iou_lt_070": 0.0,
+    "detection_rate": 0.7702702702702703,
+    "full_frame_fallbacks": 17,
+    "false_positive_rate_at_auto_capture_confidence": 0.0,
+    "detect_ms_p50": 367.66835,
+    "detect_ms_p95": 465.3336949999998,
+    "note": "detection path untouched: identical to docs/acceptance/scan-quality/geometry-after-frame-guard.json"
+  },
+  "docunet": {
+    "images": 20,
+    "allReturnedQuad": true,
+    "allArm": true,
+    "rows": {
+      "4_2.jpg": {
+        "width": 1350,
+        "height": 1800,
+        "area": 0.07388807088136673,
+        "aspect": 2.615844249725342,
+        "areaFloor": 0.03999999910593033,
+        "autoArm": true,
+        "cropArea": 0.08472804725170135,
+        "cropQuad": [
+          [
+            0.3752172589302063,
+            0.3062317371368408
+          ],
+          [
+            0.5806226134300232,
+            0.27442243695259094
+          ],
+          [
+            0.6588514447212219,
+            0.6785051822662354
+          ],
+          [
+            0.43890392780303955,
+            0.6858608722686768
+          ]
+        ],
+        "cropWidth": 666,
+        "cropHeight": 1646,
+        "cropMargin": 0.009999999776482582,
+        "confidence": 0.7725123167037964,
+        "method": "auto-neural-edge+refined",
+        "quad": [
+          [
+            0.38630107045173645,
+            0.3121778070926666
+          ],
+          [
+            0.5722448825836182,
+            0.2833823561668396
+          ],
+          [
+            0.647359311580658,
+            0.6713778972625732
+          ],
+          [
+            0.44768083095550537,
+            0.6780557036399841
+          ]
+        ]
+      },
+      "7_2.jpg": {
+        "width": 1350,
+        "height": 1800,
+        "area": 0.08020275086164474,
+        "aspect": 2.2962539196014404,
+        "areaFloor": 0.03999999910593033,
+        "autoArm": true,
+        "cropArea": 0.09125911444425583,
+        "cropQuad": [
+          [
+            0.38610705733299255,
+            0.33108794689178467
+          ],
+          [
+            0.6119312047958374,
+            0.3132070004940033
+          ],
+          [
+            0.5937138199806213,
+            0.7113572359085083
+          ],
+          [
+            0.3511269986629486,
+            0.7146506905555725
+          ]
+        ],
+        "cropWidth": 732,
+        "cropHeight": 1606,
+        "cropMargin": 0.009999999776482582,
+        "confidence": 0.701673150062561,
+        "method": "auto-neural-edge+refined",
+        "quad": [
+          [
+            0.39551761746406555,
+            0.3378886878490448
+          ],
+          [
+            0.6015349626541138,
+            0.3215760588645935
+          ],
+          [
+            0.5840378999710083,
+            0.7039831876754761
+          ],
+          [
+            0.36185553669929504,
+            0.706999659538269
+          ]
+        ]
+      }
+    }
+  },
+  "edgeOffsetsFullResolution": {
+    "4_2.jpg": {
+      "side": 1,
+      "sourceSize": [
+        3024,
+        4032
+      ],
+      "probeSize": [
+        1350,
+        1800
+      ],
+      "detected": {
+        "n": 21,
+        "medianPx": 40.0,
+        "p10Px": 15.0,
+        "p90Px": 51.0
+      },
+      "crop": {
+        "n": 21,
+        "medianPx": 10.0,
+        "p10Px": -6.0,
+        "p90Px": 25.0
+      },
+      "note": "offsets are full-resolution source pixels; positive = paper extends outside that edge; coarse Otsu boundary scan, scan start bias -6 px (work/docunet-baseline/edge_offset.py)"
+    },
+    "7_2.jpg": {
+      "side": 3,
+      "sourceSize": [
+        3024,
+        4032
+      ],
+      "probeSize": [
+        1350,
+        1800
+      ],
+      "detected": {
+        "n": 21,
+        "medianPx": 1.0,
+        "p10Px": -6.0,
+        "p90Px": 25.0
+      },
+      "crop": {
+        "n": 21,
+        "medianPx": -6.0,
+        "p10Px": -6.0,
+        "p90Px": 13.0
+      },
+      "note": "offsets are full-resolution source pixels; positive = paper extends outside that edge; coarse Otsu boundary scan, scan start bias -6 px (work/docunet-baseline/edge_offset.py)"
+    }
+  },
+  "tests": {
+    "jvmNew": "CropSafetyTest 7/7 + CaptureAreaGateTest 6/6",
+    "jvmFull": "testDebugUnitTest: 57 tests, 56 pass; only GeometryTest.fileNamesCannotEscapeDestination fails (pre-existing, also recorded in confidence-calibration.md)",
+    "device": {
+      "QualityBenchmarkTest(detect)": "1/1 pass",
+      "DocUnetProbeTest": "1/1 pass, 20 sheets + 20 crops",
+      "CameraQualityTest": "1/1 pass",
+      "LearnedDetectorTest": "1/1 pass",
+      "ResolutionTest": "1/1 pass",
+      "CaptureGeometryFlowTest": "1/1 pass",
+      "OcrGeometryTest": "1/1 pass"
+    },
+    "deviceStateIssues": "LibraryComparisonTest/HistoryBackupTest fail in BackupStore.backup on historical rows pointing at deleted cache/export files; UpgradeSmokeTest failed on a device pref 'filter=TEXT' and passed after restoring the default AUTO. All three are pre-existing device-state problems, not touched by this change."
+  }
+}

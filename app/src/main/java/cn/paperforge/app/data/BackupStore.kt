@@ -815,6 +815,9 @@ object BackupStore {
                                 if (applyWorkspace) it
                                 else
                                     JSONObject().apply {
+                                        it.optJSONArray("folders")?.let { folders ->
+                                            put("folders", folders)
+                                        }
                                         it.optJSONArray("families")?.let { families ->
                                             put("families", families)
                                         }

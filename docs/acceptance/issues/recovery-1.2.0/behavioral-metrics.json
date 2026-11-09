@@ -1,0 +1,205 @@
+{
+  "source": "Three private owner photos paired to the owner reference export by visible handwriting; images remain outside Git",
+  "processingDevice": "API35 x86_64 emulator; actual Kotlin implementation",
+  "annotationUncertaintyPx": 15,
+  "limitations": [
+    "Three paired user photos; not a population benchmark",
+    "Manual corners are approximate and include occlusion uncertainty",
+    "Registration metrics are proxies, not text correctness or pixel-equivalent geometry",
+    "Second experiment changed both the ink ramp and line slope compensation; it does not isolate their effects",
+    "No temporal snap observations and no dense dewarp ground truth"
+  ],
+  "rows": [
+    {
+      "id": "notes-1",
+      "geometryAgainstApproximateManualCorners": {
+        "cornerErrorPx": 174.21105522266572,
+        "cornerErrorDiagonalPercent": 8.17048363929771,
+        "quadIoU": 0.7131423728218218
+      },
+      "semanticConfidence": 0.10556271,
+      "semanticMethod": "docquad-CORNERS",
+      "dewarpLines": 16,
+      "dewarpApplied": true,
+      "initialBW": {
+        "registration": "homography-proxy",
+        "inliers": 38,
+        "coverage": 0.9395081158980583,
+        "registeredMAE255": 16.65925535715367,
+        "inkRecallProxy": 0.7297851612572425,
+        "inkPrecisionProxy": 0.5686420673375575
+      },
+      "refinedBW": {
+        "registration": "homography-proxy",
+        "inliers": 37,
+        "coverage": 0.9362674453883495,
+        "registeredMAE255": 16.444026329113925,
+        "inkRecallProxy": 0.5871308230995635,
+        "inkPrecisionProxy": 0.5089922523984002
+      },
+      "otherModes": {
+        "auto": {
+          "registration": "homography-proxy",
+          "inliers": 37,
+          "coverage": 0.9366884101941747,
+          "registeredMAE255": 33.72497833885321,
+          "inkRecallProxy": 0.4018606069849016,
+          "inkPrecisionProxy": 0.42334622729275817
+        },
+        "text": {
+          "registration": "homography-proxy",
+          "inliers": 36,
+          "coverage": 0.9366353155339806,
+          "registeredMAE255": 34.536583094439855,
+          "inkRecallProxy": 0.338992499493209,
+          "inkPrecisionProxy": 0.35733107472237907
+        },
+        "bw": {
+          "registration": "homography-proxy",
+          "inliers": 37,
+          "coverage": 0.9362674453883495,
+          "registeredMAE255": 16.444026329113925,
+          "inkRecallProxy": 0.5871308230995635,
+          "inkPrecisionProxy": 0.5089922523984002
+        },
+        "workbook": {
+          "registration": "homography-proxy",
+          "inliers": 32,
+          "coverage": 0.936817354368932,
+          "registeredMAE255": 20.3342765767954,
+          "inkRecallProxy": 0.35387663855299256,
+          "inkPrecisionProxy": 0.45350112939657955
+        }
+      }
+    },
+    {
+      "id": "notes-2",
+      "geometryAgainstApproximateManualCorners": {
+        "cornerErrorPx": 153.69219853041147,
+        "cornerErrorDiagonalPercent": 7.208151009563742,
+        "quadIoU": 0.7949949113055899
+      },
+      "semanticConfidence": 0.49156654,
+      "semanticMethod": "docquad-CORNERS",
+      "dewarpLines": 4,
+      "dewarpApplied": true,
+      "initialBW": {
+        "registration": "homography-proxy",
+        "inliers": 27,
+        "coverage": 0.9031136225728156,
+        "registeredMAE255": 19.67698722982535,
+        "inkRecallProxy": 0.7464338416133792,
+        "inkPrecisionProxy": 0.5676726410121244
+      },
+      "refinedBW": {
+        "registration": "homography-proxy",
+        "inliers": 42,
+        "coverage": 0.9204623027912622,
+        "registeredMAE255": 18.079338298157246,
+        "inkRecallProxy": 0.6385224274406333,
+        "inkPrecisionProxy": 0.5285714285714286
+      },
+      "otherModes": {
+        "auto": {
+          "registration": "homography-proxy",
+          "inliers": 56,
+          "coverage": 0.9195502123786408,
+          "registeredMAE255": 34.52481781025872,
+          "inkRecallProxy": 0.5517059301380991,
+          "inkPrecisionProxy": 0.5031864687037101
+        },
+        "text": {
+          "registration": "homography-proxy",
+          "inliers": 55,
+          "coverage": 0.9316330400485436,
+          "registeredMAE255": 35.63177734446557,
+          "inkRecallProxy": 0.5034326791050804,
+          "inkPrecisionProxy": 0.46881458142765187
+        },
+        "bw": {
+          "registration": "homography-proxy",
+          "inliers": 42,
+          "coverage": 0.9204623027912622,
+          "registeredMAE255": 18.079338298157246,
+          "inkRecallProxy": 0.6385224274406333,
+          "inkPrecisionProxy": 0.5285714285714286
+        },
+        "workbook": {
+          "registration": "homography-proxy",
+          "inliers": 62,
+          "coverage": 0.9266155946601942,
+          "registeredMAE255": 23.271311341218844,
+          "inkRecallProxy": 0.43483891856888457,
+          "inkPrecisionProxy": 0.4622420761540098
+        }
+      }
+    },
+    {
+      "id": "notes-3",
+      "geometryAgainstApproximateManualCorners": {
+        "cornerErrorPx": 316.5056584531839,
+        "cornerErrorDiagonalPercent": 14.844088400886033,
+        "quadIoU": 0.4771802651011072
+      },
+      "semanticConfidence": 0.12127092,
+      "semanticMethod": "docquad-CORNERS",
+      "dewarpLines": 6,
+      "dewarpApplied": true,
+      "initialBW": {
+        "registration": "homography-proxy",
+        "inliers": 23,
+        "coverage": 0.9843294902912622,
+        "registeredMAE255": 24.634300784440644,
+        "inkRecallProxy": 0.12647607209446862,
+        "inkPrecisionProxy": 0.10708224039500078
+      },
+      "refinedBW": {
+        "registration": "homography-proxy",
+        "inliers": 16,
+        "coverage": 1.0,
+        "registeredMAE255": 20.626010694781552,
+        "inkRecallProxy": 0.32815365803953533,
+        "inkPrecisionProxy": 0.22701973764864533
+      },
+      "otherModes": {
+        "auto": {
+          "registration": "homography-proxy",
+          "inliers": 19,
+          "coverage": 0.996239760315534,
+          "registeredMAE255": 14.972730058605535,
+          "inkRecallProxy": 0.016564952048823016,
+          "inkPrecisionProxy": 0.184
+        },
+        "text": {
+          "registration": "homography-proxy",
+          "inliers": 16,
+          "coverage": 1.0,
+          "registeredMAE255": 33.33019379550971,
+          "inkRecallProxy": 0.1509068677399633,
+          "inkPrecisionProxy": 0.21386938667373162
+        },
+        "bw": {
+          "registration": "homography-proxy",
+          "inliers": 16,
+          "coverage": 1.0,
+          "registeredMAE255": 20.626010694781552,
+          "inkRecallProxy": 0.32815365803953533,
+          "inkPrecisionProxy": 0.22701973764864533
+        },
+        "workbook": {
+          "registration": "homography-proxy",
+          "inliers": 17,
+          "coverage": 1.0,
+          "registeredMAE255": 19.736743401092234,
+          "inkRecallProxy": 0.10388220908905645,
+          "inkPrecisionProxy": 0.21618021073028945
+        }
+      }
+    }
+  ],
+  "measurementRuntime": {
+    "opencvPython": "5.0.0.93",
+    "pymupdf": "2.0",
+    "Pillow": "13.0.0"
+  }
+}

@@ -5,6 +5,8 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -24,6 +26,7 @@ import kotlinx.coroutines.*
 class UpdatesActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AutomaticUpdates.sync(this)
         networkContent {
             UpdatesScreen(
                 intent.getBooleanExtra(
@@ -49,8 +52,21 @@ private fun UpdatesScreen(checkOnOpen: Boolean, onBack: () -> Unit) {
         remember { manager.getWorkInfosByTagFlow("paperforge-update") }
             .collectAsState(initial = emptyList())
     var revision by remember { mutableIntStateOf(0) }
+    DisposableEffect(prefs.store) {
+        val listener =
+            android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+                if (key == "automaticUpdateAt") revision++
+            }
+        prefs.store.registerOnSharedPreferenceChangeListener(listener)
+        onDispose { prefs.store.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
     val records = remember(work, revision) { UpdateFiles.records(context) }
     var enabled by remember { mutableStateOf(prefs.enabled) }
+    var automatic by remember { mutableStateOf(prefs.automaticUpdates) }
+    var autoDownload by remember { mutableStateOf(prefs.automaticDownload) }
+    val notificationPermission =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+
     var repository by remember { mutableStateOf(prefs.repository) }
     var channel by remember { mutableStateOf(prefs.channel) }
     var credentialError by remember { mutableStateOf<String?>(null) }
@@ -282,11 +298,11 @@ private fun UpdatesScreen(checkOnOpen: Boolean, onBack: () -> Unit) {
                 ) {
                     Column(Modifier.weight(1f)) {
                         Text(
-                            if (integrated) "允许手动检查更新" else "启用可选更新",
+                            if (integrated) "允许联网更新" else "启用可选更新",
                             style = MaterialTheme.typography.titleMedium,
                         )
                         Text(
-                            if (enabled) "由你点击发起，下载完成后交给系统确认" else "已关闭联网检查与下载",
+                            if (enabled) "支持手动检查和下方自动更新，安装交给系统确认" else "已关闭联网检查与下载",
                             style = MaterialTheme.typography.bodySmall,
                         )
                     }
@@ -303,9 +319,66 @@ private fun UpdatesScreen(checkOnOpen: Boolean, onBack: () -> Unit) {
                                 manager.cancelAllWorkByTag("paperforge-update")
                                 message = "已关闭，下载断点保留"
                             }
+                            AutomaticUpdates.sync(context)
                             revision++
                         },
                     )
+                }
+            }
+            Card {
+                Column(
+                    Modifier.fillMaxWidth().padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("自动更新", style = MaterialTheme.typography.titleMedium)
+                            Text("每天检查；安装仍由系统确认", style = MaterialTheme.typography.bodySmall)
+                        }
+                        Switch(
+                            automatic,
+                            { value ->
+                                automatic = value
+                                prefs.automaticUpdates = value
+                                AutomaticUpdates.sync(context)
+                                if (value && android.os.Build.VERSION.SDK_INT >= 33)
+                                    notificationPermission.launch(
+                                        android.Manifest.permission.POST_NOTIFICATIONS
+                                    )
+                            },
+                            enabled = enabled,
+                        )
+                    }
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Text("Wi-Fi 下自动下载", Modifier.weight(1f))
+                        Switch(
+                            autoDownload,
+                            { value ->
+                                autoDownload = value
+                                prefs.automaticDownload = value
+                                AutomaticUpdates.sync(context)
+                            },
+                            enabled = enabled && automatic,
+                        )
+                    }
+                    Text(
+                        prefs.store
+                            .getString(
+                                "automaticUpdateStatus",
+                                if (automatic) "等待系统安排检查" else "自动更新已关闭",
+                            )
+                            .orEmpty(),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    TextButton({
+                        prefs.automaticUpdates = false
+                        prefs.automaticDownload = true
+                        automatic = false
+                        autoDownload = true
+                        AutomaticUpdates.sync(context)
+                    }) {
+                        Text("恢复自动更新默认")
+                    }
                 }
             }
             Text("已安装", style = MaterialTheme.typography.titleMedium)
@@ -337,6 +410,7 @@ private fun UpdatesScreen(checkOnOpen: Boolean, onBack: () -> Unit) {
                             {
                                 channel = id
                                 prefs.channel = id
+                                AutomaticUpdates.sync(context)
                                 result = null
                             },
                             label = { Text(name) },
@@ -369,6 +443,7 @@ private fun UpdatesScreen(checkOnOpen: Boolean, onBack: () -> Unit) {
                             try {
                                 prefs.repository = repository
                                 prefs.token(token)
+                                AutomaticUpdates.sync(context)
                                 message = if (token.isBlank()) "访问凭据已清除" else "访问凭据已保存"
                             } catch (e: Exception) {
                                 message = "访问凭据未能保存"

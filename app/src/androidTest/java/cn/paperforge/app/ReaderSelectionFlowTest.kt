@@ -179,7 +179,7 @@ class ReaderSelectionFlowTest {
             compose.onNodeWithText("更多", useUnmergedTree = true).performClick()
             compose.onNodeWithText("先左栏后右栏").performClick()
             columns = selected()
-            assertEquals("ALPHA 00123\nBETA 200.50\nRIGHT 111\nRIGHT 222", columns)
+            assertEquals("ALPHA 00123 BETA 200.50 RIGHT 111 RIGHT 222", columns)
             compose.onNodeWithText("高亮", useUnmergedTree = true).performClick()
             val draft = File(repo.folder(doc.id), "annotations.json")
             compose.waitUntil(10000) { draft.exists() && JSONArray(draft.readText()).length() == 4 }
@@ -192,10 +192,11 @@ class ReaderSelectionFlowTest {
             }
             assertEquals(hash, runBlocking { PdfAssembly.sha256(source) })
             screenshot("columns")
-            compose.onNodeWithText("完成选择").performClick()
+            compose.onNodeWithContentDescription("完成选择").performClick()
             compose.runOnIdle { vm.readerTarget.value = doc.id to 2 }
             waitTag("reader-viewport-2")
-            compose.onNodeWithContentDescription("阅读设置").performClick()
+            compose.onNodeWithContentDescription("工具").performClick()
+            compose.onNodeWithText("阅读与导航", useUnmergedTree = true).performClick()
             compose.onNodeWithText("区域识字", useUnmergedTree = true).performClick()
             compose.onNodeWithText("拖动圈选要识别的区域").assertIsDisplayed()
             val from = point(2, PointN(.08f, .30f))

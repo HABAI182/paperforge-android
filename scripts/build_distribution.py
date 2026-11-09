@@ -44,6 +44,18 @@ def inspect(apk, tools, java):
     permissions = re.findall(r"uses-permission[^:]*: name='([^']+)'", badging)
     with zipfile.ZipFile(apk) as archive:
         files = archive.infolist()
+        local_review_assets = []
+        model_purposes = {
+            'assets/retouch/docres-q8.onnx': 'existing DocRes restoration weights; code, weight and data terms are separate; see retouch/docres-provenance.json',
+            'assets/retouch/paper-ink-v1.onnx': 'original PaperForge procedural-data foreground matte',
+        }
+        for name, purpose in model_purposes.items():
+            if name in archive.namelist():
+                data = archive.read(name)
+                local_review_assets.append({'file': name, 'bytes': len(data),
+                                            'sha256': hashlib.sha256(data).hexdigest(),
+                                            'repositoryTracked': name.startswith('assets/retouch/'),
+                                            'purpose': purpose})
         native = sorted({x.filename.split('/')[1] for x in files if x.filename.startswith('lib/')})
         elf = []
         for entry in files:
@@ -75,7 +87,8 @@ def inspect(apk, tools, java):
             'buildToolsVersion': tools.name, 'abis': native, 'permissions': permissions,
             'zipAlignment16KiB': True, 'bytes': apk.stat().st_size, 'sha256': sha(apk),
             'groups': groups, 'largestFiles': largest, 'nativeElf': elf,
-            'nativeElf16KiBCompatible': all(x['compatible16KiB'] for x in elf)}
+            'nativeElf16KiBCompatible': all(x['compatible16KiB'] for x in elf),
+            'localReviewAssets': local_review_assets}
 
 
 def main():
@@ -87,9 +100,16 @@ def main():
     parser.add_argument('--engine', action='append', default=[],
                         choices=['office-engine', 'format-engine', 'network-engine'],
                         help='Include only the selected optional engine; repeat for multiple engines')
+    parser.add_argument('--fast-review', action='store_true', help='Full local review without R8; never stable')
+    parser.add_argument('--compact-review', action='store_true', help='R8 shrink and resource shrink, without costly code optimization; full local review only')
     parser.add_argument('--isolated-ci', action='store_true', help='Debug package cn.paperforge.app.ci, using a disposable CI identity')
+    parser.add_argument('--offline', action='store_true', help='Pass --offline to Gradle')
     parser.add_argument('--output', type=Path)
     args = parser.parse_args()
+    if args.fast_review and (not args.full or args.channel != 'development' or args.isolated_ci):
+        parser.error('--fast-review is only for full, owner-signed development review candidates')
+    if args.compact_review and (not args.full or args.channel != 'development' or args.isolated_ci or args.fast_review):
+        parser.error('--compact-review is only for full development candidates and cannot combine with --fast-review')
     sdk = Path(os.environ.get('ANDROID_HOME') or os.environ.get('ANDROID_SDK_ROOT') or '')
     java = Path(os.environ['JAVA_HOME']) / 'bin' / ('java.exe' if os.name == 'nt' else 'java')
     policy = json.loads((ROOT / 'docs/development/distribution-policy.json').read_text(encoding='utf-8'))
@@ -119,8 +139,14 @@ def main():
     command = [ROOT / ('gradlew.bat' if os.name == 'nt' else 'gradlew'),
                *[f':{module}:assemble{variant.title()}' for module in modules],
                '-PpaperforgeAbis=' + ','.join(selected_abis), '-Pksp.incremental=false', '--console=plain', '--build-cache']
+    if args.compact_review:
+        command += ['-PpaperforgeOptimizeCode=false']
+    if args.fast_review:
+        command += ['-PpaperforgeOptimizeFull=false']
     if args.isolated_ci:
         command += ['-PpaperforgeIdSuffix=.ci']
+    if args.offline:
+        command += ['--offline']
     run(command)
     results = []
     for module in modules:
@@ -128,6 +154,11 @@ def main():
         metadata = json.loads((directory / 'output-metadata.json').read_text(encoding='utf-8'))
         apk = directory / metadata['elements'][0]['outputFile']
         record = inspect(apk, tools, java)
+        with zipfile.ZipFile(apk) as archive:
+            # Guard against the removed non-open-source models coming back from a stale local copy.
+            packaged = [x for x in archive.namelist() if x.endswith('.mnn')]
+        if packaged:
+            raise RuntimeError('Package contains models that are not openly licensed: ' + ', '.join(packaged))
         if not args.isolated_ci and record['certificatesSha256'] != [policy['ownerDevelopmentCertificateSha256']]:
             raise RuntimeError('Candidate does not continue the owner certificate; no artifact copied')
         expected_id = policy['applicationId'] + ('.ci' if args.isolated_ci else '')
@@ -146,7 +177,11 @@ def main():
         target = output / filename
         shutil.copy2(apk, target)
         record.update({'file': filename, 'module': module, 'variant': variant})
-        if module == 'full-app' and variant == 'release':
+        if module == 'full-app':
+            record['optimized'] = variant == 'release' and not args.fast_review
+            record['codeOptimization'] = record['optimized'] and not args.compact_review
+            record['resourceShrinking'] = record['optimized']
+        if module == 'full-app' and variant == 'release' and not args.fast_review:
             mapping_dir = ROOT / module / 'build/outputs/mapping/release'
             mapping_name = target.stem + '-r8-mapping.zip'
             with zipfile.ZipFile(output / mapping_name, 'w', zipfile.ZIP_DEFLATED) as archive:

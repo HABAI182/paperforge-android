@@ -16,7 +16,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-/** The bundled engine remains default. A snapshot pins a model version for a whole operation. */
+/** Automatic mode uses an installed matching pack; every operation pins its actual model. */
 class RoutingOcrEngine(private val context: Context, val packs: OcrModelPacks) : OcrEngine {
     private val bundled by lazy { BundledOcrEngine() }
 
@@ -29,10 +29,23 @@ class RoutingOcrEngine(private val context: Context, val packs: OcrModelPacks) :
     private val runtimes = mutableMapOf<String, Entry>()
     private val removing = mutableSetOf<String>()
 
-    private fun selected() =
-        if (UserSettings[SettingKeys.OcrBackend] == "PADDLE")
-            packs.find(UserSettings[SettingKeys.OcrPackId])
-        else null
+    private fun selected(): OcrModelPack? =
+        when (UserSettings[SettingKeys.OcrBackend]) {
+            "PADDLE" -> packs.find(UserSettings[SettingKeys.OcrPackId])
+            "AUTO" -> {
+                val language = if (UserSettings[SettingKeys.OcrLanguage] == "LATIN") "en" else "zh"
+                val candidates = packs.installed.value.filter { language in it.languages }
+                candidates.firstOrNull { it.id == UserSettings[SettingKeys.OcrPackId] }
+                    ?: candidates.firstOrNull {
+                        it.id.startsWith(
+                            if (language == "en") "paddle-ppocrv5-latin-"
+                            else "paddle-ppocrv5-mobile-"
+                        )
+                    }
+                    ?: candidates.firstOrNull()
+            }
+            else -> null
+        }
 
     private fun engineId(pack: OcrModelPack) = "paddle:${pack.id}:${pack.fingerprint}:pf1"
 
@@ -73,8 +86,9 @@ class RoutingOcrEngine(private val context: Context, val packs: OcrModelPacks) :
             currentCoroutineContext().ensureActive()
             val bitmap =
                 ScanProcessor.render(
-                    page.copy(filter = "ORIGINAL", brightness = 0f, contrast = 1f),
+                    page.copy(brightness = 0f, contrast = 1f),
                     options.mode.edge,
+                    ocrInput = true,
                 )
             return try {
                 recognizeBitmap(bitmap, chinese, options).copy(sourceRevision = page.revision)
@@ -84,6 +98,48 @@ class RoutingOcrEngine(private val context: Context, val packs: OcrModelPacks) :
         }
 
         override suspend fun recognizeBitmap(
+            source: Bitmap,
+            chinese: Boolean,
+            options: OcrOptions,
+        ): OcrLayout {
+            val primary = recognizeOnce(source, chinese, options)
+            if (
+                options.mode == OcrMode.FAST ||
+                    (primary.meanConfidence ?: 0f) >= .86f && primary.lines.size >= 3
+            )
+                return primary
+            val paper = OcrInputPreparation.paper(source)
+            return try {
+                val alternative = recognizeOnce(paper, chinese, options)
+                OcrReadingOrder.arrange(
+                        OcrLineFusion.merge(
+                            primary,
+                            alternative.copy(
+                                lines =
+                                    alternative.lines.map {
+                                        it.copy(variant = "paddle-paper-field")
+                                    }
+                            ),
+                            options.pageAgreement,
+                        ),
+                        options.order,
+                    )
+                    .copy(
+                        attempts = listOf("paddle-original", "paddle-paper-field"),
+                        rawRecognition = primary.rawRecognition,
+                        engineMetrics =
+                            primary.engineMetrics +
+                                mapOf(
+                                    "supplementPipelineMs" to
+                                        (alternative.engineMetrics["pipelineMs"] ?: 0.0)
+                                ),
+                    )
+            } finally {
+                paper.recycle()
+            }
+        }
+
+        private suspend fun recognizeOnce(
             source: Bitmap,
             chinese: Boolean,
             options: OcrOptions,
@@ -213,7 +269,10 @@ class RoutingOcrEngine(private val context: Context, val packs: OcrModelPacks) :
 
     suspend fun remove(pack: OcrModelPack) =
         withContext(Dispatchers.IO) {
-            if (UserSettings[SettingKeys.OcrPackId] == pack.id)
+            if (
+                UserSettings[SettingKeys.OcrBackend] == "PADDLE" &&
+                    UserSettings[SettingKeys.OcrPackId] == pack.id
+            )
                 UserSettings.set(SettingKeys.OcrBackend, "MLKIT")
             val wait =
                 lock.withLock {

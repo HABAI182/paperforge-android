@@ -1,0 +1,251 @@
+[
+  {
+    "photo": "old-1",
+    "reference": "本地样本应用 full PDF page 1, embedded original JPEG",
+    "referenceRules": {
+      "tracks": 21,
+      "rmsPixels": 0.40604021864847867,
+      "rms95Pixels": 2.5056327241519214
+    },
+    "variants": {
+      "surface-off": {
+        "sharedGeometryWarning": "geometry differs between variants; transform reuse is diagnostic only",
+        "visual": {
+          "aligned": true,
+          "matches": 197,
+          "inliers": 174,
+          "referenceBlankPixels": 465088,
+          "darkInkInReferenceBlank": 0.02003276799229393,
+          "meanInkInReferenceBlank": 2.8476008841337555,
+          "binaryInkIoU": 0.16265371185668742
+        },
+        "rules": {
+          "tracks": 22,
+          "rmsPixels": 0.3843321326028326,
+          "rms95Pixels": 3.2352626836878686
+        },
+        "referenceSeededRules": {
+          "aligned": true,
+          "referenceSeeds": 22,
+          "matchedTracks": 21,
+          "medianRmsPixels": 0.6759818658684823,
+          "rms95Pixels": 4.64575934348233
+        }
+      },
+      "surface-85": {
+        "sharedGeometryWarning": "geometry differs between variants; transform reuse is diagnostic only",
+        "visual": {
+          "aligned": true,
+          "matches": 204,
+          "inliers": 166,
+          "referenceBlankPixels": 465088,
+          "darkInkInReferenceBlank": 0.02188618067978533,
+          "meanInkInReferenceBlank": 3.1612490539424796,
+          "binaryInkIoU": 0.17499081894968785
+        },
+        "rules": {
+          "tracks": 23,
+          "rmsPixels": 0.611252176210677,
+          "rms95Pixels": 2.944145981359612
+        },
+        "referenceSeededRules": {
+          "aligned": true,
+          "referenceSeeds": 22,
+          "matchedTracks": 21,
+          "medianRmsPixels": 0.6179609398911876,
+          "rms95Pixels": 4.05042932746505
+        }
+      },
+      "surface-full": {
+        "sharedGeometryWarning": "geometry differs between variants; transform reuse is diagnostic only",
+        "visual": {
+          "aligned": true,
+          "matches": 207,
+          "inliers": 155,
+          "referenceBlankPixels": 465088,
+          "darkInkInReferenceBlank": 0.011989128939039494,
+          "meanInkInReferenceBlank": 1.560670238750516,
+          "binaryInkIoU": 0.17477667002042746
+        },
+        "rules": {
+          "tracks": 23,
+          "rmsPixels": 0.6613627749367297,
+          "rms95Pixels": 3.063868505637069
+        },
+        "referenceSeededRules": {
+          "aligned": true,
+          "referenceSeeds": 22,
+          "matchedTracks": 21,
+          "medianRmsPixels": 0.5291898973056075,
+          "rms95Pixels": 2.8440574738839492
+        }
+      }
+    }
+  },
+  {
+    "photo": "old-2",
+    "reference": "本地样本应用 full PDF page 2, embedded original JPEG",
+    "referenceRules": {
+      "tracks": 21,
+      "rmsPixels": 0.6825682323916527,
+      "rms95Pixels": 2.959289309656211
+    },
+    "variants": {
+      "surface-off": {
+        "sharedGeometryWarning": "geometry differs between variants; transform reuse is diagnostic only",
+        "visual": {
+          "aligned": true,
+          "matches": 553,
+          "inliers": 331,
+          "referenceBlankPixels": 457541,
+          "darkInkInReferenceBlank": 0.011295162619306248,
+          "meanInkInReferenceBlank": 1.569868055540378,
+          "binaryInkIoU": 0.1755396385733286
+        },
+        "rules": {
+          "tracks": 21,
+          "rmsPixels": 0.8139641301159284,
+          "rms95Pixels": 4.409926952979856
+        },
+        "referenceSeededRules": {
+          "aligned": true,
+          "referenceSeeds": 35,
+          "matchedTracks": 19,
+          "medianRmsPixels": 1.344854122518281,
+          "rms95Pixels": 5.557786009848901
+        }
+      },
+      "surface-85": {
+        "sharedGeometryWarning": "geometry differs between variants; transform reuse is diagnostic only",
+        "visual": {
+          "aligned": true,
+          "matches": 692,
+          "inliers": 559,
+          "referenceBlankPixels": 447191,
+          "darkInkInReferenceBlank": 0.004105628243860006,
+          "meanInkInReferenceBlank": 0.52403335487521,
+          "binaryInkIoU": 0.31443568849091813
+        },
+        "rules": {
+          "tracks": 21,
+          "rmsPixels": 0.9445966523476216,
+          "rms95Pixels": 2.9878960121357587
+        },
+        "referenceSeededRules": {
+          "aligned": true,
+          "referenceSeeds": 35,
+          "matchedTracks": 21,
+          "medianRmsPixels": 1.9697259740812023,
+          "rms95Pixels": 4.531452015429047
+        }
+      },
+      "surface-full": {
+        "sharedGeometryWarning": "geometry differs between variants; transform reuse is diagnostic only",
+        "visual": {
+          "aligned": true,
+          "matches": 717,
+          "inliers": 588,
+          "referenceBlankPixels": 447175,
+          "darkInkInReferenceBlank": 0.002122211662100967,
+          "meanInkInReferenceBlank": 0.27460837479733885,
+          "binaryInkIoU": 0.3639948719377944
+        },
+        "rules": {
+          "tracks": 21,
+          "rmsPixels": 1.192359724406048,
+          "rms95Pixels": 2.7762819907513956
+        },
+        "referenceSeededRules": {
+          "aligned": true,
+          "referenceSeeds": 35,
+          "matchedTracks": 21,
+          "medianRmsPixels": 1.9217286962833378,
+          "rms95Pixels": 3.7890388562224495
+        }
+      }
+    }
+  },
+  {
+    "photo": "old-3",
+    "reference": "本地样本应用 full PDF page 3, embedded original JPEG",
+    "referenceRules": {
+      "tracks": 21,
+      "rmsPixels": 0.2753783845621802,
+      "rms95Pixels": 3.3694047638060867
+    },
+    "variants": {
+      "surface-off": {
+        "sharedGeometryWarning": "geometry differs between variants; transform reuse is diagnostic only",
+        "visual": {
+          "aligned": true,
+          "matches": 140,
+          "inliers": 53,
+          "referenceBlankPixels": 509301,
+          "darkInkInReferenceBlank": 0.04700756527083198,
+          "meanInkInReferenceBlank": 6.186176740277361,
+          "binaryInkIoU": 0.1467324290998767
+        },
+        "rules": {
+          "tracks": 23,
+          "rmsPixels": 0.2936107880428972,
+          "rms95Pixels": 7.699793182864016
+        },
+        "referenceSeededRules": {
+          "aligned": true,
+          "referenceSeeds": 22,
+          "matchedTracks": 22,
+          "medianRmsPixels": 0.29676344116159287,
+          "rms95Pixels": 4.517724872620728
+        }
+      },
+      "surface-85": {
+        "sharedGeometryWarning": "geometry differs between variants; transform reuse is diagnostic only",
+        "visual": {
+          "aligned": true,
+          "matches": 183,
+          "inliers": 93,
+          "referenceBlankPixels": 509301,
+          "darkInkInReferenceBlank": 0.0438365524513009,
+          "meanInkInReferenceBlank": 5.818612176296532,
+          "binaryInkIoU": 0.1563153795641617
+        },
+        "rules": {
+          "tracks": 21,
+          "rmsPixels": 0.4637950205404401,
+          "rms95Pixels": 3.9357047134767007
+        },
+        "referenceSeededRules": {
+          "aligned": true,
+          "referenceSeeds": 22,
+          "matchedTracks": 22,
+          "medianRmsPixels": 0.4783671777550125,
+          "rms95Pixels": 5.786259056030352
+        }
+      },
+      "surface-full": {
+        "sharedGeometryWarning": "geometry differs between variants; transform reuse is diagnostic only",
+        "visual": {
+          "aligned": true,
+          "matches": 197,
+          "inliers": 93,
+          "referenceBlankPixels": 509301,
+          "darkInkInReferenceBlank": 0.029762360568701022,
+          "meanInkInReferenceBlank": 3.4548999511094616,
+          "binaryInkIoU": 0.13157503714710253
+        },
+        "rules": {
+          "tracks": 22,
+          "rmsPixels": 0.5183180453578152,
+          "rms95Pixels": 4.64860093733504
+        },
+        "referenceSeededRules": {
+          "aligned": true,
+          "referenceSeeds": 22,
+          "matchedTracks": 22,
+          "medianRmsPixels": 0.5713572081623695,
+          "rms95Pixels": 5.558889272799594
+        }
+      }
+    }
+  }
+]

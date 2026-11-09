@@ -15,12 +15,7 @@ android {
         versionCode = providers.gradleProperty("paperforgeVersionCode").get().toInt() + 3
         versionName = providers.gradleProperty("paperforgeVersionName").get()
         externalNativeBuild {
-            cmake {
-                arguments += "-DANDROID_STL=c++_static"
-                providers.gradleProperty("paperforgeMnnSource").orNull?.let {
-                    arguments += "-DPAPERFORGE_MNN_SOURCE=$it"
-                }
-            }
+            cmake { arguments += "-DANDROID_STL=c++_static" }
         }
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk {
@@ -58,6 +53,8 @@ android {
                 rootProject.file("app/proguard-rules.pro"),
                 "proguard-rules.pro",
             )
+            if (providers.gradleProperty("paperforgeOptimizeCode").orNull == "false")
+                proguardFile(rootProject.file("gradle/review-shrink.pro"))
             testProguardFiles("test-proguard-rules.pro")
         }
     }
@@ -79,7 +76,9 @@ val prepareFullManifest = tasks.register("prepareFullManifest") {
     doLast {
         val original = rootProject.file("app/src/main/AndroidManifest.xml").readText()
         val content = original
-            .replace("tools:node=\"remove\"", "")
+            // Only restore optional permissions for the full package. Preserve component
+            // merge directives, including WorkManager's on-demand Startup configuration.
+            .replace(Regex("""(<uses-permission\b[^>]*?)\s+tools:node="remove"([^>]*>)"""), "$1$2")
             .replace("android:name=\".PaperForgeApp\"", "android:name=\".FullPaperForgeApp\" android:extractNativeLibs=\"true\"")
             .replace("<activity android:name=\".MainActivity\"", "<meta-data android:name=\"paperforge.full\" android:value=\"true\" /><activity android:name=\".MainActivity\"")
         generatedManifest.get().asFile.apply { parentFile.mkdirs(); writeText(content) }
@@ -98,6 +97,48 @@ val prepareLanTests = tasks.register<Sync>("prepareLanTests") {
     into(layout.buildDirectory.dir("generated/lan-tests"))
 }
 android.sourceSets.getByName("androidTest").java.srcDir(prepareLanTests.map { it.destinationDir })
+// Exercise the existing workbook regression in the integrated installation too.
+val prepareWorkbookTests = tasks.register<Sync>("prepareWorkbookTests") {
+    from(rootProject.file("app/src/androidTest/java")) { include("**/quality/WorkbookEnhancementTest.kt") }
+    into(layout.buildDirectory.dir("generated/workbook-tests"))
+}
+android.sourceSets.getByName("androidTest").java.srcDir(prepareWorkbookTests.map { it.destinationDir })
+// v200 feedback regression (export visibility, paper whiteness, corner rim, preview cache) must run
+// in the same integrated package the owner tested.
+val prepareFeedbackTests = tasks.register<Sync>("prepareFeedbackTests") {
+    from(rootProject.file("app/src/androidTest/java")) {
+        include("**/V200FeedbackTest.kt")
+        include("**/EdgeInk*Test.kt")
+    }
+    into(layout.buildDirectory.dir("generated/feedback-tests"))
+}
+android.sourceSets.getByName("androidTest").java.srcDir(prepareFeedbackTests.map { it.destinationDir })
+val prepareWorkbookUnitTests = tasks.register<Sync>("prepareWorkbookUnitTests") {
+    from(rootProject.file("app/src/test/java")) {
+        include("**/DewarpGridTest.kt", "**/ImageGeometryTest.kt", "**/GeometryTest.kt")
+    }
+    into(layout.buildDirectory.dir("generated/workbook-unit-tests"))
+}
+android.sourceSets.getByName("test").java.srcDir(prepareWorkbookUnitTests.map { it.destinationDir })
+tasks.matching { (it.name.startsWith("compile") || it.name.startsWith("ksp")) && it.name.contains("UnitTest") }.configureEach { dependsOn(prepareWorkbookUnitTests) }
+tasks.matching { it.name.startsWith("compile") && it.name.contains("AndroidTest") || it.name.startsWith("ksp") && it.name.contains("AndroidTest") }.configureEach { dependsOn(prepareWorkbookTests) }
+tasks.matching { it.name.startsWith("compile") && it.name.contains("AndroidTest") || it.name.startsWith("ksp") && it.name.contains("AndroidTest") }.configureEach { dependsOn(prepareFeedbackTests) }
+// The owner's private repro page is NOT committed: the test APK packages a copy from the
+// out-of-repo acceptance workspace, so the fixture exists on device without entering the source
+// tree or a git object.
+val prepareEdgeInkFixture = tasks.register<Copy>("prepareEdgeInkFixture") {
+    from(rootProject.file("../../work/repro-edge/original.jpg"))
+    into(layout.buildDirectory.dir("generated/edge-ink-assets"))
+}
+android.sourceSets.getByName("androidTest").assets.srcDir(prepareEdgeInkFixture.map { it.destinationDir })
+tasks.matching { it.name.startsWith("compile") && it.name.contains("AndroidTest") || it.name.startsWith("ksp") && it.name.contains("AndroidTest") }.configureEach { dependsOn(prepareEdgeInkFixture) }
+// v200 annotation batch: swipeable capture preview + baked annotation device tests.
+val prepareAnnotationTests = tasks.register<Sync>("prepareAnnotationTests") {
+    from(rootProject.file("app/src/androidTest/java")) { include("**/PageAnnotationTest.kt") }
+    into(layout.buildDirectory.dir("generated/annotation-tests"))
+}
+android.sourceSets.getByName("androidTest").java.srcDir(prepareAnnotationTests.map { it.destinationDir })
+tasks.matching { it.name.startsWith("compile") && it.name.contains("AndroidTest") || it.name.startsWith("ksp") && it.name.contains("AndroidTest") }.configureEach { dependsOn(prepareAnnotationTests) }
 tasks.matching { it.name.startsWith("compile") && it.name.contains("AndroidTest") || it.name.startsWith("ksp") && it.name.contains("AndroidTest") }.configureEach { dependsOn(prepareLanTests) }
 apply(from = rootProject.file("gradle/app-dependencies.gradle.kts"))
 dependencies {

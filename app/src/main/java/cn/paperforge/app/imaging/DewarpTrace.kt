@@ -1,18 +1,53 @@
 package cn.paperforge.app.imaging
 
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import cn.paperforge.app.data.*
 import cn.paperforge.app.model.*
 import java.io.File
 import kotlin.math.*
+import org.opencv.android.Utils
+import org.opencv.core.*
+import org.opencv.imgproc.Imgproc
 
 data class DewarpTrace(
     val input: File,
     val grid: DewarpGrid,
     val sourceFile: File,
     val version: String,
+    val currentOutput: String,
 ) {
+    /** Replay only the immutable geometry; filter edits must never enhance enhanced pixels. */
+    fun sourceAppearance(maxEdge: Int, cleanPaper: Boolean = false): Bitmap {
+        val decoded = ScanProcessor.decode(input, maxEdge)
+        val source =
+            if (
+                cleanPaper &&
+                    version.startsWith("flat-paper-") &&
+                    (version.removePrefix("flat-paper-").toIntOrNull() ?: 0) >= 8
+            )
+                try {
+                    FlatDocument.sourcePaper(decoded)
+                } finally {
+                    decoded.recycle()
+                }
+            else decoded
+        // The output may have an explicit aspect or super-resolution applied.
+        val size = PageDecoder.uprightSize(File(currentOutput)) ?: (grid.width to grid.height)
+        val scale = minOf(1.0, maxEdge.toDouble() / maxOf(size.first, size.second))
+        return try {
+            sample(
+                source,
+                grid,
+                (size.first * scale).roundToInt().coerceAtLeast(2),
+                (size.second * scale).roundToInt().coerceAtLeast(2),
+            )
+        } finally {
+            source.recycle()
+        }
+    }
+
     /** OCR coordinates refer to the current rendered page, including later crop/rotation. */
     fun inputPoint(page: PageRow, point: PointN, renderWidth: Int, renderHeight: Int): PointN {
         var p = point
@@ -25,6 +60,7 @@ data class DewarpTrace(
                         Quad.decode(page.corners),
                         bounds.outWidth,
                         bounds.outHeight,
+                        PageDecoder.focalShare(java.io.File(page.original)),
                     )
             val rotatedRatio = if (page.rotation % 180 == 0) ratio else 1 / ratio
             val angle = page.deskewDegrees * PI / 180
@@ -57,6 +93,61 @@ data class DewarpTrace(
     }
 
     companion object {
+
+        /** Shared original-pixel grid sampler. A zero-strength grid must be a real identity. */
+        internal fun sample(source: Bitmap, grid: DewarpGrid, width: Int, height: Int): Bitmap {
+            if (grid.strength == 0f)
+                return if (source.width == width && source.height == height)
+                    source.copy(Bitmap.Config.ARGB_8888, false)
+                else Bitmap.createScaledBitmap(source, width, height, true)
+            val owned = mutableListOf<Mat>()
+            fun mat() = Mat().also(owned::add)
+            val pixels = mat()
+            val sparse = mat()
+            val dense = mat()
+            val unused = mat()
+            val output = mat()
+            try {
+                Utils.bitmapToMat(source, pixels)
+                val values = FloatArray(grid.values.size)
+                for (y in 0 until grid.side) for (x in 0 until grid.side) {
+                    val i = 2 * (y * grid.side + x)
+                    val px = ((x + .5f) * grid.width / grid.side - .5f) / (grid.width - 1)
+                    val py = ((y + .5f) * grid.height / grid.side - .5f) / (grid.height - 1)
+                    values[i] =
+                        (px * (1 - grid.strength) + grid.values[i] * grid.strength) *
+                            (source.width - 1)
+                    values[i + 1] =
+                        (py * (1 - grid.strength) + grid.values[i + 1] * grid.strength) *
+                            (source.height - 1)
+                }
+                sparse.create(grid.side, grid.side, CvType.CV_32FC2)
+                sparse.put(0, 0, values)
+                Imgproc.resize(
+                    sparse,
+                    dense,
+                    Size(width.toDouble(), height.toDouble()),
+                    0.0,
+                    0.0,
+                    Imgproc.INTER_LINEAR,
+                )
+                Imgproc.remap(
+                    pixels,
+                    output,
+                    dense,
+                    unused,
+                    Imgproc.INTER_CUBIC,
+                    Core.BORDER_CONSTANT,
+                    Scalar.all(255.0),
+                )
+                return Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also {
+                    Utils.matToBitmap(output, it)
+                }
+            } finally {
+                owned.forEach(Mat::release)
+            }
+        }
+
         fun load(page: PageRow): DewarpTrace? {
             val meta = PageResources.metadata(page)
             val steps = meta.optJSONArray("steps") ?: return null
@@ -72,6 +163,7 @@ data class DewarpTrace(
                         DewarpGrid.read(File(resources.getValue(step.getString("grid")).path)),
                         File(resources.getValue(step.getString("original")).path),
                         step.getString("algorithm"),
+                        page.original,
                     )
                 }
             }

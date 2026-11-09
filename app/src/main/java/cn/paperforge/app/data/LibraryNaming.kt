@@ -110,13 +110,31 @@ object NameTemplate {
         time: LocalDateTime,
     ): List<NameChange> {
         require(options.start in 0..99999999) { "起始序号超出范围" }
-        val ids = selected.map { it.id }.toSet()
+        return previewNames(
+            selected,
+            all,
+            selected
+                .mapIndexed { index, doc ->
+                    doc.id to render(doc, options, options.start + index, time)
+                }
+                .toMap(),
+        )
+    }
+
+    /** Content suggestions use exactly the same collision handling and undo path as templates. */
+    fun previewNames(
+        selected: List<DocumentRow>,
+        all: List<DocumentRow>,
+        names: Map<String, String>,
+    ): List<NameChange> {
+        val chosen = selected.filter { !names[it.id].isNullOrBlank() }
+        val ids = chosen.map { it.id }.toSet()
         val used =
             all.filter { it.listed && it.trashedAt == null && it.id !in ids }
                 .map { it.title.lowercase(Locale.ROOT) }
                 .toMutableSet()
-        return selected.mapIndexed { index, doc ->
-            val base = render(doc, options, options.start + index, time)
+        return chosen.map { doc ->
+            val base = safeFileName(names.getValue(doc.id))
             var candidate = base
             var count = 1
             while (!used.add(candidate.lowercase(Locale.ROOT))) {

@@ -1,6 +1,6 @@
 # 构建、签名与手机交付
 
-当前发行 **1.0.1完整功能版 / code10004**，所有者授权后`releaseHold=false`。普通手机从[Release](https://github.com/HABAI182/paperforge-android/releases/tag/v1.0.1)下载一个ARM64完整APK即可。脚本和CI负责构建与核对，不自动创建tag/Release。历史模块化构建仍可按需使用。
+公开版本以 GitHub 发布页实际附件为准；2.0.0 为待机主审核的完整 ARM64 候选包，`releaseHold=true`，不得创建正式 tag/Release。候选用 development 通道构建，机主审核后再变更发布状态。普通手机安装单个完整 APK 即可。
 
 推荐完整包构建命令：`python scripts/build_distribution.py --abi arm64-v8a --channel stable --full`。产物在`build/distributions/full/arm64-v8a/`，只有完整APK、清单和SHA256SUMS。完整包声明网络权限，更新、传输与远程服务由用户发起；原模块化离线主包继续移除网络权限。完整包新增修订通过基础版本码和`fullDistribution.versionCodeOffset`连续增加，以便覆盖安装。
 
@@ -55,3 +55,15 @@ OpenCV 4.12.0 改为固定源码与 SHA256 构建，仅保留实际使用的 cor
 同为 ARM64 Release 的主包由 99,720,804 降到 84,434,456 字节，减少 15.33%；这是原生模块精简的单独对比。此前通用 Release 的 203,088,347 字节与 ARM64 的 99,720,804 字节用于说明 ABI 去重，分别记录。七种增强独立逐像素一致、两路四角与实际 Paddle 输出相同，证据见 `docs/acceptance/next/distribution-summary.json`。ARM64 APK 的结构核验与 ARM64 实体手机体验分别记录。
 
 CI 固定的 Actions 提交来自各自官方仓库，版本核对日期 2026-10-27；检查 APK 固定使用 build-tools 35.0.0，并保留公开证书报告。工作流默认只编译，不重复执行整套设备测试。必要的功能验证由改动本身决定。
+
+## 快速本地审核
+
+`python scripts/build_distribution.py --full --abi arm64-v8a --channel development --fast-review`
+
+该选项仅允许完整包 development 候选，保留 release 变体、原包名/证书、完整运行时、ABI 与 16KiB 核验，但关闭 R8/资源收缩以缩短本地视觉迭代。清单的对应产物写入 `optimized=false`，不生成或复用旧 R8 映射。包体会较正式优化包更大；正式发布仍使用默认优化构建，不能以快速审核替代发行验证。
+
+## 收缩后的本地审核包
+
+`python scripts/build_distribution.py --full --abi arm64-v8a --channel development --compact-review`
+
+保留 R8 去除未使用代码、混淆和资源收缩，使用 `-dontoptimize` 跳过耗时的全程序代码优化；与完全跳过 R8 的 `--fast-review` 互斥。仅允许本地 development 候选，不用于 stable。清单分别记录 `optimized`（R8 收缩）、`codeOptimization` 与 `resourceShrinking`，并保留真实 R8 映射。正式发布不传该开关，恢复默认全程序优化。

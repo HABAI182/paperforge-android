@@ -22,6 +22,11 @@ import java.time.LocalDateTime
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun BatchRenameScreen(vm: MainViewModel) {
+    var contentMode by rememberSaveable { mutableStateOf(false) }
+    if (contentMode) {
+        ContentNamingScreen(vm) { contentMode = false }
+        return
+    }
     val documents by vm.repo.documents.collectAsState(emptyList())
     val requested by vm.renameSelection.collectAsState()
     val busy by vm.busy.collectAsState()
@@ -72,10 +77,11 @@ fun BatchRenameScreen(vm: MainViewModel) {
             TopAppBar(
                 title = { Text("批量命名") },
                 navigationIcon = {
-                    IconButton(onClick = { vm.screen.value = "home" }) {
+                    IconButton(onClick = returnAction { vm.screen.value = "home" }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回")
                     }
                 },
+                actions = { TextButton(onClick = { contentMode = true }) { Text("内容建议") } },
             )
         },
         bottomBar = {

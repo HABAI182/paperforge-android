@@ -76,8 +76,12 @@ internal fun ReaderPage(
     regionPicking: Boolean = false,
     regionDraft: OcrRegion? = null,
     onRegionSelection: (OcrRegion, Boolean) -> Unit = { _, _ -> },
+    pageTextFile: java.io.File? = null,
 ) {
     var renderAttempt by remember(session, index) { mutableIntStateOf(0) }
+    // Kept while the text fades out, so the switch back to the scan is as smooth as the switch to text.
+    var shownTextFile by remember { mutableStateOf(pageTextFile) }
+    if (pageTextFile != null) shownTextFile = pageTextFile
     val preview by
         produceState<Result<Bitmap>?>(null, session, index, renderAttempt) {
             value = null
@@ -564,6 +568,14 @@ internal fun ReaderPage(
                             drawTiles(null)
                         }
                     }
+                }
+                androidx.compose.animation.AnimatedVisibility(
+                    pageTextFile != null,
+                    Modifier.fillMaxSize(),
+                    enter = androidx.compose.animation.fadeIn(),
+                    exit = androidx.compose.animation.fadeOut(),
+                ) {
+                    shownTextFile?.let { ReaderRecognizedTextLayer(it, index, viewport) }
                 }
                 Canvas(Modifier.fillMaxSize()) {
                     regionDraft?.let { region ->

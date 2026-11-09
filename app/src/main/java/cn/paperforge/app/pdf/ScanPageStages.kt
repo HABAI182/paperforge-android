@@ -31,14 +31,14 @@ object ScanPageStages {
             currentCoroutineContext().ensureActive()
             val signature = buildString {
                 append(
-                    "scan-page-r1|$paper|$quality|$searchable|$resolved|$lossless|${PdfTextLayer.VERSION}|${engine?.id}"
+                    "scan-page-r3|${PdfImageEncoder.VERSION}|${cn.paperforge.app.imaging.ScanConfig.fingerprint()}|$paper|$quality|$searchable|$resolved|$lossless|${PdfTextLayer.VERSION}|${engine?.id}"
                 )
                 for (page in group) {
                     append(
                         "|${PdfAssembly.sha256(File(page.original))}|${OcrFrame.signature(page)}"
                     )
                     append(
-                        "|${page.filter}|${page.brightness}|${page.contrast}|${page.enhanceStrength}"
+                        "|${page.filter}|${page.brightness}|${page.contrast}|${page.enhanceStrength}|${page.processingMetadata}"
                     )
                     if (searchable)
                         append(

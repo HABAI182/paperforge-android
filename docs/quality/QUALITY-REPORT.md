@@ -1,5 +1,7 @@
 # PaperForge 0.3.0 质量报告
 
+2026-11-03 本地 20009 增量见 [OCR、滤镜与手部边缘记录](OCR-WORKBOOK-2026-11-03.md)。下文为历史数据，不代表 20009 重测。
+
 当前0.4.0增量：共享取景坐标、相机绑定修复、离线定位模型、多选和自定义见 [SCAN-0.4.0.md](SCAN-0.4.0.md)。下文保留0.3阶段证据，不把旧OCR/100页指标当作本轮重新测得。
 
 2026-10-23。基线 `4d56d556aab3241c96f1584b869e947b1f330bb9`，以原生产实现冻结到 androidTest 的 Baseline* 文件后测量。算法各阶段提交与格式提交分开；参数见 `app/src/main/assets/scan_params.json`。
@@ -33,7 +35,7 @@ OCR 的最新9页语言CER、耗时与实际自动裁边回归独立记录在 [O
 
 原图不可变，编辑/方向/去阴影与OCR可回退；数据库迁移至6，OCR索引随更新/删除同步。RGB/灰度/黑白PDF、结构压缩、全文索引、段落DOCX和本地安全开关均有集中模拟器证据。AF元数据在OEM上可能不回报，因此新增超时后清晰度接管；手动拍摄不受门控影响。首页/最近文档/阅读器/编辑器的调整遵循用户最新的少步骤、少提示要求。
 
-上游逐文件/许可/固定提交/采用决定见 [研究矩阵](../research/UPSTREAM_REFERENCE_MATRIX.md)。CaptureQualityPolicy/OutlineTracker含Apache2来源标记和NOTICE；其他主要图像实现为技术比较后的独立实现。CamScanner只参考其公开流程说明，未声称运行或反编译商用APK，也未加入其代码/资产。
+上游逐文件/许可/固定提交/采用决定见 [研究矩阵](../research/UPSTREAM_REFERENCE_MATRIX.md)。CaptureQualityPolicy/OutlineTracker含Apache2来源标记和NOTICE；其他主要图像实现为技术比较后的独立实现。本地样本应用只参考其公开流程说明，未声称运行或反编译商用APK，也未加入其代码/资产。
 
 ## 尚需真实设备或独立研发
 

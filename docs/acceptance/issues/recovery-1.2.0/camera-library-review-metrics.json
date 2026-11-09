@@ -1,0 +1,130 @@
+{
+  "physicalDevice": false,
+  "inputCount": 7,
+  "referencePairCount": 3,
+  "geometryChanged": false,
+  "testResults": {
+    "affectedChecks": 5,
+    "seconds": 92.772,
+    "layoutFollowupChecks": 2,
+    "layoutFollowupSeconds": 18.203,
+    "finalRuleChecks": 1,
+    "finalRuleSeconds": 70.029
+  },
+  "syntheticKnownRegions": {
+    "oldGhostInk": 0.26356275303643883,
+    "newGhostInk": 0.154979757085016,
+    "oldRuleInk": 14,
+    "newRuleInk": 65,
+    "oldFrontInk": 23.087948717948706,
+    "newFrontInk": 23.087948717948706
+  },
+  "pairedVisualProxies": [
+    {
+      "id": "new-1",
+      "reference": false
+    },
+    {
+      "id": "new-2",
+      "reference": false
+    },
+    {
+      "id": "new-3",
+      "reference": false
+    },
+    {
+      "id": "new-4",
+      "reference": false
+    },
+    {
+      "id": "old-1",
+      "reference": true,
+      "before": {
+        "registration": "homography-proxy",
+        "inliers": 128,
+        "coverage": 0.9428985891990291,
+        "registeredMAE255": 12.614636186844768,
+        "inkRecallProxy": 0.4361542053650184,
+        "inkPrecisionProxy": 0.48433385285107755
+      },
+      "currentWorkbook": {
+        "registration": "homography-proxy",
+        "inliers": 129,
+        "coverage": 0.9506409283980582,
+        "registeredMAE255": 13.622881136177767,
+        "inkRecallProxy": 0.5455389854997678,
+        "inkPrecisionProxy": 0.5100427522787772
+      },
+      "currentClean": {
+        "registration": "homography-proxy",
+        "inliers": 125,
+        "coverage": 0.944728458737864,
+        "registeredMAE255": 14.552668341990959,
+        "inkRecallProxy": 0.4749727682971108,
+        "inkPrecisionProxy": 0.4395765472312704
+      }
+    },
+    {
+      "id": "old-2",
+      "reference": true,
+      "before": {
+        "registration": "homography-proxy",
+        "inliers": 383,
+        "coverage": 0.8991827214805825,
+        "registeredMAE255": 13.905913836771104,
+        "inkRecallProxy": 0.5418548813738656,
+        "inkPrecisionProxy": 0.7073804332699355
+      },
+      "currentWorkbook": {
+        "registration": "homography-proxy",
+        "inliers": 410,
+        "coverage": 0.8824332524271845,
+        "registeredMAE255": 14.726835138387486,
+        "inkRecallProxy": 0.664678049783995,
+        "inkPrecisionProxy": 0.7106604651162791
+      },
+      "currentClean": {
+        "registration": "homography-proxy",
+        "inliers": 396,
+        "coverage": 0.8965241959951457,
+        "registeredMAE255": 15.896622397634474,
+        "inkRecallProxy": 0.5630221280410774,
+        "inkPrecisionProxy": 0.6173887371761754
+      }
+    },
+    {
+      "id": "old-3",
+      "reference": true,
+      "before": {
+        "registration": "homography-proxy",
+        "inliers": 69,
+        "coverage": 0.9903462530339806,
+        "registeredMAE255": 11.61753234444319,
+        "inkRecallProxy": 0.30166089260240475,
+        "inkPrecisionProxy": 0.4787958520352887
+      },
+      "currentWorkbook": {
+        "registration": "homography-proxy",
+        "inliers": 71,
+        "coverage": 0.9902893658980583,
+        "registeredMAE255": 13.445160166130833,
+        "inkRecallProxy": 0.5106990014265336,
+        "inkPrecisionProxy": 0.4799167533818939
+      },
+      "currentClean": {
+        "registration": "homography-proxy",
+        "inliers": 69,
+        "coverage": 0.9999450091019417,
+        "registeredMAE255": 8.518251344980667,
+        "inkRecallProxy": 0.005808621216753286,
+        "inkPrecisionProxy": 0.30917874396135264
+      }
+    }
+  ],
+  "limitations": [
+    "Fresh private photos 1-4 have no clean ground truth or paired reference output.",
+    "Homography metrics are proxies, not OCR accuracy or nonlinear page equivalence. Reference includes dewarp; current outputs here isolate crop plus filter.",
+    "Reused previously detected corners; no repeated detector benchmark.",
+    "Ghost/foreground intensity overlap and severe source blur remain unresolved."
+  ]
+}

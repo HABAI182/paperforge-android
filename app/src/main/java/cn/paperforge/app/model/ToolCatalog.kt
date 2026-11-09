@@ -542,6 +542,7 @@ object ToolCatalog {
             "split-each" to "每页拆成独立 PDF",
             "extract-images" to "提取嵌入图片（PNG）",
             "watermark" to "添加中文水印",
+            "watermark-clean" to "去水印",
             "number" to "添加页码",
             "crop" to "裁切页面边缘",
             "blank" to "插入 A4 空白页",
@@ -570,6 +571,7 @@ object ToolCatalog {
         mapOf(
             "enhance-images" to "图像增强 扫描 黑白 柔和 灰度 去阴影 清晰 enhance scan",
             "watermark" to "水印 watermark 印章",
+            "watermark-clean" to "去水印 移除水印 删除水印 对象 watermark clean remove",
             "number" to "页码 page 页数",
             "crop" to "裁边 crop 边距",
             "blank" to "空白 插页 blank",

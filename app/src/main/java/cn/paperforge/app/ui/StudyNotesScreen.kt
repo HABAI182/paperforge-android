@@ -40,7 +40,7 @@ fun StudyNotesScreen(vm: MainViewModel) {
             TopAppBar(
                 title = { Text("学习摘录") },
                 navigationIcon = {
-                    IconButton(onClick = { vm.screen.value = "home" }) {
+                    IconButton(onClick = returnAction { vm.screen.value = "home" }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回")
                     }
                 },
@@ -74,7 +74,7 @@ fun StudyNotesScreen(vm: MainViewModel) {
                 if (notes.isEmpty())
                     item {
                         Text(
-                            "在 PDF 阅读设置中打开“文字与朗读”，选择段落后保存摘录。也可以长按 PDF 页面进入文字选择。",
+                            "在 PDF 的“工具”中打开“文字与朗读”，选择段落后保存摘录。也可以长按 PDF 页面进入文字选择。",
                             Modifier.padding(vertical = 24.dp),
                         )
                     }

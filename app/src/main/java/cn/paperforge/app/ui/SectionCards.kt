@@ -1,14 +1,18 @@
 package cn.paperforge.app.ui
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -26,15 +30,33 @@ internal fun SectionCardGrid(
         if (LocalConfiguration.current.screenWidthDp / LocalDensity.current.fontScale >= 330) 2
         else 1
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        sections.chunked(columns).forEach { row ->
+        sections.chunked(columns).forEachIndexed { rowIndex, row ->
             Row(
                 Modifier.height(IntrinsicSize.Min),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                row.forEach { section ->
+                row.forEachIndexed { col, section ->
+                    val motion = LocalPaperMotion.current
+                    val interaction = remember(section.id) { MutableInteractionSource() }
+                    val pressed by interaction.collectIsPressedAsState()
+                    val press by
+                        animateFloatAsState(
+                            if (pressed && !motion.reduced) .975f else 1f,
+                            spring(dampingRatio = .88f, stiffness = 650f),
+                            label = "card-press",
+                        )
+                    val navigation = expansionAction { onSelect(section.id) }
                     Card(
-                        onClick = { onSelect(section.id) },
-                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                        onClick = navigation.onClick,
+                        interactionSource = interaction,
+                        modifier =
+                            Modifier.weight(1f)
+                                .fillMaxHeight()
+                                .then(navigation.modifier)
+                                .graphicsLayer {
+                                    scaleX = press
+                                    scaleY = press
+                                },
                         shape = RoundedCornerShape(22.dp),
                         border =
                             if (section.id == selectedId)

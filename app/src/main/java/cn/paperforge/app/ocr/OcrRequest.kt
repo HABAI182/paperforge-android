@@ -41,7 +41,7 @@ data class OcrRequest(val engineId: String, val chinese: Boolean, val options: O
 
     companion object {
         fun signature(engineId: String, chinese: Boolean, options: OcrOptions) =
-            "$engineId|$chinese|${options.mode.name}|${options.pageAgreement}|${options.order.name}|${OcrReadingOrder.VERSION}"
+            "$engineId|$chinese|${options.mode.name}|${options.pageAgreement}|${options.order.name}|${OcrReadingOrder.VERSION}|${OcrInputPreparation.VERSION}|${OcrLineFusion.VERSION}"
 
         fun current(
             engineId: String,

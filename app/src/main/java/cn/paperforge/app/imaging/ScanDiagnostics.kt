@@ -50,9 +50,17 @@ object ScanDiagnostics {
                     .put("contrast", page.contrast)
                     .put("storedMethod", page.detectionMethod)
                     .put("storedConfidence", page.detectionConfidence)
+                    .put(
+                        "storedProcessingMetadata",
+                        page.processingMetadata
+                            ?.let { raw -> runCatching { JSONObject(raw) }.getOrNull() }
+                            ?: JSONObject.NULL,
+                    )
                     .put("newMethod", detection.method)
                     .put("newCorners", detection.quad?.encode())
                     .put("newConfidence", detection.confidence)
+                    .put("newDiagnostics", JSONObject(detection.diagnostics))
+                    .put("newNotes", JSONObject(detection.notes))
                     .put("decodeMs", decodedAt - start)
                     .put("analysisAndDetectionMs", detectedAt - decodedAt)
                     .put("renderMs", renderedAt - detectedAt)

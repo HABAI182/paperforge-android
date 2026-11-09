@@ -27,6 +27,7 @@ fun SettingsScreen(vm: MainViewModel) {
     val snapshot = remember(revision) { UserSettings.prefs.all }
     var query by remember { mutableStateOf("") }
     var reset by remember { mutableStateOf(false) }
+    var resetSection by remember { mutableStateOf(false) }
     var exportPresets by remember { mutableStateOf(false) }
     val importSettings =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -42,10 +43,11 @@ fun SettingsScreen(vm: MainViewModel) {
                 title = { Text(if (query.isBlank()) sectionTitle else "查找全部设置") },
                 navigationIcon = {
                     IconButton(
-                        onClick = {
-                            vm.homeTab.value = 3
-                            vm.screen.value = "home"
-                        }
+                        onClick =
+                            returnAction {
+                                vm.homeTab.value = 3
+                                vm.screen.value = "home"
+                            }
                     ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回")
                     }
@@ -68,7 +70,11 @@ fun SettingsScreen(vm: MainViewModel) {
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
-            Text("修改自动保存，拍摄参数在下一次进入相机时生效。", style = MaterialTheme.typography.bodySmall)
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text("修改自动保存", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
+                if (section != "privacy")
+                    TextButton(onClick = { resetSection = true }) { Text("恢复本页默认") }
+            }
             if (visible("桌面 系统 快捷 扫描 识字 阅读 小组件", "advanced")) SystemEntrypointsSettings()
             if (visible("图像 内存 任务 后台 预算 大图", "advanced")) {
                 Text("图像内存预算", style = MaterialTheme.typography.titleMedium)
@@ -91,6 +97,15 @@ fun SettingsScreen(vm: MainViewModel) {
                 OutlinedButton(onClick = vm::openOcrModels, modifier = Modifier.fillMaxWidth()) {
                     Text("离线 OCR 与模型包")
                 }
+            if (visible("OCR 识字 识别 校对 置信度 高亮 阈值 审核", "ocr")) {
+                PreferenceBlock("文字校对") {
+                    SettingSlider("低置信度高亮阈值", "ocrProofreadThreshold", .6f, .3f..0.9f, "%", 100f)
+                    Text(
+                        "校对页把低于该值的行/词标为待核对，可「上一个/下一个」跳转。模型没有给出置信度的片段不会高亮。",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
             if (visible("档案 配置 预设 扫描 默认", "scan"))
                 OutlinedButton(
                     onClick = { vm.openProfiles("settings") },
@@ -127,8 +142,12 @@ fun SettingsScreen(vm: MainViewModel) {
                     SettingChoices(
                         "纸张定位",
                         "detector",
-                        "NEURAL",
-                        listOf("HYBRID" to "自动识边", "STANDARD" to "传统识边"),
+                        "HYBRID",
+                        listOf(
+                            "HYBRID" to "自动识边",
+                            "STANDARD" to "传统识边",
+                            "INDEPENDENT" to "独立识边（试用）",
+                        ),
                     )
                     SettingSlider("纸框平滑程度", "outlineWeight", 3f, 1f..8f, "")
                     SettingSlider("切换纸框确认帧数", "outlineSwitchFrames", 2f, 1f..6f, "帧")
@@ -137,6 +156,13 @@ fun SettingsScreen(vm: MainViewModel) {
                     SettingSlider("翻页动作灵敏阈值", "turnThreshold", .06f, .025f..0.2f, "%", 100f)
                     SettingSlider("手动快门倒计时", "captureTimer", 0f, 0f..10f, "秒")
                     SettingToggle("拍一页即进入编辑", "reviewAfterCapture", false)
+                    SettingToggle("扫描后自动轻量 AI 精修", "scanAiFinish", true)
+                    SettingChoices(
+                        "横线笔记纸面比例",
+                        "flatPaper",
+                        "ISO",
+                        listOf("ISO" to "标准竖向纸面", "SOURCE" to "保持裁剪比例"),
+                    )
                     SettingToggle("照片沿用取景纸框", "lockCrop", true)
                     SettingToggle("显示纸边框", "showOutline", true)
                     SettingToggle("自动拍摄检查模糊与亮度", "strictQuality", false)
@@ -145,7 +171,7 @@ fun SettingsScreen(vm: MainViewModel) {
                     SettingSlider("稳定后拍摄等待", "stableMs", 600f, 300f..2000f, "ms")
                     SettingSlider("两次自动拍摄最短间隔", "cooldownMs", 1500f, 800f..5000f, "ms")
                     SettingSlider("取景分析间隔", "analysisMs", 160f, 100f..500f, "ms")
-                    SettingSlider("拍照 JPEG 画质", "cameraJpeg", 97f, 75f..100f, "")
+                    SettingSlider("拍照 JPEG 画质", "cameraJpeg", 94f, 75f..100f, "")
                 }
             }
             if (visible("增强 图片 滤镜 扫描", "scan")) {
@@ -153,17 +179,12 @@ fun SettingsScreen(vm: MainViewModel) {
                     SettingChoices(
                         "导入与拍摄滤镜",
                         "filter",
-                        "AUTO",
+                        "WORKBOOK",
                         listOf(
                             "ORIGINAL" to "原图",
-                            "AUTO" to "自然",
-                            "TEXT" to "清晰文字",
                             "WORKBOOK" to "练习册",
                             "CLEAN" to "强力去背景",
                             "GRAY" to "灰度",
-                            "BW" to "柔和黑白",
-                            "COLOR" to "彩色",
-                            "WHITEBOARD" to "白板",
                         ),
                     )
                     SettingSlider("去阴影强度", "enhanceStrength", 1f, 0f..1f, "", 100f)
@@ -173,9 +194,11 @@ fun SettingsScreen(vm: MainViewModel) {
                 }
             }
             if (visible("分享 去水印 压缩 微信 转发 PDF", "export")) {
-                PreferenceBlock("分享处理") {
-                    SettingToggle("收到 PDF 时自动处理并转发", "shareProcess", true)
-                    SettingToggle("自动去水印（通用对象处理）", "shareRemoveWatermark", true)
+                PreferenceBlock("处理后分享") {
+                    Text(
+                        "分享到本应用的 PDF 直接打开。需要时可在 PDF 工具中处理你有权修改的文档。",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
                     SettingToggle("自动压缩 PDF", "shareCompress", false)
                     SettingChoices(
                         "转发目标",
@@ -225,7 +248,7 @@ fun SettingsScreen(vm: MainViewModel) {
                         ),
                     )
                     SettingSlider("自定义分辨率", "customDpi", 300f, 72f..600f, "DPI")
-                    SettingSlider("PDF 图片画质", "quality", 90f, 40f..100f, "")
+                    SettingSlider("PDF 图片画质", "quality", 86f, 40f..100f, "")
                 }
             }
             if (
@@ -264,7 +287,6 @@ fun SettingsScreen(vm: MainViewModel) {
                         listOf("AUTO" to "自动", "2" to "2列", "3" to "3列", "4" to "4列"),
                     )
                     Text("窄屏和大字号时自动减少列数，便于阅读和点选。", style = MaterialTheme.typography.bodySmall)
-                    SettingSlider("最近文档数量", "recentCount", 6f, 4f..20f, "份")
                 }
             }
             if (visible("首页 筛选 收藏 收件箱 未识字 未导出", "appearance")) {
@@ -273,7 +295,7 @@ fun SettingsScreen(vm: MainViewModel) {
                     "homeCollection",
                     "RECENT",
                     listOf(
-                        "RECENT" to "最近",
+                        "RECENT" to "全部",
                         "FAVORITES" to "收藏",
                         "INBOX" to "未整理",
                         "NO_OCR" to "未识字",
@@ -367,6 +389,38 @@ fun SettingsScreen(vm: MainViewModel) {
             }
         }
     }
+    if (resetSection)
+        AlertDialog(
+            onDismissRequest = { resetSection = false },
+            title = { Text("恢复${sectionTitle}默认设置？") },
+            text = { Text("只重置当前分组参数，文档和其它分组设置保留") },
+            confirmButton = {
+                TextButton({
+                    val keys =
+                        when (section) {
+                            "advanced" -> setOf("taskMemoryMB")
+                            "export" ->
+                                cn.paperforge.app.data.SettingsProfiles.keys(setOf("export")) +
+                                    setOf(
+                                        "shareProcess",
+                                        "shareRemoveWatermark",
+                                        "shareCompress",
+                                        "shareForward",
+                                    )
+                            "appearance" ->
+                                cn.paperforge.app.data.SettingsProfiles.keys(
+                                    setOf("appearance", "home")
+                                )
+                            else -> cn.paperforge.app.data.SettingsProfiles.keys(setOf(section))
+                        }
+                    UserSettings.reset(keys)
+                    resetSection = false
+                }) {
+                    Text("恢复默认")
+                }
+            },
+            dismissButton = { TextButton({ resetSection = false }) { Text("取消") } },
+        )
     if (exportPresets)
         ScanExportDialog(vm, "导出示例", 1, { exportPresets = false }, settingsOnly = true)
     if (reset)
@@ -391,7 +445,14 @@ fun SettingsScreen(vm: MainViewModel) {
 @Composable
 private fun SettingToggle(title: String, key: String, default: Boolean, enabled: Boolean = true) {
     val revision by UserSettings.revision.collectAsState()
-    val value = remember(revision) { UserSettings.bool(key, default) }
+    val value =
+        remember(revision) {
+            UserSettings.bool(
+                key,
+                (SettingKeys.all.find { it.name == key } as? cn.paperforge.app.SettingKey.Bool)
+                    ?.default ?: default,
+            )
+        }
     Row(
         Modifier.fillMaxWidth()
             .heightIn(min = 56.dp)
@@ -404,6 +465,10 @@ private fun SettingToggle(title: String, key: String, default: Boolean, enabled:
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(title, Modifier.weight(1f))
+        if (value != (SettingKeys.all.find { it.name == key }?.default ?: default))
+            IconButton({ UserSettings.resetKey(key) }, enabled = enabled) {
+                Icon(Icons.Default.RestartAlt, "重置$title")
+            }
         Switch(value, null, enabled = enabled)
     }
 }
@@ -418,12 +483,24 @@ private fun SettingChoices(
     val revision by UserSettings.revision.collectAsState()
     val current =
         remember(revision) {
-            UserSettings.string(key, default).let {
-                if (key == "detector" && it == "NEURAL") "HYBRID" else it
-            }
+            UserSettings.string(
+                    key,
+                    (SettingKeys.all.find { it.name == key } as? cn.paperforge.app.SettingKey.Text)
+                        ?.default ?: default,
+                )
         }
     Column {
-        Text(title, style = MaterialTheme.typography.labelLarge)
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = 32.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(title, Modifier.weight(1f), style = MaterialTheme.typography.labelLarge)
+            val factory = SettingKeys.all.find { it.name == key }?.default ?: default
+            if (current != factory)
+                IconButton({ UserSettings.resetKey(key) }, modifier = Modifier.size(32.dp)) {
+                    Icon(Icons.Default.RestartAlt, "重置$title")
+                }
+        }
         FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             options.forEach { (value, label) ->
                 FilterChip(
@@ -447,12 +524,31 @@ private fun SettingSlider(
 ) {
     val revision by UserSettings.revision.collectAsState()
     var pending by
-        remember(key, revision) { mutableFloatStateOf(UserSettings.number(key, default)) }
+        remember(key, revision) {
+            mutableFloatStateOf(
+                UserSettings.number(
+                    key,
+                    (SettingKeys.all.find { it.name == key }
+                            as? cn.paperforge.app.SettingKey.Number)
+                        ?.default ?: default,
+                )
+            )
+        }
     Column {
-        Text(
-            "$title · ${(pending*multiplier).toInt()} $unit",
-            style = MaterialTheme.typography.labelLarge,
-        )
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = 32.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                "$title · ${(pending*multiplier).toInt()} $unit",
+                Modifier.weight(1f),
+                style = MaterialTheme.typography.labelLarge,
+            )
+            if (pending != (SettingKeys.all.find { it.name == key }?.default ?: default))
+                IconButton({ UserSettings.resetKey(key) }, modifier = Modifier.size(32.dp)) {
+                    Icon(Icons.Default.RestartAlt, "重置$title")
+                }
+        }
         Slider(
             pending.coerceIn(range),
             { pending = it },

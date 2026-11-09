@@ -17,6 +17,18 @@ class NetworkPreferences(context: Context) {
             store.edit().putBoolean("updatesEnabled", value).commit()
         }
 
+    var automaticUpdates: Boolean
+        get() = store.getBoolean("automaticUpdates", false)
+        set(value) {
+            store.edit().putBoolean("automaticUpdates", value).apply()
+        }
+
+    var automaticDownload: Boolean
+        get() = store.getBoolean("automaticDownload", true)
+        set(value) {
+            store.edit().putBoolean("automaticDownload", value).apply()
+        }
+
     var repository: String
         get() = store.getString("repository", "HABAI182/paperforge-android")!!
         set(value) {

@@ -32,7 +32,7 @@ fun OutputHistoryScreen(vm: MainViewModel) {
             TopAppBar(
                 title = { Text("导出记录") },
                 navigationIcon = {
-                    IconButton(onClick = { vm.screen.value = "home" }) {
+                    IconButton(onClick = returnAction { vm.screen.value = "home" }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回")
                     }
                 },

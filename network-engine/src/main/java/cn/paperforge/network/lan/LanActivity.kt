@@ -99,11 +99,34 @@ private fun LanScreen(back: () -> Unit) {
     var direction by rememberSaveable { mutableStateOf("OUT") }
     var target by rememberSaveable { mutableStateOf("") }
     var configuration by rememberSaveable { mutableStateOf(false) }
+    var libraryPicker by remember { mutableStateOf(false) }
+    val library = remember { LanDocumentLibrary(context) }
+    if (libraryPicker)
+        LanLibraryPicker({ libraryPicker = false }) { ids ->
+            libraryPicker = false
+            addCopies(context, ids.map { library.uri(it) }, target)
+        }
     var devices by rememberSaveable { mutableStateOf(false) }
     var pairingExpanded by rememberSaveable { mutableStateOf(false) }
     var addresses by remember { mutableStateOf(LanSession.addresses()) }
     var address by rememberSaveable { mutableStateOf("") }
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var previewItem by remember { mutableStateOf<LanItem?>(null) }
+    previewItem?.let { item ->
+        LanPreviewDialog(
+            {
+                org.json
+                    .JSONObject()
+                    .put("title", item.name)
+                    .put("mime", item.mime)
+                    .put("bytes", item.total)
+                    .put("modified", item.created)
+                    .put("pages", LanFilePreview.pages(ledger.file(item.id), item.mime))
+            },
+            { page -> LanFilePreview.render(ledger.file(item.id), item.mime, page) },
+            { previewItem = null },
+        )
+    }
     var saving by remember { mutableStateOf<LanItem?>(null) }
     val save =
         rememberLauncherForActivityResult(
@@ -221,7 +244,7 @@ private fun LanScreen(back: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             item {
-                Text("文件，就在手边。", style = MaterialTheme.typography.headlineSmall)
+                Text("文件就在手边", style = MaterialTheme.typography.headlineSmall)
                 Text(
                     "手机、平板和电脑浏览器互传。使用同一个 Wi-Fi 或手机热点。",
                     style = MaterialTheme.typography.bodyMedium,
@@ -372,7 +395,7 @@ private fun LanScreen(back: () -> Unit) {
                                 }
                             }
                             Text(
-                                "局域网 HTTP 传输；文件只向配对设备开放。系统结束后台时段后可重新开启，断点保留。",
+                                "局域网 HTTPS 传输；文档只向配对设备开放。系统结束后台时段后可重新开启，断点保留。",
                                 style = MaterialTheme.typography.bodySmall,
                             )
                         }
@@ -433,15 +456,17 @@ private fun LanScreen(back: () -> Unit) {
                             )
                         }
                     }
-                    Button(onClick = { choose.launch(arrayOf("*/*")) }) {
-                        Text(if (copying > 0) "正在准备 $copying 个文件 · 继续添加" else "选择要发送的文件")
+                    if (library.available)
+                        Button(onClick = { libraryPicker = true }) { Text("从 PaperForge 文档库选择") }
+                    OutlinedButton(onClick = { choose.launch(arrayOf("*/*")) }) {
+                        Text(if (copying > 0) "正在准备 $copying 个文件 · 继续添加" else "从手机文件添加")
                     }
                 }
             }
             if (rows.none { it.direction == direction })
                 item {
                     Text(
-                        if (direction == "OUT") "队列为空。从这里选择文件，或从其他应用分享到 PaperForge 传输。"
+                        if (direction == "OUT") "暂无待发送文件。可从文档库添加，或让已配对设备直接浏览应用内文档。"
                         else "浏览器发送完成后，文件会出现在这里。"
                     )
                 }
@@ -454,7 +479,21 @@ private fun LanScreen(back: () -> Unit) {
                         Modifier.fillMaxWidth().padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Text(row.name, style = MaterialTheme.typography.titleMedium)
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                row.name,
+                                Modifier.weight(1f),
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                            if (
+                                row.state in setOf("WAITING", "SENT", "READY", "HELD", "PAUSED") &&
+                                    ledger.file(row.id).length() == row.total
+                            )
+                                TextButton(onClick = { previewItem = row }) { Text("预览与详情") }
+                        }
                         Text(
                             "${size(row.bytes)} / ${size(row.total)} · " +
                                 when (row.state) {
@@ -542,7 +581,12 @@ private fun LanScreen(back: () -> Unit) {
                     }
                 }
             }
-            item { Text("只传输你选择的文件；移除队列副本不会删除原件。", style = MaterialTheme.typography.bodySmall) }
+            item {
+                Text(
+                    "开启后，已配对设备可浏览和下载应用内文档。移除队列副本不会删除原件。",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
         }
     }
 }

@@ -26,7 +26,8 @@ object CaptureMetadata {
                     .put("scene", JSONArray(reference.scene))
                     .put("paper", JSONArray(reference.paper))
                     .put("decision", result.method)
-                    .put("diagnostics", JSONObject(result.diagnostics)),
+                    .put("diagnostics", JSONObject(result.diagnostics))
+                    .put("notes", JSONObject(result.notes)),
             )
             .toString()
     }

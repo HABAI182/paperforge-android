@@ -92,30 +92,30 @@ internal fun ReaderSelectionHandles(
                 val y = size.height / 4
                 drawLine(
                     color,
-                    Offset(x, y - 8.dp.toPx()),
-                    Offset(x, y + 10.dp.toPx()),
-                    2.dp.toPx(),
+                    Offset(x, y - 6.dp.toPx()),
+                    Offset(x, y + 7.dp.toPx()),
+                    1.5.dp.toPx(),
                 )
                 drawPath(
                     Path().apply {
                         moveTo(x, y)
                         if (start) {
                             cubicTo(
-                                x - 22.dp.toPx(),
-                                y + 10.dp.toPx(),
-                                x - 10.dp.toPx(),
-                                y + 29.dp.toPx(),
+                                x - 13.dp.toPx(),
+                                y + 6.dp.toPx(),
+                                x - 6.dp.toPx(),
+                                y + 17.dp.toPx(),
                                 x,
-                                y + 13.dp.toPx(),
+                                y + 8.dp.toPx(),
                             )
                         } else
                             cubicTo(
-                                x + 22.dp.toPx(),
-                                y + 10.dp.toPx(),
-                                x + 10.dp.toPx(),
-                                y + 29.dp.toPx(),
+                                x + 13.dp.toPx(),
+                                y + 6.dp.toPx(),
+                                x + 6.dp.toPx(),
+                                y + 17.dp.toPx(),
                                 x,
-                                y + 13.dp.toPx(),
+                                y + 8.dp.toPx(),
                             )
                         close()
                     },

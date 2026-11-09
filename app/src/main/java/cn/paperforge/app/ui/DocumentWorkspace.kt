@@ -1,6 +1,8 @@
 package cn.paperforge.app.ui
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
@@ -30,23 +33,81 @@ import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
 import kotlin.math.roundToInt
 
+internal data class PaperDestination(val screen: String, val tab: Int, val group: String) {
+    val key
+        get() =
+            Triple(
+                screen,
+                if (screen == "home") (if (tab < 2) 0 else tab) else -1,
+                if (screen == "home" && tab == 2) group else "",
+            )
+}
+
+internal val LocalPaperDestination = staticCompositionLocalOf<PaperDestination?> { null }
+
 internal val LocalDocumentFocus = staticCompositionLocalOf<(Boolean) -> Unit> { {} }
 
 /** One movable content tree keeps the actual reader/editor alive across pane-width changes. */
 @Composable
-fun DocumentWorkspace(vm: MainViewModel, screen: String, content: @Composable () -> Unit) {
+internal fun DocumentWorkspace(
+    vm: MainViewModel,
+    screen: String,
+    navigation: NavigationExpansion? = null,
+    content: @Composable () -> Unit,
+) {
     val latestContent by rememberUpdatedState(content)
     val pane = remember { movableContentOf { latestContent() } }
     val revision by UserSettings.revision.collectAsState()
     val enabled = remember(revision) { UserSettings[SettingKeys.DocumentSidebar] }
     var focus by rememberSaveable { mutableStateOf(false) }
     val motion = LocalPaperMotion.current
+    val expansionScope = rememberCoroutineScope()
+    val expansion = navigation ?: remember { NavigationExpansion(expansionScope) }
+    val tab by vm.homeTab.collectAsState()
+    val group by vm.workspaceGroup.collectAsState()
+    val requested = PaperDestination(screen, tab, group)
+    val rootMotionOrigin = remember { RootMotionOrigin() }
+    var shown by remember { mutableStateOf(requested) }
+    // Library collection changes are immediate; they are not a navigation transition.
+    val displayed = requested
+    val travel = remember { Animatable(0f) }
+    var travelTarget by remember { mutableFloatStateOf(0f) }
+    val routeHistory = remember { mutableListOf(requested.key) }
+    SideEffect { expansion.observeRoute(requested.key) }
+    LaunchedEffect(requested.key, motion.reduced) {
+        val swipe = rootMotionOrigin.consume(shown, requested)
+        val changed = shown.key != requested.key
+        val previous = if (changed) routeHistory.indexOf(requested.key) else -1
+        val returning = changed && previous >= 0
+        if (changed) {
+            if (returning)
+                while (routeHistory.size > previous + 1) routeHistory.removeAt(
+                    routeHistory.lastIndex
+                )
+            else routeHistory += requested.key
+        }
+        shown = requested
+        if (!changed || motion.reduced || swipe || expansion.active || returning)
+            travel.snapTo(travelTarget)
+        else {
+            travelTarget += 1f
+            travel.animateTo(
+                travelTarget,
+                spring(dampingRatio = 1f, stiffness = 330f, visibilityThreshold = .002f),
+            )
+        }
+    }
+
     val font = LocalDensity.current.fontScale
     val density = LocalDensity.current
     val fold = rememberWorkspaceFold()
     var origin by remember { mutableStateOf(Offset.Zero) }
     val requestFocus: (Boolean) -> Unit = remember { { focus = it } }
-    CompositionLocalProvider(LocalDocumentFocus provides requestFocus) {
+    CompositionLocalProvider(
+        LocalRootMotionOrigin provides rootMotionOrigin,
+        LocalDocumentFocus provides requestFocus,
+        LocalPaperDestination provides displayed,
+    ) {
         BoxWithConstraints(
             Modifier.fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
@@ -61,7 +122,7 @@ fun DocumentWorkspace(vm: MainViewModel, screen: String, content: @Composable ()
                 )
             val wide =
                 enabled &&
-                    screen in setOf("reader", "editor") &&
+                    displayed.screen in setOf("reader", "editor") &&
                     maxWidth >= 1000.dp + ((font - 1).coerceAtLeast(0f) * 160).dp &&
                     maxHeight >= 460.dp
             // Keep the native accessibility subtree in one stable parent. Moving Compose
@@ -114,7 +175,26 @@ fun DocumentWorkspace(vm: MainViewModel, screen: String, content: @Composable ()
                             Modifier.fillMaxSize()
                                 .padding(start = (320 * font.coerceIn(1f, 1.2f)).dp + 1.dp)
                 }
-            Box(documentModifier) { pane() }
+            // Animate the same content tree; outgoing screens never run duplicate camera/OCR
+            // effects.
+            Box(documentModifier) {
+                NavigationExpansionHost(expansion) {
+                    Box(
+                        Modifier.fillMaxSize().graphicsLayer {
+                            val remaining =
+                                if (expansion.active || shown.key != requested.key) 0f
+                                else (travelTarget - travel.value).coerceIn(-1.3f, 1.3f)
+                            translationX = remaining * 22.dp.toPx()
+                            translationY = kotlin.math.abs(remaining) * 3.dp.toPx()
+                            val scale = 1f - kotlin.math.abs(remaining).coerceAtMost(1f) * .006f
+                            scaleX = scale
+                            scaleY = scale
+                        }
+                    ) {
+                        pane()
+                    }
+                }
+            }
         }
     }
 }

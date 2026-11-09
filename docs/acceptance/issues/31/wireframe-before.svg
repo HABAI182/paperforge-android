@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="2340" viewBox="0 0 1080 2340" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans CJK SC', 'Noto Sans SC', 'Microsoft YaHei', 'PingFang SC', sans-serif">
+  <title>PaperForge 编辑页线框 · 现状（1080×2340）</title>
+  <desc>低保真线框：现状编辑器。顶栏为返回、标题（点击重命名）、撤销、重做、全屏检查；画布可滑动翻页与缩放；缩略图条默认隐藏，只由页码徽标展开；底部为两行七个动作（裁切、增强、识字、更多，继续拍、导图、导出）。标注「更多」菜单为 21 行单列滚动，旋转、删除、页面管理都在其中。</desc>
+
+  <rect x="0" y="0" width="1080" height="2340" fill="#FFFFFF"/>
+
+  <!-- 状态栏 -->
+  <text x="40" y="48" font-size="26" fill="#1A1A1A">9:41</text>
+  <rect x="884" y="34" width="16" height="14" fill="#1A1A1A"/>
+  <rect x="906" y="28" width="16" height="20" fill="#1A1A1A"/>
+  <rect x="928" y="22" width="16" height="26" fill="#1A1A1A"/>
+  <rect x="962" y="24" width="52" height="24" rx="5" fill="none" stroke="#1A1A1A" stroke-width="3"/>
+  <rect x="968" y="30" width="32" height="12" fill="#1A1A1A"/>
+
+  <!-- 顶部栏 -->
+  <rect x="0" y="72" width="1080" height="168" fill="#FAFAF8"/>
+  <line x1="0" y1="240" x2="1080" y2="240" stroke="#D5D5D0" stroke-width="2"/>
+  <text x="34" y="178" font-size="42" fill="#1A1A1A">←</text>
+  <text x="112" y="146" font-size="34" font-weight="600" fill="#1A1A1A">扫描文档</text>
+  <text x="112" y="192" font-size="22" fill="#6B6B66">整理扫描 · 点击名称重命名</text>
+  <text x="668" y="178" font-size="38" fill="#1A1A1A">↺</text>
+  <text x="800" y="178" font-size="38" fill="#1A1A1A">↻</text>
+  <g stroke="#1A1A1A" stroke-width="4" fill="none">
+    <path d="M916 144 h-14 v14"/>
+    <path d="M960 144 h14 v14"/>
+    <path d="M916 188 h-14 v-14"/>
+    <path d="M960 188 h14 v-14"/>
+  </g>
+  <text x="690" y="222" font-size="18" fill="#8A8A85" text-anchor="middle">1 步</text>
+  <text x="814" y="222" font-size="18" fill="#8A8A85" text-anchor="middle">1 步</text>
+  <text x="938" y="222" font-size="18" fill="#8A8A85" text-anchor="middle">1 步</text>
+
+  <!-- 画布 -->
+  <rect x="0" y="240" width="1080" height="1650" fill="#EFEFEC"/>
+  <text x="24" y="280" font-size="20" fill="#8A8A85">现状 · 画布：左右滑翻页 / 双击缩放 / 点按切全屏（ScanPageCanvas.kt）</text>
+
+  <rect x="170" y="330" width="740" height="1047" fill="#FFFFFF" stroke="#C9C9C4" stroke-width="2"/>
+  <rect x="210" y="386" width="660" height="16" rx="8" fill="#E8E8E4"/>
+  <rect x="210" y="464" width="600" height="16" rx="8" fill="#E8E8E4"/>
+  <rect x="210" y="542" width="540" height="16" rx="8" fill="#E8E8E4"/>
+  <rect x="210" y="620" width="660" height="16" rx="8" fill="#E8E8E4"/>
+  <rect x="210" y="698" width="580" height="16" rx="8" fill="#E8E8E4"/>
+  <rect x="210" y="776" width="620" height="16" rx="8" fill="#E8E8E4"/>
+  <rect x="210" y="854" width="520" height="16" rx="8" fill="#E8E8E4"/>
+  <rect x="210" y="932" width="660" height="16" rx="8" fill="#E8E8E4"/>
+  <rect x="210" y="1010" width="600" height="16" rx="8" fill="#E8E8E4"/>
+  <rect x="210" y="1088" width="540" height="16" rx="8" fill="#E8E8E4"/>
+  <rect x="210" y="1166" width="640" height="16" rx="8" fill="#E8E8E4"/>
+  <rect x="210" y="1244" width="480" height="16" rx="8" fill="#E8E8E4"/>
+  <text x="540" y="1318" font-size="22" fill="#B0B0AA" text-anchor="middle">扫描页预览（第 3 页）</text>
+
+  <!-- 更多菜单说明卡 -->
+  <rect x="110" y="1390" width="860" height="280" rx="14" fill="#FFFFFF" stroke="#B0B0AA" stroke-width="2" stroke-dasharray="10 8"/>
+  <text x="136" y="1432" font-size="24" font-weight="600" fill="#1A1A1A">「更多」菜单：21 行按钮 + 1 个识别设置块（单列滚动）</text>
+  <text x="136" y="1470" font-size="22" fill="#3A3A36">旋转本页 · 2 步　　页面管理与排序 · 2 步</text>
+  <text x="136" y="1502" font-size="22" fill="#3A3A36">删除本页 · 3 步（含二次确认）</text>
+  <text x="136" y="1534" font-size="22" fill="#3A3A36">拆分双页 · 自动书脊 · 2 步</text>
+  <text x="136" y="1566" font-size="22" fill="#3A3A36">框选识别与同屏校对 · 2 步</text>
+  <text x="136" y="1598" font-size="22" fill="#3A3A36">保存本页诊断包 · 2 步（需滚动才看得到）</text>
+  <text x="136" y="1630" font-size="22" fill="#3A3A36">票据信息：编辑器内无入口（在文档库卡片菜单）</text>
+
+  <!-- 页码徽标 -->
+  <rect x="470" y="1682" width="140" height="64" rx="32" fill="#FFFFFF" stroke="#C9C9C4" stroke-width="2"/>
+  <text x="540" y="1724" font-size="26" fill="#1A1A1A" text-anchor="middle">3 / 8</text>
+  <text x="626" y="1722" font-size="18" fill="#8A8A85">← 点这里才展开缩略图条（1 步）</text>
+
+  <!-- 缩略图条（隐藏位） -->
+  <rect x="60" y="1758" width="960" height="88" rx="12" fill="#F7F7F4" stroke="#B0B0AA" stroke-width="2" stroke-dasharray="10 8"/>
+  <text x="84" y="1790" font-size="20" fill="#6B6B66">缩略图条：默认隐藏（thumbnails = false），展开后才出现「页面管理」</text>
+  <text x="84" y="1822" font-size="18" fill="#8A8A85">默认看不到多页概览；页面网格要 2 步才能到</text>
+
+  <text x="24" y="1878" font-size="20" fill="#8A8A85">底部栏 2 行 7 个动作：4 个图标 + 3 个按钮（没有旋转、没有删除）</text>
+
+  <!-- 底部栏 -->
+  <rect x="0" y="1890" width="1080" height="378" fill="#FAFAF8"/>
+  <line x1="0" y1="1890" x2="1080" y2="1890" stroke="#D5D5D0" stroke-width="2"/>
+
+  <!-- 第一行：4 图标 -->
+  <rect x="105" y="1926" width="60" height="60" fill="none" stroke="#33332F" stroke-width="4"/>
+  <line x1="105" y1="1926" x2="145" y2="1966" stroke="#33332F" stroke-width="4"/>
+  <path d="M405 1920 l9 27 l27 9 l-27 9 l-9 27 l-9 -27 l-27 -9 l27 -9 z" fill="#33332F"/>
+  <text x="675" y="1988" font-size="54" fill="#33332F" text-anchor="middle">字</text>
+  <circle cx="915" cy="1956" r="9" fill="#33332F"/>
+  <circle cx="945" cy="1956" r="9" fill="#33332F"/>
+  <circle cx="975" cy="1956" r="9" fill="#33332F"/>
+  <text x="135" y="2052" font-size="24" fill="#1A1A1A" text-anchor="middle">裁切</text>
+  <text x="405" y="2052" font-size="24" fill="#1A1A1A" text-anchor="middle">增强</text>
+  <text x="675" y="2052" font-size="24" fill="#1A1A1A" text-anchor="middle">识字</text>
+  <text x="945" y="2052" font-size="24" fill="#1A1A1A" text-anchor="middle">更多</text>
+  <text x="135" y="2092" font-size="18" fill="#8A8A85" text-anchor="middle">2 步（微调 3 步）</text>
+  <text x="405" y="2092" font-size="18" fill="#8A8A85" text-anchor="middle">2 步（选滤镜）</text>
+  <text x="675" y="2092" font-size="18" fill="#8A8A85" text-anchor="middle">1 步</text>
+  <text x="945" y="2092" font-size="18" fill="#8A8A85" text-anchor="middle">2 步起</text>
+
+  <!-- 第二行：3 按钮 -->
+  <rect x="48" y="2118" width="252" height="110" rx="14" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3"/>
+  <rect x="324" y="2118" width="156" height="110" rx="14" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3"/>
+  <rect x="504" y="2118" width="528" height="110" rx="14" fill="#1A1A1A"/>
+  <text x="174" y="2186" font-size="26" fill="#1A1A1A" text-anchor="middle">继续拍</text>
+  <text x="402" y="2186" font-size="26" fill="#1A1A1A" text-anchor="middle">导图</text>
+  <text x="768" y="2186" font-size="26" fill="#FFFFFF" text-anchor="middle">导出</text>
+  <text x="174" y="2258" font-size="18" fill="#8A8A85" text-anchor="middle">1 步</text>
+  <text x="402" y="2258" font-size="18" fill="#8A8A85" text-anchor="middle">1 步</text>
+  <text x="768" y="2258" font-size="18" fill="#8A8A85" text-anchor="middle">2 步（面板 + 生成）</text>
+
+  <!-- 系统导航条 -->
+  <rect x="0" y="2268" width="1080" height="72" fill="#FAFAF8"/>
+  <rect x="430" y="2310" width="220" height="8" rx="4" fill="#1A1A1A"/>
+
+  <rect x="1" y="1" width="1078" height="2338" fill="none" stroke="#C9C9C4" stroke-width="2"/>
+</svg>

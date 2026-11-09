@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import cn.paperforge.app.PaperForgeApp
 import cn.paperforge.app.imaging.ScanProcessor
 import cn.paperforge.app.model.Quad
@@ -32,7 +31,7 @@ class WorkbookEnhancementTest {
         val paper = BooleanArray(w * h)
         private val illum = FloatArray(w * h)
 
-        fun build(): Scene {
+        fun build(bleed: Boolean = true): Scene {
             for (y in 0 until h) {
                 for (x in 0 until w) {
                     // Uneven lamp light: bright on the left, vignette towards the bottom right.
@@ -95,7 +94,7 @@ class WorkbookEnhancementTest {
                     }
                 }
             }
-            showThrough()
+            if (bleed) showThrough()
             for (y in 0 until h) {
                 for (x in 0 until w) {
                     val i = y * w + x
@@ -127,10 +126,9 @@ class WorkbookEnhancementTest {
                     if (ink[i] || pencil[i] || rule[i]) continue
                     val darken = 34f * min(1f, strength * 1.6f) * illum[i]
                     val c = pixels[i]
-                    val dim = { channel: Int ->
-                        (channel - darken.toInt()).coerceIn(0, 255)
-                    }
-                    pixels[i] = Color.rgb(dim(Color.red(c)), dim(Color.green(c)), dim(Color.blue(c)))
+                    val dim = { channel: Int -> (channel - darken.toInt()).coerceIn(0, 255) }
+                    pixels[i] =
+                        Color.rgb(dim(Color.red(c)), dim(Color.green(c)), dim(Color.blue(c)))
                     ghost[i] = true
                 }
             }
@@ -171,7 +169,10 @@ class WorkbookEnhancementTest {
                 for (x in 0 until w) {
                     if (!mask[y * w + x]) continue
                     val pixel = bitmap.getPixel(x * bitmap.width / w, by)
-                    sum += .299 * Color.red(pixel) + .587 * Color.green(pixel) + .114 * Color.blue(pixel)
+                    sum +=
+                        .299 * Color.red(pixel) +
+                            .587 * Color.green(pixel) +
+                            .114 * Color.blue(pixel)
                     count++
                 }
             }
@@ -180,8 +181,8 @@ class WorkbookEnhancementTest {
 
         /**
          * Thin strokes are a few pixels wide and the warped output is one pixel shorter than the
-         * source, so a plain mean can pick up blank paper along the edge. A low percentile reads the
-         * stroke tone itself.
+         * source, so a plain mean can pick up blank paper along the edge. A low percentile reads
+         * the stroke tone itself.
          */
         fun percentile(bitmap: Bitmap, mask: BooleanArray, fraction: Double): Double {
             val values = ArrayList<Double>()
@@ -191,7 +192,9 @@ class WorkbookEnhancementTest {
                     if (!mask[y * w + x]) continue
                     val pixel = bitmap.getPixel(x * bitmap.width / w, by)
                     values.add(
-                        .299 * Color.red(pixel) + .587 * Color.green(pixel) + .114 * Color.blue(pixel)
+                        .299 * Color.red(pixel) +
+                            .587 * Color.green(pixel) +
+                            .114 * Color.blue(pixel)
                     )
                 }
             }
@@ -205,10 +208,11 @@ class WorkbookEnhancementTest {
     fun workbookPresetSuppressesShowThroughAndKeepsInk() {
         val scene = Scene().build()
         val source = scene.bitmap()
+        val cleanSource = Scene().build(bleed = false).bitmap()
         val app = ApplicationProvider.getApplicationContext<PaperForgeApp>()
         val output = File(app.filesDir, "workbook-quality").apply { mkdirs() }
         val rows = JSONArray()
-        fun record(mode: String, bitmap: Bitmap): JSONObject =
+        fun record(mode: String, bitmap: Bitmap, clean: Bitmap? = null): JSONObject =
             JSONObject()
                 .put("mode", mode)
                 .put("ghost", scene.mean(bitmap, scene.ghost))
@@ -217,24 +221,70 @@ class WorkbookEnhancementTest {
                 .put("rules", scene.percentile(bitmap, scene.rule, .35))
                 .put("paper", scene.mean(bitmap, scene.paper))
                 .put("ink_mean", scene.mean(bitmap, scene.ink))
+                .apply {
+                    if (clean != null) {
+                        val originalBleed =
+                            scene.mean(cleanSource, scene.ghost) - scene.mean(source, scene.ghost)
+                        val remaining =
+                            abs(scene.mean(clean, scene.ghost) - scene.mean(bitmap, scene.ghost))
+                        put(
+                            "pairedNoBleedScope",
+                            "same synthetic fixture without injected rear print, processed with the same mode",
+                        )
+                        put("injectedBleedMean", originalBleed).put("remainingBleedMean", remaining)
+                        put("bleedContrastReduction", 1 - remaining / max(.001, originalBleed))
+                    }
+                }
 
         try {
             File(output, "workbook-source.png").outputStream().use {
                 source.compress(Bitmap.CompressFormat.PNG, 100, it)
             }
-            File(output, "metrics.json").writeText(
-                JSONObject()
-                    .put("scene", "synthetic-thin-paper")
-                    .put("synthetic", true)
-                    .put("physical_device", false)
-                    .put("source", record("ORIGINAL", source))
-                    .toString(2)
-            )
+            File(output, "metrics.json")
+                .writeText(
+                    JSONObject()
+                        .put("scene", "synthetic-thin-paper")
+                        .put("synthetic", true)
+                        .put("physical_device", false)
+                        .put("source", record("ORIGINAL", source))
+                        .toString(2)
+                )
             val auto = ScanProcessor.transform(source, Quad.Full, "AUTO")
             val workbook = ScanProcessor.transform(source, Quad.Full, "WORKBOOK")
+            val snapshot =
+                cn.paperforge.app.imaging.ScanConfig.replaceForBenchmark(
+                    JSONObject().put("workbookIntelligence", 0)
+                )
+            val legacy =
+                try {
+                    ScanProcessor.transform(source, Quad.Full, "WORKBOOK")
+                } finally {
+                    cn.paperforge.app.imaging.ScanConfig.restoreAfterBenchmark(snapshot)
+                }
             try {
-                for ((mode, bitmap) in listOf("AUTO" to auto, "WORKBOOK" to workbook)) {
-                    rows.put(record(mode, bitmap))
+                for ((mode, bitmap) in
+                    listOf("AUTO" to auto, "LEGACY" to legacy, "WORKBOOK" to workbook)) {
+                    val cleanSnapshot =
+                        cn.paperforge.app.imaging.ScanConfig.replaceForBenchmark(
+                            JSONObject().put("workbookIntelligence", if (mode == "LEGACY") 0 else 1)
+                        )
+                    val clean =
+                        try {
+                            ScanProcessor.transform(
+                                cleanSource,
+                                Quad.Full,
+                                if (mode == "LEGACY") "WORKBOOK" else mode,
+                            )
+                        } finally {
+                            cn.paperforge.app.imaging.ScanConfig.restoreAfterBenchmark(
+                                cleanSnapshot
+                            )
+                        }
+                    try {
+                        rows.put(record(mode, bitmap, clean))
+                    } finally {
+                        clean.recycle()
+                    }
                     File(output, "workbook-${mode.lowercase()}.png").outputStream().use {
                         bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
                     }
@@ -262,16 +312,22 @@ class WorkbookEnhancementTest {
                 )
                 val pencil = scene.percentile(workbook, scene.pencil, .35)
                 assertTrue("pencil erased or lost tone: $pencil", pencil in 120.0..238.0)
-                assertTrue("table rules lost: ${scene.percentile(workbook, scene.rule, .35)}",
-                    scene.percentile(workbook, scene.rule, .35) <= 205.0)
-                assertTrue("paper not white: ${scene.mean(workbook, scene.paper)}",
-                    scene.mean(workbook, scene.paper) >= 235.0)
+                assertTrue(
+                    "table rules lost: ${scene.percentile(workbook, scene.rule, .35)}",
+                    scene.percentile(workbook, scene.rule, .35) <= 205.0,
+                )
+                assertTrue(
+                    "paper not white: ${scene.mean(workbook, scene.paper)}",
+                    scene.mean(workbook, scene.paper) >= 235.0,
+                )
             } finally {
                 auto.recycle()
                 workbook.recycle()
+                legacy.recycle()
             }
         } finally {
             source.recycle()
+            cleanSource.recycle()
         }
     }
 }

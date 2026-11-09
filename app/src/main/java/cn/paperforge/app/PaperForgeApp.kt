@@ -8,7 +8,10 @@ import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import kotlinx.coroutines.*
 import org.opencv.android.OpenCVLoader
 
-open class PaperForgeApp : Application() {
+open class PaperForgeApp : Application(), androidx.work.Configuration.Provider {
+    override val workManagerConfiguration: androidx.work.Configuration
+        get() = androidx.work.Configuration.Builder().build()
+
     val backgroundScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     val ocrModels by lazy { cn.paperforge.app.ocr.OcrModelPacks(this) }
     val ocrEngine by lazy { cn.paperforge.app.ocr.RoutingOcrEngine(this, ocrModels) }
@@ -24,7 +27,7 @@ open class PaperForgeApp : Application() {
                 android.util.Log.w("PaperForgeShortcuts", "Launcher shortcuts unavailable", it)
             }
         cn.paperforge.app.imaging.LearnedDocumentDetector.initialize(this)
-        cn.paperforge.app.imaging.ScanModel.initialize(this)
+        cn.paperforge.app.imaging.PageNetDetector.initialize(this)
         PDFBoxResourceLoader.init(this)
         OpenCVLoader.initLocal()
         org.opencv.core.Core.setNumThreads(2)
@@ -48,6 +51,8 @@ open class PaperForgeApp : Application() {
                     .build(),
             )
         backgroundScope.launch {
+            // Keep the scheduler's Room database/class loading off the first-frame path.
+            androidx.work.WorkManager.getInstance(this@PaperForgeApp)
             runCatching { cn.paperforge.app.imaging.CaptureTasks.recover(repository) }
                 .onFailure {
                     android.util.Log.e("PaperForgeTasks", "Pending capture recovery failed", it)

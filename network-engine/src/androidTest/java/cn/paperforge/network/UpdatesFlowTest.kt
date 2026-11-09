@@ -156,7 +156,8 @@ class UpdatesFlowTest {
                     else -> null
                 }
             }
-            val client = GitHubUpdates("", server.address)
+            val mirror = server.address + "/mirror/"
+            val client = GitHubUpdates("", server.address, webRoot = server.address, mirrors = listOf(mirror))
             val installed = mapOf("cn.paperforge.app" to InstalledPackage(7, "0.6.1-dev"))
             val stable =
                 client.check("fixture/paperforge", "stable", installed, listOf("arm64-v8a"))
@@ -179,6 +180,19 @@ class UpdatesFlowTest {
                     .exceptionOrNull()
             assertNotNull(failed)
             assertTrue(failed!!.message!!.contains("私有仓库"))
+            // The API down and github.com stalling: the latest release's manifest still comes through a mirror,
+            // and its files are offered from github.com first, then the mirror.
+            val older = mapOf("cn.paperforge.app" to InstalledPackage(5, "0.5.0"))
+            val latest = "/fixture/paperforge/releases/latest/download/"
+            server.route = { path ->
+                if (path == "/mirror/${server.address}${latest}release-manifest.json") manifest(6, "stable").toString() else null
+            }
+            val mirrored = client.check("fixture/paperforge", "stable", older, listOf("arm64-v8a"))
+            val offered = mirrored.candidates.single()
+            assertEquals(6L, offered.versionCode)
+            assertEquals(server.address + latest + "PaperForge.apk", offered.assetUrl)
+            assertEquals(listOf(mirror + server.address + latest + "PaperForge.apk"), offered.mirrors)
+            assertTrue(mirrored.warnings.any { it.contains("发布清单") })
             File(proof, "catalog.json")
                 .writeText(
                     JSONObject()

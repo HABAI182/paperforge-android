@@ -19,6 +19,8 @@ import org.opencv.imgproc.Imgproc
  * XObjects explicitly. Only opaque derived scan bitmaps enter this API.
  */
 object PdfImageEncoder {
+    const val VERSION = "scan-image-codec-2"
+
     fun scan(
         doc: PDDocument,
         bitmap: Bitmap,
@@ -27,11 +29,63 @@ object PdfImageEncoder {
         dpi: Int,
     ): PDImageXObject =
         when (filter) {
+            "WORKBOOK" ->
+                if (
+                    cn.paperforge.app.imaging.ScanConfig.int("workbookLosslessPdf", 1) != 0 &&
+                        quality >=
+                            cn.paperforge.app.imaging.ScanConfig.int(
+                                "workbookLosslessPdfQualityFloor",
+                                80,
+                            )
+                )
+                    lossless(doc, bitmap)
+                else jpeg(doc, bitmap, false, quality, dpi)
             "BW" -> binary(doc, bitmap)
             "GRAY",
             "CLEAN" -> jpeg(doc, bitmap, true, quality, dpi)
             else -> jpeg(doc, bitmap, false, quality, dpi)
         }
+
+    /** Exact opaque scan samples, no JPEG ringing, alpha mask or character reconstruction. */
+    fun lossless(doc: PDDocument, bitmap: Bitmap): PDImageXObject {
+        val width = bitmap.width
+        val row = IntArray(width)
+        var gray = true
+        loop@ for (y in 0 until bitmap.height) {
+            bitmap.getPixels(row, 0, width, 0, y, width, 1)
+            for (color in row) if (
+                Color.red(color) != Color.green(color) || Color.red(color) != Color.blue(color)
+            ) {
+                gray = false
+                break@loop
+            }
+        }
+        val buffer = ByteArray(width * if (gray) 1 else 3)
+        val bytes = ByteArrayOutputStream()
+        DeflaterOutputStream(bytes).use { stream ->
+            for (y in 0 until bitmap.height) {
+                bitmap.getPixels(row, 0, width, 0, y, width, 1)
+                for (x in 0 until width) {
+                    if (gray) buffer[x] = Color.red(row[x]).toByte()
+                    else {
+                        buffer[x * 3] = Color.red(row[x]).toByte()
+                        buffer[x * 3 + 1] = Color.green(row[x]).toByte()
+                        buffer[x * 3 + 2] = Color.blue(row[x]).toByte()
+                    }
+                }
+                stream.write(buffer)
+            }
+        }
+        return PDImageXObject(
+            doc,
+            ByteArrayInputStream(bytes.toByteArray()),
+            COSName.FLATE_DECODE,
+            width,
+            bitmap.height,
+            8,
+            if (gray) PDDeviceGray.INSTANCE else PDDeviceRGB.INSTANCE,
+        )
+    }
 
     fun jpeg(
         doc: PDDocument,

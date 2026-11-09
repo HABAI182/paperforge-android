@@ -7,20 +7,29 @@ import androidx.lifecycle.viewModelScope
 import androidx.room.withTransaction
 import androidx.work.*
 import cn.paperforge.app.data.*
+import cn.paperforge.app.model.OcrFrame
+import cn.paperforge.app.model.OcrLayout
+import cn.paperforge.app.model.PointN
+import cn.paperforge.app.model.ReceiptFields
+import cn.paperforge.app.model.SmartNaming
 import cn.paperforge.app.model.safeFileName
 import cn.paperforge.app.pdf.*
 import cn.paperforge.app.share.ShareEnhance
+import com.tom_roush.pdfbox.io.MemoryUsageSetting
+import com.tom_roush.pdfbox.pdmodel.PDDocument
 import java.io.File
 import java.util.UUID
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.sync.withLock
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainViewModel(app: Application) : AndroidViewModel(app) {
     val repo = (app as PaperForgeApp).repository
     private val ocrEngine = (app as PaperForgeApp).ocrEngine
     val query = MutableStateFlow("")
+    val homeScrollPositions = mutableMapOf<String, Pair<Int, Int>>()
     val homeTab = MutableStateFlow(0)
     val documentTab = MutableStateFlow(0)
     val workspaceGroup = MutableStateFlow("")
@@ -28,6 +37,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val settingsSection = MutableStateFlow("appearance")
     val toolHubReturn = MutableStateFlow("convert")
     val storageReturn = MutableStateFlow("settings")
+    val watermarkInput = MutableStateFlow<Uri?>(null)
+    val watermarkReturn = MutableStateFlow("home")
+
+    fun openWatermarks(document: DocumentRow? = null) {
+        watermarkReturn.value = screen.value
+        watermarkInput.value =
+            document?.let {
+                Uri.parse("content://${repo.context.packageName}.library/documents/${it.id}")
+            }
+        screen.value = "document-watermarks"
+    }
+
     val conversionEntry = MutableStateFlow("")
     val conversionReturn = MutableStateFlow("convert")
 
@@ -35,6 +56,109 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         conversionEntry.value = mode
         screen.value = "convert"
     }
+
+    val libraryFolderPaths = MutableStateFlow(LibraryPreferences(repo.context).folders())
+    val folderNotice = MutableStateFlow<String?>(null)
+
+    private data class FolderUndo(
+        val paths: List<String>,
+        val changes: Map<String, Pair<String, String>>,
+    )
+
+    private var folderUndo: FolderUndo? = null
+
+    fun createLibraryFolder(path: String, documentIds: Set<String> = emptySet()) =
+        perform("新建文件夹") {
+            val normalized = libraryFolder(path)
+            require(normalized.isNotBlank()) { "请输入文件夹名称" }
+            val preferences = LibraryPreferences(repo.context)
+            val known =
+                preferences.folders() + repo.dao.allDocuments().map { libraryFolder(it.folder) }
+            require(normalized !in known) { "文件夹已存在" }
+            val members =
+                repo.dao.allDocuments().filter { it.id in documentIds && it.trashedAt == null }
+            repo.database.withTransaction {
+                members.forEach {
+                    repo.dao.putDocument(
+                        it.copy(folder = normalized, modified = System.currentTimeMillis())
+                    )
+                }
+            }
+            folderUndo =
+                FolderUndo(
+                    preferences.folders(),
+                    members.associate { it.id to (it.folder to normalized) },
+                )
+            preferences.folders(preferences.folders() + normalized)
+            libraryFolderPaths.value = preferences.folders()
+            folderNotice.value =
+                "已新建 $normalized" + if (members.isEmpty()) "" else "，移入 ${members.size} 份文档"
+        }
+
+    /** Rename/move a whole subtree; delete only removes classification, never document files. */
+    fun changeLibraryFolder(source: String, destination: String?) =
+        perform("整理文件夹") {
+            val from = libraryFolder(source)
+            val to = destination?.let(::libraryFolder)
+            require(from.isNotBlank()) { "未分类不能重命名" }
+            require(to == null || (to.isNotBlank() && to != from && !to.startsWith("$from/"))) {
+                "请选择文件夹以外的新位置"
+            }
+            val preferences = LibraryPreferences(repo.context)
+            val oldPaths = preferences.folders()
+            val all = repo.dao.allDocuments()
+            val known = (oldPaths + all.map { libraryFolder(it.folder) }).distinct()
+            require(to == null || known.none { it == to || it.startsWith("$to/") }) { "目标文件夹已存在" }
+            fun mapped(path: String): String =
+                if (to == null) from.substringBeforeLast('/', "") else to + path.removePrefix(from)
+            val members =
+                all.filter {
+                    libraryFolder(it.folder).let { p -> p == from || p.startsWith("$from/") }
+                }
+            repo.database.withTransaction {
+                members.forEach { doc ->
+                    repo.dao.putDocument(
+                        doc.copy(
+                            folder = mapped(libraryFolder(doc.folder)),
+                            modified = System.currentTimeMillis(),
+                        )
+                    )
+                }
+            }
+            val replacement =
+                known.filterNot { it == from || it.startsWith("$from/") } +
+                    if (to == null) emptyList()
+                    else known.filter { it == from || it.startsWith("$from/") }.map(::mapped)
+            preferences.folders(replacement)
+            folderUndo =
+                FolderUndo(
+                    oldPaths,
+                    members.associate { it.id to (it.folder to mapped(libraryFolder(it.folder))) },
+                )
+            libraryFolderPaths.value = preferences.folders()
+            folderNotice.value = if (to == null) "已移除文件夹，文档保留在上一级" else "已更新文件夹 $to"
+        }
+
+    fun undoLibraryFolder() =
+        perform("撤销文件夹操作") {
+            val undo = folderUndo ?: return@perform
+            repo.database.withTransaction {
+                undo.changes.forEach { (id, paths) ->
+                    repo.dao
+                        .document(id)
+                        ?.takeIf { it.folder == paths.second }
+                        ?.let {
+                            repo.dao.putDocument(
+                                it.copy(folder = paths.first, modified = System.currentTimeMillis())
+                            )
+                        }
+                }
+            }
+            LibraryPreferences(repo.context).folders(undo.paths)
+            libraryFolderPaths.value = undo.paths
+            folderUndo = null
+            folderNotice.value = null
+        }
 
     val renameSelection = MutableStateFlow<List<String>>(emptyList())
     val canUndoNames = MutableStateFlow(LibraryPreferences(repo.context).renameUndo().isNotEmpty())
@@ -84,6 +208,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val pages =
         selected
             .flatMapLatest { it?.let { d -> repo.dao.observePages(d.id) } ?: flowOf(emptyList()) }
+            .map { rows -> rows.map(PageResources::normalizedAppearance) }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val screen = MutableStateFlow("home")
     val pdfEntry = MutableStateFlow<String?>(null)
@@ -329,6 +454,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private var task: Job? = null
     private var exportId: UUID? = null
     private var exportWatch: Job? = null
+    private var exportForeground = true
     val canBackgroundTask = MutableStateFlow(false)
     val taskFilter = MutableStateFlow("ACTIVE")
     val localTasks =
@@ -340,7 +466,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     init {
         val prefs = app.getSharedPreferences("session", 0)
         val pending = prefs.getString("export", null)
-        if (pending != null) runCatching { UUID.fromString(pending) }.onSuccess { watchExport(it) }
+        if (pending != null)
+            runCatching { UUID.fromString(pending) }
+                .onSuccess { watchExport(it, !prefs.getBoolean("exportBackground", false)) }
     }
 
     private suspend fun publishOutput(
@@ -443,6 +571,24 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         screen.value = if (doc.kind == "pdf") "reader" else "editor"
     }
 
+    /**
+     * v200 feedback 1: a finished export is registered in the document library, and this opens it
+     * from the result card. Resolving by path keeps the action correct even if the job finished in
+     * the background and the cached card is stale.
+     */
+    fun openOutputInLibrary(file: File) {
+        viewModelScope.launch {
+            val doc =
+                withContext(Dispatchers.IO) { runCatching { repo.dao.documentByPath(file.path) }.getOrNull() }
+            if (doc == null) {
+                messages.send("这份结果还没有加入文档库，可先保存到手机后重新导入")
+                return@launch
+            }
+            output.value = null
+            open(doc)
+        }
+    }
+
     fun importImages(uris: List<Uri>, recognizeFirst: Boolean = false) {
         if (uris.isEmpty()) return
         perform("正在导入图片") {
@@ -454,6 +600,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             repo.importImages(doc.id, uris)
             screen.value = "editor"
             if (recognizeFirst) {
+                progress.value = "正在处理页面"
+                repo.awaitCaptures(doc.id)
                 progress.value = "正在离线识别文字"
                 repo.dao.pages(doc.id).lastOrNull()?.let { showOcr(it, true) }
             }
@@ -491,10 +639,27 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    private var sharedImportUri: Uri? = null
+
+    fun importSharedPdf(uri: Uri) {
+        sharedImportUri = uri
+        importPdf(uri)
+    }
+
     fun importPdf(uri: Uri, password: String = "") =
         perform("正在导入 PDF") {
             try {
-                selected.value = repo.importPdf(uri, password)
+                val existingLibraryPdf =
+                    if (uri.authority == "${repo.context.packageName}.library")
+                        uri.pathSegments
+                            .getOrNull(1)
+                            ?.let { repo.dao.document(it) }
+                            ?.takeIf { it.kind == "pdf" && it.trashedAt == null }
+                    else null
+                selected.value =
+                    existingLibraryPdf
+                        ?: repo.importPdf(uri, password)
+                sharedImportUri = null
                 passwordRequest.value = null
                 screen.value = "reader"
             } catch (e: com.tom_roush.pdfbox.pdmodel.encryption.InvalidPasswordException) {
@@ -613,6 +778,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun openTask(row: LocalTaskRow, retake: Boolean = false) {
         if (
+            row.state in LocalTaskRow.active && row.type in DocumentJobs.types && row.workId != null
+        ) {
+            watchExport(UUID.fromString(row.workId))
+            return
+        }
+        if (
             row.type == "CONVERT" &&
                 org.json.JSONObject(row.payload).optJSONObject("input")?.optString("kind") ==
                     "SCAN_RETOUCH" &&
@@ -717,6 +888,34 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun save(page: PageRow) = perform("正在更新页面") { repo.savePage(page) }
 
+    /**
+     * Saves a crop edited in the crop tool. A finished page is edited on its camera photo, so a changed crop
+     * finishes the page again from that photo the way a capture does; an unchanged one leaves it as it is.
+     */
+    fun saveGeometry(before: PageRow, after: PageRow) {
+        if (after == before) return
+        val flat = cn.paperforge.app.data.PageResources.metadata(before).optJSONObject("flatDocument")
+        if (flat == null || after.original == before.original) {
+            save(after)
+            return
+        }
+        perform("正在按新纸边重新处理") {
+            val finished =
+                cn.paperforge.app.imaging.CaptureTasks.finishSlot.withLock {
+                    cn.paperforge.app.imaging.FlatDocument.prepare(
+                        repo,
+                        after,
+                        flat.optBoolean("ai", false),
+                        .70710678f,
+                        workEdge = cn.paperforge.app.imaging.AutomaticScanBudget.edge(),
+                        automatic = true,
+                        progress = {},
+                    )
+                }
+            repo.savePage(finished)
+        }
+    }
+
     fun copyPagesTo(ids: Set<String>, targetId: String?, title: String, move: Boolean = false) {
         val source = selected.value?.id ?: return
         perform(if (move) "正在移动页面与原件" else "正在复制页面与原件") {
@@ -790,7 +989,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                                 gridFile,
                                 file,
                                 result.grid.strength,
-                                cn.paperforge.app.imaging.ScanModel.fingerprint(true),
+                                cn.paperforge.app.imaging.PageDewarp.fingerprint(),
+                                result.algorithm,
                             ),
                     )
                 )
@@ -817,6 +1017,21 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
 
     fun deletePage(page: PageRow) = perform("正在删除页面") { repo.deletePage(page) }
+
+    fun discardCapturedPage(page: PageRow) =
+        perform("正在撤回此页") {
+            repo.dao
+                .tasksForDocument(page.documentId)
+                .filter {
+                    it.type == "CAPTURE" &&
+                        it.documentId == page.documentId &&
+                        (it.pageId == page.id || it.targetPageId == page.id) &&
+                        it.state in LocalTaskRow.active
+                }
+                .forEach { cn.paperforge.app.imaging.CaptureTasks.cancel(repo, it) }
+            repo.deletePage(page)
+            messages.send("已撤回此页，可在编辑页撤销")
+        }
 
     fun delete(doc: DocumentRow) =
         perform("移入回收站") {
@@ -873,12 +1088,26 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun categorizeDocuments(ids: Set<String>, folder: String?, tags: String?) =
         perform("批量分类") {
+            val before = repo.dao.allDocuments().filter { it.id in ids }
+            val target = folder?.let(::libraryFolder)
+            if (target != null)
+                folderUndo =
+                    FolderUndo(
+                        LibraryPreferences(repo.context).folders(),
+                        before.associate { it.id to (it.folder to target) },
+                    )
             repo.editDocuments(ids) {
                 it.copy(
-                    folder = folder?.let(::libraryFolder) ?: it.folder,
+                    folder = target ?: it.folder,
                     tags = tags?.let(::libraryTags) ?: it.tags,
                     modified = System.currentTimeMillis(),
                 )
+            }
+            if (target != null) {
+                val preferences = LibraryPreferences(repo.context)
+                if (target.isNotBlank()) preferences.folders(preferences.folders() + target)
+                libraryFolderPaths.value = preferences.folders()
+                folderNotice.value = "已移入${target.ifBlank { "未分类" }} · ${before.size} 份文档"
             }
         }
 
@@ -957,15 +1186,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
 
     fun categorize(doc: DocumentRow, folder: String, tags: String) =
-        perform("保存分类") {
-            repo.editDocuments(setOf(doc.id)) {
-                it.copy(
-                    folder = libraryFolder(folder),
-                    tags = libraryTags(tags),
-                    modified = System.currentTimeMillis(),
-                )
-            }
-        }
+        categorizeDocuments(setOf(doc.id), folder, tags)
 
     fun favorite(doc: DocumentRow) =
         perform("更新收藏") { repo.dao.updateDocument(doc.copy(favorite = !doc.favorite)) }
@@ -975,6 +1196,210 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             repo.rename(doc, title)
             selected.value = doc.copy(title = safeFileName(title))
         }
+
+    /**
+     * #25: reuse corrected first-page OCR/native PDF text. The explicit naming button can recognise
+     * a missing first page; simply opening a document never starts OCR or changes its name.
+     */
+    suspend fun namingSuggestion(
+        doc: DocumentRow,
+        recognizeMissing: Boolean = false,
+    ): SmartNaming.Suggestion? =
+        withContext(Dispatchers.IO) {
+            val text: String
+            val count: Int
+            var sourceLayout: OcrLayout? = null
+            if (doc.kind == "scan") {
+                val pages = repo.dao.pages(doc.id)
+                val first = pages.firstOrNull() ?: return@withContext null
+                sourceLayout = first.ocrLayout?.let(OcrLayout::decode)
+                val cached = sourceLayout?.text.orEmpty().ifBlank { first.ocrText.orEmpty() }
+                text =
+                    if (cached.isNotBlank() || !recognizeMissing) cached
+                    else {
+                        currentCoroutineContext().ensureActive()
+                        val recognized =
+                            repo
+                                .cacheOcr(
+                                    first,
+                                    ocrEngine.layout(
+                                        first,
+                                        UserSettings[SettingKeys.OcrLanguage] != "LATIN",
+                                    ),
+                                )
+                                .second
+                        sourceLayout = recognized
+                        recognized.text
+                    }
+                count = pages.size
+            } else {
+                val file = doc.pdfPath?.let(::File) ?: return@withContext null
+                val native =
+                    cn.paperforge.app.pdf.ReaderDocument.text(file, 0).joinToString("\n") {
+                        it.text
+                    }
+                text =
+                    if (native.isNotBlank() || !recognizeMissing) native
+                    else {
+                        cn.paperforge.app.pdf.PageTextSource.load(repo.context, file, 0, ocrEngine)
+                            .joinToString("\n") { it.text }
+                    }
+                count = com.tom_roush.pdfbox.pdmodel.PDDocument.load(file).use { it.numberOfPages }
+            }
+            if (text.isBlank()) return@withContext null
+            val suggestion =
+                SmartNaming.suggest(
+                    SmartNaming.Input(
+                        ocrText = text.take(6000),
+                        pageCount = count,
+                        currentName = doc.title,
+                        heading = sourceLayout?.let(SmartNaming::heading),
+                    )
+                )
+            val uncertain =
+                sourceLayout
+                    ?.lines
+                    ?.take(SmartNaming.DEFAULT_LINE_LIMIT)
+                    ?.withIndex()
+                    ?.filter {
+                        !it.value.corrected &&
+                            it.value.confidence?.let { score -> score < .75f } == true
+                    }
+                    .orEmpty()
+            suggestion.copy(
+                reviewNotes =
+                    suggestion.reviewNotes +
+                        if (uncertain.isEmpty()) emptyList()
+                        else
+                            listOf(
+                                "首页第 ${uncertain.take(4).joinToString("、") { (it.index + 1).toString() }} 行识别置信度较低，请核对名称与日期。"
+                            )
+            )
+        }
+
+    /** Reuse corrected/cache text; recognise missing pages only when explicitly requested. */
+    suspend fun receiptDraft(
+        doc: DocumentRow,
+        recognizeMissing: Boolean = false,
+        onProgress: (String) -> Unit = {},
+    ): ReceiptFields.Record? =
+        withContext(Dispatchers.IO) {
+            val source = mutableListOf<ReceiptFields.SourceLine>()
+            if (doc.kind == "scan") {
+                val pages = repo.dao.pages(doc.id)
+                for ((index, initial) in pages.withIndex()) {
+                    currentCoroutineContext().ensureActive()
+                    val page =
+                        if (
+                            recognizeMissing &&
+                                initial.ocrText.isNullOrBlank() &&
+                                initial.ocrLayout.isNullOrBlank()
+                        ) {
+                            onProgress("正在离线识别 ${index + 1}/${pages.size} 页")
+                            repo
+                                .cacheOcr(
+                                    initial,
+                                    ocrEngine.layout(
+                                        initial,
+                                        UserSettings[SettingKeys.OcrLanguage] != "LATIN",
+                                    ),
+                                )
+                                .first
+                        } else initial
+                    val layout = page.ocrLayout?.let(OcrLayout::decode)
+                    if (layout != null && layout.lines.isNotEmpty()) {
+                        source +=
+                            layout.lines.mapIndexed { line, text ->
+                                ReceiptFields.SourceLine(
+                                    text.text,
+                                    index,
+                                    line,
+                                    text.corners,
+                                    layout.engineId,
+                                    text.confidence,
+                                    page.id,
+                                    layout.frame?.geometrySignature ?: OcrFrame.signature(page),
+                                )
+                            }
+                    } else {
+                        source +=
+                            page.ocrText
+                                .orEmpty()
+                                .lines()
+                                .filter { it.isNotBlank() }
+                                .mapIndexed { line, text ->
+                                    ReceiptFields.SourceLine(
+                                        text,
+                                        index,
+                                        line,
+                                        engine = "cached-text",
+                                        pageId = page.id,
+                                    )
+                                }
+                    }
+                    if (
+                        source.size >= 200 ||
+                            source.sumOf { it.text.length } >= ReceiptLedger.MAX_SOURCE_CHARS
+                    )
+                        break
+                }
+            } else {
+                val file = doc.pdfPath?.let(::File) ?: return@withContext null
+                val count =
+                    com.tom_roush.pdfbox.pdmodel.PDDocument.load(file).use { it.numberOfPages }
+                for (index in 0 until count) {
+                    currentCoroutineContext().ensureActive()
+                    onProgress("正在读取票据 ${index + 1}/$count 页")
+                    val blocks =
+                        cn.paperforge.app.pdf.PageTextSource.load(
+                            repo.context,
+                            file,
+                            index,
+                            ocrEngine,
+                        )
+                    source +=
+                        blocks.mapIndexed { line, block ->
+                            ReceiptFields.SourceLine(
+                                block.text,
+                                index,
+                                line,
+                                listOf(
+                                    PointN(block.left, block.top),
+                                    PointN(block.right, block.top),
+                                    PointN(block.right, block.bottom),
+                                    PointN(block.left, block.bottom),
+                                ),
+                                block.source,
+                            )
+                        }
+                    if (
+                        source.size >= 200 ||
+                            source.sumOf { it.text.length } >= ReceiptLedger.MAX_SOURCE_CHARS
+                    )
+                        break
+                }
+            }
+            if (source.none { it.text.isNotBlank() }) null else ReceiptFields.parse(source, doc.id)
+        }
+
+    /**
+     * #26: writes the ledger only when the user pressed an export button. The CSV is append-only
+     * and the XLSX is rebuilt from the CSV, so switching formats keeps every earlier row.
+     */
+    fun exportReceipt(record: ReceiptFields.Record, source: DocumentRow?, xlsx: Boolean) {
+        if (record.isBlank) {
+            viewModelScope.launch { messages.send("没有可导出的字段，请先填写至少一项") }
+            return
+        }
+        perform(if (xlsx) "正在导出票据记录 XLSX" else "正在追加票据记录 CSV") {
+            val csv = ReceiptLedger.append(repo, record, source?.title.orEmpty())
+            val file = if (xlsx) ReceiptLedger.exportXlsx(repo) else csv
+            // The ledger is one shared, append-only file, so it is recorded as an independent
+            // export instead of being re-attributed to whichever document exported last.
+            publishOutput(file, notice = "已写入 ${ReceiptLedger.DIRECTORY}/${file.name}")
+            messages.send("已保存票据记录${if (xlsx) "并重建 XLSX" else " CSV"}；相同文档的相同记录不会重复写入")
+        }
+    }
 
     fun exportWithOptions(
         title: String,
@@ -1072,16 +1497,20 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }
     }
 
-    private fun watchExport(id: UUID) {
+    private fun watchExport(id: UUID) = watchExport(id, true)
+
+    private fun watchExport(id: UUID, foreground: Boolean) {
+        exportForeground = foreground
         getApplication<Application>()
             .getSharedPreferences("session", 0)
             .edit()
             .putString("export", id.toString())
+            .putBoolean("exportBackground", !foreground)
             .apply()
         exportId = id
-        busy.value = true
+        busy.value = foreground
         exportWatch?.cancel()
-        canBackgroundTask.value = true
+        canBackgroundTask.value = foreground
         exportWatch =
             viewModelScope.launch {
                 WorkManager.getInstance(getApplication())
@@ -1091,16 +1520,20 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                         val detail =
                             localTasks.value.firstOrNull { it.workId == id.toString() }?.detail
                                 ?: "处理文件"
-                        progress.value = "$detail · ${info.progress.getInt("progress",0)}%"
+                        if (exportForeground)
+                            progress.value = "$detail · ${info.progress.getInt("progress",0)}%"
                         if (info.state.isFinished) {
-                            busy.value = false
-                            progress.value = ""
+                            if (exportForeground) {
+                                busy.value = false
+                                progress.value = ""
+                            }
                             exportId = null
                             canBackgroundTask.value = false
                             getApplication<Application>()
                                 .getSharedPreferences("session", 0)
                                 .edit()
                                 .remove("export")
+                                .remove("exportBackground")
                                 .apply()
                             if (info.state == WorkInfo.State.SUCCEEDED) {
                                 if (info.outputData.getBoolean("skipped", false)) {
@@ -1114,14 +1547,28 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                                     File(info.outputData.getString("path") ?: error("任务没有本地结果"))
                                 when (info.outputData.getString("mode")) {
                                     "SCAN_RETOUCH" -> {
+                                        var updatedOriginal = false
                                         repo.dao
                                             .task(info.outputData.getString("taskId") ?: "")
                                             ?.let { row ->
                                                 repo.dao
                                                     .document(RetouchJobs.publishedDocument(row))
-                                                    ?.let(::open)
+                                                    ?.let { document ->
+                                                        val inPlace =
+                                                            org.json
+                                                                .JSONObject(row.payload)
+                                                                .optJSONObject("input")
+                                                                ?.optBoolean("inPlace") == true
+                                                        updatedOriginal = inPlace
+                                                        // An in-place background result must not
+                                                        // pull the user away from another document.
+                                                        if (!inPlace) open(document)
+                                                    }
                                             }
-                                        messages.send("修复副本已保存，原文档保持完整")
+                                        messages.send(
+                                            if (updatedOriginal) "已更新原文档中的此页，可撤销；也可从任务中心打开"
+                                            else "修复副本已生成并打开，可在文档列表中找到"
+                                        )
                                     }
                                     "OCR" -> {
                                         ocrPage = null
@@ -1189,30 +1636,31 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun backgroundJob() {
         if (!canBackgroundTask.value) return
-        exportWatch?.cancel()
-        exportWatch = null
-        exportId = null
+        exportForeground = false
         canBackgroundTask.value = false
         busy.value = false
         progress.value = ""
         getApplication<Application>()
             .getSharedPreferences("session", 0)
             .edit()
-            .remove("export")
+            .putBoolean("exportBackground", true)
             .apply()
+        taskFilter.value = "ACTIVE"
         screen.value = "tasks"
     }
 
     fun cancel() {
-        exportId?.let { id ->
-            WorkManager.getInstance(getApplication()).cancelWorkById(id)
-            appScope.launch {
-                repo.dao
-                    .allTasks()
-                    .firstOrNull { it.workId == id.toString() }
-                    ?.let { DocumentJobs.cancel(repo, it) }
+        exportId
+            ?.takeIf { exportForeground }
+            ?.let { id ->
+                WorkManager.getInstance(getApplication()).cancelWorkById(id)
+                appScope.launch {
+                    repo.dao
+                        .allTasks()
+                        .firstOrNull { it.workId == id.toString() }
+                        ?.let { DocumentJobs.cancel(repo, it) }
+                }
             }
-        }
         task?.cancel()
     }
 
@@ -1496,7 +1944,55 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }
     }
 
-    fun retouch(page: PageRow, request: cn.paperforge.app.imaging.RetouchRequest) {
+    fun cleanDocument(uri: Uri, options: org.json.JSONObject, displayName: String? = null) {
+        if (!busy.compareAndSet(false, true)) return
+        progress.value = "保留文档原件"
+        task =
+            viewModelScope.launch {
+                var queued: UUID? = null
+                try {
+                    queued =
+                        withContext(Dispatchers.IO) {
+                            val retained = ConversionInputs.retain(repo, listOf(uri)).single()
+                            DocumentJobs.enqueue(
+                                repo,
+                                "CONVERT",
+                                JobInput(
+                                    org.json
+                                        .JSONObject()
+                                        .put("kind", "DOCUMENT_CLEAN")
+                                        .put("name", displayName ?: retained.second)
+                                        .put(
+                                            "inputs",
+                                            org.json.JSONArray(listOf(retained.first.path)),
+                                        )
+                                        .put(
+                                            "names",
+                                            org.json.JSONArray(
+                                                listOf(displayName ?: retained.second)
+                                            ),
+                                        )
+                                        .put("options", options.toString())
+                                ),
+                            )
+                        }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    messages.send(e.message ?: "去水印未能开始")
+                } finally {
+                    busy.value = false
+                    progress.value = ""
+                }
+                queued?.let(::watchExport)
+            }
+    }
+
+    fun retouch(
+        page: PageRow,
+        request: cn.paperforge.app.imaging.RetouchRequest,
+        inPlace: Boolean = false,
+    ) {
         if (!busy.compareAndSet(false, true)) return
         progress.value = "保留修复原图与选区"
         task =
@@ -1504,7 +2000,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 var queued: UUID? = null
                 try {
                     queued =
-                        withContext(Dispatchers.IO) { RetouchJobs.enqueue(repo, page, request) }
+                        withContext(Dispatchers.IO) {
+                            RetouchJobs.enqueue(repo, page, request, inPlace)
+                        }
                 } catch (cancel: CancellationException) {
                     throw cancel
                 } catch (e: Exception) {
@@ -1513,8 +2011,67 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     busy.value = false
                     progress.value = ""
                 }
-                queued?.let(::watchExport)
+                queued?.let {
+                    if (inPlace) messages.send("正在处理第 ${page.position + 1} 页，完成后直接更新当前预览")
+                    watchExport(it)
+                }
             }
+    }
+
+    /**
+     * Bakes the annotation layer into a new page image.
+     *
+     * The camera original and the previous appearance are never modified: a new PNG becomes
+     * `page.original`, the page revision increments, and [Repository.savePage] records the old
+     * page in `edit_history`, so the editor's 撤销 restores the unannotated page. Because the page
+     * image itself now contains the marks, every export path (PDF, image pack) includes them
+     * without a separate annotation renderer.
+     */
+    fun saveAnnotations(
+        page: PageRow,
+        annotations: List<cn.paperforge.app.model.PageAnnotation>,
+    ) {
+        if (annotations.isEmpty()) {
+            viewModelScope.launch { messages.send("还没有标注，直接返回即可") }
+            return
+        }
+        perform("正在把标注写入页面") {
+            val bitmap =
+                cn.paperforge.app.annotation.PageAnnotations.bake(page, annotations)
+            var written: File? = null
+            var saved = false
+            try {
+                written =
+                    cn.paperforge.app.annotation.PageAnnotations.write(
+                        bitmap,
+                        repo.folder(page.documentId),
+                    )
+                repo.savePage(
+                    page.copy(
+                        original = written.path,
+                        corners = cn.paperforge.app.model.Quad.Full.encode(),
+                        filter = "ORIGINAL",
+                        brightness = 0f,
+                        contrast = 1f,
+                        rotation = 0,
+                        deskewDegrees = 0f,
+                        outputAspect = 0f,
+                        detectionConfidence = null,
+                        detectionMethod = "annotation",
+                        processingMetadata =
+                            cn.paperforge.app.annotation.PageAnnotations.metadata(
+                                page,
+                                annotations,
+                            ),
+                    )
+                )
+                saved = true
+                messages.send("标注已写入第 ${page.position + 1} 页；原图保留，可撤销恢复")
+            } finally {
+                bitmap.recycle()
+                if (!saved) written?.delete()
+            }
+        }
     }
 
     fun officeResult(uri: Uri) =
@@ -2484,6 +3041,43 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             publishOutput(file, doc)
         }
 
+    /**
+     * #27 in-app entry: scan the current PDF first, then clean object-level watermarks into a copy.
+     * The source file is only read; a PDF without recognised candidates never produces an empty
+     * copy.
+     */
+    fun removeObjectWatermarks() =
+        perform("正在检查对象级水印") {
+            val doc = selected.value ?: return@perform
+            val input = doc.pdfPath?.let(::File) ?: return@perform
+            val scan =
+                PDDocument.load(input, MemoryUsageSetting.setupTempFileOnly()).use {
+                    PdfWatermarks.scan(it)
+                }
+            if (!scan.found) {
+                messages.send("未检测到可识别的对象级水印")
+                return@perform
+            }
+            progress.value = "正在处理 ${scan.images.size} 个图片水印与 ${scan.texts.size} 处文字水印"
+            val file = OutputNames.create(repo, UUID.randomUUID().toString(), doc.title, "pdf")
+            var published = false
+            try {
+                val report = PdfWatermarks.remove(input, file)
+                outputLocked.value = false
+                publishOutput(
+                    file,
+                    doc,
+                    "已移除 ${report.imagesRemoved} 个图片水印，删除/遮盖 ${report.textCovers} 处文字水印",
+                )
+                published = true
+            } finally {
+                if (!published) {
+                    file.delete()
+                    File(file.path + ".part").delete()
+                }
+            }
+        }
+
     fun forms() = queueTool("forms")
 
     fun queueCertificate(options: org.json.JSONObject) {
@@ -2556,16 +3150,101 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun splitBook(page: PageRow, top: Float = .5f, bottom: Float = .5f, keep: String = "both") =
         perform("分割双页") { repo.splitBook(page, top, bottom, keep) }
 
+    /**
+     * Last spine search performed by [autoSplitSpread]; exposed for diagnostics and device tests.
+     */
+    val lastSpineDetection = MutableStateFlow<cn.paperforge.app.imaging.SpineDetection?>(null)
+
+    /**
+     * #23: detect the gutter of the current spread and split it through the existing
+     * [Repository.splitBook] path (same document, left half first, original file kept, undo works).
+     * Rendering uses the neutral ORIGINAL filter so a display filter cannot hide the shadow. When
+     * no spine is found nothing is written: the page is never cut at a fallback position.
+     */
+    fun autoSplitSpread(page: PageRow) =
+        perform("检测书脊并拆分双页") {
+            lastSpineDetection.value = null
+            val rotation = ((page.rotation % 360) + 360) % 360
+            if (rotation != 0 || page.deskewDegrees != 0f) {
+                messages.send(
+                    "当前页旋转 $rotation°、去斜 ${page.deskewDegrees}°：" + "本轮只支持未旋转、未去斜的整页跨页图，未拆分"
+                )
+                return@perform
+            }
+            val analysis = page.copy(filter = "ORIGINAL", brightness = 0f, contrast = 1f)
+            val bitmap = cn.paperforge.app.imaging.ScanProcessor.render(analysis, 1600)
+            val detection =
+                try {
+                    cn.paperforge.app.imaging.BookSpineDetector.detect(bitmap)
+                } finally {
+                    bitmap.recycle()
+                }
+            lastSpineDetection.value = detection
+            val x = detection.x
+            if (!detection.found || x == null) {
+                messages.send("未检测到书脊：${detection.reason}。本页未拆分。")
+                return@perform
+            }
+            val leftEdge = detection.seamLeft
+            val rightEdge = detection.seamRight
+            if (leftEdge == null || rightEdge == null) {
+                messages.send("未检测到书脊：${detection.reason}。本页未拆分。")
+                return@perform
+            }
+            // #23 follow-up: the left page ends on the gutter's left edge and the right page starts
+            // on its right edge, so neither half keeps the shadow. Each stored inner edge is inset
+            // by the render-time CropSafety ring: the render grows the quad back out by that ring,
+            // so an edge stored exactly on the seam would pick the gutter up again (see
+            // innerEdgeSafetyInset).
+            val inset = innerEdgeSafetyInset(page)
+            repo.splitBook(
+                page,
+                leftEdge.top - inset,
+                leftEdge.bottom - inset,
+                "both",
+                rightEdge.top + inset,
+                rightEdge.bottom + inset,
+            )
+            messages.send(
+                "已拆分双页：左页在前，右页在后（书脊在 ${(x * 100).toInt()}% 处，" +
+                    "置信度 ${(detection.confidence * 100).toInt()}%）"
+            )
+        }
+
+    /**
+     * `PageDecoder.crop` grows every page quad by `CropSafety` (1% of the shorter source side)
+     * before warping. A stored inner edge sitting exactly on the gutter edge would therefore still
+     * show a strip of the gutter after rendering, so the auto split insets each stored inner edge
+     * by that same pixel ring and lets the render grow it back onto the seam. Returns the ring
+     * width as a fraction of the source width; 0 when the header cannot be read (the render then
+     * also keeps its default, so the page still renders).
+     */
+    private fun innerEdgeSafetyInset(page: PageRow): Float {
+        val size =
+            cn.paperforge.app.imaging.PageDecoder.uprightSize(File(page.original)) ?: return 0f
+        val uprightWidth = size.first
+        if (uprightWidth < 2) return 0f
+        val margin =
+            cn.paperforge.app.imaging.ScanConfig.float(
+                "cropSafetyMargin",
+                cn.paperforge.app.model.CropSafety.Margin,
+            )
+        return margin * minOf(uprightWidth, size.second) / (uprightWidth - 1)
+    }
+
     fun applyAll(page: PageRow) =
         perform("应用到所有页") {
             repo.dao.pages(page.documentId).forEach {
                 repo.savePage(
-                    it.copy(
-                        filter = page.filter,
-                        brightness = page.brightness,
-                        contrast = page.contrast,
-                        enhanceStrength = page.enhanceStrength,
-                    )
+                    (if (page.filter in setOf("WORKBOOK", "CLEAN"))
+                            it.withWorkbookDetail(page.workbookDetail())
+                        else it)
+                        .copy(
+                            filter = page.filter,
+                            brightness = page.brightness,
+                            contrast = page.contrast,
+                            enhanceStrength = page.enhanceStrength,
+                        )
                 )
             }
         }
@@ -2703,6 +3382,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             assembly.flush()
             val count = BackupStore.restore(repo, uri, policy, applyWorkspace)
             canUndoNames.value = LibraryPreferences(repo.context).renameUndo().isNotEmpty()
+            libraryFolderPaths.value = LibraryPreferences(repo.context).folders()
+            folderUndo = null
+            folderNotice.value = null
             comparison.refreshFamilies()
             assembly.reload()
             val workspace = if (applyWorkspace) "已应用设置和工作区" else "已保留本机设置和工作区"

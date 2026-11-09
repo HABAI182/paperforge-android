@@ -19,6 +19,7 @@ import org.json.JSONObject
  */
 object CaptureTasks {
     val decodeSlot = Mutex()
+    val finishSlot = Mutex()
 
     private fun marker(repo: Repository, row: LocalTaskRow) =
         AtomicFile(
@@ -48,6 +49,7 @@ object CaptureTasks {
         reference: CaptureReference?,
         target: String? = null,
         file: File = repo.captureFile(documentId),
+        galleryImport: Boolean = false,
     ): LocalTaskRow =
         withContext(Dispatchers.IO) {
             repo.database.withTransaction {
@@ -62,7 +64,7 @@ object CaptureTasks {
                         ) + 1)
                 val spec =
                     CaptureSpec(
-                        CapturePreset.current(existing),
+                        CapturePreset.current(existing).let { if (galleryImport) it.forGalleryImport() else it },
                         reference,
                         existing?.revision ?: -1,
                     )
@@ -303,7 +305,7 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
             if (start.state == LocalTaskState.CANCELLED || start.state == LocalTaskState.SUCCEEDED)
                 return@withContext Result.success()
             try {
-                CaptureTasks.decodeSlot.withLock {
+                run {
                     val row =
                         repo.database.withTransaction {
                             val row = repo.dao.task(id) ?: return@withTransaction null
@@ -314,20 +316,110 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                                 return@withTransaction null
                             repo.dao.taskState(id, LocalTaskState.RUNNING, 15, "正在检测纸边", null)
                             row
-                        } ?: return@withLock
+                        } ?: return@run
                     val document = row.documentId ?: error("来源文档已移除")
                     check(repo.dao.document(document) != null) { "来源文档已移除" }
-                    val spec = CaptureSpec.decode(JSONObject(row.payload))
+                    var spec =
+                        CaptureSpec.decode(JSONObject(row.payload)).let {
+                            it.copy(
+                                preset =
+                                    it.preset.copy(
+                                        aiFinish =
+                                            it.preset.aiFinish &&
+                                                cn.paperforge.app.UserSettings[
+                                                        cn.paperforge.app.SettingKeys.ScanAiFinish]
+                                    )
+                            )
+                        }
                     val file = CaptureTasks.raw(row)
                     val result =
-                        ScanProcessor.detectFile(
-                            file,
-                            spec.reference?.quad,
-                            spec.reference,
-                            spec.preset.detector,
-                            spec.preset.lockCrop,
-                        )
+                        CaptureTasks.decodeSlot.withLock {
+                            ScanProcessor.detectFile(
+                                file,
+                                spec.reference?.quad,
+                                spec.reference,
+                                spec.preset.detector,
+                                spec.preset.lockCrop,
+                            )
+                        }
                     currentCoroutineContext().ensureActive()
+                    val detected =
+                        spec.preset
+                            .page(checkNotNull(row.pageId), document, row.position, file.path)
+                            .copy(
+                                corners = (result.quad ?: Quad.Full).encode(),
+                                processingMetadata =
+                                    JSONObject(CaptureMetadata.encode(spec.reference, result))
+                                        .put("captureJob", id)
+                                        .toString(),
+                                detectionConfidence = result.confidence,
+                                detectionMethod = result.method,
+                            )
+                    // Publish detected framing before the slower neural finish. Other captured
+                    // pages can run their detector while foreground inference is queued.
+                    if (row.targetPageId == null)
+                        repo.database.withTransaction {
+                            val current =
+                                repo.dao.pages(document).firstOrNull { it.id == row.pageId }
+                            val task = repo.dao.task(id)
+                            if (
+                                current != null &&
+                                    current.original == file.path &&
+                                    current.revision == spec.expectedDraftRevision &&
+                                    task?.state == LocalTaskState.RUNNING &&
+                                    task.workId == this@CaptureProcessWorker.id.toString()
+                            ) {
+                                val framed = detected.copy(revision = current.revision + 1)
+                                repo.dao.updatePage(framed)
+                                spec = spec.copy(expectedDraftRevision = framed.revision)
+                                repo.dao.putTask(task.copy(payload = spec.encode().toString()))
+                                repo.dao.touch(document, System.currentTimeMillis())
+                            }
+                        }
+                    repo.database.withTransaction {
+                        val current = repo.dao.task(id)
+                        if (
+                            current?.state == LocalTaskState.CANCELLED ||
+                                current?.workId != this@CaptureProcessWorker.id.toString()
+                        )
+                            throw CancellationException("任务已停止")
+                        repo.dao.taskState(id, LocalTaskState.RUNNING, 20, "纸边已准备，正在处理纸面", null)
+                    }
+                    val flat =
+                        if (
+                            // CLEAN is the camera's show-through mode, so it gets the same finished page.
+                            spec.preset.filter in setOf("WORKBOOK", "CLEAN") &&
+                                result.quad != null &&
+                                ScanConfig.int("workbookAutoFlatten", 1) == 1
+                        ) {
+                            CaptureTasks.finishSlot.withLock {
+                                FlatDocument.prepare(
+                                    repo,
+                                    detected,
+                                    spec.preset.aiFinish &&
+                                        cn.paperforge.app.UserSettings[
+                                                cn.paperforge.app.SettingKeys.ScanAiFinish],
+                                    spec.preset.flatAspect,
+                                    workEdge = AutomaticScanBudget.edge(),
+                                    automatic = true,
+                                    progress = { percent ->
+                                        currentCoroutineContext().ensureActive()
+                                        check(
+                                            repo.dao.task(id)?.state != LocalTaskState.CANCELLED
+                                        ) {
+                                            "任务已停止"
+                                        }
+                                        repo.dao.taskState(
+                                            id,
+                                            LocalTaskState.RUNNING,
+                                            20 + percent * 79 / 100,
+                                            if (spec.preset.aiFinish) "纸面展平与 AI 去透页" else "纸面展平与增强",
+                                            null,
+                                        )
+                                    },
+                                )
+                            }
+                        } else null
                     repo.database.withTransaction {
                         val current = repo.dao.task(id)
                         if (
@@ -343,6 +435,7 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                             JSONObject(CaptureMetadata.encode(spec.reference, result))
                                 .put("captureJob", id)
                                 .toString()
+                        var flatTarget: String? = null
                         var detail = if (result.quad == null) "未找到完整纸边，已保留全图" else "纸张已保存"
                         var state =
                             if (result.quad == null) LocalTaskState.PARTIAL
@@ -351,6 +444,7 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                             row.targetPageId != null &&
                                 target?.revision == spec.expectedTargetRevision
                         ) {
+                            flatTarget = target.id
                             repo.savePage(
                                 target.copy(
                                     original = file.path,
@@ -366,7 +460,8 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                             if (
                                 original.revision == spec.expectedDraftRevision &&
                                     original.original == file.path
-                            )
+                            ) {
+                                flatTarget = original.id
                                 repo.dao.updatePage(
                                     original.copy(
                                         corners = (result.quad ?: Quad.Full).encode(),
@@ -378,12 +473,13 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                                         detectionMethod = result.method,
                                     )
                                 )
-                            else {
+                            } else {
                                 state = LocalTaskState.SUCCEEDED
                                 detail = "已保留你对本页的修改"
                             }
                         } else if (row.targetPageId != null) {
                             val position = (pages.maxOfOrNull { it.position } ?: -1) + 1
+                            flatTarget = row.pageId
                             repo.dao.putPage(
                                 spec.preset
                                     .page(checkNotNull(row.pageId), document, position, file.path)
@@ -398,6 +494,22 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                         } else {
                             state = LocalTaskState.SUCCEEDED
                             detail = "本页已移除，原图仍可从任务中查看"
+                        }
+                        if (flat != null) {
+                            val published =
+                                repo.dao.pages(document).firstOrNull { it.id == flatTarget }
+                            if (
+                                published != null &&
+                                    published.original == file.path &&
+                                    published.corners == detected.corners
+                            ) {
+                                repo.savePage(
+                                    flat.copy(id = published.id, position = published.position)
+                                )
+                                detail =
+                                    if (spec.preset.aiFinish) "纸面展平与 AI 去透页已完成，可撤销"
+                                    else "纸面展平已完成，可撤销"
+                            }
                         }
                         repo.dao.touch(document, System.currentTimeMillis())
                         repo.dao.taskState(id, state, 100, detail, null)

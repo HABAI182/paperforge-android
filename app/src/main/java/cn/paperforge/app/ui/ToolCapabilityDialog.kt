@@ -14,19 +14,6 @@ import cn.paperforge.app.UserSettings
 import cn.paperforge.app.model.ToolCapability
 
 @Composable
-fun ToolPinButton(id: String, title: String, pinned: Boolean) {
-    IconButton(onClick = { UserSettings.toggleTool(id) }) {
-        Icon(
-            if (pinned) Icons.Default.Star else Icons.Default.StarBorder,
-            if (pinned) "取消固定$title" else "固定$title",
-            tint =
-                if (pinned) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
-@Composable
 fun ToolCapabilityDialog(capability: ToolCapability, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -37,11 +24,11 @@ fun ToolCapabilityDialog(capability: ToolCapability, onDismiss: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 listOf(
-                        "输入" to capability.input,
-                        "输出" to capability.output,
+                        "输入" to capability.input.ifBlank { "在功能页选择文件，可选格式以文件选择器为准。" },
+                        "输出" to capability.output.ifBlank { capability.detail },
                         "处理方式" to capability.engine,
-                        "可调内容" to capability.parameters,
-                        "结果说明" to capability.boundary,
+                        "可调内容" to capability.parameters.ifBlank { "在功能页选择处理范围与选项。" },
+                        "结果说明" to capability.boundary.ifBlank { capability.detail },
                     )
                     .forEach { (label, value) ->
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {

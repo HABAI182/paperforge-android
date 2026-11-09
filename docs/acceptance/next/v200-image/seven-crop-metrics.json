@@ -1,0 +1,79 @@
+[
+  {
+    "id": "new-1",
+    "darkPixels": 61187,
+    "changedDarkPixels": 0,
+    "changedPixels": 64373,
+    "pixels": 1180140,
+    "milliseconds": [
+      2353,
+      1478
+    ]
+  },
+  {
+    "id": "new-2",
+    "darkPixels": 29228,
+    "changedDarkPixels": 0,
+    "changedPixels": 73445,
+    "pixels": 1514212,
+    "milliseconds": [
+      2894,
+      2092
+    ]
+  },
+  {
+    "id": "new-3",
+    "darkPixels": 50160,
+    "changedDarkPixels": 0,
+    "changedPixels": 4954,
+    "pixels": 1291707,
+    "milliseconds": [
+      2160,
+      1476
+    ]
+  },
+  {
+    "id": "new-4",
+    "darkPixels": 63894,
+    "changedDarkPixels": 0,
+    "changedPixels": 9149,
+    "pixels": 1205400,
+    "milliseconds": [
+      2245,
+      1740
+    ]
+  },
+  {
+    "id": "old-1",
+    "darkPixels": 51906,
+    "changedDarkPixels": 0,
+    "changedPixels": 70730,
+    "pixels": 1160075,
+    "milliseconds": [
+      2301,
+      1566
+    ]
+  },
+  {
+    "id": "old-2",
+    "darkPixels": 52572,
+    "changedDarkPixels": 0,
+    "changedPixels": 9015,
+    "pixels": 1086376,
+    "milliseconds": [
+      1978,
+      1338
+    ]
+  },
+  {
+    "id": "old-3",
+    "darkPixels": 40613,
+    "changedDarkPixels": 0,
+    "changedPixels": 27,
+    "pixels": 950413,
+    "milliseconds": [
+      1584,
+      1070
+    ]
+  }
+]

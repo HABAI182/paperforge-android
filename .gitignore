@@ -12,6 +12,8 @@ bench-results/
 __pycache__/
 *.pyc
 .cxx/
+# Owner-supplied detail weights are local review inputs, never repository/release assets.
+app/src/main/assets/scan/detail.mnn
 
 office-engine/runtime/
 desktop/.venv/
@@ -23,3 +25,10 @@ docs/acceptance/next/special-formats/gb18030-email.pdf
 docs/acceptance/next/special-formats/latex-project-container.pdf
 docs/acceptance/next/special-formats/subset-xps-diagnostic.png
 docs/acceptance/next/special-formats/latex-page-1.png
+
+# Local caches, crash logs and research scratch stay out of the public repository.
+.ruff_cache/
+hs_err_pid*.log
+replay_pid*.log
+*.part
+scripts/*_lab.py

@@ -17,6 +17,13 @@ fun ReaderDisplaySettings(
     page: Int,
     onChange: (ReaderViewOptions) -> Unit,
 ) {
+    Row(
+        Modifier.fillMaxWidth(),
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+    ) {
+        Text("显示参数", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
+        TextButton({ onChange(ReaderViewOptions()) }) { Text("恢复默认") }
+    }
     var expanded by remember { mutableStateOf(false) }
     var scope by remember(page) { mutableStateOf("page:$page") }
     Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {

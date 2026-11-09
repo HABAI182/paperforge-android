@@ -143,7 +143,13 @@ object PdfEngine {
                                 PdfImageEncoder.scan(
                                     doc,
                                     bitmap,
-                                    page.filter,
+                                    if (
+                                        page.filter == "ORIGINAL" &&
+                                            cn.paperforge.app.data.PageResources.metadata(page)
+                                                .has("flatDocument")
+                                    )
+                                        "WORKBOOK"
+                                    else page.filter,
                                     quality,
                                     effectiveDpi,
                                 )

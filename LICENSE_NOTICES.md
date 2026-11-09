@@ -1,5 +1,7 @@
 # 第三方组件声明
 
+PaperForge 自有代码自 2.0.0 起以 GNU AGPL-3.0-or-later 发布，全文见仓库根目录 [LICENSE](LICENSE)。以下第三方组件、模型和字体保留各自的许可。
+
 第三方组件和模型的来源、许可状态与随包记录见下文。
 
 本项目按个人非商用用途开发。项目自身的对外源码发行许可证尚未由所有者指定；以下组件继续受其原许可证/条款约束。
@@ -34,17 +36,7 @@ Includes the Script Property (Scripts-10.0.0.txt). Copyright 2017 Unicode, Inc.
 
 v0.4 directly adapts DocQuadLetterbox.java, DocQuadScore.java and DocQuadPostprocessor.java from MakeACopy (Christian Kierdorf), fixed revision 01bebd394b9dd6f3a692f28aea7c0638085eb4da, Apache-2.0. Package names changed, Lombok and runner-specific overloads removed; original copyright headers retained. The unmodified DocQuadNet-256 ORT inference artifact is bundled under the upstream NOTICE's explicit Apache-2.0 model grant. Full LICENSE/NOTICE, training-provenance caveats and hashes travel in assets/licenses/MakeACopy-* and assets/docquad/provenance.json. Model training overlap and inherited dataset terms are not independently certified.
 
-ONNX Runtime Android 1.24.1 is the official Microsoft Maven artifact, CPU only, MIT plus third-party notices. Exact upstream revision 470ae16099a74fe05e31f2530489332c0525edb5 and AAR/notice hashes are recorded in assets/licenses/ONNXRuntime-provenance.json. Full texts are bundled. In v0.4, CamScanner's provided APK and extracted binaries/source/assets were local research inputs, not shipped dependencies.
-
-v0.5 builds Alibaba MNN 3.6.1 from official source, fixed commit
-d407447ed56c4121a11ccbd266dc184ca1ead0c2 (Apache-2.0), CPU only.
-Full MNN, FlatBuffers and half licenses are bundled in assets/licenses/MNN-*.
-Two recovered third-party model buffers (border.mnn, dewarp.mnn) come from
-the user-provided CamScanner 7.27.5 APK. They are not PaperForge-authored or
-open-source-licensed model weights. APK/model hashes, binary addresses and
-runtime source pin are in assets/scan/provenance.json. No original competitor
-.so or APK shell is bundled or executed. Edge contour fitting is PaperForge's
-implementation; display tracking and dense dewarp core adapt recovered logic.
+ONNX Runtime Android 1.24.1 is the official Microsoft Maven artifact, CPU only, MIT plus third-party notices. Exact upstream revision 470ae16099a74fe05e31f2530489332c0525edb5 and AAR/notice hashes are recorded in assets/licenses/ONNXRuntime-provenance.json. Full texts are bundled.
 
 
 ## 0.6.0 Office 与转换
@@ -74,3 +66,14 @@ JPEG-2000 / PDF JPX 解码使用 [ThalesGroup/JP2ForAndroid 1.1.0](https://githu
 局域网二维码使用ZXing core 3.5.3（Apache-2.0）；随包浏览器增量哈希使用js-sha256 0.11.1（MIT），npm完整性与脚本SHA已核对。完整许可位于network-engine/src/main/assets/licenses，来源见其UPSTREAM.json。
 
 可选联网工具新增Google ML Kit Translate 17.0.3，适用[Google ML Kit SDK条款](https://developers.google.com/ml-kit/terms)，不是开源模型。SDK AAR固定哈希在network-engine/UPSTREAM.json；语言包由用户手动下载/移除，文字翻译在设备本地处理，权重未提交或随APK再打包。
+
+
+## PaperForge PageNet
+
+原创纸张定位网络（约 1 MB ONNX），从随机初始化训练，未加载任何第三方权重。训练场景由 `scripts/page_scenes.py` 生成：程序生成的纸张合成到 COCO val2017 照片（仅作背景，其 Flickr 创作共用条款各异，照片本身不随包）或程序生成的表面。来源记录见 `assets/pagenet/pagenet.json` 与 `docs/PROVENANCE.md`。
+
+## PaperForge Ink v1
+
+原创 537 参数前景遮罩分类器（4,386 字节 ONNX），仅用程序生成的字形与合成噪点训练；只判断原墨迹，不生成替代文字；不使用第三方数据集、模型、机主照片或竞品输出。生成器、校验范围与 SHA256 见 `scripts/train_paper_ink.py`、`retouch/paper-ink-v1.json`。
+
+淡墨残留清理为原创 Kotlin/OpenCV 字节平面实现，含线条与学习前景保护。

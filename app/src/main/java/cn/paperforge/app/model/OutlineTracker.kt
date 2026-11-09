@@ -1,18 +1,17 @@
+// Adapted from phillip9933/open-android-doc-scanner@3ba5c50a64f9be8eaeec47d263b360488e58835b
+// scanner-camera/.../OutlineTracker.kt (Apache-2.0). PaperForge: native Quad/result boundary,
+// configurable smoothing, a confirmation delay before switching page, and a one-frame coast.
 package cn.paperforge.app.model
 
 import kotlin.math.*
 
-/**
- * Display only. Two candidate buffers reject transient jumps; capture always uses raw corners.
- * Adapted from the recovered tracker, with explicit milliseconds and configurable switch latency.
- */
+/** Display only. Capture/edits always use raw detection and original still pixels. */
 class OutlineTracker(private val weight: Float = 3f, private val switchFrames: Int = 2) {
     private var displayed: Quad? = null
     private var pending: Quad? = null
-    private var pendingCount = 0
-    private var signature: List<Float> = emptyList()
-    private var lastTime = 0L
-    private var lastSeen = 0L
+    private var pendingFrames = 0
+    private var missed = 0
+    private var lastTime: Long? = null
     private var viewport: Long? = null
 
     @Synchronized
@@ -23,63 +22,55 @@ class OutlineTracker(private val weight: Float = 3f, private val switchFrames: I
         now: Long,
         epoch: Long = 0,
     ): Quad? {
-        if (viewport != epoch || now <= lastTime || now - lastTime > 600) reset()
-        viewport = epoch
+        val current = displayed
+        val time = lastTime
+        val stale = viewport != epoch || time == null || now <= time || now - time > 600
         lastTime = now
+        viewport = epoch
         if (raw == null || !raw.valid() || !confidence.isFinite() || confidence < .55f) {
             pending = null
-            pendingCount = 0
-            if (now - lastSeen > 260) displayed = null
-            return displayed
+            pendingFrames = 0
+            if (stale || current == null || ++missed > 1) reset() else return current
+            return null
         }
-        lastSeen = now
-        fun distance(a: Quad, b: Quad) =
-            a.points.zip(b.points).maxOf { (x, y) -> max(abs(x.x - y.x), abs(x.y - y.y)) }
-        val old = displayed
-        val contentChanged =
-            signature.size == this.signature.size &&
-                signature.isNotEmpty() &&
-                signature.zip(this.signature).map { (a, b) -> abs(a - b) }.average() > .12
-        if (old == null || contentChanged) {
-            displayed = raw
+        missed = 0
+        if (current == null || stale) return show(raw)
+        if (distance(current, raw) <= .04f) {
             pending = null
-            pendingCount = 0
-        } else if (distance(old, raw) <= 1f / 15) {
-            val w = weight.coerceIn(1f, 8f)
-            // Recovered EMA's old term is evaluated in double, new / weight in float.
-            fun blend(a: Float, b: Float): Float =
-                (((w - 1).toDouble() * a / w) + (b / w).toDouble()).toFloat()
-            displayed =
+            pendingFrames = 0
+            val blend = 1f / weight.coerceAtLeast(1f)
+            return show(
                 Quad(
-                        old.points.zip(raw.points).map { (a, b) ->
-                            PointN(blend(a.x, b.x), blend(a.y, b.y))
+                        current.points.zip(raw.points).map { (a, b) ->
+                            PointN(a.x + (b.x - a.x) * blend, a.y + (b.y - a.y) * blend)
                         }
                     )
                     .takeIf { it.valid() } ?: raw
-            pending = null
-            pendingCount = 0
-        } else {
-            pendingCount =
-                if (pending?.let { distance(it, raw) < 1f / 15 } == true) pendingCount + 1 else 1
-            pending = raw
-            if (pendingCount >= switchFrames.coerceIn(1, 6)) {
-                displayed = raw
-                pending = null
-                pendingCount = 0
-            }
+            )
         }
-        this.signature = signature.toList()
-        return displayed
+        val candidate = pending
+        pendingFrames = if (candidate != null && distance(candidate, raw) <= .04f) pendingFrames + 1 else 1
+        pending = raw
+        return if (pendingFrames >= switchFrames) show(raw) else current
     }
+
+    private fun show(quad: Quad): Quad {
+        pending = null
+        pendingFrames = 0
+        displayed = quad
+        return quad
+    }
+
+    private fun distance(a: Quad, b: Quad) =
+        a.points.zip(b.points).maxOf { (p, q) -> hypot(p.x - q.x, p.y - q.y) }
 
     @Synchronized
     fun reset() {
         displayed = null
         pending = null
-        pendingCount = 0
-        signature = emptyList()
-        lastTime = 0
-        lastSeen = 0
+        pendingFrames = 0
+        missed = 0
+        lastTime = null
         viewport = null
     }
 }

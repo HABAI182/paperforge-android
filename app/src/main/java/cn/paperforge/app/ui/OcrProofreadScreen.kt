@@ -20,14 +20,18 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
+import cn.paperforge.app.SettingKeys
+import cn.paperforge.app.UserSettings
 import cn.paperforge.app.model.*
+import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun OcrProofreadScreen(vm: MainViewModel) {
     val stored by vm.proofPage.collectAsState()
@@ -40,6 +44,8 @@ fun OcrProofreadScreen(vm: MainViewModel) {
     var regional by rememberSaveable { mutableStateOf(false) }
     var lineIndex by rememberSaveable(page?.id) { mutableIntStateOf(0) }
     var wordIndex by rememberSaveable(page?.id) { mutableStateOf<Int?>(null) }
+    var onlySuspects by rememberSaveable(page?.id) { mutableStateOf(false) }
+    var lowestFirst by rememberSaveable { mutableStateOf(false) }
     val regionSaver = remember {
         Saver<OcrRegion, List<Float>>(
             save = { listOf(it.left, it.top, it.right, it.bottom) },
@@ -51,13 +57,46 @@ fun OcrProofreadScreen(vm: MainViewModel) {
             mutableStateOf(OcrRegion(.1f, .1f, .9f, .3f))
         }
     val layout = remember(page?.ocrLayout) { page?.ocrLayout?.let(OcrLayout::decode) }
-    val line = layout?.lines?.getOrNull(lineIndex)
+    val settingsRevision by UserSettings.revision.collectAsState()
+    val threshold =
+        remember(settingsRevision) {
+            OcrConfidence.threshold(UserSettings[SettingKeys.OcrProofreadThreshold])
+        }
+    val flagged =
+        remember(layout, threshold) {
+            layout?.let { OcrConfidence.lowLines(it, threshold) }.orEmpty()
+        }
+    val review =
+        remember(layout, threshold, lowestFirst) {
+            layout?.let { OcrConfidence.queue(it, threshold, lowestFirst) }.orEmpty()
+        }
+    val reviewIndices = review.map { it.line }
+    LaunchedEffect(onlySuspects, reviewIndices) {
+        if (onlySuspects && reviewIndices.isNotEmpty() && lineIndex !in reviewIndices) {
+            lineIndex = reviewIndices.first()
+            wordIndex = null
+        }
+    }
+    val line = if (onlySuspects && review.isEmpty()) null else layout?.lines?.getOrNull(lineIndex)
     val sourceText = wordIndex?.let { line?.elements?.getOrNull(it)?.text } ?: line?.text.orEmpty()
     var draft by
         rememberSaveable(page?.id, lineIndex, wordIndex, sourceText) { mutableStateOf(sourceText) }
     LaunchedEffect(page?.ocrLayout, lineIndex, wordIndex) {
-        if (layout != null && lineIndex > layout.lines.lastIndex)
-            lineIndex = layout.lines.lastIndex.coerceAtLeast(0)
+        val current = layout ?: return@LaunchedEffect
+        if (lineIndex > current.lines.lastIndex)
+            lineIndex = current.lines.lastIndex.coerceAtLeast(0)
+        val words = current.lines.getOrNull(lineIndex)?.elements?.size ?: 0
+        val selectedWord = wordIndex
+        // A whole-line correction clears the element list; do not keep a stale word selection.
+        if (selectedWord != null && selectedWord >= words) wordIndex = null
+    }
+    val jumpLowConfidence: (Boolean) -> Unit = { forward ->
+        val current = layout
+        val target = current?.let { OcrConfidence.stepQueue(lineIndex, reviewIndices, forward) }
+        if (current != null && target != null) {
+            lineIndex = target
+            wordIndex = OcrConfidence.lowWords(current.lines[target], threshold).firstOrNull()
+        }
     }
     val previewPage =
         page?.copy(
@@ -95,6 +134,7 @@ fun OcrProofreadScreen(vm: MainViewModel) {
             TopAppBar(
                 title = { Text("文字校对") },
                 actions = {
+                    TextButton(onClick = vm::undo, enabled = page != null && !busy) { Text("撤销") }
                     TextButton(
                         onClick = { page?.let(vm::exportOcrStructure) },
                         enabled = page != null && layout != null && !busy,
@@ -110,7 +150,7 @@ fun OcrProofreadScreen(vm: MainViewModel) {
             )
         }
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding)) {
+        Column(Modifier.fillMaxSize().padding(padding).imePadding()) {
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -134,6 +174,7 @@ fun OcrProofreadScreen(vm: MainViewModel) {
                     wordIndex,
                     regional,
                     region,
+                    threshold,
                     onSelect = { index, word ->
                         lineIndex = index
                         wordIndex = word
@@ -188,6 +229,22 @@ fun OcrProofreadScreen(vm: MainViewModel) {
                                 Text("可扩大选区到整行，或复制后校正。", style = MaterialTheme.typography.bodySmall)
                         }
                     } else if (line != null && page != null) {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilterChip(
+                                selected = !onlySuspects,
+                                onClick = { onlySuspects = false },
+                                label = { Text("全部行") },
+                            )
+                            FilterChip(
+                                selected = onlySuspects,
+                                onClick = { onlySuspects = true },
+                                label = { Text("只看待核对 ${review.size}") },
+                            )
+                            if (onlySuspects)
+                                TextButton(onClick = { lowestFirst = !lowestFirst }) {
+                                    Text(if (lowestFirst) "最没把握的优先" else "按页面顺序")
+                                }
+                        }
                         Row(
                             Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -195,24 +252,70 @@ fun OcrProofreadScreen(vm: MainViewModel) {
                         ) {
                             TextButton(
                                 onClick = {
-                                    lineIndex--
+                                    if (onlySuspects) jumpLowConfidence(false) else lineIndex--
                                     wordIndex = null
                                 },
-                                enabled = lineIndex > 0,
+                                enabled = if (onlySuspects) review.size > 1 else lineIndex > 0,
                             ) {
-                                Text("上一行")
+                                Text(if (onlySuspects) "上一处" else "上一行")
                             }
-                            Text("${lineIndex+1} / ${layout?.lines?.size ?: 0}")
+                            Text(
+                                if (onlySuspects)
+                                    "${reviewIndices.indexOf(lineIndex) + 1} / ${review.size}"
+                                else "${lineIndex+1} / ${layout?.lines?.size ?: 0}"
+                            )
                             TextButton(
                                 onClick = {
-                                    lineIndex++
+                                    if (onlySuspects) jumpLowConfidence(true) else lineIndex++
                                     wordIndex = null
                                 },
-                                enabled = lineIndex < (layout?.lines?.lastIndex ?: -1),
+                                enabled =
+                                    if (onlySuspects) review.size > 1
+                                    else lineIndex < (layout?.lines?.lastIndex ?: -1),
                             ) {
-                                Text("下一行")
+                                Text(if (onlySuspects) "下一处" else "下一行")
                             }
                         }
+                        OutlinedTextField(
+                            draft,
+                            { draft = it },
+                            label = { Text(if (wordIndex == null) "这一行的文字" else "这个词") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                        )
+                        val changed = draft != sourceText
+                        val hasNext =
+                            if (onlySuspects) review.size > 1
+                            else lineIndex < (layout?.lines?.lastIndex ?: -1)
+                        Button(
+                            onClick = {
+                                if (changed) vm.correctProofLine(page, lineIndex, wordIndex, draft)
+                                if (hasNext) {
+                                    if (onlySuspects) jumpLowConfidence(true) else lineIndex++
+                                    wordIndex = null
+                                }
+                            },
+                            enabled = !busy && (changed || hasNext),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                when {
+                                    changed && hasNext -> "保存并到下一处"
+                                    changed -> "保存"
+                                    hasNext -> "没问题，下一处"
+                                    else -> "已是最后一处"
+                                }
+                            )
+                        }
+                        review
+                            .find { it.line == lineIndex }
+                            ?.let {
+                                Text(
+                                    it.reasons.joinToString(" · "),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.tertiary,
+                                )
+                            }
                         Row(
                             Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -230,20 +333,56 @@ fun OcrProofreadScreen(vm: MainViewModel) {
                                 )
                             }
                         }
-                        OutlinedTextField(
-                            draft,
-                            { draft = it },
-                            label = { Text(if (wordIndex == null) "当前行" else "当前词") },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                        )
-                        Button(
-                            onClick = { vm.correctProofLine(page, lineIndex, wordIndex, draft) },
-                            enabled = !busy,
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text("保存这一处")
+                        val selectedWord = wordIndex
+                        val currentConfidence =
+                            if (selectedWord == null) line.confidence
+                            else line.elements.getOrNull(selectedWord)?.confidence
+                        val currentLow = OcrConfidence.isLow(currentConfidence, threshold)
+                        if (currentLow)
+                            Text(
+                                "这一${if (wordIndex == null) "行" else "词"}识别把握较低，请核对" +
+                                    (currentConfidence?.let { "（${(it * 100).roundToInt()}%）" } ?: ""),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        val candidates =
+                            remember(line, wordIndex) {
+                                if (wordIndex != null || line.corrected) emptyList()
+                                else
+                                    line.hypotheses
+                                        .map { it.text }
+                                        .filter { it.isNotBlank() && it != line.text }
+                                        .distinct()
+                            }
+                        if (candidates.isNotEmpty()) {
+                            Text(
+                                "其他可能的写法，点一下填入",
+                                style = MaterialTheme.typography.labelLarge,
+                            )
+                            Row(
+                                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                candidates.forEach { candidate ->
+                                    FilterChip(
+                                        selected = draft == candidate,
+                                        onClick = { draft = candidate },
+                                        label = { Text(candidate) },
+                                    )
+                                }
+                            }
+                        } else if (currentLow) {
+                            Text(
+                                "没有其他可能的写法，请直接修改。",
+                                style = MaterialTheme.typography.bodySmall,
+                            )
                         }
+                    } else if (onlySuspects && layout != null) {
+                        Text(
+                            "没有待核对的地方。其他文字仍可在全部行中校对。",
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                        TextButton(onClick = { onlySuspects = false }) { Text("查看全部行") }
                     } else {
                         Text(
                             if (page?.ocrText.isNullOrBlank()) "先识别本页文字，或直接框选一个区域。"
@@ -293,13 +432,17 @@ private fun ProofCanvas(
     word: Int?,
     regional: Boolean,
     region: OcrRegion,
+    threshold: Float,
     onSelect: (Int, Int?) -> Unit,
     onRegion: (OcrRegion) -> Unit,
     error: String? = null,
 ) {
     var zoom by remember { mutableFloatStateOf(1f) }
     var anchor by remember { mutableStateOf(PointN(.5f, .5f)) }
+    var showText by rememberSaveable { mutableStateOf(false) }
+    val textPaint = remember { android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { color = android.graphics.Color.rgb(24, 24, 24) } }
     val color = MaterialTheme.colorScheme.primary
+    val warning = MaterialTheme.colorScheme.error
     val line = layout?.lines?.getOrNull(selected)
     val polygon = word?.let { line?.elements?.getOrNull(it)?.corners } ?: line?.corners
     val center =
@@ -316,6 +459,10 @@ private fun ProofCanvas(
             Modifier.fillMaxWidth().padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.End,
         ) {
+            if (!regional && layout != null)
+                TextButton(onClick = { showText = !showText }) {
+                    Text(if (showText) "看原图" else "看识别文字")
+                }
             TextButton(
                 onClick = {
                     anchor =
@@ -340,18 +487,60 @@ private fun ProofCanvas(
                 val frame =
                     if (maxWidth / maxHeight > ratio) Modifier.fillMaxHeight().aspectRatio(ratio)
                     else Modifier.fillMaxWidth().aspectRatio(ratio)
+                val shownZoom by androidx.compose.animation.core.animateFloatAsState(zoom, label = "proof-zoom")
+                val shownX by androidx.compose.animation.core.animateFloatAsState(center.x, label = "proof-x")
+                val shownY by androidx.compose.animation.core.animateFloatAsState(center.y, label = "proof-y")
                 Box(
                     frame.graphicsLayer {
-                        scaleX = zoom
-                        scaleY = zoom
-                        val limit = (zoom - 1) / 2
+                        scaleX = shownZoom
+                        scaleY = shownZoom
+                        val limit = (shownZoom - 1) / 2
                         translationX =
-                            ((.5f - center.x) * zoom).coerceIn(-limit, limit) * size.width
+                            ((.5f - shownX) * shownZoom).coerceIn(-limit, limit) * size.width
                         translationY =
-                            ((.5f - center.y) * zoom).coerceIn(-limit, limit) * size.height
+                            ((.5f - shownY) * shownZoom).coerceIn(-limit, limit) * size.height
                     }
                 ) {
                     Image(bitmap.asImageBitmap(), "校对原图", Modifier.fillMaxSize())
+                    androidx.compose.animation.AnimatedVisibility(
+                        showText && !regional,
+                        Modifier.fillMaxSize(),
+                        enter = androidx.compose.animation.fadeIn(),
+                        exit = androidx.compose.animation.fadeOut(),
+                    ) {
+                        Canvas(Modifier.fillMaxSize().background(Color.White)) {
+                            drawContext.canvas.nativeCanvas.let { native ->
+                                layout?.lines?.forEach { item ->
+                                    if (item.corners.isEmpty()) return@forEach
+                                    val top = item.corners.minOf { it.y } * size.height
+                                    val bottom = item.corners.maxOf { it.y } * size.height
+                                    if (item.elements.isNotEmpty())
+                                        item.elements.forEach { element ->
+                                            if (element.corners.isNotEmpty())
+                                                drawTextInBox(
+                                                    native,
+                                                    textPaint,
+                                                    element.text,
+                                                    element.corners.minOf { it.x } * size.width,
+                                                    top,
+                                                    element.corners.maxOf { it.x } * size.width,
+                                                    bottom,
+                                                )
+                                        }
+                                    else
+                                        drawTextInBox(
+                                            native,
+                                            textPaint,
+                                            item.text,
+                                            item.corners.minOf { it.x } * size.width,
+                                            top,
+                                            item.corners.maxOf { it.x } * size.width,
+                                            bottom,
+                                        )
+                                }
+                            }
+                        }
+                    }
                     Canvas(
                         Modifier.fillMaxSize().pointerInput(regional, layout) {
                             if (regional) {
@@ -414,12 +603,32 @@ private fun ProofCanvas(
                             drawPath(path, tint, style = Stroke(width))
                         }
                         layout?.lines?.forEachIndexed { index, item ->
+                            val low = OcrConfidence.review(item, threshold).isNotEmpty()
                             outline(
                                 item.corners,
-                                if (!regional && index == selected) color
-                                else color.copy(alpha = .25f),
-                                if (index == selected) 1.1.dp.toPx() / zoom else .5.dp.toPx() / zoom,
+                                when {
+                                    !regional && index == selected -> color
+                                    low -> warning
+                                    else -> color.copy(alpha = .25f)
+                                },
+                                when {
+                                    !regional && index == selected -> 1.1.dp.toPx() / zoom
+                                    low -> .9.dp.toPx() / zoom
+                                    else -> .5.dp.toPx() / zoom
+                                },
                             )
+                        }
+                        if (!regional) {
+                            layout?.lines?.forEachIndexed { index, item ->
+                                OcrConfidence.lowWords(item, threshold).forEach { lowWord ->
+                                    if (index != selected || lowWord != word)
+                                        outline(
+                                            item.elements[lowWord].corners,
+                                            warning,
+                                            .9.dp.toPx() / zoom,
+                                        )
+                                }
+                            }
                         }
                         if (!regional && word != null && polygon != null)
                             outline(polygon, color, 1.4.dp.toPx() / zoom)

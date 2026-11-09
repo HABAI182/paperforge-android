@@ -19,9 +19,12 @@ data class UpdateCandidate(
     val releaseUrl: String,
     val channel: String,
     val abis: List<String>,
+    /** Other places to fetch the same file from, tried in order when [assetUrl] fails. */
+    val mirrors: List<String> = emptyList(),
 ) {
     fun json() =
         JSONObject()
+            .put("mirrors", JSONArray(mirrors))
             .put("packageName", packageName)
             .put("title", title)
             .put("versionName", versionName)
@@ -48,6 +51,7 @@ data class UpdateCandidate(
                 j.getString("releaseUrl"),
                 j.getString("channel"),
                 j.getJSONArray("abis").let { a -> List(a.length()) { a.getString(it) } },
+                j.optJSONArray("mirrors")?.let { a -> List(a.length()) { a.getString(it) } }.orEmpty(),
             )
     }
 }
@@ -65,7 +69,13 @@ class GitHubUpdates(
     private val token: String,
     private val apiRoot: String = "https://api.github.com",
     private val integrated: Boolean = false,
+    /** Where public release files are served, and the mirrors in front of it; tests point these at a local server. */
+    private val webRoot: String = "https://github.com",
+    private val mirrors: List<String> = mirrorPrefixes,
 ) {
+    /** [path] on [webRoot], then the same file through each mirror, in the order to try them. */
+    private fun sources(path: String): List<String> = (webRoot + path).let { direct -> listOf(direct) + mirrors.map { it + direct } }
+
     companion object {
         val packages =
             linkedMapOf(
@@ -116,6 +126,13 @@ class GitHubUpdates(
 
         fun compatible(abis: List<String>, supported: List<String>) =
             abis.isEmpty() || abis.any { it in supported }
+
+        /**
+         * Public GitHub download proxies that are usually reachable from mainland China, where github.com often
+         * stalls. They only carry the bytes: every file is still checked against the release's SHA256, and an APK
+         * must also carry PaperForge's own signature, so a proxy cannot slip in a different file.
+         */
+        val mirrorPrefixes = listOf("https://ghfast.top/", "https://gh-proxy.com/", "https://ghproxy.net/")
     }
 
     suspend fun connect(
@@ -194,6 +211,11 @@ class GitHubUpdates(
         }
     }
 
+    /**
+     * The newest installable files. When the GitHub API cannot be reached, as often happens on an unsteady line in
+     * mainland China, a public repository's latest release is read from its own release manifest, fetched from
+     * github.com or a mirror.
+     */
     suspend fun check(
         repository: String,
         channel: String,
@@ -204,6 +226,74 @@ class GitHubUpdates(
         require(parts.size == 2 && parts.all { it.matches(Regex("[A-Za-z0-9_.-]+")) }) {
             "仓库格式应为 用户名/仓库名"
         }
+        return try {
+            checkApi(parts, channel, installed, supported)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            if (token.isNotBlank() || channel == "development") throw e
+            checkLatest(parts, installed, supported) ?: throw e
+        }
+    }
+
+    /** The latest release's manifest, from github.com or a mirror; null when none of them answers. */
+    private suspend fun checkLatest(
+        parts: List<String>,
+        installed: Map<String, InstalledPackage>,
+        supported: List<String>,
+    ): UpdateCheck? {
+        val base = "/${parts[0]}/${parts[1]}/releases/latest/download/"
+        for (source in sources(base + "release-manifest.json")) {
+            currentCoroutineContext().ensureActive()
+            val data = runCatching { JSONObject(text(source, true)) }.getOrNull() ?: continue
+            val items = data.optJSONArray("artifacts") ?: continue
+            if (integrated && data.optString("distribution") != "full") return UpdateCheck(emptyList(), 1, emptyList())
+            val groupChannel = data.optString("channel", "stable")
+            val warnings = mutableListOf("GitHub 接口暂时无法连接，已通过发布清单检查最新版本")
+            val candidates = mutableListOf<UpdateCandidate>()
+            for (j in 0 until items.length()) {
+                val item = items.getJSONObject(j)
+                val id = item.optString("applicationId")
+                if (id !in packages || integrated && id != "cn.paperforge.app") continue
+                val code = item.getLong("versionCode")
+                if (code <= (installed[id]?.versionCode ?: 0)) continue
+                val abiArray = item.getJSONArray("abis")
+                val abis = List(abiArray.length()) { abiArray.getString(it) }
+                if (!compatible(abis, supported)) {
+                    warnings += "最新版本没有适配当前设备架构的安装包"
+                    continue
+                }
+                val hash = item.getString("sha256").lowercase()
+                if (!hash.matches(Regex("[0-9a-f]{64}"))) continue
+                val file = item.getString("file")
+                val urls = sources(base + file)
+                candidates +=
+                    UpdateCandidate(
+                        id,
+                        packages.getValue(id),
+                        item.getString("versionName"),
+                        code,
+                        file,
+                        item.getLong("bytes"),
+                        hash,
+                        urls.first(),
+                        "$webRoot/${parts[0]}/${parts[1]}/releases/latest",
+                        groupChannel,
+                        abis,
+                        urls.drop(1),
+                    )
+            }
+            return UpdateCheck(candidates.groupBy { it.packageName }.values.map { g -> g.maxBy { it.versionCode } }, 1, warnings)
+        }
+        return null
+    }
+
+    private suspend fun checkApi(
+        parts: List<String>,
+        channel: String,
+        installed: Map<String, InstalledPackage>,
+        supported: List<String>,
+    ): UpdateCheck {
         val root = "$apiRoot/repos/${parts[0]}/${parts[1]}"
         val candidates = mutableListOf<UpdateCandidate>()
         val warnings = mutableListOf<String>()
@@ -228,6 +318,10 @@ class GitHubUpdates(
                 val tag = release.getString("tag_name")
                 val releaseUrl = release.getString("html_url")
                 fun url(asset: JSONObject) = "$root/releases/assets/${asset.getLong("id")}"
+                // A public repository's files can also be fetched without the API, directly and through mirrors.
+                fun mirrors(asset: JSONObject) =
+                    if (token.isNotBlank()) emptyList()
+                    else sources("/${parts[0]}/${parts[1]}/releases/download/$tag/${asset.getString("name")}")
                 val manifests =
                     files.values.filter { it.getString("name").endsWith("release-manifest.json") }
                 if (manifests.isNotEmpty()) {
@@ -276,6 +370,7 @@ class GitHubUpdates(
                                     releaseUrl,
                                     groupChannel,
                                     abis,
+                                    mirrors(asset),
                                 )
                         }
                     }
@@ -350,6 +445,7 @@ class GitHubUpdates(
                                 releaseUrl,
                                 if (release.optBoolean("prerelease")) "prerelease" else "stable",
                                 abis,
+                                mirrors(asset),
                             )
                     }
                 }

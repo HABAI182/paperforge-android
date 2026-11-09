@@ -21,6 +21,8 @@ class PdfSession(val file: File, cacheBytes: Int = 40 * 1024 * 1024) : AutoClose
         }
     val count = renderer.pageCount
     private var closed = false
+    // The renderer leaves out annotations, so pen marks are drawn over each page here.
+    private val ink by lazy { cn.paperforge.app.pdf.PdfInk.read(file) }
     private val cache =
         object : LruCache<String, Bitmap>(cacheBytes) {
             override fun sizeOf(key: String, value: Bitmap) = value.allocationByteCount
@@ -42,6 +44,7 @@ class PdfSession(val file: File, cacheBytes: Int = 40 * 1024 * 1024) : AutoClose
                     .also {
                         it.eraseColor(AndroidColor.WHITE)
                         page.render(it, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                        ink[n]?.let { marks -> cn.paperforge.app.pdf.PdfInk.draw(it, marks, scale) }
                         cache.put(key, it)
                     }
             }
@@ -83,6 +86,7 @@ class PdfSession(val file: File, cacheBytes: Int = 40 * 1024 * 1024) : AutoClose
                             postTranslate(-left.toFloat(), -top.toFloat())
                         }
                     page.render(result, null, matrix, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                    ink[n]?.let { cn.paperforge.app.pdf.PdfInk.draw(result, it, scale, left.toFloat(), top.toFloat()) }
                     cache.put(key, result)
                     result
                 }

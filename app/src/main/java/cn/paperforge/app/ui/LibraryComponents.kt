@@ -45,7 +45,7 @@ fun LibraryFilterControls(
     onSort: (String) -> Unit,
 ) {
     Row(
-        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+        Modifier.fillMaxWidth().rootSwipeChild().horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         libraryCollections.forEach { (key, title) ->
@@ -53,7 +53,7 @@ fun LibraryFilterControls(
         }
     }
     Row(
-        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+        Modifier.fillMaxWidth().rootSwipeChild().horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         librarySorts.forEach { (key, title) ->

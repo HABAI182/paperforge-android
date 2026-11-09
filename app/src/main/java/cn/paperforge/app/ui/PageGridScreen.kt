@@ -227,7 +227,7 @@ fun MergeScreen(vm: MainViewModel) {
             TopAppBar(
                 title = { Text("合并顺序") },
                 navigationIcon = {
-                    IconButton(onClick = { vm.screen.value = "home" }) {
+                    IconButton(onClick = returnAction { vm.screen.value = "home" }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回")
                     }
                 },

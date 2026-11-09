@@ -46,17 +46,7 @@ aliases for reliable PDF copy/search. Source: google/fonts/ofl/notosanssc.
 
 v0.4 directly adapts DocQuadLetterbox.java, DocQuadScore.java and DocQuadPostprocessor.java from MakeACopy (Christian Kierdorf), fixed revision 01bebd394b9dd6f3a692f28aea7c0638085eb4da, Apache-2.0. Package names changed, Lombok and runner-specific overloads removed; original copyright headers retained. The unmodified DocQuadNet-256 ORT inference artifact is bundled under the upstream NOTICE's explicit Apache-2.0 model grant. Full LICENSE/NOTICE, training-provenance caveats and hashes travel in assets/licenses/MakeACopy-* and assets/docquad/provenance.json. Model training overlap and inherited dataset terms are not independently certified.
 
-ONNX Runtime Android 1.24.1 is the official Microsoft Maven artifact, CPU only, MIT plus third-party notices. Exact upstream revision 470ae16099a74fe05e31f2530489332c0525edb5 and AAR/notice hashes are recorded in assets/licenses/ONNXRuntime-provenance.json. Full texts are bundled. In v0.4, CamScanner's provided APK and extracted binaries/source/assets were local research inputs, not shipped dependencies.
-
-v0.5 builds Alibaba MNN 3.6.1 from official source, fixed commit
-d407447ed56c4121a11ccbd266dc184ca1ead0c2 (Apache-2.0), CPU only.
-Full MNN, FlatBuffers and half licenses are bundled in assets/licenses/MNN-*.
-Two recovered third-party model buffers (border.mnn, dewarp.mnn) come from
-the user-provided CamScanner 7.27.5 APK. They are not PaperForge-authored or
-open-source-licensed model weights. APK/model hashes, binary addresses and
-runtime source pin are in assets/scan/provenance.json. No original competitor
-.so or APK shell is bundled or executed. Edge contour fitting is PaperForge's
-implementation; display tracking and dense dewarp core adapt recovered logic.
+ONNX Runtime Android 1.24.1 is the official Microsoft Maven artifact, CPU only, MIT plus third-party notices. Exact upstream revision 470ae16099a74fe05e31f2530489332c0525edb5 and AAR/notice hashes are recorded in assets/licenses/ONNXRuntime-provenance.json. Full texts are bundled.
 
 Next development integrates PaddleOCR Android SDK source, Apache-2.0,
 Copyright (c) 2026 PaddlePaddle Authors. Fixed revision
@@ -77,3 +67,21 @@ permission remains removed from the application.
 
 
 扫描清理与修复使用 Picsart AI Research 的 MI-GAN pipeline v2（MIT，模型由用户单独导入），以及 ONNX Model Zoo 的 Sub-Pixel CNN 3× 超分模型（Apache-2.0，240,078 字节随包）。固定来源、版本、输入输出与 SHA256 位于 app/src/main/assets/retouch/models.json；完整许可随包保存在 retouch/LICENSE-MIGAN、retouch/LICENSE-SR。两者均在本机推理。
+
+DocRes appearance restoration (CVPR 2024), Jiaxin Zhang et al. (MIT), with the Restormer backbone, Syed Waqas Zamir et al. (MIT).
+PaperForge exports the fixed-patch model to ONNX and applies symmetric int8 weight packaging, observed-tone transfer, cancellable tile inference and line-preserving cleanup.
+Source commits, model hashes and changes: retouch/docres-provenance.json. Full licenses: retouch/LICENSE-DOCRES and retouch/LICENSE-RESTORMER.
+
+
+PaperForge PageNet: an original page-location network, trained from random initialisation with
+no third-party weights. Training scenes are procedural sheets composited over COCO val2017
+photographs, used as backgrounds and not redistributed (those photographs carry Flickr's various
+Creative Commons terms), or over procedural surfaces. Provenance: pagenet/pagenet.json.
+
+PaperForge Ink v1: an original 537-parameter ONNX foreground matte classifier, trained only
+on procedurally generated glyphs and synthetic noise. It gates existing ink and never
+generates replacement text. No third-party dataset, model, owner photo or competitor output
+is used. Generator and checksums: scripts/train_paper_ink.py, retouch/paper-ink-v1.json.
+
+Faint-residual cleanup is original Kotlin/OpenCV byte-plane logic with line and
+learned-foreground protection.

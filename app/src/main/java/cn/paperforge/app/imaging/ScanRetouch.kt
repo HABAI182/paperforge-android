@@ -27,13 +27,15 @@ data class RetouchRequest(
     val strength: Float = 1f,
     val strokes: List<RetouchStroke> = emptyList(),
     val modelSha: String =
-        if (mode == "MIGAN") RetouchModels.MIGAN_SHA
+        if (mode in setOf("AI_CLEAN", "FLAT_SCAN")) NeuralPaper.SHA
+        else if (mode == "MIGAN") RetouchModels.MIGAN_SHA
         else if (mode == "SR") RetouchModels.SR_SHA else "",
 ) {
     fun json() =
         JSONObject()
             .put("version", 1)
             .put("algorithm", ScanRetouch.VERSION)
+            .put("enhancement", ScanConfig.fingerprint())
             .put("mode", mode)
             .put("strength", strength)
             .put("modelSha", modelSha)
@@ -80,9 +82,11 @@ data class RetouchRequest(
 
 /** Selected pixels only. Learned output is composited over a byte-identical unselected source. */
 object ScanRetouch {
-    const val VERSION = "retouch-1"
+    const val VERSION = "retouch-10"
     val modes =
         linkedMapOf(
+            "FLAT_SCAN" to "扁平文档",
+            "AI_CLEAN" to "AI 去透页",
             "REPAIR" to "局部修补",
             "MIGAN" to "智能填补",
             "INK" to "彩色笔迹",
@@ -128,6 +132,15 @@ object ScanRetouch {
             require(request.mode in modes) { "未知修复方式" }
             val w = source.width
             val h = source.height
+            if (request.mode == "FLAT_SCAN") {
+                require(request.modelSha == NeuralPaper.SHA)
+                return@withContext FlatDocument.process(context, source, request.strength, progress)
+                    .bitmap
+            }
+            if (request.mode == "AI_CLEAN") {
+                require(request.modelSha == NeuralPaper.SHA) { "前景分离模型已变化，请重新提交" }
+                return@withContext NeuralPaper.apply(context, source, request.strength, progress)
+            }
             val selected = IntArray(w * h)
             mask(w, h, request.strokes).also {
                 it.getPixels(selected, 0, w, 0, 0, w, h)
@@ -405,30 +418,27 @@ object ScanRetouch {
     }
 
     /** 224px fixed model, 16px context on each side. Crop context instead of stitching seams. */
-    private suspend fun superResolve(
+    internal suspend fun superResolve(
         context: Context,
         source: Bitmap,
         selected: IntArray,
         strength: Float,
         progress: suspend (Int) -> Unit,
+        maximumEdge: Int = ScanConfig.int("superResolutionMaximumEdge", 4096),
     ): Bitmap {
-        val scale = min(1f, 4096f / (3 * max(source.width, source.height)))
-        val low =
-            Bitmap.createScaledBitmap(
-                source,
-                max(1, (source.width * scale).roundToInt()),
-                max(1, (source.height * scale).roundToInt()),
-                true,
-            )
-        val w = low.width
-        val h = low.height
-        val width = w * 3
-        val height = h * 3
+        // Infer on native source pixels. The old 4096/3 working resize discarded fine ink
+        // before inference, even when the source already had more usable detail.
+        val w = source.width
+        val h = source.height
+        val cap = max(max(w, h), maximumEdge)
+        val scale = min(3f, cap.toFloat() / max(w, h))
+        val width = max(w, (w * scale).roundToInt())
+        val height = max(h, (h * scale).roundToInt())
+        val scaleX = width.toFloat() / w
+        val scaleY = height.toFloat() / h
         val baseline = Bitmap.createScaledBitmap(source, width, height, true)
         val result = baseline.copy(Bitmap.Config.ARGB_8888, true)
-        if (baseline !== source && baseline !== low) baseline.recycle()
-        val sourcePixels = IntArray(w * h)
-        low.getPixels(sourcePixels, 0, w, 0, 0, w, h)
+        if (baseline !== source) baseline.recycle()
         val env = OrtEnvironment.getEnvironment()
         val stride = 192
         val total = ceil(w / stride.toDouble()).toInt() * ceil(h / stride.toDouble()).toInt()
@@ -437,11 +447,25 @@ object ScanRetouch {
             RetouchModels.session(context, false).use { session ->
                 for (top in 0 until h step stride) for (left in 0 until w step stride) {
                     currentCoroutineContext().ensureActive()
+                    val readLeft = max(0, left - 16)
+                    val readTop = max(0, top - 16)
+                    val readWidth = min(w, left + 208) - readLeft
+                    val readHeight = min(h, top + 208) - readTop
+                    val sourcePixels = IntArray(readWidth * readHeight)
+                    source.getPixels(
+                        sourcePixels,
+                        0,
+                        readWidth,
+                        readLeft,
+                        readTop,
+                        readWidth,
+                        readHeight,
+                    )
                     val values =
                         FloatArray(224 * 224) { i ->
                             val x = (left + i % 224 - 16).coerceIn(0, w - 1)
                             val y = (top + i / 224 - 16).coerceIn(0, h - 1)
-                            val c = sourcePixels[y * w + x]
+                            val c = sourcePixels[(y - readTop) * readWidth + x - readLeft]
                             (.299f * (c shr 16 and 255) +
                                 .587f * (c shr 8 and 255) +
                                 .114f * (c and 255)) / 255f
@@ -455,10 +479,14 @@ object ScanRetouch {
                             .use { input ->
                                 session.run(mapOf("input" to input)).use { out ->
                                     val luminance = (out[0] as OnnxTensor).floatBuffer
-                                    val tw = min(stride, w - left) * 3
-                                    val th = min(stride, h - top) * 3
+                                    val outputLeft = (left * scaleX).roundToInt()
+                                    val outputTop = (top * scaleY).roundToInt()
+                                    val tw =
+                                        (min(left + stride, w) * scaleX).roundToInt() - outputLeft
+                                    val th =
+                                        (min(top + stride, h) * scaleY).roundToInt() - outputTop
                                     val pixels = IntArray(tw * th)
-                                    result.getPixels(pixels, 0, tw, left * 3, top * 3, tw, th)
+                                    result.getPixels(pixels, 0, tw, outputLeft, outputTop, tw, th)
                                     for (y in 0 until th) for (x in 0 until tw) {
                                         val i = y * tw + x
                                         val c = pixels[i]
@@ -466,9 +494,36 @@ object ScanRetouch {
                                         val g = c shr 8 and 255
                                         val b = c and 255
                                         val oldY = .299f * r + .587f * g + .114f * b
-                                        val delta =
-                                            luminance[(y + 48) * 672 + x + 48].coerceIn(0f, 1f) *
+                                        val modelX =
+                                            (((outputLeft + x + .5f) / scaleX - left + 16) * 3 -
+                                                    .5f)
+                                                .coerceIn(0f, 670f)
+                                        val modelY =
+                                            (((outputTop + y + .5f) / scaleY - top + 16) * 3 - .5f)
+                                                .coerceIn(0f, 670f)
+                                        val ix = floor(modelX).toInt()
+                                        val iy = floor(modelY).toInt()
+                                        val fx = modelX - ix
+                                        val fy = modelY - iy
+                                        val first =
+                                            luminance[iy * 672 + ix] * (1 - fx) +
+                                                luminance[iy * 672 + ix + 1] * fx
+                                        val second =
+                                            luminance[(iy + 1) * 672 + ix] * (1 - fx) +
+                                                luminance[(iy + 1) * 672 + ix + 1] * fx
+                                        val predictedDelta =
+                                            (first * (1 - fy) + second * fy).coerceIn(0f, 1f) *
                                                 255 - oldY
+                                        // Refine observed ink, without adding a gray SR texture to
+                                        // already-white paper. Keep the source antialias fringe.
+                                        val inkSupport =
+                                            ((255f - oldY) /
+                                                    ScanConfig.float("superResolutionInkRamp", 16f)
+                                                        .coerceAtLeast(1f))
+                                                .coerceIn(0f, 1f)
+                                        val delta =
+                                            if (predictedDelta < 0) predictedDelta * inkSupport
+                                            else predictedDelta
                                         val altered =
                                             Color.rgb(
                                                 (r + delta).roundToInt().coerceIn(0, 255),
@@ -476,12 +531,12 @@ object ScanRetouch {
                                                 (b + delta).roundToInt().coerceIn(0, 255),
                                             )
                                         val sx =
-                                            ((left * 3 + x) * source.width / width).coerceIn(
+                                            ((outputLeft + x) * source.width / width).coerceIn(
                                                 0,
                                                 source.width - 1,
                                             )
                                         val sy =
-                                            ((top * 3 + y) * source.height / height).coerceIn(
+                                            ((outputTop + y) * source.height / height).coerceIn(
                                                 0,
                                                 source.height - 1,
                                             )
@@ -494,7 +549,7 @@ object ScanRetouch {
                                                     255f,
                                             )
                                     }
-                                    result.setPixels(pixels, 0, tw, left * 3, top * 3, tw, th)
+                                    result.setPixels(pixels, 0, tw, outputLeft, outputTop, tw, th)
                                 }
                             }
                     }
@@ -505,8 +560,6 @@ object ScanRetouch {
         } catch (e: Throwable) {
             result.recycle()
             throw e
-        } finally {
-            if (low !== source) low.recycle()
         }
     }
 }

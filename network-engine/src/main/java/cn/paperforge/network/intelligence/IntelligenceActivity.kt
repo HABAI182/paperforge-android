@@ -341,7 +341,7 @@ private fun IntelligenceScreen(vm: IntelligenceModel, back: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             item {
-                Text("读懂文档，保留依据。", style = MaterialTheme.typography.headlineSmall)
+                Text("读懂文档，保留依据", style = MaterialTheme.typography.headlineSmall)
                 Text("手动选择原文与运行方式。结果独立保存，原始 OCR 和文档保持不变。")
             }
             item {

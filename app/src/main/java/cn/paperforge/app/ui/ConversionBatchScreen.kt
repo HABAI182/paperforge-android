@@ -1,7 +1,5 @@
 package cn.paperforge.app.ui
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -45,15 +43,11 @@ fun ConversionBatchScreen(vm: MainViewModel) {
     var recent by remember { mutableStateOf(false) }
     var replaceId by rememberSaveable { mutableStateOf("") }
     var pickerPreset by remember { mutableStateOf(common) }
-    val picker =
-        rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
-            vm.batches.add(uris, pickerPreset)
-        }
-    val replacement =
-        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-            if (uri != null && replaceId.isNotBlank()) vm.batches.replace(replaceId, uri)
-            replaceId = ""
-        }
+    val picker = rememberPaperDocumentsPicker { uris -> vm.batches.add(uris, pickerPreset) }
+    val replacement = rememberPaperDocumentPicker { uri ->
+        if (uri != null && replaceId.isNotBlank()) vm.batches.replace(replaceId, uri)
+        replaceId = ""
+    }
     edit?.let { request ->
         BatchPresetDialog(request.preset, onDismiss = { edit = null }) { value ->
             if (request.ids.isEmpty()) {

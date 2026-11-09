@@ -31,12 +31,25 @@ object RetouchJobs {
         }
     }
 
-    suspend fun enqueue(repo: Repository, page: PageRow, request: RetouchRequest): UUID {
+    suspend fun enqueue(
+        repo: Repository,
+        page: PageRow,
+        request: RetouchRequest,
+        inPlace: Boolean = false,
+    ): UUID {
         val directory =
             File(repo.context.filesDir, "retouch-inputs/${UUID.randomUUID()}").apply { mkdirs() }
         val image = File(directory, "source.png")
         val recipe = File(directory, "request.json")
-        val bitmap = ScanProcessor.render(page, 2400)
+        val bitmap =
+            ScanProcessor.render(
+                if (request.mode in setOf("AI_CLEAN", "FLAT_SCAN"))
+                    PageResources.sourceAppearance(page)
+                        .copy(filter = "ORIGINAL", brightness = 0f, contrast = 1f)
+                else page,
+                if (request.mode == "FLAT_SCAN") AutomaticScanBudget.edge()
+                else if (request.mode == "SR") 4000 else 2400,
+            )
         try {
             image.outputStream().use { check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)) }
         } finally {
@@ -50,6 +63,13 @@ object RetouchJobs {
                 .put("documentId", page.documentId)
                 .put("pageId", page.id)
                 .put("ordinal", page.position + 1)
+                .put("revision", page.revision)
+                .put("aspect", page.outputAspect)
+                .put(
+                    "preserveAspect",
+                    cn.paperforge.app.UserSettings[cn.paperforge.app.SettingKeys.FlatPaper] ==
+                        "SOURCE",
+                )
                 .put("title", source.title)
                 .toString()
         )
@@ -61,7 +81,8 @@ object RetouchJobs {
                     .put("kind", "SCAN_RETOUCH")
                     .put("document", page.documentId)
                     .put("page", page.id)
-                    .put("name", source.title + " · 修复副本")
+                    .put("inPlace", inPlace)
+                    .put("name", if (inPlace) source.title else source.title + " · 修复副本")
                     .put("inputs", JSONArray(listOf(image.path, recipe.path)))
             ),
         )
@@ -99,10 +120,30 @@ object RetouchJobs {
         val image = BitmapFactory.decodeFile(inputs[0].path) ?: error("无法打开修复原图")
         val result =
             try {
-                ScanRetouch.apply(repo.context, image, request) { percent ->
-                    DocumentJobs.checkCurrent(repo, job)
-                    progress(percent, "${ScanRetouch.modes[request.mode]} · 保留原件")
-                }
+                if (request.mode == "FLAT_SCAN") {
+                    val frozenRecipe = JSONObject(inputs[1].readText())
+                    val flat =
+                        FlatDocument.process(
+                            repo.context,
+                            image,
+                            request.strength,
+                            progress = { percent ->
+                                DocumentJobs.checkCurrent(repo, job)
+                                progress(percent, "正在更新当前页的练习册效果")
+                            },
+                            aspectOverride =
+                                frozenRecipe.optDouble("aspect", 0.0).toFloat().takeIf { it > 0f }
+                                    ?: if (frozenRecipe.optBoolean("preserveAspect")) 0f else null,
+                            automatic = true,
+                        )
+                    val gridFile = File(output.path + ".pfgrid.gz")
+                    if (!gridFile.exists()) flat.grid.write(gridFile)
+                    flat.bitmap
+                } else
+                    ScanRetouch.apply(repo.context, image, request) { percent ->
+                        DocumentJobs.checkCurrent(repo, job)
+                        progress(percent, "${ScanRetouch.modes[request.mode]} · 保留原件")
+                    }
             } finally {
                 image.recycle()
             }
@@ -134,6 +175,63 @@ object RetouchJobs {
      * retry.
      */
     suspend fun publish(repo: Repository, job: JobHandle, result: File): String {
+        if (job.input.getBoolean("inPlace", false)) {
+            val inputs = job.input.getStringArray("inputs")!!.map(::File)
+            val recipe = JSONObject(inputs[1].readText())
+            val docId = recipe.getString("documentId")
+            val page =
+                repo.dao.pages(docId).firstOrNull { it.id == recipe.getString("pageId") }
+                    ?: error("原页已移除，处理结果保留在任务中")
+            // A completed publication is idempotent even if the worker is resumed.
+            if (page.original != result.path) {
+                require(page.revision == recipe.getInt("revision")) { "原页已修改，未覆盖你的编辑；请重新处理" }
+                val grid = File(result.path + ".pfgrid.gz")
+                val metadata =
+                    PageResources.withDewarp(
+                        page,
+                        inputs[0],
+                        grid,
+                        result,
+                        1f,
+                        FlatDocument.VERSION,
+                        FlatDocument.VERSION,
+                    )
+                repo.savePage(
+                    page.copy(
+                        original = result.path,
+                        corners = cn.paperforge.app.model.Quad.Full.encode(),
+                        filter = "WORKBOOK",
+                        enhanceStrength =
+                            recipe.getJSONObject("request").optDouble("strength", 1.0).toFloat(),
+                        brightness = 0f,
+                        contrast = 1f,
+                        rotation = 0,
+                        deskewDegrees = 0f,
+                        outputAspect = 0f,
+                        processingMetadata =
+                            JSONObject(metadata)
+                                .put(
+                                    "flatDocument",
+                                    JSONObject()
+                                        .put("version", FlatDocument.VERSION)
+                                        .put("appearanceModel", 2)
+                                        .put("bakedFilter", "WORKBOOK")
+                                        .put(
+                                            "bakedStrength",
+                                            recipe
+                                                .getJSONObject("request")
+                                                .optDouble("strength", 1.0),
+                                        )
+                                        .put("enhancement", ScanConfig.fingerprint())
+                                        .put("foregroundCompositor", "paper-ink-v1+local-workbook"),
+                                )
+                                .toString(),
+                    )
+                )
+            }
+            DocumentJobs.checkpoint(repo, job, "retouch-document", docId)
+            return docId
+        }
         val id = documentId(job.row.id)
         if (repo.dao.document(id) != null) {
             DocumentJobs.checkpoint(repo, job, "retouch-document", id)

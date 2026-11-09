@@ -21,14 +21,13 @@ object PaperSpace {
     val section = 32.dp
 }
 
+internal val PaperMotionEase = androidx.compose.animation.core.CubicBezierEasing(.3f, 0f, .18f, 1f)
+
 data class PaperMotion(val reduced: Boolean = false) {
     val stateMs
-        get() = if (reduced) 0 else 120
+        get() = if (reduced) 0 else 180
 
     val panelMs
-        get() = if (reduced) 0 else 200
-
-    val screenMs
         get() = if (reduced) 0 else 280
 }
 

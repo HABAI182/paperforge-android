@@ -1,0 +1,77 @@
+{
+  "metricScope": "owner same-photo screenshot reference; content alignment; not OCR or corner truth",
+  "referenceCrop": [
+    36,
+    378,
+    1228,
+    2016
+  ],
+  "analysisWidth": 900,
+  "reference": {
+    "rules": {
+      "tracks": 23,
+      "rmsPixels": 0.4804036805094179,
+      "rms95Pixels": 5.6162961811049295
+    }
+  },
+  "before": {
+    "visual": {
+      "aligned": true,
+      "matches": 706,
+      "inliers": 485,
+      "referenceBlankPixels": 399242,
+      "darkInkInReferenceBlank": 0.0006362056096302493,
+      "meanInkInReferenceBlank": 0.09314400789496095,
+      "binaryInkIoU": 0.3462685425906102
+    },
+    "rules": {
+      "tracks": 25,
+      "rmsPixels": 1.6422521197932174,
+      "rms95Pixels": 5.631385038847438
+    },
+    "referenceSeededRules": {
+      "aligned": true,
+      "referenceSeeds": 29,
+      "matchedTracks": 23,
+      "medianRmsPixels": 2.6177212271705925,
+      "rms95Pixels": 7.941440013139493
+    }
+  },
+  "after": {
+    "visual": {
+      "aligned": true,
+      "matches": 706,
+      "inliers": 485,
+      "referenceBlankPixels": 399242,
+      "darkInkInReferenceBlank": 0.0006362056096302493,
+      "meanInkInReferenceBlank": 0.0915785413358314,
+      "binaryInkIoU": 0.3462685425906102
+    },
+    "rules": {
+      "tracks": 25,
+      "rmsPixels": 1.6422521197932174,
+      "rms95Pixels": 5.631385038847438
+    },
+    "referenceSeededRules": {
+      "aligned": true,
+      "referenceSeeds": 29,
+      "matchedTracks": 23,
+      "medianRmsPixels": 2.6177212271705925,
+      "rms95Pixels": 7.941440013139493
+    }
+  },
+  "sharedGeometry": {
+    "aligned": true,
+    "scope": "identical geometry only; baseline registration reused",
+    "before": {
+      "darkInkInReferenceBlank": 0.0006362056096302493,
+      "meanInkInReferenceBlank": 0.09314400789496095,
+      "binaryInkIoU": 0.3462685425906102
+    },
+    "after": {
+      "darkInkInReferenceBlank": 0.0006362056096302493,
+      "meanInkInReferenceBlank": 0.0915785413358314,
+      "binaryInkIoU": 0.3462685425906102
+    }
+  }
+}

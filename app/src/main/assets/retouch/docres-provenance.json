@@ -1,0 +1,26 @@
+{
+  "upstreamCommit": "d3e3a18c7c7ad10e4615ca2eb6a10f83128d8560",
+  "space": "qubvel-hf/documents-restoration",
+  "spaceRevision": "e9d734906ea26ec569a8daeac0bfd14f495990ab",
+  "weightSha256": "1d6a89d754fe1e58ffd1865eab0ef3f03344798d39197b2d9a77ce4fbc8c02fd",
+  "weightBytes": 183260711,
+  "name": "DocRes appearance and foreground restoration",
+  "upstream": "https://github.com/ZZZHANG-jx/DocRes",
+  "license": "MIT",
+  "backbone": "Restormer, https://github.com/swz30/Restormer",
+  "conversion": "PaperForge: PyTorch fixed 128 patch ONNX opset17, weight-only symmetric int8 QDQ; float activations",
+  "input": "BGR + appearance or dual-Sauvola/Sobel binarization prompt, NCHW float32 [1,6,128,128], 0..1",
+  "output": "Task-conditioned float32 [1,3,128,128]; BGR appearance or first two foreground/background logits",
+  "probe": {
+    "bytes": 15890584,
+    "sha256": "d11338eb9c5cb67f3c6de192fafe3b050def10465b9b89d7fe47e305dbdcaff9",
+    "tileSeconds": 0.47186851501464844,
+    "patchAbsMean": 0.004226065706461668,
+    "patchAbsMax": 0.03677785396575928
+  },
+  "tasks": [
+    "appearance",
+    "binarization foreground logits"
+  ],
+  "kotlinAdaptation": "2026-11-02: published dual Sauvola + Sobel binarization prompt; class-0 foreground probability, native ink/rule composition. Same immutable model; separate versioned task caches."
+}

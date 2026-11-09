@@ -72,18 +72,37 @@ fun OcrModelsScreen(vm: MainViewModel) {
             Text("内置识别可直接离线使用。独立模型包可在手机上导入、切换和移除。", style = MaterialTheme.typography.bodyMedium)
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
-                    Text("内置 ML Kit", style = MaterialTheme.typography.titleMedium)
+                    Text("自动与内置识别", style = MaterialTheme.typography.titleMedium)
                     Text("中英 / 拉丁字母 · 快速、均衡、精细", style = MaterialTheme.typography.bodySmall)
-                    TextButton(
-                        onClick = {
-                            scope.launch {
-                                UserSettings.set(SettingKeys.OcrBackend, "MLKIT")
-                                app.ocrEngine.trimUnused()
-                            }
-                        },
-                        enabled = !working && backend != "MLKIT",
-                    ) {
-                        Text(if (backend == "MLKIT") "正在使用" else "使用内置识别")
+                    Text(
+                        "自动选择会优先使用已安装且语言匹配的模型，否则使用内置识别",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton(
+                            onClick = {
+                                scope.launch {
+                                    UserSettings.set(SettingKeys.OcrBackend, "AUTO")
+                                    app.ocrEngine.trimUnused()
+                                }
+                            },
+                            enabled = !working && backend != "AUTO",
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Text(if (backend == "AUTO") "自动模式" else "自动选择")
+                        }
+                        TextButton(
+                            onClick = {
+                                scope.launch {
+                                    UserSettings.set(SettingKeys.OcrBackend, "MLKIT")
+                                    app.ocrEngine.trimUnused()
+                                }
+                            },
+                            enabled = !working && backend != "MLKIT",
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Text(if (backend == "MLKIT") "正在使用" else "使用内置识别")
+                        }
                     }
                 }
             }
@@ -126,7 +145,12 @@ fun OcrModelsScreen(vm: MainViewModel) {
                             "${pack.languageSummary} · ${"%.1f".format(pack.bytes/1048576.0)} MB · ${pack.version}",
                             style = MaterialTheme.typography.bodySmall,
                         )
-                        Text("Paddle 单路行级识别；模型包自带语言字典。", style = MaterialTheme.typography.bodySmall)
+                        Text(
+                            if (backend == "AUTO" && app.ocrEngine.id.contains(pack.fingerprint))
+                                "自动选用此模型 · 模型包自带语言字典"
+                            else "Paddle 行级识别与低置信度补充 · 模型包自带语言字典",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             TextButton(
                                 onClick = {

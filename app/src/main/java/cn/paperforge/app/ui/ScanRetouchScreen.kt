@@ -39,12 +39,19 @@ fun ScanRetouchScreen(
     page: PageRow,
     onBack: () -> Unit,
     onSubmit: (RetouchRequest) -> Unit,
+    initialMode: String? = null,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var source by remember(page.id) { mutableStateOf<Bitmap?>(null) }
     var preview by remember(page.id) { mutableStateOf<Bitmap?>(null) }
-    var request by remember(page.id) { mutableStateOf(RetouchRequest()) }
+    var request by
+        remember(page.id, initialMode) {
+            mutableStateOf(
+                if (initialMode == "AI_CLEAN") RetouchRequest("AI_CLEAN", 1f)
+                else RetouchRequest()
+            )
+        }
     var sourceKey by remember(page.id) { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
     var processing by remember { mutableStateOf(false) }
@@ -65,21 +72,51 @@ fun ScanRetouchScreen(
             val loaded =
                 withContext(Dispatchers.IO) {
                     val key = RetouchDrafts.sourceKey(page)
-                    Triple(ScanProcessor.render(page, 1400), key, RetouchDrafts.load(page, key))
+                    key to RetouchDrafts.load(page, key)
                 }
-            source = loaded.first
-            sourceKey = loaded.second
-            loaded.third?.let { request = it }
+            sourceKey = loaded.first
+            if (!dirty)
+                loaded.second
+                    ?.takeIf { initialMode == null || it.mode == initialMode }
+                    ?.let { request = it }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             error = e.message ?: "无法打开修复页面"
         }
     }
+    val fullWorkbook = request.mode in setOf("AI_CLEAN", "FLAT_SCAN")
+    LaunchedEffect(page.id, fullWorkbook) {
+        var generated: Bitmap? = null
+        source = null
+        try {
+            withContext(Dispatchers.IO) {
+                generated =
+                    ScanProcessor.render(
+                        if (fullWorkbook)
+                            PageResources.sourceAppearance(page)
+                                .copy(filter = "ORIGINAL", brightness = 0f, contrast = 1f)
+                        else page,
+                        1400,
+                    )
+            }
+            source = generated
+            generated = null
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (failure: Exception) {
+            error = failure.message ?: "无法读取页面"
+        } finally {
+            generated?.recycle()
+        }
+    }
     val currentSource = source
     val currentPreview = preview
     DisposableEffect(currentSource) { onDispose { currentSource?.recycle() } }
     DisposableEffect(currentPreview) { onDispose { currentPreview?.recycle() } }
+    var previewing by remember { mutableStateOf(false) }
+    var previewProgress by remember { mutableIntStateOf(0) }
+    var previewGeneration by remember { mutableIntStateOf(0) }
     val requestText = request.json().toString()
     LaunchedEffect(requestText, sourceKey) {
         if (dirty && sourceKey != null) {
@@ -90,6 +127,48 @@ fun ScanRetouchScreen(
             } catch (e: Exception) {
                 error = e.message ?: "草稿未能保存"
             }
+        }
+    }
+    LaunchedEffect(currentSource, requestText, installed) {
+        val generation = ++previewGeneration
+        val original = currentSource
+        if (
+            original == null ||
+                (request.mode == "MIGAN" && !installed) ||
+                (request.mode in setOf("REPAIR", "MIGAN", "INK") && request.strokes.isEmpty())
+        ) {
+            previewing = false
+            return@LaunchedEffect
+        }
+        previewing = true
+        previewProgress = 0
+        var result: Bitmap? = null
+        var owned: Bitmap? = null
+        try {
+            delay(300)
+            val input = original.copy(Bitmap.Config.ARGB_8888, false)
+            owned = input
+            val recipe = request
+            withContext(Dispatchers.Default) {
+                result =
+                    ScanRetouch.apply(context, input, recipe) { amount ->
+                        withContext(Dispatchers.Main) {
+                            if (generation == previewGeneration) previewProgress = amount
+                        }
+                    }
+            }
+            ensureActive()
+            preview = result
+            result = null
+            error = null
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (failure: Exception) {
+            if (generation == previewGeneration) error = failure.message ?: "实时预览未完成"
+        } finally {
+            result?.recycle()
+            owned?.recycle()
+            if (generation == previewGeneration) previewing = false
         }
     }
     fun change(value: RetouchRequest) {
@@ -140,13 +219,24 @@ fun ScanRetouchScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("清理与修复") },
+                title = { Text("高清与修复") },
                 navigationIcon = {
                     IconButton(onClick = { leave(false) }, enabled = !processing) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "保存草稿并返回")
                     }
                 },
                 actions = {
+                    IconButton(
+                        onClick = {
+                            change(
+                                RetouchRequest(request.mode, 1f)
+                            )
+                            radius = .025f
+                        },
+                        enabled = !processing,
+                    ) {
+                        Icon(Icons.Default.RestartAlt, "恢复修复默认参数")
+                    }
                     TextButton(
                         onClick = { showOriginal = !showOriginal },
                         enabled = preview != null,
@@ -190,8 +280,12 @@ fun ScanRetouchScreen(
                                             change(
                                                 RetouchRequest(
                                                     mode,
-                                                    request.strength,
-                                                    request.strokes,
+                                                    if (mode == "FLAT_SCAN") 1f
+                                                    else if (mode == "AI_CLEAN") 1f
+                                                    else request.strength,
+                                                    if (mode in setOf("AI_CLEAN", "FLAT_SCAN"))
+                                                        emptyList()
+                                                    else request.strokes,
                                                 )
                                             )
                                         },
@@ -203,11 +297,14 @@ fun ScanRetouchScreen(
                         }
                         Text(
                             when (request.mode) {
+                                "FLAT_SCAN" ->
+                                    "横线展平、AI 去透页、细字与低分辨率超分。后台处理较慢；纸面比例可在扫描设置选择保留。自动预览，保存后可对比原件。"
+                                "AI_CLEAN" -> "文档专用 AI 分离正面墨迹与弱透印，并保护纸张横线。实时预览，可调强度并对比原图，确认后另存副本。"
                                 "MIGAN" -> "涂抹手指或遮挡处。模型填补周围纹理，不能还原被遮住的原文字。"
                                 "REPAIR" -> "涂抹小污点或边缘杂物，使用周围像素修补。"
                                 "INK" -> "涂抹彩色批注，只修补明显彩色笔迹；黑色手写请用局部修补。"
                                 "GLARE" -> "压制仍有纹理的高光、改善局部对比。纯白过曝区域无法还原。"
-                                "SR" -> "实验性 3× 亮度超分，最长边 4096。请放大核对细字；未涂抹时处理整页。"
+                                "SR" -> "原始像素推理，最多 3×，通常最长边 4096，不先缩小细字。未涂抹时处理整页，完成后打开高清副本，原页保留。"
                                 else -> "去除彩色细噪点。可只处理涂抹区域，未涂抹时处理整页。"
                             },
                             style = MaterialTheme.typography.bodySmall,
@@ -227,41 +324,42 @@ fun ScanRetouchScreen(
                                     Text("导入")
                                 }
                             }
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            FilterChip(
-                                brush,
-                                { brush = !brush },
-                                enabled = !processing,
-                                label = { Text(if (brush) "涂抹选区" else "浏览缩放") },
-                            )
-                            FilterChip(
-                                erase,
-                                {
-                                    erase = !erase
-                                    brush = true
-                                },
-                                enabled = !processing,
-                                label = { Text("擦除选区") },
-                            )
-                            IconButton(
-                                onClick = {
-                                    change(request.copy(strokes = request.strokes.dropLast(1)))
-                                },
-                                enabled = !processing && request.strokes.isNotEmpty(),
+                        if (!fullWorkbook)
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Icon(Icons.AutoMirrored.Filled.Undo, "撤销涂抹")
+                                FilterChip(
+                                    brush,
+                                    { brush = !brush },
+                                    enabled = !processing,
+                                    label = { Text(if (brush) "涂抹选区" else "浏览缩放") },
+                                )
+                                FilterChip(
+                                    erase,
+                                    {
+                                        erase = !erase
+                                        brush = true
+                                    },
+                                    enabled = !processing,
+                                    label = { Text("擦除选区") },
+                                )
+                                IconButton(
+                                    onClick = {
+                                        change(request.copy(strokes = request.strokes.dropLast(1)))
+                                    },
+                                    enabled = !processing && request.strokes.isNotEmpty(),
+                                ) {
+                                    Icon(Icons.AutoMirrored.Filled.Undo, "撤销涂抹")
+                                }
+                                TextButton(
+                                    onClick = { change(request.copy(strokes = emptyList())) },
+                                    enabled = !processing && request.strokes.isNotEmpty(),
+                                ) {
+                                    Text("清空")
+                                }
                             }
-                            TextButton(
-                                onClick = { change(request.copy(strokes = emptyList())) },
-                                enabled = !processing && request.strokes.isNotEmpty(),
-                            ) {
-                                Text("清空")
-                            }
-                        }
-                        if (brush)
+                        if (brush && !fullWorkbook)
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text("笔刷", style = MaterialTheme.typography.labelMedium)
                                 Slider(
@@ -274,7 +372,7 @@ fun ScanRetouchScreen(
                             }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                "强度 ${(request.strength * 100).roundToInt()}%",
+                                "${if (request.mode == "AI_CLEAN") "去透页强度" else if (fullWorkbook) "高清强度" else "强度"} ${(request.strength * 100).roundToInt()}%",
                                 style = MaterialTheme.typography.labelMedium,
                             )
                             Slider(
@@ -292,53 +390,25 @@ fun ScanRetouchScreen(
                                 style = MaterialTheme.typography.bodySmall,
                             )
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            OutlinedButton(
-                                onClick = {
-                                    val original = source ?: return@OutlinedButton
-                                    processing = true
-                                    error = null
-                                    scope.launch {
-                                        var result: Bitmap? = null
-                                        try {
-                                            result =
-                                                withContext(Dispatchers.Default) {
-                                                    val owned =
-                                                        original.copy(
-                                                            Bitmap.Config.ARGB_8888,
-                                                            false,
-                                                        )
-                                                    try {
-                                                        ScanRetouch.apply(context, owned, request)
-                                                    } finally {
-                                                        owned.recycle()
-                                                    }
-                                                }
-                                            ensureActive()
-                                            preview = result
-                                            result = null
-                                            showOriginal = false
-                                            brush = false
-                                        } catch (e: CancellationException) {
-                                            throw e
-                                        } catch (e: Exception) {
-                                            error = e.message ?: "处理未完成"
-                                        } finally {
-                                            result?.recycle()
-                                            processing = false
-                                        }
-                                    }
-                                },
-                                enabled =
-                                    source != null &&
-                                        !processing &&
-                                        (request.mode != "MIGAN" || installed),
-                                modifier = Modifier.weight(1f),
+                            Row(
+                                Modifier.weight(1f).heightIn(min = 48.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
-                                Text(if (processing) "处理中" else "生成预览")
+                                if (previewing)
+                                    CircularProgressIndicator(
+                                        Modifier.size(18.dp),
+                                        strokeWidth = 2.dp,
+                                    )
+                                Text(
+                                    if (previewing) "实时预览 · $previewProgress%"
+                                    else if (preview != null) "实时预览已更新" else "涂抹后自动预览",
+                                    style = MaterialTheme.typography.labelMedium,
+                                )
                             }
                             Button(
                                 onClick = { leave(true) },
-                                enabled = preview != null && !processing,
+                                enabled = preview != null && !processing && !previewing,
                                 modifier = Modifier.weight(1f),
                             ) {
                                 Text("另存副本")
@@ -357,7 +427,7 @@ fun ScanRetouchScreen(
                 RetouchCanvas(
                     bitmap,
                     request.strokes,
-                    brush && !processing && preview == null,
+                    brush && !fullWorkbook && !processing,
                     erase,
                     radius,
                 ) { stroke ->
@@ -366,7 +436,7 @@ fun ScanRetouchScreen(
             else if (error != null)
                 Text(error!!, color = Color.White, modifier = Modifier.padding(24.dp))
             else CircularProgressIndicator()
-            if (processing)
+            if (processing || previewing)
                 LinearProgressIndicator(Modifier.align(Alignment.TopCenter).fillMaxWidth())
             if (!brush || preview != null)
                 Text(

@@ -37,6 +37,13 @@ internal fun PdfToolsDialog(
     var copyAllowed by remember { mutableStateOf(true) }
     var preferEditable by remember { mutableStateOf(false) }
     var layoutMode by remember { mutableStateOf("editable") }
+    if (mode == "watermark-clean") {
+        LaunchedEffect(Unit) {
+            vm.openWatermarks(vm.selected.value)
+            onDismiss()
+        }
+        return
+    }
     if (mode in listOf("redact", "native-edit", "certificates", "forms", "archive")) {
         LaunchedEffect(Unit) {
             vm.queueTool(mode)
@@ -74,9 +81,11 @@ internal fun PdfToolsDialog(
                     )
                     if (query.isBlank() && group.isBlank()) {
                         Text("常用", style = MaterialTheme.typography.titleMedium)
-                        titles
-                            .filterKeys { "tool:$it" in pinned }
-                            .entries
+                        pinned
+                            .mapNotNull { id ->
+                                val key = id.removePrefix("tool:")
+                                titles[key]?.let { key to it }
+                            }
                             .chunked(2)
                             .forEach { row ->
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -88,6 +97,7 @@ internal fun PdfToolsDialog(
                                             Text(
                                                 mapOf(
                                                     "compress" to "压缩 PDF",
+                                                    "watermark-clean" to "去水印",
                                                     "searchable" to "识别文字",
                                                     "images-png" to "转为图片",
                                                     "docx-layout" to "转为 Word",
@@ -125,13 +135,26 @@ internal fun PdfToolsDialog(
                         }
                         if (group == "reading" && query.isBlank()) {
                             readingActions
-                                .filterNot { it.id in setOf("read:range", "read:assembly") }
-                                .forEach { tool -> WorkspaceToolRow(tool, false, true, {}) }
+                                .filterNot {
+                                    it.id in
+                                        setOf("read:range", "read:assembly", "read:share-process")
+                                }
+                                .forEach { tool ->
+                                    WorkspaceToolRow(tool, false, true, { capability = it })
+                                }
                         } else {
                             if (group == "pages" && query.isBlank())
                                 readingActions
                                     .filter { it.id in setOf("read:range", "read:assembly") }
-                                    .forEach { tool -> WorkspaceToolRow(tool, false, true, {}) }
+                                    .forEach { tool ->
+                                        WorkspaceToolRow(tool, false, true, { capability = it })
+                                    }
+                            if (group == "export" && query.isBlank())
+                                readingActions
+                                    .filter { it.id == "read:share-process" }
+                                    .forEach { tool ->
+                                        WorkspaceToolRow(tool, false, true, { capability = it })
+                                    }
                             val found =
                                 titles.filter { (key, title) ->
                                     (query.isNotBlank() ||
@@ -200,6 +223,7 @@ internal fun PdfToolsDialog(
                             label = { Text("作者") },
                         )
                     }
+
                     if (mode in listOf("crop", "blank"))
                         OutlinedTextField(
                             value = number,
@@ -209,6 +233,12 @@ internal fun PdfToolsDialog(
                             },
                         )
                     if (mode == "crop") Text("调整 CropBox，可见范围外的内容仍保留。")
+                    if (mode == "watermark-clean")
+                        Text(
+                            "整篇检查重复小图与角落短文字；检测到候选才生成新副本，不覆盖原件。" +
+                                "文字水印优先删除文字层内容，无法解码时遮盖。" +
+                                "已栅格化的 logo / 平铺水印不在本次范围。"
+                        )
                     if (mode == "encrypt") {
                         OutlinedTextField(
                             value = text,
@@ -261,6 +291,7 @@ internal fun PdfToolsDialog(
                     }
                     if (mode == "docx-image") Text("每页参考图加可编辑文字段落，便于对照。图片保留页面外观；不重建原排版或表格。")
                     if (mode == "docx") Text("导出可编辑的文字段落，保留文字阅读顺序；图片、表格与原排版不属于此模式。")
+
                     if (mode in listOf("optimize", "nup2", "nup4"))
                         Text(
                             if (mode == "optimize")
@@ -277,6 +308,10 @@ internal fun PdfToolsDialog(
                     enabled = mode != "long-image" || longValid,
                     onClick = {
                         when (mode) {
+                            "watermark-clean" -> {
+                                vm.removeObjectWatermarks()
+                                onDismiss()
+                            }
                             "encrypt" ->
                                 if (text.isNotEmpty()) {
                                     vm.encrypt(text, printAllowed, copyAllowed)

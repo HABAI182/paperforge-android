@@ -6,7 +6,7 @@ import androidx.compose.material.icons.filled.*
 internal val pdfFamilies =
     listOf(
         WorkspaceSection("pages", "页面编排", "拆分、裁边、页码与拼版", Icons.Default.ViewModule),
-        WorkspaceSection("edit", "内容与标注", "文字、表单、水印与批注", Icons.Default.Draw),
+        WorkspaceSection("edit", "水印与编辑", "水印清理、文字、表单与批注", Icons.Default.Draw),
         WorkspaceSection("export", "导出与转换", "图片、文字、Word 与幻灯片", Icons.Default.SwapHoriz),
         WorkspaceSection("protect", "安全与签署", "密码、脱敏、证书与归档", Icons.Default.Lock),
         WorkspaceSection("optimize", "优化与属性", "压缩、资源、属性与诊断", Icons.Default.Tune),
@@ -27,7 +27,9 @@ internal fun pdfFamily(mode: String): String =
         "annotate",
         "native-edit",
         "forms",
-        "watermark" -> "edit"
+        "watermark",
+        "watermark-clean",
+        "action:document-watermarks" -> "edit"
         "encrypt",
         "redact",
         "certificates",

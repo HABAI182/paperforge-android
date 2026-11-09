@@ -14,7 +14,21 @@ data class CapturePreset(
     val aspect: Float,
     val detector: String,
     val lockCrop: Boolean,
+    val aiFinish: Boolean = true,
+    val flatAspect: Float = .70710678f,
 ) {
+    /**
+     * The camera's mode rail stores its recipe in the shared settings. A gallery photo was not taken in
+     * that mode, so it must not inherit it: a stale rail silently turned off flattening for every import.
+     * A filter the rail cannot set was chosen in Settings, and stands.
+     */
+    fun forGalleryImport(): CapturePreset {
+        val railFilter =
+            mapOf("color" to "AUTO", "clean" to "CLEAN", "card" to "ORIGINAL")[
+                UserSettings.string("captureMode", "document")]
+        return if (filter == railFilter) copy(filter = "WORKBOOK", aspect = 0f) else this
+    }
+
     fun page(id: String, document: String, position: Int, path: String) =
         PageRow(
             id,
@@ -37,18 +51,27 @@ data class CapturePreset(
             .put("aspect", aspect)
             .put("detector", detector)
             .put("lockCrop", lockCrop)
+            .put("aiFinish", aiFinish)
+            .put("flatAspect", flatAspect)
 
     companion object {
         fun current(existing: PageRow? = null): CapturePreset {
             val p = JSONObject(UserSettings.exportJson()).getJSONObject("preferences")
             return CapturePreset(
-                existing?.filter ?: p.getString("filter"),
+                if (
+                    existing != null &&
+                        JSONObject(existing.processingMetadata ?: "{}").has("flatDocument")
+                )
+                    "WORKBOOK"
+                else existing?.filter ?: p.getString("filter"),
                 existing?.brightness ?: p.getDouble("brightness").toFloat(),
                 existing?.contrast ?: p.getDouble("contrast").toFloat(),
                 existing?.enhanceStrength ?: p.getDouble("enhanceStrength").toFloat(),
                 existing?.outputAspect ?: p.optDouble("scanAspect", 0.0).toFloat(),
                 p.getString("detector"),
                 p.getBoolean("lockCrop"),
+                p.optBoolean("scanAiFinish", false),
+                if (p.optString("flatPaper", "ISO") == "SOURCE") 0f else .70710678f,
             )
         }
 
@@ -61,6 +84,8 @@ data class CapturePreset(
                 j.getDouble("aspect").toFloat(),
                 j.getString("detector"),
                 j.getBoolean("lockCrop"),
+                j.optBoolean("aiFinish", false),
+                j.optDouble("flatAspect", .70710678).toFloat(),
             )
     }
 }

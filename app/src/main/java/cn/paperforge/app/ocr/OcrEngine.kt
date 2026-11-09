@@ -76,8 +76,9 @@ class BundledOcrEngine : OcrEngine {
         val run = Run(options)
         val bitmap =
             ScanProcessor.render(
-                page.copy(filter = "ORIGINAL", brightness = 0f, contrast = 1f),
+                page.copy(brightness = 0f, contrast = 1f),
                 options.mode.edge,
+                ocrInput = true,
             )
         return try {
             var result = recognizeBitmap(bitmap, chinese, run)
@@ -87,9 +88,10 @@ class BundledOcrEngine : OcrEngine {
             ) {
                 var alternative =
                     ScanProcessor.render(
-                        page.copy(filter = "ORIGINAL", brightness = 0f, contrast = 1f),
+                        page.copy(brightness = 0f, contrast = 1f),
                         options.mode.edge,
                         ocrSampling = true,
+                        ocrInput = true,
                     )
                 try {
                     val rotation = result.orientationCorrection
@@ -113,7 +115,9 @@ class BundledOcrEngine : OcrEngine {
                 // hypothesis depend on the same perspective resampling. Geometry is mapped
                 // back into the existing crop; text outside that crop cannot enter the page.
                 if (
-                    page.rotation == 0 &&
+                    cn.paperforge.app.data.PageResources.metadata(page)
+                        .optJSONObject("flatDocument") == null &&
+                        page.rotation == 0 &&
                         page.deskewDegrees == 0f &&
                         result.orientationCorrection == 0
                 ) {
@@ -230,6 +234,13 @@ class BundledOcrEngine : OcrEngine {
                 )
         try {
             var normalized = if (rotation == 0) best else best.rotated(rotation)
+            val latinCharacters = normalized.text.count { it in 'A'..'Z' || it in 'a'..'z' }
+            val codePage =
+                chinese &&
+                    normalized.lines.size >= 3 &&
+                    latinCharacters > 80 &&
+                    latinCharacters > normalized.text.count { it.isLetter() } * .45f &&
+                    normalized.lines.count { line -> line.text.any { it in "();{}[]=<>" } } >= 3
             val heights =
                 normalized.lines.map { l ->
                     hypot(
@@ -243,9 +254,9 @@ class BundledOcrEngine : OcrEngine {
                     ((normalized.meanConfidence ?: .65f) <
                         ScanConfig.float("ocrLowConfidence", .82f) || smallType)
             ) {
-                val clean = ScanProcessor.transform(upright, Quad.Full, "CLEAN")
+                val clean = OcrInputPreparation.paper(upright)
                 try {
-                    normalized = run.merge(normalized, run.pass(clean, chinese, "clean"))
+                    normalized = run.merge(normalized, run.pass(clean, chinese, "paper-field"))
                 } finally {
                     clean.recycle()
                 }
@@ -276,10 +287,14 @@ class BundledOcrEngine : OcrEngine {
                 }
             }
             if (run.options.mode == OcrMode.BALANCED) {
-                if (normalized.text.isBlank()) {
-                    val clean = ScanProcessor.transform(upright, Quad.Full, "CLEAN")
+                if (
+                    !codePage &&
+                        (normalized.text.isBlank() || (normalized.meanConfidence ?: .65f) < .86f)
+                ) {
+                    val clean = OcrInputPreparation.paper(upright)
                     try {
-                        normalized = run.merge(normalized, run.pass(clean, chinese, "clean-empty"))
+                        normalized =
+                            run.merge(normalized, run.pass(clean, chinese, "paper-field-balanced"))
                     } finally {
                         clean.recycle()
                     }
@@ -430,7 +445,13 @@ class BundledOcrEngine : OcrEngine {
                     (bottom + pad).coerceIn(1, source.height),
                 )
             if (rect.width() > 0 && rect.height() > 0) {
-                val factor = min(80.0 / rect.height(), 1900.0 / rect.width()).coerceAtMost(3.0)
+                val factor =
+                    min(
+                            ScanConfig.int("ocrLineTargetHeight", 36).coerceIn(28, 64).toDouble() /
+                                rect.height(),
+                            1900.0 / rect.width(),
+                        )
+                        .coerceAtMost(3.0)
                 val destination =
                     android.graphics.Rect(
                         24,
@@ -496,78 +517,8 @@ class BundledOcrEngine : OcrEngine {
         return ln(1.0 + chars) * (confidence * confidence) * 100 * horizontal
     }
 
-    private fun merge(base: OcrLayout, alternative: OcrLayout, voting: Boolean): OcrLayout {
-        if (base.lines.isEmpty()) return alternative.copy(width = base.width, height = base.height)
-        fun bounds(p: List<PointN>) =
-            floatArrayOf(p.minOf { it.x }, p.minOf { it.y }, p.maxOf { it.x }, p.maxOf { it.y })
-        fun overlap(a: OcrLine, b: OcrLine): Float {
-            val x = bounds(a.corners)
-            val y = bounds(b.corners)
-            val intersection =
-                max(0f, min(x[2], y[2]) - max(x[0], y[0])) *
-                    max(0f, min(x[3], y[3]) - max(x[1], y[1]))
-            return intersection /
-                max(
-                    .000001f,
-                    (x[2] - x[0]) * (x[3] - x[1]) + (y[2] - y[0]) * (y[3] - y[1]) - intersection,
-                )
-        }
-        return base.copy(
-            lines =
-                base.lines.map { line ->
-                    val candidate = alternative.lines.maxByOrNull { overlap(line, it) }
-                    if (candidate == null || overlap(line, candidate) <= .55f) line
-                    else {
-                        val hypotheses =
-                            (line.hypotheses.ifEmpty {
-                                    listOf(OcrHypothesis(line.text, line.confidence, line.variant))
-                                } +
-                                    OcrHypothesis(
-                                        candidate.text,
-                                        candidate.confidence,
-                                        candidate.variant,
-                                    ))
-                                .distinctBy { it.variant }
-                        val selected =
-                            if (
-                                candidate.confidence != null &&
-                                    candidate.confidence > (line.confidence ?: 0f) + .025f
-                            )
-                                candidate.copy(block = line.block, paragraph = line.paragraph)
-                            else line
-                        val original = hypotheses.first()
-                        val strongest = hypotheses.maxBy { it.confidence ?: 0f }
-                        val tieText =
-                            if ((strongest.confidence ?: 0f) > (original.confidence ?: 0f) + .025f)
-                                strongest.text
-                            else original.text
-                        val ballot = hypotheses.filter { it.text.length == selected.text.length }
-                        val voted =
-                            if (voting && ballot.size >= 3)
-                                selected.text.indices
-                                    .map { i ->
-                                        val counts = ballot.groupingBy { it.text[i] }.eachCount()
-                                        val top = counts.maxBy { it.value }
-                                        if (top.value > ballot.size / 2) top.key
-                                        else if (tieText.length == selected.text.length) tieText[i]
-                                        else selected.text[i]
-                                    }
-                                    .joinToString("")
-                                    .takeIf { value -> hypotheses.any { it.text == value } }
-                                    ?: selected.text
-                            else selected.text
-                        if (voted != selected.text)
-                            selected.copy(
-                                text = voted,
-                                elements = emptyList(),
-                                variant = "variant-vote",
-                                hypotheses = hypotheses,
-                            )
-                        else selected.copy(hypotheses = hypotheses)
-                    }
-                }
-        )
-    }
+    private fun merge(base: OcrLayout, alternative: OcrLayout, voting: Boolean) =
+        OcrLineFusion.merge(base, alternative, voting)
 
     private fun unrotate(layout: OcrLayout, width: Int, height: Int, angle: Int) =
         layout
@@ -578,7 +529,7 @@ class BundledOcrEngine : OcrEngine {
         if (values.isEmpty()) 0f else values.sorted()[values.size / 2]
 
     companion object {
-        const val ID = "mlkit-bundled-v031"
+        const val ID = "mlkit-bundled-v032"
         private val chineseClient by lazy {
             TextRecognition.getClient(ChineseTextRecognizerOptions.Builder().build())
         }

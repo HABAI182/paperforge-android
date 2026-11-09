@@ -1,9 +1,12 @@
 package cn.paperforge.app.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -15,8 +18,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
@@ -34,7 +39,7 @@ internal val workspaceSections =
     listOf(
         WorkspaceSection("capture", "扫描与识字", "拍摄、图片导入、文字识别", Icons.Default.DocumentScanner),
         WorkspaceSection("convert", "格式转换", "Office、表格、图片与电子书", Icons.Default.SwapHoriz),
-        WorkspaceSection("pdf", "PDF 工具", "页面处理、批注、压缩与保护", Icons.Default.PictureAsPdf),
+        WorkspaceSection("pdf", "PDF 工具", "去水印、页面处理与保护", Icons.Default.PictureAsPdf),
         WorkspaceSection("organize", "文档整理", "命名、笔记、备份与存储", Icons.Default.FolderOpen),
         WorkspaceSection("workflow", "任务与流程", "批量操作、自动化与导出记录", Icons.Default.PendingActions),
         WorkspaceSection("connect", "连接与智能", "传输、翻译与智能服务", Icons.Default.Wifi),
@@ -53,8 +58,10 @@ internal val settingsSections =
 /** Every entry has exactly one destination; newly added PDF tools remain discoverable. */
 internal fun workspaceSection(tool: HomeTool): String =
     when (tool.id) {
+        "action:document-watermarks" -> "pdf"
         "action:scan",
         "action:ocr-images",
+        "action:receipts",
         "tool:image-pdf",
         "tool:searchable" -> "capture"
         "action:tasks",
@@ -111,7 +118,7 @@ internal fun LazyListScope.workspaceContent(
             },
             singleLine = true,
             shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().rootSwipeInput(),
         )
     }
     if (!searching && group.isBlank()) {
@@ -129,20 +136,42 @@ internal fun LazyListScope.workspaceContent(
                             Modifier.weight(1f),
                             style = MaterialTheme.typography.titleMedium,
                         )
-                        TextButton(onClick = { onGroup("pinned") }) { Text("常用工具") }
+                        var editing by remember { mutableStateOf(false) }
+                        TextButton(onClick = { editing = true }) { Text("编辑常用") }
+                        if (editing) QuickToolsDialog(tools, pinned) { editing = false }
                     }
+                    val quickHeight =
+                        with(LocalDensity.current) {
+                                MaterialTheme.typography.labelLarge.lineHeight.toDp() * 2 + 28.dp
+                            }
+                            .coerceAtLeast(68.dp)
                     quick.chunked(2).forEach { row ->
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             row.forEach { tool ->
+                                val navigation = expansionAction(tool.action)
                                 FilledTonalButton(
-                                    onClick = tool.action,
+                                    onClick = navigation.onClick,
                                     enabled = enabled,
-                                    modifier = Modifier.weight(1f),
+                                    modifier =
+                                        Modifier.weight(1f)
+                                            .height(quickHeight)
+                                            .then(navigation.modifier),
                                     shape = RoundedCornerShape(14.dp),
                                     contentPadding =
                                         PaddingValues(horizontal = 12.dp, vertical = 14.dp),
                                 ) {
-                                    Text(tool.title, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                    Text(
+                                        when (tool.id) {
+                                            "tool:watermark-clean" -> "去水印"
+                                            "tool:searchable" -> "识别文字"
+                                            "tool:images-png" -> "转为图片"
+                                            "tool:docx-layout" -> "转为 Word"
+                                            else -> tool.title
+                                        },
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis,
+                                        textAlign = TextAlign.Center,
+                                    )
                                 }
                             }
                             if (row.size == 1) Spacer(Modifier.weight(1f))
@@ -188,10 +217,11 @@ internal fun LazyListScope.workspaceContent(
         item(key = "workspace-breadcrumb") {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 TextButton(
-                    onClick = {
-                        onQuery("")
-                        onGroup(if (family.isNotBlank()) root else "")
-                    }
+                    onClick =
+                        returnAction {
+                            onQuery("")
+                            onGroup(if (family.isNotBlank()) root else "")
+                        }
                 ) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
@@ -289,11 +319,11 @@ internal fun WorkspaceToolRow(
     onInfo: (cn.paperforge.app.model.ToolCapability) -> Unit,
 ) {
     var menu by remember { mutableStateOf(false) }
-    val capability =
-        if (tool.id.startsWith("tool:")) ToolCatalog.conversion(tool.id.removePrefix("tool:"))
-        else null
+    val capability = toolDescription(tool)
+    val navigation = expansionAction(tool.action)
     Card(
-        onClick = tool.action,
+        onClick = navigation.onClick,
+        modifier = navigation.modifier,
         enabled = enabled,
         shape = RoundedCornerShape(16.dp),
         colors =
@@ -336,7 +366,7 @@ internal fun WorkspaceToolRow(
                             menu = false
                         },
                     )
-                    capability?.let { info ->
+                    capability.let { info ->
                         DropdownMenuItem(
                             text = { Text("能力与格式说明") },
                             onClick = {
@@ -354,6 +384,35 @@ internal fun WorkspaceToolRow(
 @Composable
 internal fun SettingsHub(vm: MainViewModel, onAbout: () -> Unit, onUpdates: () -> Unit) {
     val context = LocalContext.current
+    var community by remember { mutableStateOf(false) }
+    if (community)
+        AlertDialog(
+            onDismissRequest = { community = false },
+            title = { Text("PaperForge体验交流") },
+            text = { Text("QQ群聊：980694348") },
+            confirmButton = {
+                TextButton({
+                    val clipboard =
+                        context.getSystemService(android.content.ClipboardManager::class.java)
+                    clipboard.setPrimaryClip(
+                        android.content.ClipData.newPlainText("PaperForge体验交流", "980694348")
+                    )
+                    val intent =
+                        context.packageManager.getLaunchIntentForPackage("com.tencent.mobileqq")
+                    if (intent != null) context.startActivity(intent)
+                    android.widget.Toast.makeText(
+                            context,
+                            "群号已复制，可在 QQ 中搜索加入",
+                            android.widget.Toast.LENGTH_SHORT,
+                        )
+                        .show()
+                    community = false
+                }) {
+                    Text("复制群号并打开 QQ")
+                }
+            },
+            dismissButton = { TextButton({ community = false }) { Text("关闭") } },
+        )
     val version =
         remember(context) {
             context.packageManager.getPackageInfo(context.packageName, 0).versionName.orEmpty()
@@ -390,20 +449,6 @@ internal fun SettingsHub(vm: MainViewModel, onAbout: () -> Unit, onUpdates: () -
             ) {
                 Text("检查更新")
             }
-            OutlinedButton(
-                onClick = {
-                    context.startActivity(
-                        android.content.Intent(
-                            android.content.Intent.ACTION_VIEW,
-                            android.net.Uri.parse("https://github.com/HABAI182/paperforge-android"),
-                        )
-                    )
-                },
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(14.dp),
-            ) {
-                Text("GitHub 项目")
-            }
         }
         Spacer(Modifier.height(4.dp))
         Text("偏好设置", style = MaterialTheme.typography.titleMedium)
@@ -414,12 +459,27 @@ internal fun SettingsHub(vm: MainViewModel, onAbout: () -> Unit, onUpdates: () -
         Spacer(Modifier.height(4.dp))
         Text("关于 PaperForge", style = MaterialTheme.typography.titleMedium)
         SectionNavigationRow(
-            WorkspaceSection("about", "关于与项目主页", "版本信息、GitHub 与开源声明", Icons.Default.Info),
-            onClick = onAbout,
-        )
-        SectionNavigationRow(
             WorkspaceSection("help", "使用说明", "扫描、阅读、转换与备份的离线指南", Icons.Default.HelpOutline),
             onClick = { vm.screen.value = "help" },
+        )
+        SectionNavigationRow(
+            WorkspaceSection("project", "项目主页", "GitHub 项目与开发动态", Icons.Default.Code),
+            onClick = {
+                context.startActivity(
+                    android.content.Intent(
+                        android.content.Intent.ACTION_VIEW,
+                        android.net.Uri.parse("https://github.com/HABAI182/paperforge-android"),
+                    )
+                )
+            },
+        )
+        SectionNavigationRow(
+            WorkspaceSection("community", "PaperForge体验交流", "QQ群 980694348", Icons.Default.Groups),
+            onClick = { community = true },
+        )
+        SectionNavigationRow(
+            WorkspaceSection("about", "关于 PaperForge", "版本信息与开源声明", Icons.Default.Info),
+            onClick = onAbout,
         )
     }
 }
@@ -453,4 +513,68 @@ private fun SectionNavigationRow(section: WorkspaceSection, onClick: () -> Unit)
             )
         }
     }
+}
+
+@Composable
+private fun QuickToolsDialog(tools: List<HomeTool>, pinned: Set<String>, onDismiss: () -> Unit) {
+    var selected by remember { mutableStateOf(pinned.toList().take(4)) }
+    var query by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("编辑常用工具") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    query,
+                    { query = it },
+                    placeholder = { Text("搜索工具") },
+                    singleLine = true,
+                )
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text("已选 ${selected.size} / 4", Modifier.weight(1f))
+                    TextButton({
+                        selected = cn.paperforge.app.SettingKeys.DefaultPinnedTools.split(',')
+                    }) {
+                        Text("恢复默认")
+                    }
+                }
+                Column(Modifier.heightIn(max = 360.dp).verticalScroll(rememberScrollState())) {
+                    val choices =
+                        tools
+                            .filter {
+                                it.title.contains(query, true) ||
+                                    it.description.contains(query, true)
+                            }
+                            .sortedBy {
+                                if (it.id in selected) selected.indexOf(it.id) else Int.MAX_VALUE
+                            }
+                    choices.forEach { tool ->
+                        val chosen = tool.id in selected
+                        fun toggle() {
+                            selected =
+                                if (chosen) selected - tool.id else (selected + tool.id).take(4)
+                        }
+                        Row(
+                            Modifier.fillMaxWidth()
+                                .clickable(enabled = chosen || selected.size < 4) { toggle() }
+                                .padding(vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Checkbox(chosen, null, enabled = chosen || selected.size < 4)
+                            Text(tool.title, Modifier.weight(1f))
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton({
+                UserSettings.set("pinnedTools", selected.joinToString(","))
+                onDismiss()
+            }) {
+                Text("保存")
+            }
+        },
+        dismissButton = { TextButton(onDismiss) { Text("取消") } },
+    )
 }

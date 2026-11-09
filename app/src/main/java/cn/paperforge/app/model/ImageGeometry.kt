@@ -60,8 +60,17 @@ object ImageGeometry {
         ) to max(distance(quad.points[0], quad.points[3]), distance(quad.points[1], quad.points[2]))
     }
 
-    /** Homography columns + centered pinhole camera. Reject ill-conditioned focal estimates. */
-    fun aspect(quad: Quad, width: Int, height: Int): Float {
+    /** A phone's main camera, 26 mm in 35 mm terms, as a share of the image diagonal (43.27 mm on film). */
+    const val TYPICAL_FOCAL_SHARE = 26f / 43.27f
+
+    /**
+     * The page's true width over height, from the homography columns and a centred pinhole camera. The focal
+     * length is estimated from the quad; when that estimate is implausible, [focalShare], the focal length as a
+     * share of the image diagonal from the photo's EXIF, or else a typical phone lens stands in. On the owner's
+     * photos the side lengths, the old stand-in, made an exam page 17% too wide, and snapping within 3% to
+     * standard paper sizes made three pages 2-3% too wide: the snap now needs 1%.
+     */
+    fun aspect(quad: Quad, width: Int, height: Int, focalShare: Float? = null): Float {
         val p =
             quad.points.map {
                 doubleArrayOf(it.x.toDouble() * (width - 1), it.y.toDouble() * (height - 1))
@@ -78,17 +87,22 @@ object ImageGeometry {
         if (abs(det) < 1e-6) return fallback
         val g = (dx3 * dy2 - dx2 * dy3) / det
         val h = (dx1 * dy3 - dx3 * dy1) / det
-        if (abs(g * h) < 1e-5) return fallback
         val cx = (width - 1) / 2.0
         val cy = (height - 1) / 2.0
         val ax = p[1][0] - p[0][0] + g * (p[1][0] - cx)
         val ay = p[1][1] - p[0][1] + g * (p[1][1] - cy)
         val bx = p[3][0] - p[0][0] + h * (p[3][0] - cx)
         val by = p[3][1] - p[0][1] + h * (p[3][1] - cy)
-        val focal2 = -(ax * bx + ay * by) / (g * h)
         val diagonal = hypot(width.toDouble(), height.toDouble())
-        if (!focal2.isFinite() || focal2 !in (diagonal * .3).pow(2)..(diagonal * 5).pow(2))
-            return fallback
+        // A near-affine quad says nothing about the lens, and its sides are its shape.
+        if (abs(g * h) < 1e-5) return fallback
+        // The quad's own estimate comes first: a notebook page that is not quite flat fits the lens it implies
+        // better than the lens the photo records (a page came out 10% too wide with the recorded one). The
+        // recorded lens, or a typical one, stands in when the estimate is implausible.
+        val estimate = -(ax * bx + ay * by) / (g * h)
+        val focal2 =
+            if (estimate.isFinite() && estimate in (diagonal * .3).pow(2)..(diagonal * 5).pow(2)) estimate
+            else ((focalShare?.takeIf { it in .2f..3f } ?: TYPICAL_FOCAL_SHARE) * diagonal).pow(2)
         val ratio =
             sqrt((ax * ax + ay * ay + g * g * focal2) / (bx * bx + by * by + h * h * focal2))
                 .toFloat()
@@ -97,6 +111,6 @@ object ImageGeometry {
             listOf(1.41421356f, 1.29411765f, 1.58518519f).flatMap { listOf(it, 1 / it) }
         return paperRatios
             .minByOrNull { abs(it / ratio - 1) }
-            ?.takeIf { abs(it / ratio - 1) < .03f } ?: ratio
+            ?.takeIf { abs(it / ratio - 1) < .01f } ?: ratio
     }
 }

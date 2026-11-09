@@ -15,12 +15,7 @@ android {
         versionCode = providers.gradleProperty("paperforgeVersionCode").get().toInt()
         versionName = providers.gradleProperty("paperforgeVersionName").get()
         externalNativeBuild {
-            cmake {
-                arguments += "-DANDROID_STL=c++_static"
-                providers.gradleProperty("paperforgeMnnSource").orNull?.let {
-                    arguments += "-DPAPERFORGE_MNN_SOURCE=$it"
-                }
-            }
+            cmake { arguments += "-DANDROID_STL=c++_static" }
         }
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk {

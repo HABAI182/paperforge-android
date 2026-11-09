@@ -1,0 +1,149 @@
+{
+  "synthetic": {
+    "strength": 0.85,
+    "source": {
+      "paperTone": 199.71702009638773,
+      "paperDarkRate": 0,
+      "textTone": 28.593743169398905,
+      "lightTone": 92.48706896551724,
+      "lightRetained": 1,
+      "pencilTone": 127.5699233716475,
+      "pencilRetained": 1,
+      "shadowPaperTone": 140.4228477067865,
+      "speckRate": 0,
+      "paperInteriorDarkRate": 0,
+      "sourceSpeckRetention": 1
+    },
+    "AUTO": {
+      "paperTone": 237.52007957871785,
+      "paperDarkRate": 0.007782577687702759,
+      "textTone": 82.80524590163934,
+      "lightTone": 140.03931034482758,
+      "lightRetained": 0.9982758620689656,
+      "pencilTone": 160.64463601532566,
+      "pencilRetained": 1,
+      "shadowPaperTone": 222.3331470950974,
+      "speckRate": 0.006837670461503735,
+      "paperInteriorDarkRate": 0,
+      "sourceSpeckRetention": 0.29333333333333333
+    },
+    "TEXT": {
+      "paperTone": 237.1628578220789,
+      "paperDarkRate": 0.007805389933316204,
+      "textTone": 81.84808743169398,
+      "lightTone": 138.53620689655173,
+      "lightRetained": 0.9982758620689656,
+      "pencilTone": 159.4588122605364,
+      "pencilRetained": 1,
+      "shadowPaperTone": 221.95392052179815,
+      "speckRate": 0.006894100753284363,
+      "paperInteriorDarkRate": 0,
+      "sourceSpeckRetention": 0.3028571428571429
+    },
+    "BW": {
+      "paperTone": 252.20980902548487,
+      "paperDarkRate": 0.010338749840914603,
+      "textTone": 48.691775956284154,
+      "lightTone": 0.4396551724137931,
+      "lightRetained": 0.9982758620689656,
+      "pencilTone": 9.217624521072796,
+      "pencilRetained": 0.9996168582375479,
+      "shadowPaperTone": 252.36376052246032,
+      "speckRate": 0.010287122127157858,
+      "paperInteriorDarkRate": 0,
+      "sourceSpeckRetention": 0.6666666666666666
+    },
+    "WORKBOOK": {
+      "paperTone": 251.27288248331703,
+      "paperDarkRate": 0.009809265613781478,
+      "textTone": 57.46532786885246,
+      "lightTone": 108.23120689655173,
+      "lightRetained": 0.9982758620689656,
+      "pencilTone": 148.7277777777778,
+      "pencilRetained": 1,
+      "shadowPaperTone": 250.40950063321,
+      "speckRate": 0.009773246278602354,
+      "paperInteriorDarkRate": 0,
+      "sourceSpeckRetention": 0.4095238095238095
+    },
+    "WORKBOOK_DETAIL_0": {
+      "paperTone": 251.44477515530338,
+      "paperDarkRate": 0.009716815986821725,
+      "textTone": 68.20871584699454,
+      "lightTone": 135.1746551724138,
+      "lightRetained": 0.9982758620689656,
+      "pencilTone": 176.89885057471264,
+      "pencilRetained": 0.9634099616858237,
+      "shadowPaperTone": 250.6437510863897,
+      "speckRate": 0.009242561406963258,
+      "paperInteriorDarkRate": 0,
+      "sourceSpeckRetention": 0.35619047619047617
+    },
+    "WORKBOOK_DETAIL_1": {
+      "paperTone": 251.20641720475552,
+      "paperDarkRate": 0.00988610686216361,
+      "textTone": 54.70106557377049,
+      "lightTone": 101.89465517241379,
+      "lightRetained": 0.9982758620689656,
+      "pencilTone": 141.44904214559386,
+      "pencilRetained": 1,
+      "shadowPaperTone": 250.33610621373526,
+      "speckRate": 0.009798459813227741,
+      "paperInteriorDarkRate": 0,
+      "sourceSpeckRetention": 0.43047619047619046
+    }
+  },
+  "sample": {
+    "strength": 0.85,
+    "source": {
+      "paperTone": 254.71114895879052,
+      "paperDarkRate": 0,
+      "faintRetention": 1,
+      "shadowTone": 141.0695625,
+      "shadowPixels": 48,
+      "speckCount": 65,
+      "speckPixels": 139,
+      "speckRatePerMegapixel": 136.75718221172767
+    },
+    "AUTO": {
+      "paperTone": 249.27434510905206,
+      "paperDarkRate": 0.0027138418172947963,
+      "faintRetention": 0.5883701883701884,
+      "shadowTone": 132.22525,
+      "shadowPixels": 48,
+      "speckCount": 89,
+      "speckPixels": 164,
+      "speckRatePerMegapixel": 161.35379771743408
+    },
+    "TEXT": {
+      "paperTone": 249.27050865998817,
+      "paperDarkRate": 0.0027278306926416768,
+      "faintRetention": 0.5838656838656838,
+      "shadowTone": 132.47525,
+      "shadowPixels": 48,
+      "speckCount": 82,
+      "speckPixels": 154,
+      "speckRatePerMegapixel": 151.5151515151515
+    },
+    "BW": {
+      "paperTone": 253.80562107983627,
+      "paperDarkRate": 0.004656546881092811,
+      "faintRetention": 0.6048321048321048,
+      "shadowTone": 106.35416666666667,
+      "shadowPixels": 48,
+      "speckCount": 11,
+      "speckPixels": 21,
+      "speckRatePerMegapixel": 20.66115702479339
+    },
+    "WORKBOOK": {
+      "paperTone": 253.96870164002078,
+      "paperDarkRate": 0.0037262866705252647,
+      "faintRetention": 0.6221949221949222,
+      "shadowTone": 77.33333333333333,
+      "shadowPixels": 48,
+      "speckCount": 15,
+      "speckPixels": 26,
+      "speckRatePerMegapixel": 25.58048012593467
+    }
+  }
+}

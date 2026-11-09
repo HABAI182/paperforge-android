@@ -34,6 +34,7 @@ data class OcrFrame(
                         JSONObject()
                             .put("algorithm", step.optString("algorithm"))
                             .put("modelSha256", step.optString("modelSha256"))
+                            .put("implementationVersion", step.optString("implementationVersion"))
                             .put("strength", step.optDouble("strength", 1.0))
                             .put("sourceGeometry", step.optJSONObject("sourceGeometry"))
                     )

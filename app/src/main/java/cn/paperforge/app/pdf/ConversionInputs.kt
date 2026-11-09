@@ -8,8 +8,17 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 
 object ConversionInputs {
-    suspend fun retain(repo: Repository, uris: List<Uri>): List<Pair<File, String>> {
-        val directory = File(repo.context.filesDir, "conversion-inputs").apply { mkdirs() }
+    suspend fun retain(
+        repo: Repository,
+        uris: List<Uri>,
+        temporary: Boolean = false,
+    ): List<Pair<File, String>> {
+        val directory =
+            File(
+                    if (temporary) repo.context.cacheDir else repo.context.filesDir,
+                    "conversion-inputs",
+                )
+                .apply { mkdirs() }
         val results = mutableListOf<Pair<File, String>>()
         try {
             for (uri in uris) {

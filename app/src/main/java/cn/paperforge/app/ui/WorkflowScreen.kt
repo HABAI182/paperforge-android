@@ -52,10 +52,7 @@ fun WorkflowScreen(vm: MainViewModel) {
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) {
             it?.let(vm::rememberWorkflowDirectory)
         }
-    val input =
-        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
-            it?.let { uri -> vm.runWorkflow(uri) }
-        }
+    val input = rememberPaperDocumentPicker { it?.let { uri -> vm.runWorkflow(uri) } }
     fun pickInput() {
         input.launch(
             when (draft.input) {

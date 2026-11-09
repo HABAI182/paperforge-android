@@ -30,7 +30,6 @@ object PdfImageEnhancement {
     val presets =
         linkedMapOf(
             "AUTO" to "自然",
-            "TEXT" to "清晰文字",
             "WORKBOOK" to "练习册",
             "BW" to "柔和黑白",
             "CLEAN" to "强力去背景",
@@ -182,7 +181,7 @@ object PdfImageEnhancement {
                                                             val cached =
                                                                 stages.file(
                                                                     "enhance-$index-$path-${name.name}",
-                                                                    "scan-enhance-r1|$sourceHash|$index|$path|${name.name}|$preset",
+                                                                    "scan-enhance-r2|${cn.paperforge.app.imaging.ScanConfig.fingerprint()}|$sourceHash|$index|$path|${name.name}|$preset",
                                                                     "png",
                                                                 ) { file ->
                                                                     val b = enhanced(obj, preset)

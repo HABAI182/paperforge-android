@@ -16,7 +16,6 @@ import org.opencv.core.Mat
 
 /** MakeACopy model, letterbox and postprocessor; provenance/license travel in assets. */
 object LearnedDocumentDetector {
-    private var neuralFailure = false
     private var context: Context? = null
     private var session: OrtSession? = null
     private var failure: String? = null
@@ -47,10 +46,10 @@ object LearnedDocumentDetector {
         }
     }
 
+    /** Raw model output for [bitmap], with coordinates in its own pixels; null if unavailable. */
     @Synchronized
-    fun detect(bitmap: Bitmap): DetectionResult {
-        val started = System.nanoTime()
-        if (context == null || failure != null) return DetectionResult(null, 0f, "ai-unavailable")
+    internal fun infer(bitmap: Bitmap): DocQuadPostprocessor.Result? {
+        if (context == null || failure != null) return null
         try {
             val lb = DocQuadLetterbox.create(bitmap.width, bitmap.height)
             val input = Bitmap.createBitmap(256, 256, Bitmap.Config.ARGB_8888)
@@ -94,48 +93,50 @@ object LearnedDocumentDetector {
                         @Suppress("UNCHECKED_CAST")
                         val mask =
                             output.get("mask_logits").get().value as Array<Array<Array<FloatArray>>>
-                        val result =
-                            DocQuadPostprocessor.postprocess(
-                                corners,
-                                mask,
-                                lb,
-                                DocQuadPostprocessor.PeakMode.REFINE_5X5_QUADRATIC,
-                            )
-                        val points =
-                            result.chosenQuadOriginal()?.map {
-                                PointN(
-                                    (it[0] / bitmap.width).toFloat().coerceIn(0f, 1f),
-                                    (it[1] / bitmap.height).toFloat().coerceIn(0f, 1f),
-                                )
-                            }
-                        val quad =
-                            points
-                                ?.let { Quad.ordered(it) }
-                                ?.takeIf { it.valid() && it.area >= .06f }
-                        val confidence = result.cornerConfidence().toFloat().coerceIn(0f, 1f)
-                        return DetectionResult(
-                            quad,
-                            confidence,
-                            "docquad-${result.chosenSource()}",
-                            mapOf(
-                                "mask_iou" to result.cornerMaskIou().toFloat(),
-                                "corner_peak" to result.minPeakProb().toFloat(),
-                            ),
-                            (System.nanoTime() - started) / 1e6f,
+                        return DocQuadPostprocessor.postprocess(
+                            corners,
+                            mask,
+                            lb,
+                            DocQuadPostprocessor.PeakMode.REFINE_5X5_QUADRATIC,
                         )
                     }
                 }
         } catch (e: Exception) {
             failure = e.javaClass.simpleName + ": " + e.message
             android.util.Log.w("PaperForgeDetector", "AI unavailable; using local edge detector", e)
-            return DetectionResult(null, 0f, "ai-fallback")
+            return null
         }
     }
 
+    fun detect(bitmap: Bitmap): DetectionResult {
+        val started = System.nanoTime()
+        if (context == null || failure != null) return DetectionResult(null, 0f, "ai-unavailable")
+        val result = infer(bitmap) ?: return DetectionResult(null, 0f, "ai-fallback")
+        val points =
+            result.chosenQuadOriginal()?.map {
+                PointN(
+                    (it[0] / bitmap.width).toFloat().coerceIn(0f, 1f),
+                    (it[1] / bitmap.height).toFloat().coerceIn(0f, 1f),
+                )
+            }
+        val quad = points?.let { Quad.ordered(it) }?.takeIf { it.valid() && it.area >= .06f }
+        val confidence = result.cornerConfidence().toFloat().coerceIn(0f, 1f)
+        return DetectionResult(
+            quad,
+            confidence,
+            "docquad-${result.chosenSource()}",
+            mapOf(
+                "mask_iou" to result.cornerMaskIou().toFloat(),
+                "corner_peak" to result.minPeakProb().toFloat(),
+            ),
+            (System.nanoTime() - started) / 1e6f,
+        )
+    }
+
     /**
-     * A full-frame quad is the absence of a crop, not a located page. Collapsing it here keeps every
-     * engine honest: the caller sees "nothing detected", the capture still falls back to the full
-     * frame, and confidence gates never treat a blank desk as a verified document.
+     * A full-frame quad is the absence of a crop, not a located page. Collapsing it here keeps
+     * every engine honest: the caller sees "nothing detected", the capture still falls back to the
+     * full frame, and confidence gates never treat a blank desk as a verified document.
      */
     private fun frameOnly(result: DetectionResult): DetectionResult {
         val quad = result.quad ?: return result
@@ -154,29 +155,25 @@ object LearnedDocumentDetector {
         preview: Boolean = false,
         engineOverride: String? = null,
     ): DetectionResult {
+        val result = detectRaw(source, preview, engineOverride)
+        // PageNet already separates the top sheet of a pile.
+        return if (preview || result.method.startsWith("pagenet")) result
+        else PrimaryPaperFrame.refine(source, result)
+    }
+
+    private fun detectRaw(source: Mat, preview: Boolean, engineOverride: String?): DetectionResult {
         val engine = engineOverride ?: UserSettings[SettingKeys.Detector]
+        if (engine == "INDEPENDENT") return IndependentDocumentDetector.detect(source, preview)
         if (engine == "STANDARD") return frameOnly(DocumentDetector.detect(source, preview))
-        // HYBRID must not bypass the paper-edge model. The older fallback preferred high-score
-        // background rectangles when DocQuad corner scores were low on small/curved documents.
-        if ((engine == "NEURAL" || engine == "HYBRID") && !neuralFailure) {
-            try {
-                val result = NeuralEdgeDetector.detect(source, preview)
-                if (result.quad != null)
-                    return frameOnly(
-                        if (engine == "HYBRID") result.copy(method = "auto-" + result.method) else result
-                    )
-            } catch (e: Exception) {
-                neuralFailure = true
-                android.util.Log.w("PaperForgeDetector", "Edge model unavailable; using hybrid", e)
-            } catch (e: UnsatisfiedLinkError) {
-                neuralFailure = true
-                android.util.Log.w(
-                    "PaperForgeDetector",
-                    "Scan runtime unavailable; using hybrid",
-                    e,
-                )
-            }
+        PageNetDetector.detect(source, preview)?.let { found ->
+            val quad = found.quad ?: return@let
+            return frameOnly(
+                if (preview || ScanConfig.int("pageNetRefine", 1) == 0) found
+                else found.copy(quad = DocumentDetector.refine(source, quad), method = found.method + "+refined")
+            )
         }
+        // PageNet saw no sheet. The edge detector prefers background rectangles when it decides
+        // alone, so it is only the last resort.
         val bitmap = Bitmap.createBitmap(source.cols(), source.rows(), Bitmap.Config.ARGB_8888)
         val learned =
             try {
@@ -185,29 +182,6 @@ object LearnedDocumentDetector {
             } finally {
                 bitmap.recycle()
             }
-        val standard = DocumentDetector.detect(source, preview)
-        if (learned.quad == null || learned.confidence < .55f) return frameOnly(standard)
-        fun refined() =
-            if (preview) learned
-            else
-                learned.copy(
-                    quad = DocumentDetector.refine(source, requireNotNull(learned.quad)),
-                    method = learned.method + "+refined",
-                )
-        if (standard.quad == null) return frameOnly(refined())
-        val shift =
-            learned.quad.points.zip(standard.quad.points).maxOf { (a, b) ->
-                hypot(a.x - b.x, a.y - b.y)
-            }
-        // Consensus keeps the high-resolution edge fit. A confident semantic model
-        // can resolve a background rectangle that the edge-only detector preferred.
-        if (shift < .055f)
-            return frameOnly(
-                standard.copy(
-                    method = "ai+" + standard.method,
-                    confidence = max(standard.confidence, learned.confidence),
-                )
-            )
-        return frameOnly(if (learned.confidence >= .72f) refined() else standard)
+        return frameOnly(if (learned.quad != null) learned else DocumentDetector.detect(source, preview))
     }
 }

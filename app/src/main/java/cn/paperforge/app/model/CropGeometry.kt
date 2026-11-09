@@ -65,14 +65,42 @@ object CropGeometry {
             .takeIf { it.valid() } ?: quad
     }
 
-    fun split(quad: Quad, topFraction: Float, bottomFraction: Float): Pair<Quad, Quad> {
-        val p = quad.points
-        fun point(a: PointN, b: PointN, fraction: Float): PointN {
-            val t = fraction.coerceIn(.15f, .85f)
-            return PointN(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)
+    fun split(quad: Quad, topFraction: Float, bottomFraction: Float): Pair<Quad, Quad> =
+        split(quad, topFraction, bottomFraction, topFraction, bottomFraction)
+
+    /**
+     * Split into a left and a right page where each page can end on its own side of the gutter.
+     *
+     * [topFraction]/[bottomFraction] are the LEFT page's inner edge (the gutter's left side);
+     * [rightTopFraction]/[rightBottomFraction] are the RIGHT page's inner edge (the gutter's right
+     * side). Equal values keep the old single-line split: one seam, half of it on each page.
+     * Passing two ordered boundaries instead drops the whole gutter band, which is what the auto
+     * spine split uses so neither page keeps half of the shadow.
+     *
+     * Fractions are clamped to 0.15..0.85 exactly like the single-line version. Reversed boundaries
+     * are rejected instead of producing two overlapping pages.
+     */
+    fun split(
+        quad: Quad,
+        topFraction: Float,
+        bottomFraction: Float,
+        rightTopFraction: Float,
+        rightBottomFraction: Float,
+    ): Pair<Quad, Quad> {
+        // Clamp first: out-of-range input keeps the single-line behavior (clamped to .15...85), so
+        // the ordering check has to look at the same values that are actually used.
+        val leftTop = topFraction.coerceIn(.15f, .85f)
+        val leftBottom = bottomFraction.coerceIn(.15f, .85f)
+        val rightTop = rightTopFraction.coerceIn(.15f, .85f)
+        val rightBottom = rightBottomFraction.coerceIn(.15f, .85f)
+        require(rightTop >= leftTop && rightBottom >= leftBottom) {
+            "书脊左右边界交叉：$leftTop/$leftBottom > $rightTop/$rightBottom"
         }
-        val top = point(p[0], p[1], topFraction)
-        val bottom = point(p[3], p[2], bottomFraction)
-        return Quad(listOf(p[0], top, bottom, p[3])) to Quad(listOf(top, p[1], p[2], bottom))
+        val p = quad.points
+        fun point(a: PointN, b: PointN, fraction: Float): PointN =
+            PointN(a.x + (b.x - a.x) * fraction, a.y + (b.y - a.y) * fraction)
+        return Quad(
+            listOf(p[0], point(p[0], p[1], leftTop), point(p[3], p[2], leftBottom), p[3])
+        ) to Quad(listOf(point(p[0], p[1], rightTop), p[1], p[2], point(p[3], p[2], rightBottom)))
     }
 }

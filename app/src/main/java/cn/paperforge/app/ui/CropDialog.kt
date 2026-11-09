@@ -1,6 +1,5 @@
 package cn.paperforge.app.ui
 
-import android.graphics.Bitmap
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -22,7 +21,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import cn.paperforge.app.data.PageRow
 import cn.paperforge.app.imaging.ScanProcessor
 import cn.paperforge.app.model.*
@@ -32,8 +30,16 @@ import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalFoundationApi::class, androidx.compose.ui.ExperimentalComposeUiApi::class)
 @Composable
-fun CropDialog(page: PageRow, onDismiss: () -> Unit, onSave: (Quad, Float) -> Unit) {
-    val bitmap = pageBitmap(page, 1400, true)
+fun CropDialog(
+    page: PageRow,
+    onDismiss: () -> Unit,
+    onSave: (Quad, Float) -> Unit,
+    embedded: Boolean = false,
+    onDraft: (Quad, Float) -> Unit = { _, _ -> },
+) {
+    // The photo under the outline depends on the photo only: keyed on the draft, every drag decoded it again.
+    val photo = remember(page.id, page.original) { page }
+    val bitmap = pageBitmap(photo, 1400, true)
     val pointSaver = remember {
         Saver<List<PointN>, String>(
             save = { Quad(it).encode() },
@@ -54,10 +60,8 @@ fun CropDialog(page: PageRow, onDismiss: () -> Unit, onSave: (Quad, Float) -> Un
     var dragPoint by remember { mutableStateOf(Offset.Unspecified) }
     var detecting by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
-    ) {
+    LaunchedEffect(points, aspect) { if (embedded) onDraft(Quad(points), aspect) }
+    ScanToolWindow(embedded, onDismiss) {
         Surface(
             Modifier.fillMaxSize().semantics { testTagsAsResourceId = true },
             color = MaterialTheme.colorScheme.background,
@@ -65,14 +69,17 @@ fun CropDialog(page: PageRow, onDismiss: () -> Unit, onSave: (Quad, Float) -> Un
             BoxWithConstraints(Modifier.fillMaxSize()) {
                 val canvasHeight = (maxHeight - 270.dp).coerceIn(180.dp, 700.dp)
                 Column(
-                    Modifier.fillMaxSize().systemBarsPadding().padding(20.dp),
+                    Modifier.fillMaxSize()
+                        .then(if (embedded) Modifier else Modifier.systemBarsPadding())
+                        .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Column(
                         Modifier.weight(1f).verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        Text("沿纸边拖动四角或整边", style = MaterialTheme.typography.headlineSmall)
+                        if (!embedded)
+                            Text("沿纸边拖动四角或整边", style = MaterialTheme.typography.headlineSmall)
                         Text("拖动圆点或边线中点；放大镜辅助对齐。", style = MaterialTheme.typography.bodyMedium)
                         Box(
                             Modifier.height(canvasHeight).fillMaxWidth(),
@@ -349,38 +356,54 @@ fun CropDialog(page: PageRow, onDismiss: () -> Unit, onSave: (Quad, Float) -> Un
                     ) {
                         TextButton(onClick = { points = Quad.Full.points }) { Text("全图") }
                         TextButton(
+                            onClick = {
+                                points = CropGeometry.expand(Quad(points), .02f).points
+                                notice = "已向外留边，避免裁掉页边文字。"
+                            }
+                        ) {
+                            Text("向外留边")
+                        }
+                        TextButton(
                             enabled = bitmap != null && !detecting,
                             onClick = {
                                 detecting = true
-                                scope.launchIoDetect(bitmap!!) { q ->
-                                    q?.let { points = it.points }
-                                    detecting = false
+                                scope.launch {
+                                    try {
+                                        val result =
+                                            withContext(Dispatchers.Default) {
+                                                ScanProcessor.detectFile(
+                                                    java.io.File(page.original),
+                                                    lockReference = false,
+                                                )
+                                            }
+                                        result.quad?.let { points = it.points }
+                                        notice =
+                                            if (result.quad == null) "未找到完整纸边，已保留当前四角；可手动微调。"
+                                            else if (result.confidence < .6f) "已从原图重检，边缘较弱，请检查四角。"
+                                            else "已从原始照片重新检测纸边。"
+                                    } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                                        throw cancelled
+                                    } catch (failure: Exception) {
+                                        notice = failure.message ?: "重新检测失败，当前四角已保留。"
+                                    } finally {
+                                        detecting = false
+                                    }
                                 }
                             },
                         ) {
                             Text(if (detecting) "检测中…" else "重新检测")
                         }
-                        TextButton(onClick = onDismiss) { Text("取消") }
-                        Button(
-                            onClick = { onSave(Quad(points), aspect) },
-                            enabled = Quad(points).valid(),
-                        ) {
-                            Text("应用")
-                        }
+                        if (!embedded) TextButton(onClick = onDismiss) { Text("取消") }
+                        if (!embedded)
+                            Button(
+                                onClick = { onSave(Quad(points), aspect) },
+                                enabled = Quad(points).valid(),
+                            ) {
+                                Text("应用")
+                            }
                     }
                 }
             }
         }
     }
-}
-
-private fun kotlinx.coroutines.CoroutineScope.launchIoDetect(
-    bitmap: Bitmap,
-    done: (Quad?) -> Unit,
-) = launch {
-    done(
-        withContext(Dispatchers.Default) {
-            runCatching { ScanProcessor.detect(bitmap) }.getOrNull()
-        }
-    )
 }

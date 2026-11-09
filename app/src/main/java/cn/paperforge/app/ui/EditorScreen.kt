@@ -18,43 +18,105 @@ import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
 import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.UserSettings
+import cn.paperforge.app.data.PageResources
 import cn.paperforge.app.data.PageRow
 import cn.paperforge.app.data.origins
+import cn.paperforge.app.data.withWorkbookDetail
+import cn.paperforge.app.data.workbookDetail
 import cn.paperforge.app.imaging.ScanProcessor
 import cn.paperforge.app.model.*
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+/** Smallest size a page preview is worked out at before it is shrunk to a thumbnail. */
+private const val THUMBNAIL_WORK = 640
+
 @Composable
 fun pageBitmap(page: PageRow, edge: Int = 1200, original: Boolean = false): Bitmap? {
     return pagePreview(page, edge, original).bitmap
 }
 
-data class PagePreview(val bitmap: Bitmap? = null, val error: String? = null)
+data class PagePreview(
+    val bitmap: Bitmap? = null,
+    val error: String? = null,
+    val loading: Boolean = true,
+)
 
 @Composable
 fun pagePreview(page: PageRow, edge: Int = 1200, original: Boolean = false): PagePreview {
     val preview by
         produceState(PagePreview(), page, edge, original) {
-            value =
+            value = value.copy(error = null, loading = true)
+            var generated: Bitmap? = null
+            try {
                 withContext(Dispatchers.Default) {
-                    runCatching {
-                            if (original) ScanProcessor.decode(File(page.original), edge)
-                            else ScanProcessor.render(page, edge)
-                        }
-                        .fold(
-                            onSuccess = { PagePreview(bitmap = it) },
-                            onFailure = { PagePreview(error = it.message ?: "预览无法打开") },
-                        )
+                    generated =
+                        if (original)
+                            ScanProcessor.decode(
+                                File(PageResources.sourceAppearance(page).original),
+                                edge,
+                            )
+                        else if (edge >= THUMBNAIL_WORK) ScanProcessor.render(page, edge)
+                        else
+                            // The page's look is worked out on enough pixels to hold its lines, then shrunk:
+                            // finished at thumbnail size, thin rules and strokes broke into specks.
+                            ScanProcessor.render(page, THUMBNAIL_WORK).let { full ->
+                                try {
+                                    if (kotlin.math.max(full.width, full.height) <= edge)
+                                        full.copy(Bitmap.Config.ARGB_8888, false)
+                                    else ScanProcessor.shrunk(full, edge)
+                                } finally {
+                                    full.recycle()
+                                }
+                            }
                 }
+                value = PagePreview(bitmap = generated, loading = false)
+                generated = null
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                value = PagePreview(error = failure.message ?: "预览无法打开", loading = false)
+            } finally {
+                generated?.recycle()
+            }
+        }
+    val ownedPreview = preview.bitmap
+    DisposableEffect(ownedPreview) { onDispose { ownedPreview?.recycle() } }
+    return preview
+}
+
+/**
+ * Editor canvas preview backed by [EnhancedPreviewCache].
+ *
+ * The enhanced bitmap is a function of the page identity and the filter parameters only, so a zoom
+ * change (which is a display transform) never invalidates it and never re-runs the filter. The
+ * returned bitmap belongs to the cache and must not be recycled by the caller.
+ */
+@Composable
+fun cachedPagePreview(page: PageRow): PagePreview {
+    val preview by
+        produceState(PagePreview(), page.id, page.revision, page.filter, page.enhanceStrength, page.rotation) {
+            value = PagePreview(loading = true)
+            try {
+                val bitmap =
+                    withContext(Dispatchers.Default) {
+                        cn.paperforge.app.imaging.EnhancedPreviewCache.obtain(page)
+                    }
+                value = PagePreview(bitmap = bitmap, loading = false)
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                android.util.Log.e("PaperForgePreview", "enhanced preview failed", failure)
+                value = PagePreview(error = failure.message ?: "预览无法打开", loading = false)
+            }
         }
     return preview
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
+    val libraryPages = rememberPaperDocumentsPicker { if (it.isNotEmpty()) vm.importImages(it) }
     val pages by vm.pages.collectAsState()
     val doc by vm.selected.collectAsState()
     val busy by vm.busy.collectAsState()
@@ -114,25 +176,45 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                 )
         }
     var crop by rememberSaveable(doc?.id) { mutableStateOf(false) }
-    var name by remember(doc?.id) { mutableStateOf(doc?.title ?: "") }
+    var name by remember(doc?.id, doc?.title) { mutableStateOf(doc?.title ?: "") }
     var export by rememberSaveable(doc?.id) { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
     var adjust by rememberSaveable(doc?.id) { mutableStateOf(false) }
     var more by remember { mutableStateOf(false) }
+    var addPage by remember { mutableStateOf(false) }
+    var receipts by remember { mutableStateOf(false) }
+    // #31: the grouped menu lives here but the rename / fullscreen dialogs belong to the layout.
+    var renameTick by remember { mutableIntStateOf(0) }
+    var fullscreenTick by remember { mutableIntStateOf(0) }
     var bookSplit by remember { mutableStateOf(false) }
     var dewarp by remember { mutableStateOf(false) }
     var trace by remember { mutableStateOf(false) }
     var origins by remember { mutableStateOf(false) }
+    var retouchMode by remember { mutableStateOf<String?>(null) }
     var retouch by remember(doc?.id) { mutableStateOf<PageRow?>(null) }
+    var annotate by remember(doc?.id) { mutableStateOf<PageRow?>(null) }
     val repairPage = retouch
     if (repairPage != null) {
         ScanRetouchScreen(
             vm.repo,
             repairPage,
             onBack = { retouch = null },
+            initialMode = retouchMode,
             onSubmit = { request ->
                 retouch = null
                 vm.retouch(repairPage, request)
+            },
+        )
+        return
+    }
+    val annotatingPage = annotate
+    if (annotatingPage != null) {
+        ScanAnnotationScreen(
+            annotatingPage,
+            onBack = { annotate = null },
+            onSave = { annotations ->
+                annotate = null
+                vm.saveAnnotations(annotatingPage, annotations)
             },
         )
         return
@@ -147,14 +229,36 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                 "back" -> vm.closeDocument()
                 "tasks" -> vm.screen.value = "tasks"
                 "capture" -> vm.screen.value = "capture"
+                "addPageSheet" -> addPage = true
                 "import" -> onImport()
                 "pages" -> vm.screen.value = "pages"
                 "export" -> export = true
                 "undo" -> vm.undo()
                 "redo" -> vm.redo()
                 "crop" -> crop = true
+                "retake" ->
+                    active?.let {
+                        vm.replacement.value = it.id
+                        vm.screen.value = "capture"
+                    }
+                "delete" -> confirmDelete = true
                 "adjust" -> adjust = true
-                "retouch" -> retouch = active
+                "retouch" -> {
+                    retouchMode = null
+                    retouch = active
+                }
+                "flatten" ->
+                    active?.let {
+                        vm.retouch(
+                            it,
+                            cn.paperforge.app.imaging.RetouchRequest("FLAT_SCAN"),
+                            inPlace = true,
+                        )
+                    }
+                "ai-clean" -> {
+                    retouchMode = "AI_CLEAN"
+                    retouch = active
+                }
                 "more" -> more = true
                 "applyAll" -> active?.let(vm::applyAll)
                 "ocr" -> active?.let(vm::openOcr)
@@ -165,34 +269,28 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
             doc?.let { vm.rename(it, value) }
         },
         onFilter = { page, filter -> vm.save(page.copy(filter = filter)) },
+        suggestName = { doc?.let { vm.namingSuggestion(it, recognizeMissing = true) } },
         highlights = highlights,
+        taskCount = tasks.count { it.state in cn.paperforge.app.data.LocalTaskRow.active },
         taskStatus =
             tasks
                 .firstOrNull {
                     it.documentId == doc?.id &&
                         (it.pageId == active?.id ||
                             it.targetPageId == active?.id ||
-                            active == null) &&
+                            active == null ||
+                            it.type != "CAPTURE") &&
                         it.state != cn.paperforge.app.data.LocalTaskState.SUCCEEDED
                 }
-                ?.let { "${taskStateName(it.state)} · ${it.detail}" },
+                ?.let { "${taskStateName(it.state)} ${it.progress}%  ${it.detail}" },
+        renameRequest = renameTick,
+        fullscreenRequest = fullscreenTick,
     )
     if (crop && active != null)
-        CropDialog(
-            active,
-            onDismiss = { crop = false },
-            onSave = { quad, aspect ->
-                vm.save(
-                    active.copy(
-                        corners = quad.encode(),
-                        outputAspect = aspect,
-                        detectionConfidence = null,
-                        detectionMethod = "manual",
-                    )
-                )
-                crop = false
-            },
-        )
+        ScanGeometryDialog(active, { crop = false }) {
+            vm.saveGeometry(active, it)
+            crop = false
+        }
     if (bookSplit && active != null)
         BookSplitDialog(
             active,
@@ -212,6 +310,7 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
             }
         var previewStrength by remember { mutableFloatStateOf(strength) }
         var previewError by remember { mutableStateOf<String?>(null) }
+        var dewarpNote by remember { mutableStateOf("") }
         val preview by
             produceState<Bitmap?>(null, page, previewStrength) {
                 value = null
@@ -229,10 +328,13 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                                         1000,
                                     )
                                 try {
-                                    cn.paperforge.app.imaging.PageDewarp.apply(
-                                        image,
-                                        previewStrength,
-                                    )
+                                    val result =
+                                        cn.paperforge.app.imaging.PageDewarp.process(
+                                            image,
+                                            previewStrength,
+                                        )
+                                    dewarpNote = result.note
+                                    result.bitmap
                                 } finally {
                                     image.recycle()
                                 }
@@ -269,7 +371,10 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                         valueRange = 0f..1f,
                         onValueChangeFinished = { previewStrength = strength },
                     )
-                    Text("适合弯曲书页。预览满意后应用，可用撤销恢复。", style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        dewarpNote.ifBlank { "正在估计文字行曲率" } + "；预览满意后应用，可撤销。",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
                 }
             },
             confirmButton = {
@@ -307,42 +412,95 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
         var brightness by rememberSaveable(active.id) { mutableFloatStateOf(active.brightness) }
         var contrast by rememberSaveable(active.id) { mutableFloatStateOf(active.contrast) }
         var strength by rememberSaveable(active.id) { mutableFloatStateOf(active.enhanceStrength) }
+        var faintInk by rememberSaveable(active.id) { mutableFloatStateOf(active.workbookDetail()) }
+        val adjusted =
+            (if (active.filter in setOf("WORKBOOK", "CLEAN")) active.withWorkbookDetail(faintInk)
+                else active)
+                .copy(brightness = brightness, contrast = contrast, enhanceStrength = strength)
+        // Debounce expensive rendering while dragging, without persisting preview edits.
+        var previewPage by remember(active.id) { mutableStateOf(adjusted) }
+        LaunchedEffect(adjusted) {
+            kotlinx.coroutines.delay(100)
+            previewPage = adjusted
+        }
+        val preview = pagePreview(previewPage, edge = 1000)
         SpaciousToolDialog(
             onDismissRequest = { adjust = false },
             title = { Text("增强与明暗") },
             text = {
-                Column(Modifier.verticalScroll(rememberScrollState())) {
-                    Text("去阴影强度 %.0f%%".format(strength * 100))
-                    Slider(
-                        value = strength,
-                        onValueChange = { strength = it },
-                        valueRange = 0f..1f,
-                        enabled = active.filter != "ORIGINAL",
-                    )
-                    Text("亮度 %+.0f".format(brightness * 100))
-                    Slider(
-                        value = brightness,
-                        onValueChange = { brightness = it },
-                        valueRange = -0.5f..0.5f,
-                    )
-                    Text("对比度 %.2f".format(contrast))
-                    Slider(
-                        value = contrast,
-                        onValueChange = { contrast = it },
-                        valueRange = 0.5f..1.8f,
-                    )
+                BoxWithConstraints(Modifier.fillMaxSize()) {
+                    val controlsHeight = maxHeight * .48f
+                    val previewContent: @Composable (Modifier) -> Unit = { modifier ->
+                        Box(modifier, contentAlignment = Alignment.Center) {
+                            preview.bitmap?.let {
+                                Image(
+                                    it.asImageBitmap(),
+                                    "增强效果实时预览",
+                                    Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Fit,
+                                )
+                            }
+                            if (preview.error != null) Text(preview.error)
+                            else if (preview.bitmap == null) CircularProgressIndicator()
+                        }
+                    }
+                    val controls: @Composable (Modifier) -> Unit = { modifier ->
+                        Column(modifier.verticalScroll(rememberScrollState())) {
+                            TextButton(
+                                onClick = {
+                                    brightness = 0f
+                                    contrast = 1f
+                                    strength = .85f
+                                    faintInk = .85f
+                                }
+                            ) {
+                                Text("恢复增强默认参数")
+                            }
+                            Text(
+                                (if (active.filter in setOf("WORKBOOK", "CLEAN")) "去透页强度 %.0f%%"
+                                    else "增强强度 %.0f%%")
+                                    .format(strength * 100)
+                            )
+                            Slider(
+                                strength,
+                                { strength = it },
+                                valueRange = 0f..1f,
+                                enabled = active.filter != "ORIGINAL",
+                            )
+                            if (active.filter in setOf("WORKBOOK", "CLEAN")) {
+                                Text("淡字保留 %.0f%%".format(faintInk * 100))
+                                Slider(faintInk, { faintInk = it }, valueRange = 0f..1f)
+                                Text("向右保留细字，向左更强去透印。", style = MaterialTheme.typography.bodySmall)
+                            }
+                            Text("亮度 %+.0f".format(brightness * 100))
+                            Slider(brightness, { brightness = it }, valueRange = -0.5f..0.5f)
+                            Text("对比度 %.2f".format(contrast))
+                            Slider(contrast, { contrast = it }, valueRange = 0.5f..1.8f)
+                        }
+                    }
+                    if (maxWidth > 500.dp && maxWidth > maxHeight) {
+                        Row(
+                            Modifier.fillMaxSize(),
+                            horizontalArrangement = Arrangement.spacedBy(20.dp),
+                        ) {
+                            previewContent(Modifier.weight(1f).fillMaxHeight())
+                            controls(Modifier.weight(1f).fillMaxHeight())
+                        }
+                    } else {
+                        Column(
+                            Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            previewContent(Modifier.fillMaxWidth().weight(1f))
+                            controls(Modifier.fillMaxWidth().heightIn(max = controlsHeight))
+                        }
+                    }
                 }
             },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        vm.save(
-                            active.copy(
-                                brightness = brightness,
-                                contrast = contrast,
-                                enhanceStrength = strength,
-                            )
-                        )
+                        vm.save(adjusted)
                         adjust = false
                     }
                 ) {
@@ -354,210 +512,98 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
     }
     if (export) ScanExportDialog(vm, name, pages.size, { export = false })
     if (more && active != null)
-        AlertDialog(
-            onDismissRequest = { more = false },
-            title = { Text("扫描页面工具") },
-            text = {
-                Column(Modifier.verticalScroll(rememberScrollState())) {
-                    TextButton(
-                        onClick = {
-                            more = false
-                            retouch = active
-                        }
-                    ) {
-                        Text("清理与修复 · 另存副本")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            intelligence = true
-                        }
-                    ) {
-                        Text("翻译与智能工具")
-                    }
-                    OcrOptionsControl()
-                    if (active.origins().isNotEmpty())
-                        TextButton(
-                            onClick = {
-                                more = false
-                                origins = true
-                            }
-                        ) {
-                            Text("页面来源与原件关系")
-                        }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            vm.openProofreading(active)
-                        }
-                    ) {
-                        Text("框选识别与同屏校对")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            vm.recognize(active)
-                        }
-                    ) {
-                        Text("重新识别本页")
-                    }
-                    if (active.ocrText != null)
-                        TextButton(
-                            onClick = {
-                                more = false
-                                vm.openOcr(active)
-                            }
-                        ) {
-                            Text("识别记录与文字校正")
-                        }
-                    HorizontalDivider(Modifier.padding(vertical = 12.dp))
-                    TextButton(
-                        onClick = {
-                            more = false
-                            vm.detectPage(active)
-                        }
-                    ) {
-                        Text("自动裁边")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            dewarp = true
-                        }
-                    ) {
-                        Text("曲面校正")
-                    }
-                    if (
-                        cn.paperforge.app.data.PageResources.entries(active).any {
-                            it.role == "dewarp-grid"
-                        }
-                    )
-                        TextButton(
-                            onClick = {
-                                more = false
-                                trace = true
-                            }
-                        ) {
-                            Text("曲面来源与网格")
-                        }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            vm.save(active.copy(rotation = (active.rotation + 90) % 360))
-                        }
-                    ) {
-                        Text("旋转本页")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            vm.replacement.value = active.id
-                            vm.screen.value = "capture"
-                        }
-                    ) {
-                        Text("重拍本页")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            vm.screen.value = "pages"
-                        }
-                    ) {
-                        Text("页面管理与排序")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            confirmDelete = true
-                        }
-                    ) {
-                        Text("删除本页")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            vm.exportScanCase(active)
-                        }
-                    ) {
-                        Text("保存本页诊断包（含原图）")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            vm.duplicate(active)
-                        }
-                    ) {
-                        Text("复制当前页")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            bookSplit = true
-                        }
-                    ) {
-                        Text("书籍双页与书脊")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            vm.recognizeAll()
-                        }
-                    ) {
-                        Text("识别全部页面文字")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            vm.stitchScanPages()
-                        }
-                    ) {
-                        Text("长票据拼接与接缝调整")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            vm.images("jpg")
-                        }
-                    ) {
-                        Text("全部页面导出 JPG 图片包")
-                    }
-                    TextButton(
-                        onClick = {
-                            more = false
-                            vm.images("png")
-                        }
-                    ) {
-                        Text("全部页面导出 PNG 图片包")
-                    }
-                }
+        EditorMoreSheet(
+            active = active,
+            busy = busy,
+            onDismiss = { more = false },
+            onOcr = { vm.openOcr(active) },
+            onProofread = { vm.openProofreading(active) },
+            onRecognize = { vm.recognize(active) },
+            onRecognizeAll = { vm.recognizeAll() },
+            onPageGrid = { vm.screen.value = "pages" },
+            onAddPage = { addPage = true },
+            onAutoSplit = { vm.autoSplitSpread(active) },
+            onBookSplit = { bookSplit = true },
+            onStitch = { vm.stitchScanPages() },
+            onOrigins = { origins = true },
+            onRotate = { degrees ->
+                vm.save(active.copy(rotation = (active.rotation + degrees) % 360))
             },
-            confirmButton = { TextButton(onClick = { more = false }) { Text("关闭") } },
+            onAutoDetect = { vm.detectPage(active) },
+            onDewarp = { dewarp = true },
+            onDewarpTrace = { trace = true },
+            onAnnotate = { annotate = active },
+            onRetouch = {
+                retouchMode = null
+                retouch = active
+            },
+            onWatermark = { vm.openWatermarks(doc) },
+            onIntelligence = { intelligence = true },
+            onDelete = { confirmDelete = true },
+            onExport = { export = true },
+            onReceipt = { receipts = true },
+            onExportImages = { format -> vm.images(format) },
+            onDiagnostics = { vm.exportScanCase(active) },
+            onRename = { renameTick++ },
+            onFullscreen = { fullscreenTick++ },
         )
+    if (addPage)
+        EditorAddPageSheet(
+            hasActive = active != null,
+            busy = busy,
+            onDismiss = { addPage = false },
+            onCapture = { vm.screen.value = "capture" },
+            onImport = onImport,
+            onLibrary = { libraryPages.launch(arrayOf("image/*")) },
+            onRetake = {
+                active?.let { vm.replacement.value = it.id }
+                vm.screen.value = "capture"
+            },
+            onDuplicate = { active?.let { vm.duplicate(it) } },
+        )
+    val document = doc
+    if (receipts && document != null) ReceiptDocumentDialog(vm, document) { receipts = false }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ToolAction(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
     enabled: Boolean = true,
+    modifier: Modifier = Modifier,
+    showLabel: Boolean = true,
+    longPressLabel: String? = null,
+    onLongPress: (() -> Unit)? = null,
     onClick: () -> Unit,
 ) {
+    var capability by remember { mutableStateOf(false) }
+    if (capability) ToolCapabilityDialog(scanToolDescription(label)) { capability = false }
+    val longPressAction: () -> Unit = onLongPress ?: { capability = true }
     Column(
-        Modifier.widthIn(min = 48.dp)
-            .clickable(
+        modifier
+            .widthIn(min = 48.dp)
+            .combinedClickable(
                 enabled = enabled,
-                role = androidx.compose.ui.semantics.Role.Button,
+                role = Role.Button,
                 onClick = onClick,
+                onLongClick = longPressAction,
             )
             .clearAndSetSemantics {
                 contentDescription = label
                 role = Role.Button
-                if (enabled)
+                if (enabled) {
                     onClick(label) {
                         onClick()
                         true
                     }
-                else disabled()
+                    longPressAction?.let { action ->
+                        onLongClick(longPressLabel ?: "能力与格式说明") {
+                            action()
+                            true
+                        }
+                    }
+                } else disabled()
             },
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -570,6 +616,6 @@ fun ToolAction(
                     else MaterialTheme.colorScheme.onSurface.copy(alpha = .38f),
             )
         }
-        Text(label, style = MaterialTheme.typography.labelSmall)
+        if (showLabel) Text(label, style = MaterialTheme.typography.labelSmall)
     }
 }

@@ -71,6 +71,7 @@ object UpdateFiles {
         context: Context,
         candidate: UpdateCandidate,
         restart: Boolean = false,
+        automatic: Boolean = false,
     ): java.util.UUID {
         require(NetworkPreferences(context).enabled) { "请先启用可选更新" }
         require(candidate.sha256.matches(Regex("[0-9a-f]{64}")))
@@ -78,14 +79,30 @@ object UpdateFiles {
         update(context, candidate, "WAITING", part(context, candidate).length(), "等待网络")
         val request =
             OneTimeWorkRequestBuilder<UpdateDownloadWorker>()
-                .setInputData(workDataOf("candidate" to candidate.json().toString()))
+                .setInputData(
+                    workDataOf("candidate" to candidate.json().toString(), "automatic" to automatic)
+                )
                 .setConstraints(
-                    Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+                    Constraints.Builder()
+                        .setRequiredNetworkType(
+                            if (automatic) NetworkType.UNMETERED else NetworkType.CONNECTED
+                        )
+                        .build()
                 )
                 .addTag("paperforge-update")
+                .apply {
+                    if (automatic) {
+                        addTag(AutomaticUpdates.TAG)
+                        addTag(AutomaticUpdates.DOWNLOAD_TAG)
+                    }
+                }
                 .build()
         WorkManager.getInstance(context)
-            .enqueueUniqueWork("update:${candidate.sha256}", ExistingWorkPolicy.REPLACE, request)
+            .enqueueUniqueWork(
+                "update:${candidate.sha256}",
+                if (automatic) ExistingWorkPolicy.KEEP else ExistingWorkPolicy.REPLACE,
+                request,
+            )
         return request.id
     }
 
@@ -219,7 +236,13 @@ class UpdateDownloadWorker(context: Context, params: WorkerParameters) :
             lease.lock()
             try {
                 try {
-                    require(prefs.enabled) { "可选更新已关闭，已保留下载断点" }
+                    require(
+                        prefs.enabled &&
+                            (!inputData.getBoolean("automatic", false) ||
+                                prefs.automaticUpdates && prefs.automaticDownload)
+                    ) {
+                        "更新已关闭，已保留下载断点"
+                    }
                     val ready = UpdateFiles.ready(applicationContext, candidate)
                     if (ready.isFile) {
                         UpdateApkVerifier.verify(applicationContext, ready, candidate)
@@ -230,63 +253,32 @@ class UpdateDownloadWorker(context: Context, params: WorkerParameters) :
                             ready.length(),
                             "SHA256 与同源 APK 签名已核对",
                         )
+                        if (inputData.getBoolean("automatic", false)) {
+                            AutomaticUpdates.status(
+                                applicationContext,
+                                "${candidate.versionName} 已准备好，等待确认安装",
+                            )
+                            AutomaticUpdates.notify(applicationContext, candidate, true)
+                        }
                         return@withContext Result.success()
                     }
-                    val offset = part.length()
-                    require(offset <= candidate.bytes) { "下载断点大于文件长度，请重新下载" }
-                    if (offset < candidate.bytes) {
-                        val connection =
-                            GitHubUpdates(prefs.token()).connect(candidate.assetUrl, true, offset)
+                    require(part.length() <= candidate.bytes) { "下载断点大于文件长度，请重新下载" }
+                    // GitHub first, then each mirror; every source carries on from the bytes already saved. A
+                    // source that fails or stalls hands over to the next, and only when all fail does the work
+                    // wait and retry. Whatever the source, the file must match the release's SHA256 and signature.
+                    var failure: Exception? = null
+                    for (source in listOf(candidate.assetUrl) + candidate.mirrors) {
+                        if (part.length() >= candidate.bytes) break
                         try {
-                            val append = offset > 0 && connection.responseCode == 206
-                            if (connection.responseCode == 206) {
-                                val range =
-                                    Regex("bytes (\\d+)-(\\d+)/(\\d+)")
-                                        .matchEntire(
-                                            connection.getHeaderField("Content-Range").orEmpty()
-                                        )
-                                require(
-                                    range != null &&
-                                        range.groupValues[1].toLong() == offset &&
-                                        range.groupValues[3].toLong() == candidate.bytes
-                                ) {
-                                    "服务器返回的断点范围不一致"
-                                }
-                            }
-                            var bytes = if (append) offset else 0L
-                            var reported = bytes
-                            connection.inputStream.use { input ->
-                                FileOutputStream(part, append).use { output ->
-                                    val buffer = ByteArray(65536)
-                                    while (true) {
-                                        ensureActive()
-                                        val n = input.read(buffer)
-                                        if (n < 0) break
-                                        bytes += n
-                                        require(bytes <= candidate.bytes) { "服务器文件长度超过发布清单" }
-                                        output.write(buffer, 0, n)
-                                        if (
-                                            bytes - reported >= 262144 || bytes == candidate.bytes
-                                        ) {
-                                            require(prefs.enabled) { "可选更新已关闭" }
-                                            UpdateFiles.update(
-                                                applicationContext,
-                                                candidate,
-                                                "RUNNING",
-                                                bytes,
-                                                "正在下载",
-                                            )
-                                            setProgress(workDataOf("bytes" to bytes))
-                                            reported = bytes
-                                        }
-                                    }
-                                    output.fd.sync()
-                                }
-                            }
-                        } finally {
-                            connection.disconnect()
+                            fetch(GitHubUpdates(prefs.token()), source, part, candidate, prefs)
+                            failure = null
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            failure = e
                         }
                     }
+                    if (part.length() < candidate.bytes) throw failure ?: java.io.IOException("下载未完成")
                     UpdateFiles.update(
                         applicationContext,
                         candidate,
@@ -294,7 +286,14 @@ class UpdateDownloadWorker(context: Context, params: WorkerParameters) :
                         part.length(),
                         "正在校验完整 APK 签名",
                     )
-                    val verification = UpdateApkVerifier.verify(applicationContext, part, candidate)
+                    val verification =
+                        try {
+                            UpdateApkVerifier.verify(applicationContext, part, candidate)
+                        } catch (e: IllegalArgumentException) {
+                            // A wrong file is not resumed: the next try starts clean.
+                            part.delete()
+                            throw e
+                        }
                     ensureActive()
                     check(part.renameTo(ready)) { "无法保存已校验安装包" }
                     File(ready.path + ".json").writeText(verification.toString(2))
@@ -305,6 +304,13 @@ class UpdateDownloadWorker(context: Context, params: WorkerParameters) :
                         ready.length(),
                         "SHA256 与同源 APK 签名已核对",
                     )
+                    if (inputData.getBoolean("automatic", false)) {
+                        AutomaticUpdates.status(
+                            applicationContext,
+                            "${candidate.versionName} 已下载并校验，等待确认安装",
+                        )
+                        AutomaticUpdates.notify(applicationContext, candidate, true)
+                    }
                     Result.success(workDataOf("path" to ready.path))
                 } catch (e: CancellationException) {
                     withContext(NonCancellable) {
@@ -340,4 +346,75 @@ class UpdateDownloadWorker(context: Context, params: WorkerParameters) :
                 lease.unlock()
             }
         }
+
+    /** Appends to [part] from [source], from where it stands. */
+    private suspend fun fetch(
+        updates: GitHubUpdates,
+        source: String,
+        part: File,
+        candidate: UpdateCandidate,
+        prefs: NetworkPreferences,
+    ) {
+        val offset = part.length()
+        run {
+            run {
+                val connection = updates.connect(source, true, offset)
+                        try {
+                            val append = offset > 0 && connection.responseCode == 206
+                            if (connection.responseCode == 206) {
+                                val range =
+                                    Regex("bytes (\\d+)-(\\d+)/(\\d+)")
+                                        .matchEntire(
+                                            connection.getHeaderField("Content-Range").orEmpty()
+                                        )
+                                require(
+                                    range != null &&
+                                        range.groupValues[1].toLong() == offset &&
+                                        range.groupValues[3].toLong() == candidate.bytes
+                                ) {
+                                    "服务器返回的断点范围不一致"
+                                }
+                            }
+                            var bytes = if (append) offset else 0L
+                            var reported = bytes
+                            connection.inputStream.use { input ->
+                                FileOutputStream(part, append).use { output ->
+                                    val buffer = ByteArray(65536)
+                                    while (true) {
+                                        currentCoroutineContext().ensureActive()
+                                        val n = input.read(buffer)
+                                        if (n < 0) break
+                                        bytes += n
+                                        require(bytes <= candidate.bytes) { "服务器文件长度超过发布清单" }
+                                        output.write(buffer, 0, n)
+                                        if (
+                                            bytes - reported >= 262144 || bytes == candidate.bytes
+                                        ) {
+                                            require(
+                                                prefs.enabled &&
+                                                    (!inputData.getBoolean("automatic", false) ||
+                                                        prefs.automaticUpdates)
+                                            ) {
+                                                "更新已关闭"
+                                            }
+                                            UpdateFiles.update(
+                                                applicationContext,
+                                                candidate,
+                                                "RUNNING",
+                                                bytes,
+                                                "正在下载",
+                                            )
+                                            setProgress(workDataOf("bytes" to bytes))
+                                            reported = bytes
+                                        }
+                                    }
+                                    output.fd.sync()
+                                }
+                            }
+                        } finally {
+                            connection.disconnect()
+                        }
+                    }
+        }
+    }
 }

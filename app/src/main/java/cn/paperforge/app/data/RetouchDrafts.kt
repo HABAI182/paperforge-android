@@ -22,6 +22,7 @@ object RetouchDrafts {
                 page.brightness,
                 page.contrast,
                 page.enhanceStrength,
+                page.workbookDetail(),
                 page.outputAspect,
                 page.deskewDegrees,
             )

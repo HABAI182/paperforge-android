@@ -72,31 +72,7 @@ suspend fun Repository.correctOcrLine(
             "文字已更新，请重新选择"
         }
         val layout = current.ocrLayout?.let(OcrLayout::decode) ?: error("请先识别本页文字")
-        val line = layout.lines.getOrNull(lineIndex) ?: error("请选择文字行")
-        require(!text.contains('\n')) { "逐行校正请保留当前行，换行可在完整文字中编辑" }
-        val updated =
-            if (word == null)
-                line.copy(text = text, elements = emptyList(), corrected = true, confidence = null)
-            else {
-                val span = OcrRegionMerge.wordSpan(line, word) ?: error("该词无法单独替换，请选择整行校正")
-                line.copy(
-                    text = line.text.replaceRange(span.first, span.last + 1, text),
-                    elements =
-                        line.elements.mapIndexed { index, element ->
-                            if (index == word) element.copy(text = text, confidence = null)
-                            else element
-                        },
-                    corrected = true,
-                    confidence = null,
-                )
-            }
-        val corrected =
-            layout.copy(
-                lines =
-                    layout.lines.mapIndexed { index, old ->
-                        if (index == lineIndex) updated else old
-                    }
-            )
+        val corrected = OcrLineCorrection.apply(layout, lineIndex, word, text)
         correctOcr(current, corrected.text, corrected)
     }
 

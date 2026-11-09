@@ -59,7 +59,7 @@ fun TaskCenterScreen(vm: MainViewModel) {
             TopAppBar(
                 title = { Text("任务中心") },
                 navigationIcon = {
-                    IconButton(onClick = { vm.screen.value = "home" }) {
+                    IconButton(onClick = returnAction { vm.screen.value = "home" }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回")
                     }
                 },
@@ -195,10 +195,12 @@ fun TaskCenterScreen(vm: MainViewModel) {
                                         }
                                     TextButton(
                                         onClick = { vm.openTask(row) },
-                                        enabled = available,
+                                        enabled =
+                                            available || active && row.type in DocumentJobs.types,
                                     ) {
                                         Text(
-                                            if (textDraft) "编辑草稿"
+                                            if (active && row.type in DocumentJobs.types) "查看进度"
+                                            else if (textDraft) "编辑草稿"
                                             else if (row.type == "CAPTURE") "查看文档"
                                             else if (row.type == "SAVE") "本地结果 / 另存" else "查看结果"
                                         )

@@ -1,0 +1,51 @@
+{
+  "input": "owner supplied 本地研究归档",
+  "sha256": "1a2f89f98047670e3a39b0256474f64b4953fe872b8c61a09258a129cb955793",
+  "inspected": [
+    "scanner/enhance.py",
+    "scanner/restore.py",
+    "scanner/dewarp.py",
+    "scanner/imaging.py",
+    "README.md",
+    "docs/06-纸张修复.md"
+  ],
+  "adaptedCriterion": {
+    "file": "scanner/restore.py",
+    "sha256": "7170ea5ea0bc1830c8d16a0995daf058efc21f06d5ceb79136cd25a3d8c9a436",
+    "function": "cleanup_faint",
+    "claimedAuthor": "机主 (package README)",
+    "scope": "dark-core neighborhood criterion, independently ported to native byte planes with existing rule evidence and learned matte protection"
+  },
+  "shipping": "no Python runtime, source archive, sample photos or reference PDF added to APK; existing assets unchanged",
+  "parameters": [
+    "paperFaintCleanup",
+    "paperFaintLow",
+    "paperFaintHigh",
+    "paperFaintCore",
+    "paperFaintRadius",
+    "paperFaintStrength",
+    "paperFaintConfidence"
+  ],
+  "qualityReference": {
+    "source": "本地样本应用 full app exported PDF supplied with the archive",
+    "pdfSha256": "49840434a5e58ce068f2503b7cc11243549627e5b1ee8b1f277eca1e4534555d",
+    "images": [
+      {
+        "page": 1,
+        "photo": "old-1",
+        "embeddedSha256": "cfd0d06455267e0bd4c6a4d9c72e0527819eb0055b8338818b1807baee279db0"
+      },
+      {
+        "page": 2,
+        "photo": "old-2",
+        "embeddedSha256": "dba42d3fd173c6be97d57ef771d50e925b1522ed65d17f0e10ebb71712347374"
+      },
+      {
+        "page": 3,
+        "photo": "old-3",
+        "embeddedSha256": "1e52fbbc092a2fd191363aa0ea759a93459473c6d3ead794048a24cd6f6db38c"
+      }
+    ],
+    "scope": "original JPEG extraction for metrics; Poppler whole-page rendering for visual confirmation; fixed historical crop inputs isolate image processing, not current automatic crop accuracy"
+  }
+}

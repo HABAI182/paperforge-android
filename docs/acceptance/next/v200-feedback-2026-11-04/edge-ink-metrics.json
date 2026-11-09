@@ -1,0 +1,738 @@
+{
+  "b-baseline": {
+    "size": [
+      1063,
+      1375
+    ],
+    "warpInk": 0.20748618831779697,
+    "strokePixels": 175098,
+    "bands": {
+      "0-2%": {
+        "warpInk": 0.9815064935064935,
+        "stroke": 1602,
+        "finalRetention": 0.9344569288389513
+      },
+      "2-10%": {
+        "warpInk": 0.6577967914438503,
+        "stroke": 7664,
+        "finalRetention": 0.7866649269311065
+      },
+      "10-20%": {
+        "warpInk": 0.4300994854202401,
+        "stroke": 20217,
+        "finalRetention": 0.722857001533363
+      },
+      "20-30%": {
+        "warpInk": 0.14558490566037735,
+        "stroke": 18484,
+        "finalRetention": 0.6409326985500974
+      },
+      "30-100%": {
+        "warpInk": 0.11142403904820013,
+        "stroke": 127131,
+        "finalRetention": 0.6193453996271563
+      }
+    },
+    "stages": {
+      "03-boundary-prepared": {
+        "strokeRetentionLeft30": 0.946067087789522,
+        "strokeRetentionContent": 0.9450878895718753
+      },
+      "06-content": {
+        "strokeRetentionLeft30": 0.7085496278691601,
+        "strokeRetentionContent": 0.7007440957618893
+      },
+      "07-white": {
+        "strokeRetentionLeft30": 0.7085496278691601,
+        "strokeRetentionContent": 0.7007440957618893
+      },
+      "08-guard": {
+        "strokeRetentionLeft30": 0.7085496278691601,
+        "strokeRetentionContent": 0.7007440957618893
+      },
+      "09-final": {
+        "strokeRetentionLeft30": 0.7085496278691601,
+        "strokeRetentionContent": 0.7007440957618893
+      }
+    },
+    "greyRim": {
+      "warp": 0.8810699588477366,
+      "final": 0.2609567901234568
+    },
+    "finalStrokeRetentionLeft30": 0.7085496278691601,
+    "finalStrokeRetentionContent": 0.7007440957618893,
+    "contentBands": {
+      "2-10%": 0.7866649269311065,
+      "10-20%": 0.722857001533363,
+      "20-30%": 0.6409326985500974
+    }
+  },
+  "c-edge-cleanup-off": {
+    "size": [
+      1063,
+      1375
+    ],
+    "warpInk": 0.20748618831779697,
+    "strokePixels": 175098,
+    "bands": {
+      "0-2%": {
+        "warpInk": 0.9815064935064935,
+        "stroke": 1602,
+        "finalRetention": 0.99812734082397
+      },
+      "2-10%": {
+        "warpInk": 0.6577967914438503,
+        "stroke": 7664,
+        "finalRetention": 0.7434759916492694
+      },
+      "10-20%": {
+        "warpInk": 0.4300994854202401,
+        "stroke": 20217,
+        "finalRetention": 0.6874412623040016
+      },
+      "20-30%": {
+        "warpInk": 0.14558490566037735,
+        "stroke": 18484,
+        "finalRetention": 0.6466132871672798
+      },
+      "30-100%": {
+        "warpInk": 0.11142403904820013,
+        "stroke": 127131,
+        "finalRetention": 0.6246548835453194
+      }
+    },
+    "stages": {
+      "06-content": {
+        "strokeRetentionLeft30": 0.6910375883419851,
+        "strokeRetentionContent": 0.6804270462633452
+      },
+      "07-white": {
+        "strokeRetentionLeft30": 0.6910375883419851,
+        "strokeRetentionContent": 0.6804270462633452
+      },
+      "08-guard": {
+        "strokeRetentionLeft30": 0.6910375883419851,
+        "strokeRetentionContent": 0.6804270462633452
+      },
+      "09-final": {
+        "strokeRetentionLeft30": 0.6910375883419851,
+        "strokeRetentionContent": 0.6804270462633452
+      }
+    },
+    "greyRim": {
+      "warp": 0.8810699588477366,
+      "final": 0.42998971193415636
+    },
+    "finalStrokeRetentionLeft30": 0.6910375883419851,
+    "finalStrokeRetentionContent": 0.6804270462633452,
+    "contentBands": {
+      "2-10%": 0.7434759916492694,
+      "10-20%": 0.6874412623040016,
+      "20-30%": 0.6466132871672798
+    }
+  },
+  "d-edge-guard-off": {
+    "size": [
+      1063,
+      1375
+    ],
+    "warpInk": 0.20748618831779697,
+    "strokePixels": 175098,
+    "bands": {
+      "0-2%": {
+        "warpInk": 0.9815064935064935,
+        "stroke": 1602,
+        "finalRetention": 0.9344569288389513
+      },
+      "2-10%": {
+        "warpInk": 0.6577967914438503,
+        "stroke": 7664,
+        "finalRetention": 0.7866649269311065
+      },
+      "10-20%": {
+        "warpInk": 0.4300994854202401,
+        "stroke": 20217,
+        "finalRetention": 0.722857001533363
+      },
+      "20-30%": {
+        "warpInk": 0.14558490566037735,
+        "stroke": 18484,
+        "finalRetention": 0.6409326985500974
+      },
+      "30-100%": {
+        "warpInk": 0.11142403904820013,
+        "stroke": 127131,
+        "finalRetention": 0.6193453996271563
+      }
+    },
+    "stages": {
+      "03-boundary-prepared": {
+        "strokeRetentionLeft30": 0.946067087789522,
+        "strokeRetentionContent": 0.9450878895718753
+      },
+      "06-content": {
+        "strokeRetentionLeft30": 0.7085496278691601,
+        "strokeRetentionContent": 0.7007440957618893
+      },
+      "07-white": {
+        "strokeRetentionLeft30": 0.7085496278691601,
+        "strokeRetentionContent": 0.7007440957618893
+      },
+      "08-guard": {
+        "strokeRetentionLeft30": 0.7085496278691601,
+        "strokeRetentionContent": 0.7007440957618893
+      },
+      "09-final": {
+        "strokeRetentionLeft30": 0.7085496278691601,
+        "strokeRetentionContent": 0.7007440957618893
+      }
+    },
+    "greyRim": {
+      "warp": 0.8810699588477366,
+      "final": 0.2671810699588477
+    },
+    "finalStrokeRetentionLeft30": 0.7085496278691601,
+    "finalStrokeRetentionContent": 0.7007440957618893,
+    "contentBands": {
+      "2-10%": 0.7866649269311065,
+      "10-20%": 0.722857001533363,
+      "20-30%": 0.6409326985500974
+    }
+  },
+  "e-white-off": {
+    "size": [
+      1063,
+      1375
+    ],
+    "warpInk": 0.20748618831779697,
+    "strokePixels": 175098,
+    "bands": {
+      "0-2%": {
+        "warpInk": 0.9815064935064935,
+        "stroke": 1602,
+        "finalRetention": 0.9344569288389513
+      },
+      "2-10%": {
+        "warpInk": 0.6577967914438503,
+        "stroke": 7664,
+        "finalRetention": 0.7866649269311065
+      },
+      "10-20%": {
+        "warpInk": 0.4300994854202401,
+        "stroke": 20217,
+        "finalRetention": 0.722857001533363
+      },
+      "20-30%": {
+        "warpInk": 0.14558490566037735,
+        "stroke": 18484,
+        "finalRetention": 0.6409326985500974
+      },
+      "30-100%": {
+        "warpInk": 0.11142403904820013,
+        "stroke": 127131,
+        "finalRetention": 0.6193453996271563
+      }
+    },
+    "stages": {
+      "03-boundary-prepared": {
+        "strokeRetentionLeft30": 0.946067087789522,
+        "strokeRetentionContent": 0.9450878895718753
+      },
+      "06-content": {
+        "strokeRetentionLeft30": 0.7085496278691601,
+        "strokeRetentionContent": 0.7007440957618893
+      },
+      "07-white": {
+        "strokeRetentionLeft30": 0.7085496278691601,
+        "strokeRetentionContent": 0.7007440957618893
+      },
+      "08-guard": {
+        "strokeRetentionLeft30": 0.7085496278691601,
+        "strokeRetentionContent": 0.7007440957618893
+      },
+      "09-final": {
+        "strokeRetentionLeft30": 0.7085496278691601,
+        "strokeRetentionContent": 0.7007440957618893
+      }
+    },
+    "greyRim": {
+      "warp": 0.8810699588477366,
+      "final": 0.2609567901234568
+    },
+    "finalStrokeRetentionLeft30": 0.7085496278691601,
+    "finalStrokeRetentionContent": 0.7007440957618893,
+    "contentBands": {
+      "2-10%": 0.7866649269311065,
+      "10-20%": 0.722857001533363,
+      "20-30%": 0.6409326985500974
+    }
+  },
+  "f-confident-background-off": {
+    "size": [
+      1063,
+      1375
+    ],
+    "warpInk": 0.20748618831779697,
+    "strokePixels": 175098,
+    "bands": {
+      "0-2%": {
+        "warpInk": 0.9815064935064935,
+        "stroke": 1602,
+        "finalRetention": 0.9344569288389513
+      },
+      "2-10%": {
+        "warpInk": 0.6577967914438503,
+        "stroke": 7664,
+        "finalRetention": 0.7866649269311065
+      },
+      "10-20%": {
+        "warpInk": 0.4300994854202401,
+        "stroke": 20217,
+        "finalRetention": 0.722857001533363
+      },
+      "20-30%": {
+        "warpInk": 0.14558490566037735,
+        "stroke": 18484,
+        "finalRetention": 0.6409326985500974
+      },
+      "30-100%": {
+        "warpInk": 0.11142403904820013,
+        "stroke": 127131,
+        "finalRetention": 0.6193453996271563
+      }
+    },
+    "stages": {
+      "03-boundary-prepared": {
+        "strokeRetentionLeft30": 0.946067087789522,
+        "strokeRetentionContent": 0.9450878895718753
+      },
+      "06-content": {
+        "strokeRetentionLeft30": 0.7085496278691601,
+        "strokeRetentionContent": 0.7007440957618893
+      },
+      "07-white": {
+        "strokeRetentionLeft30": 0.7085496278691601,
+        "strokeRetentionContent": 0.7007440957618893
+      },
+      "08-guard": {
+        "strokeRetentionLeft30": 0.7085496278691601,
+        "strokeRetentionContent": 0.7007440957618893
+      },
+      "09-final": {
+        "strokeRetentionLeft30": 0.7085496278691601,
+        "strokeRetentionContent": 0.7007440957618893
+      }
+    },
+    "greyRim": {
+      "warp": 0.8810699588477366,
+      "final": 0.26116255144032924
+    },
+    "finalStrokeRetentionLeft30": 0.7085496278691601,
+    "finalStrokeRetentionContent": 0.7007440957618893,
+    "contentBands": {
+      "2-10%": 0.7866649269311065,
+      "10-20%": 0.722857001533363,
+      "20-30%": 0.6409326985500974
+    }
+  },
+  "g-workbook-intelligence-off": {
+    "size": [
+      1063,
+      1375
+    ],
+    "warpInk": 0.20748618831779697,
+    "strokePixels": 175098,
+    "bands": {
+      "0-2%": {
+        "warpInk": 0.9815064935064935,
+        "stroke": 1602,
+        "finalRetention": 1.0
+      },
+      "2-10%": {
+        "warpInk": 0.6577967914438503,
+        "stroke": 7664,
+        "finalRetention": 0.8335073068893528
+      },
+      "10-20%": {
+        "warpInk": 0.4300994854202401,
+        "stroke": 20217,
+        "finalRetention": 0.7567393777513973
+      },
+      "20-30%": {
+        "warpInk": 0.14558490566037735,
+        "stroke": 18484,
+        "finalRetention": 0.7289006708504653
+      },
+      "30-100%": {
+        "warpInk": 0.11142403904820013,
+        "stroke": 127131,
+        "finalRetention": 0.7057130046959436
+      }
+    },
+    "stages": {
+      "07-white": {
+        "strokeRetentionLeft30": 0.7664227489732525,
+        "strokeRetentionContent": 0.7583522053272943
+      },
+      "08-guard": {
+        "strokeRetentionLeft30": 0.7664019013071487,
+        "strokeRetentionContent": 0.758330637334196
+      },
+      "09-final": {
+        "strokeRetentionLeft30": 0.7664019013071487,
+        "strokeRetentionContent": 0.758330637334196
+      }
+    },
+    "greyRim": {
+      "warp": 0.8810699588477366,
+      "final": 0.37808641975308643
+    },
+    "finalStrokeRetentionLeft30": 0.7664019013071487,
+    "finalStrokeRetentionContent": 0.758330637334196,
+    "contentBands": {
+      "2-10%": 0.8335073068893528,
+      "10-20%": 0.7567393777513973,
+      "20-30%": 0.7289006708504653
+    }
+  },
+  "h-crop-safety": {
+    "size": [
+      1093,
+      1414
+    ],
+    "warpInk": 0.23870755262691346,
+    "strokePixels": 179596,
+    "bands": {
+      "0-2%": {
+        "warpInk": 0.9796591904088368,
+        "stroke": 52,
+        "finalRetention": 0.0
+      },
+      "2-10%": {
+        "warpInk": 0.7792288157387167,
+        "stroke": 7526,
+        "finalRetention": 0.7734520329524316
+      },
+      "10-20%": {
+        "warpInk": 0.4727755213267067,
+        "stroke": 20393,
+        "finalRetention": 0.7349090374147992
+      },
+      "20-30%": {
+        "warpInk": 0.17326083853470536,
+        "stroke": 20557,
+        "finalRetention": 0.6489273726711096
+      },
+      "30-100%": {
+        "warpInk": 0.13230341124377265,
+        "stroke": 131068,
+        "finalRetention": 0.6227454451124607
+      }
+    },
+    "stages": {
+      "03-boundary-prepared": {
+        "strokeRetentionLeft30": 0.9531610616551269,
+        "strokeRetentionContent": 0.9531108177242347
+      },
+      "06-content": {
+        "strokeRetentionLeft30": 0.7038616880975932,
+        "strokeRetentionContent": 0.704616717550953
+      },
+      "07-white": {
+        "strokeRetentionLeft30": 0.7038616880975932,
+        "strokeRetentionContent": 0.704616717550953
+      },
+      "08-guard": {
+        "strokeRetentionLeft30": 0.7037586547972304,
+        "strokeRetentionContent": 0.7045135737272052
+      },
+      "09-final": {
+        "strokeRetentionLeft30": 0.7036762281569403,
+        "strokeRetentionContent": 0.704431058668207
+      }
+    },
+    "greyRim": {
+      "warp": 0.9005602240896359,
+      "final": 0.20538215286114445
+    },
+    "finalStrokeRetentionLeft30": 0.7036762281569403,
+    "finalStrokeRetentionContent": 0.704431058668207,
+    "contentBands": {
+      "2-10%": 0.7734520329524316,
+      "10-20%": 0.7349090374147992,
+      "20-30%": 0.6489273726711096
+    }
+  },
+  "i-boundary-margin": {
+    "size": [
+      1063,
+      1375
+    ],
+    "warpInk": 0.20748618831779697,
+    "strokePixels": 175098,
+    "bands": {
+      "0-2%": {
+        "warpInk": 0.9815064935064935,
+        "stroke": 1602,
+        "finalRetention": 0.9344569288389513
+      },
+      "2-10%": {
+        "warpInk": 0.6577967914438503,
+        "stroke": 7664,
+        "finalRetention": 0.7866649269311065
+      },
+      "10-20%": {
+        "warpInk": 0.4300994854202401,
+        "stroke": 20217,
+        "finalRetention": 0.722857001533363
+      },
+      "20-30%": {
+        "warpInk": 0.14558490566037735,
+        "stroke": 18484,
+        "finalRetention": 0.6409326985500974
+      },
+      "30-100%": {
+        "warpInk": 0.11142403904820013,
+        "stroke": 127131,
+        "finalRetention": 0.6193453996271563
+      }
+    },
+    "stages": {
+      "03-boundary-prepared": {
+        "strokeRetentionLeft30": 0.946067087789522,
+        "strokeRetentionContent": 0.9450878895718753
+      },
+      "06-content": {
+        "strokeRetentionLeft30": 0.7085496278691601,
+        "strokeRetentionContent": 0.7007440957618893
+      },
+      "07-white": {
+        "strokeRetentionLeft30": 0.7085496278691601,
+        "strokeRetentionContent": 0.7007440957618893
+      },
+      "08-guard": {
+        "strokeRetentionLeft30": 0.7085496278691601,
+        "strokeRetentionContent": 0.7007440957618893
+      },
+      "09-final": {
+        "strokeRetentionLeft30": 0.7085496278691601,
+        "strokeRetentionContent": 0.7007440957618893
+      }
+    },
+    "greyRim": {
+      "warp": 0.8810699588477366,
+      "final": 0.2609567901234568
+    },
+    "finalStrokeRetentionLeft30": 0.7085496278691601,
+    "finalStrokeRetentionContent": 0.7007440957618893,
+    "contentBands": {
+      "2-10%": 0.7866649269311065,
+      "10-20%": 0.722857001533363,
+      "20-30%": 0.6409326985500974
+    }
+  },
+  "j-fixed-no-content-crop": {
+    "size": [
+      1041,
+      1347
+    ],
+    "warpInk": 0.18450578971878304,
+    "strokePixels": 164231,
+    "bands": {
+      "0-2%": {
+        "warpInk": 0.9548997772828508,
+        "stroke": 844,
+        "finalRetention": 0.9715639810426541
+      },
+      "2-10%": {
+        "warpInk": 0.5993565949022519,
+        "stroke": 8568,
+        "finalRetention": 0.8211951447245565
+      },
+      "10-20%": {
+        "warpInk": 0.40189024042030724,
+        "stroke": 18964,
+        "finalRetention": 0.7215249947268508
+      },
+      "20-30%": {
+        "warpInk": 0.12578522071840556,
+        "stroke": 16311,
+        "finalRetention": 0.6250996260192508
+      },
+      "30-100%": {
+        "warpInk": 0.09293323679201762,
+        "stroke": 119544,
+        "finalRetention": 0.6149618550491869
+      }
+    },
+    "stages": {
+      "03-boundary-prepared": {
+        "strokeRetentionLeft30": 0.952335131022445,
+        "strokeRetentionContent": 0.9516684533448897
+      },
+      "06-content": {
+        "strokeRetentionLeft30": 0.7101617920200506,
+        "strokeRetentionContent": 0.7051296672216774
+      },
+      "07-white": {
+        "strokeRetentionLeft30": 0.7101617920200506,
+        "strokeRetentionContent": 0.7051296672216774
+      },
+      "08-guard": {
+        "strokeRetentionLeft30": 0.7101617920200506,
+        "strokeRetentionContent": 0.7051296672216774
+      },
+      "09-final": {
+        "strokeRetentionLeft30": 0.7101617920200506,
+        "strokeRetentionContent": 0.7051296672216774
+      }
+    },
+    "greyRim": {
+      "warp": 0.8898109243697478,
+      "final": 0.273686974789916
+    },
+    "finalStrokeRetentionLeft30": 0.7101617920200506,
+    "finalStrokeRetentionContent": 0.7051296672216774,
+    "contentBands": {
+      "2-10%": 0.8211951447245565,
+      "10-20%": 0.7215249947268508,
+      "20-30%": 0.6250996260192508
+    }
+  },
+  "k-fixed-no-edge-paper-repair": {
+    "size": [
+      1063,
+      1375
+    ],
+    "warpInk": 0.20748618831779697,
+    "strokePixels": 175098,
+    "bands": {
+      "0-2%": {
+        "warpInk": 0.9815064935064935,
+        "stroke": 1602,
+        "finalRetention": 0.9344569288389513
+      },
+      "2-10%": {
+        "warpInk": 0.6577967914438503,
+        "stroke": 7664,
+        "finalRetention": 0.7862734864300627
+      },
+      "10-20%": {
+        "warpInk": 0.4300994854202401,
+        "stroke": 20217,
+        "finalRetention": 0.7056437651481426
+      },
+      "20-30%": {
+        "warpInk": 0.14558490566037735,
+        "stroke": 18484,
+        "finalRetention": 0.6244319411382817
+      },
+      "30-100%": {
+        "warpInk": 0.11142403904820013,
+        "stroke": 127131,
+        "finalRetention": 0.6117312063934053
+      }
+    },
+    "stages": {
+      "03-boundary-prepared": {
+        "strokeRetentionLeft30": 0.946067087789522,
+        "strokeRetentionContent": 0.9450878895718753
+      },
+      "06-content": {
+        "strokeRetentionLeft30": 0.6948735589050806,
+        "strokeRetentionContent": 0.6865954922894425
+      },
+      "07-white": {
+        "strokeRetentionLeft30": 0.6948735589050806,
+        "strokeRetentionContent": 0.6865954922894425
+      },
+      "08-guard": {
+        "strokeRetentionLeft30": 0.6948735589050806,
+        "strokeRetentionContent": 0.6865954922894425
+      },
+      "09-final": {
+        "strokeRetentionLeft30": 0.6948735589050806,
+        "strokeRetentionContent": 0.6865954922894425
+      }
+    },
+    "greyRim": {
+      "warp": 0.8810699588477366,
+      "final": 0.07520576131687243
+    },
+    "finalStrokeRetentionLeft30": 0.6948735589050806,
+    "finalStrokeRetentionContent": 0.6865954922894425,
+    "contentBands": {
+      "2-10%": 0.7862734864300627,
+      "10-20%": 0.7056437651481426,
+      "20-30%": 0.6244319411382817
+    }
+  },
+  "l-fixed-no-stroke-veto": {
+    "size": [
+      1063,
+      1375
+    ],
+    "warpInk": 0.20748618831779697,
+    "strokePixels": 175098,
+    "bands": {
+      "0-2%": {
+        "warpInk": 0.9815064935064935,
+        "stroke": 1602,
+        "finalRetention": 0.0
+      },
+      "2-10%": {
+        "warpInk": 0.6577967914438503,
+        "stroke": 7664,
+        "finalRetention": 0.14652922755741127
+      },
+      "10-20%": {
+        "warpInk": 0.4300994854202401,
+        "stroke": 20217,
+        "finalRetention": 0.4879062175396943
+      },
+      "20-30%": {
+        "warpInk": 0.14558490566037735,
+        "stroke": 18484,
+        "finalRetention": 0.6211858904998918
+      },
+      "30-100%": {
+        "warpInk": 0.11142403904820013,
+        "stroke": 127131,
+        "finalRetention": 0.6188891773052992
+      }
+    },
+    "stages": {
+      "03-boundary-prepared": {
+        "strokeRetentionLeft30": 0.8754977380282277,
+        "strokeRetentionContent": 0.8964520651353391
+      },
+      "06-content": {
+        "strokeRetentionLeft30": 0.46842620968582566,
+        "strokeRetentionContent": 0.48461123692440417
+      },
+      "07-white": {
+        "strokeRetentionLeft30": 0.46842620968582566,
+        "strokeRetentionContent": 0.48461123692440417
+      },
+      "08-guard": {
+        "strokeRetentionLeft30": 0.46842620968582566,
+        "strokeRetentionContent": 0.48461123692440417
+      },
+      "09-final": {
+        "strokeRetentionLeft30": 0.46842620968582566,
+        "strokeRetentionContent": 0.48461123692440417
+      }
+    },
+    "greyRim": {
+      "warp": 0.8810699588477366,
+      "final": 0.2609567901234568
+    },
+    "finalStrokeRetentionLeft30": 0.46842620968582566,
+    "finalStrokeRetentionContent": 0.48461123692440417,
+    "contentBands": {
+      "2-10%": 0.14652922755741127,
+      "10-20%": 0.4879062175396943,
+      "20-30%": 0.6211858904998918
+    }
+  }
+}

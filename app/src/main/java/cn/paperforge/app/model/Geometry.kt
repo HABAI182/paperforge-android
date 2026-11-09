@@ -89,6 +89,8 @@ class AutoCaptureGate(
     private val stableMs: Long = 1200,
     private val cooldownMs: Long = 4000,
     private val minimumArea: Float = .08f,
+    private val receiptAspect: Float = 1.8f,
+    private val receiptMinimumArea: Float = .04f,
 ) {
     private var anchor: Quad? = null
     private var since = 0L
@@ -106,6 +108,20 @@ class AutoCaptureGate(
     var progress = 0f
         private set
 
+    /**
+     * Area floor for this frame. A long, narrow receipt covers much less of the frame than a page
+     * even when it is fully visible, so once the quad is clearly elongated the user's page floor no
+     * longer applies; ordinary pages keep `SettingKeys.CaptureArea` unchanged.
+     */
+    fun areaFloor(quad: Quad, frameWidth: Int, frameHeight: Int): Float {
+        if (frameWidth < 2 || frameHeight < 2) return minimumArea
+        val sides = ImageGeometry.pixelSides(quad, frameWidth, frameHeight)
+        val long = max(sides.first, sides.second)
+        val short = min(sides.first, sides.second)
+        if (short <= 0f || long / short < receiptAspect) return minimumArea
+        return min(minimumArea, receiptMinimumArea)
+    }
+
     fun update(
         quad: Quad?,
         now: Long,
@@ -114,6 +130,8 @@ class AutoCaptureGate(
         fullFrame: List<Float>? = null,
         turnRearm: Boolean = true,
         turnThreshold: Float = .06f,
+        frameWidth: Int = 0,
+        frameHeight: Int = 0,
     ): Boolean {
         val prior = priorFrame
         priorFrame = fullFrame?.toList()
@@ -145,7 +163,7 @@ class AutoCaptureGate(
                 reset()
             }
         }
-        if (quad == null || !quad.valid() || quad.area < minimumArea) {
+        if (quad == null || !quad.valid() || quad.area < areaFloor(quad, frameWidth, frameHeight)) {
             if (absentSince == null) absentSince = now
             if (now - (absentSince ?: now) > 600) {
                 captured = null

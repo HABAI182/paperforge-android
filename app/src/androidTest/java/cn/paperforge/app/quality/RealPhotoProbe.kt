@@ -46,7 +46,7 @@ class RealPhotoProbe {
                 .put("device", Build.MODEL)
                 .put("decodeEdge", 1800)
                 .put("rows", rows)
-                .put("runtimeDetectorSetting", UserSettings.string("detector", "NEURAL"))
+                .put("runtimeDetectorSetting", UserSettings.string("detector", "HYBRID"))
                 .put(
                     "interpretation",
                     "Timing and returned candidates only; no accuracy or CER claim",
@@ -76,7 +76,6 @@ class RealPhotoProbe {
                 val heads = JSONObject()
                 val probes =
                     listOf<Pair<String, () -> DetectionResult>>(
-                        "mnn" to { NeuralEdgeDetector.detect(mat, false) },
                         "docquad" to { LearnedDocumentDetector.detect(bitmap) },
                         "standard" to { DocumentDetector.detect(mat, false) },
                         "current" to { LearnedDocumentDetector.detect(mat, false) },

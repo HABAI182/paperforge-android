@@ -1,0 +1,90 @@
+[
+  {
+    "fixture": "pure-white",
+    "corners": {
+      "topLeft": {
+        "mean": 255,
+        "greyShare": 0
+      },
+      "topRight": {
+        "mean": 255,
+        "greyShare": 0
+      },
+      "bottomLeft": {
+        "mean": 255,
+        "greyShare": 0
+      },
+      "bottomRight": {
+        "mean": 255,
+        "greyShare": 0
+      }
+    },
+    "edgeRuleLuma": 0
+  },
+  {
+    "fixture": "rim",
+    "corners": {
+      "topLeft": {
+        "mean": 254.99138888888888,
+        "greyShare": 0
+      },
+      "topRight": {
+        "mean": 254.945,
+        "greyShare": 0
+      },
+      "bottomLeft": {
+        "mean": 254.9752777777778,
+        "greyShare": 8.333333333333334E-4
+      },
+      "bottomRight": {
+        "mean": 254.99694444444444,
+        "greyShare": 0
+      }
+    },
+    "edgeRuleLuma": 0
+  },
+  {
+    "fixture": "curl",
+    "corners": {
+      "topLeft": {
+        "mean": 255,
+        "greyShare": 0
+      },
+      "topRight": {
+        "mean": 255,
+        "greyShare": 0
+      },
+      "bottomLeft": {
+        "mean": 254.33333333333334,
+        "greyShare": 0
+      },
+      "bottomRight": {
+        "mean": 255,
+        "greyShare": 0
+      }
+    },
+    "edgeRuleLuma": 0
+  },
+  {
+    "fixture": "spine",
+    "corners": {
+      "topLeft": {
+        "mean": 253.44333333333333,
+        "greyShare": 0.0175
+      },
+      "topRight": {
+        "mean": 255,
+        "greyShare": 0
+      },
+      "bottomLeft": {
+        "mean": 253.48333333333332,
+        "greyShare": 0.016666666666666666
+      },
+      "bottomRight": {
+        "mean": 255,
+        "greyShare": 0
+      }
+    },
+    "edgeRuleLuma": 0
+  }
+]

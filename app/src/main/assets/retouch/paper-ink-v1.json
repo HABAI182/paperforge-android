@@ -1,0 +1,24 @@
+{
+  "seed": 20261102,
+  "steps": 7000,
+  "seconds": 150.6131362915039,
+  "parameters": 537,
+  "validation": "held-out synthetic seeds only, not real document accuracy",
+  "precision": 0.9259194371826283,
+  "recall": 0.9043543591718002,
+  "trainingData": "original procedural OpenCV glyphs/curves; no owner photos/reference outputs used",
+  "name": "PaperForge Ink v1",
+  "sha256": "6e9de1734e3f880e7551927c64715e208f4b74a0f80a9e20c469bafeee984710",
+  "bytes": 4386,
+  "scope": "Original generated foreground matte weights. Synthetic validation is not real document accuracy; source ink is composited, never regenerated.",
+  "generator": "scripts/train_paper_ink.py",
+  "input": "normalized ink, Gaussian(0.8), Gaussian(2.0), each 0..1",
+  "toolVersions": {
+    "torch": "2.15.0+cpu",
+    "opencv": "5.0.0",
+    "numpy": "2.5.4",
+    "onnx": "1.23.2",
+    "onnxruntime": "1.31.0"
+  },
+  "generatorSha256": "293cbc41cd713a1c17fbcb1f177e556af834f184b934ff28c4ebc3a3cd3ec4ea"
+}

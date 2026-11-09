@@ -16,7 +16,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * #28: watermark removal measured on the owner's real CamScanner exports. The samples live on the
+ * #28: watermark removal measured on the owner's real 本地样本应用 exports. The samples live on the
  * device (files/samples), never in the repository, because they contain private documents.
  */
 @RunWith(AndroidJUnit4::class)
@@ -89,6 +89,10 @@ class PdfWatermarkSampleTest {
             val cleaned = File(output, "clean-" + source.name)
             if (cleaned.exists()) cleaned.delete()
             val report = PdfWatermarks.remove(source, cleaned)
+            val remainingText =
+                com.tom_roush.pdfbox.pdmodel.PDDocument.load(cleaned).use {
+                    com.tom_roush.pdfbox.text.PDFTextStripper().getText(it)
+                }
             val before = render(source)
             val after = render(cleaned)
             try {
@@ -104,6 +108,7 @@ class PdfWatermarkSampleTest {
                         .put("cornerDarkBefore", beforeDark)
                         .put("cornerDarkAfter", afterDark)
                         .put("untouchedMeanDiff", untouched)
+                        .put("remainingTextChars", remainingText.trim().length)
                 )
                 File(output, source.name.replace(".pdf", "-before.png")).outputStream().use {
                     before.compress(Bitmap.CompressFormat.PNG, 100, it)
@@ -114,6 +119,7 @@ class PdfWatermarkSampleTest {
                 assertTrue("${source.name}: 水印没有被移除 ($beforeDark -> $afterDark)",
                     afterDark <= beforeDark * .2 || afterDark < .005)
                 assertTrue("${source.name}: 正文区域被改动 $untouched", untouched < 1.0)
+                assertTrue("${source.name}: 文字层仍有水印文字 ${remainingText.take(20)}", remainingText.isBlank())
             } finally {
                 before.recycle()
                 after.recycle()

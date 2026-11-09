@@ -3,7 +3,6 @@ package cn.paperforge.app
 import android.graphics.*
 import androidx.test.core.app.ApplicationProvider
 import cn.paperforge.app.imaging.LearnedDocumentDetector
-import cn.paperforge.app.imaging.ScanModel
 import cn.paperforge.app.ocr.BundledOcrEngine
 import cn.paperforge.app.ocr.OcrOptions
 import java.io.File
@@ -29,11 +28,7 @@ class ShrunkRuntimeTest {
                     .toList()
             assertEquals(listOf("assets/fonts/PaperForgeCJK-Regular.ttf"), fonts.map { it.name })
             for (path in
-                listOf(
-                    "assets/docquad/docquadnet256.ort",
-                    "assets/scan/border.mnn",
-                    "assets/scan/dewarp.mnn",
-                )) assertEquals(
+                listOf("assets/docquad/docquadnet256.ort")) assertEquals(
                 "$path must be compressed",
                 ZipEntry.DEFLATED,
                 apk.getEntry(path).method,
@@ -57,11 +52,6 @@ class ShrunkRuntimeTest {
                 )
             }
             Utils.bitmapToMat(image, rgba)
-            for (dewarp in listOf(false, true)) {
-                val field = ScanModel.run(rgba, dewarp)
-                assertEquals(2 * 240 * 240, field.size)
-                assertTrue(field.all(Float::isFinite))
-            }
             // Force the same asset-to-file path used by a fresh installation.
             val ortCache = File(app.cacheDir, "docquad-01bebd39.ort")
             check(!ortCache.exists() || ortCache.delete())

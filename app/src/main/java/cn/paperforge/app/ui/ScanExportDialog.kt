@@ -41,7 +41,15 @@ fun ScanExportDialog(
         )
     }
     var options by
-        rememberSaveable(stateSaver = optionsSaver) { mutableStateOf(ScanExportOptions.current()) }
+        rememberSaveable(stateSaver = optionsSaver) {
+            mutableStateOf(
+                ScanExportOptions.current().let {
+                    if (settingsOnly) it
+                    else it.copy(format = "PDF", naming = "{title}", searchable = false)
+                }
+            )
+        }
+    var outputName by rememberSaveable(title) { mutableStateOf(title.removeSuffix(".pdf")) }
     var dpiText by rememberSaveable(options.dpi) { mutableStateOf(options.dpi.toString()) }
     val dpiValid = dpiText.toIntOrNull()?.let { it in 72..600 } == true
     var presetName by rememberSaveable { mutableStateOf("") }
@@ -69,6 +77,17 @@ fun ScanExportDialog(
                 Modifier.heightIn(max = 490.dp).verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
+                if (!settingsOnly) {
+                    OutlinedTextField(
+                        outputName,
+                        { outputName = it },
+                        label = { Text("文件名") },
+                        trailingIcon = { Text(".pdf", Modifier.padding(end = 12.dp)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Text("默认沿用文档名称，可直接修改本次导出文件名", style = MaterialTheme.typography.bodySmall)
+                }
                 Box {
                     OutlinedButton(
                         onClick = { presetMenu = true },
@@ -86,12 +105,7 @@ fun ScanExportDialog(
                                         quality = 72,
                                         searchable = false,
                                     ),
-                                "无损页面 PNG" to
-                                    ScanExportOptions(
-                                        resolution = "HIGH",
-                                        searchable = false,
-                                        format = "PNG",
-                                    ),
+                                "无损存档 PDF" to ScanExportOptions(resolution = "HIGH", quality = 100),
                             )
                             .forEach { (name, value) ->
                                 DropdownMenuItem(
@@ -107,7 +121,11 @@ fun ScanExportDialog(
                             DropdownMenuItem(
                                 text = { Text(preset.name) },
                                 onClick = {
-                                    options = ScanExportOptions.decode(preset.values)
+                                    options =
+                                        ScanExportOptions.decode(preset.values).let {
+                                            if (settingsOnly) it
+                                            else it.copy(format = "PDF", naming = "{title}")
+                                        }
                                     selectedPreset = preset.name
                                     presetMenu = false
                                 },
@@ -130,7 +148,8 @@ fun ScanExportDialog(
                     Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    listOf("PDF", "JPG", "PNG").forEach { value ->
+                    (if (settingsOnly) listOf("PDF", "JPG", "PNG") else listOf("PDF")).forEach {
+                        value ->
                         FilterChip(
                             options.format == value,
                             { options = options.copy(format = value) },
@@ -138,6 +157,7 @@ fun ScanExportDialog(
                         )
                     }
                 }
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(
                         options.searchable && options.format == "PDF",
@@ -205,21 +225,27 @@ fun ScanExportDialog(
                         valueRange = 40f..100f,
                     )
                 }
-                OutlinedTextField(
-                    options.naming,
-                    { options = options.copy(naming = it) },
-                    label = { Text("文件名模板") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                )
-                Text(
-                    "{title} 标题 · {date} 日期 · {time} 时间 · {pages} 扫描页数",
-                    style = MaterialTheme.typography.bodySmall,
-                )
-                Text(
-                    "预览：${options.fileName(title, pages)}.${if(options.format == "PDF") "pdf" else "zip"}",
-                    style = MaterialTheme.typography.bodySmall,
-                )
+                if (settingsOnly) {
+                    OutlinedTextField(
+                        options.naming,
+                        { options = options.copy(naming = it) },
+                        label = { Text("文件名模板") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                    )
+                    Text(
+                        "{title} 标题 · {date} 日期 · {time} 时间 · {pages} 扫描页数",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    Text(
+                        "预览：${options.fileName(title, pages)}.${if(options.format == "PDF") "pdf" else "zip"}",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                } else
+                    Text(
+                        "${outputName.trim().removeSuffix(".pdf")}.pdf",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
                 val destination = destinations.get(options.destination)
                 Text(
                     if (options.destination.isBlank()) "生成后选择保存位置"
@@ -264,11 +290,18 @@ fun ScanExportDialog(
         },
         confirmButton = {
             TextButton(
-                enabled = options.resolution != "CUSTOM" || dpiValid,
+                enabled =
+                    (options.resolution != "CUSTOM" || dpiValid) &&
+                        (settingsOnly || outputName.trim().removeSuffix(".pdf").isNotBlank()),
                 onClick = {
                     options.remember()
                     onDismiss()
-                    if (!settingsOnly) vm.exportWithOptions(title, pages, options)
+                    if (!settingsOnly)
+                        vm.exportWithOptions(
+                            outputName.trim().removeSuffix(".pdf"),
+                            pages,
+                            options.copy(naming = "{title}"),
+                        )
                 },
             ) {
                 Text(
@@ -277,6 +310,19 @@ fun ScanExportDialog(
                 )
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
+        dismissButton = {
+            Row {
+                TextButton(
+                    onClick = {
+                        options = ScanExportOptions()
+                        selectedPreset = "默认"
+                        notice = ""
+                    }
+                ) {
+                    Text("恢复默认")
+                }
+                TextButton(onClick = onDismiss) { Text("取消") }
+            }
+        },
     )
 }
