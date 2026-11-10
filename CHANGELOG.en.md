@@ -4,6 +4,39 @@
 
 Notes for versions before 2.0.0 are in Chinese in [CHANGELOG.md](CHANGELOG.md).
 
+## 2.0.1 · 2026-11-10
+
+A revision of 2.0.0 (internal build 20042). It focuses on original-photo detail, manual cropping and automatic edge finding.
+
+### Original-photo detail
+
+- **Unedited full-frame Original page.** PDF export now embeds the camera's own JPEG, with no downscaling or second compression. Image export copies the file unchanged.
+- **Cropped Original page.** It keeps the photo's full resolution, where PDF export at Standard used to shrink it to 2572 px on the long side. It is compressed at quality 95 or higher.
+- **Photo JPEG quality is back to 97.** An earlier default-settings migration had set every install to 94. This release clears that value; any other value you chose is kept.
+- **Resolution.** The camera now asks for the highest 4:3 resolution it supports.
+- **Phone's own capture enhancement.** Where the phone offers it, PaperForge uses it (CameraX Extensions in auto mode, such as HDR or night). Otherwise it falls back to normal capture. You can turn it off under Settings → Capture.
+
+### Manual cropping
+
+- **A new magnifier.** It shows the photo at 3×. It moves out of the way of your finger and hand, and never covers the point you are placing. It always stays fully on screen and glides when it changes place.
+- **Precise markers.** An open crosshair marks the exact point, and the crop line is drawn thin, so you can line it up with the paper edge. The corner being adjusted shows as a ring instead of a solid dot.
+- **Corners follow your finger.** A dragged corner moves relative to your finger instead of jumping under the fingertip.
+- **Fine adjustment.** After you let go, arrow keys nudge the corner by about 0.1% of the photo's long side per tap. Holding a key repeats.
+- **All Android versions.** The magnifier now appears on every version; Android 8 had none.
+
+### Automatic edge finding
+
+- **PageNet v3.** The page-detection model adds training scenes with printed covers, pens, open notebooks, stacked sheets of the same paper, engineering drawings and light desks.
+- **Stacked sheets.** The top sheet's edge is found from where its ruled lines end.
+- **Multi-colour book covers.** The whole cover is outlined, not just a central panel.
+- **Colour blocks.** Covers made mostly of colour blocks keep their colour instead of being whitened like paper.
+- **Edge snapping.** The outline snaps to a nearby continuous paper edge.
+
+### Known limitations
+
+- This release was verified on emulators and the project's test photos. Whether the phone's capture enhancement is available, and how the magnifier feels, still need checking on a real phone.
+- When ruled lines on the back show through a printed page, faint traces can remain.
+
 ## 2.0.0 · 2026-11-09
 
 This is the first official release since 1.1.0 (internal build 20036). It includes every improvement kept since 1.1.0. The 1.2.0 and 1.3.0 development lines were never published separately, so their contents are part of this release.

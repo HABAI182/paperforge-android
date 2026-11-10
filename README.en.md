@@ -4,7 +4,7 @@
 
 PaperForge is an open-source Android document scanner and PDF workbench. It scans with the camera, crops and flattens pages, removes shadows and show-through, recognises text, reads and annotates PDFs, and converts formats. Scanning and recognition run on the phone. There are no accounts, ads or subscriptions.
 
-**Current version: v2.0.0.** Requires Android 8.0 or later on a 64-bit ARM phone.
+**Current version: v2.0.1.** Requires Android 8.0 or later on a 64-bit ARM phone.
 
 [Download](https://github.com/HABAI182/paperforge-android/releases/latest) · [Changelog](CHANGELOG.en.md) · [Install and update](docs/INSTALL.md) · [Provenance and licences](docs/PROVENANCE.md)
 
@@ -25,6 +25,13 @@ PaperForge is an open-source Android document scanner and PDF workbench. It scan
   - Check for updates in the app. When GitHub is unreliable, downloads fall back to mirrors.
   - Every download is checked against its SHA-256 and its signature.
 
+## Highlights of v2.0.1
+
+- Original-mode exports keep all the detail the camera captured. An unedited full page uses the camera's JPEG as is, and a cropped page keeps the photo's resolution.
+- Photos save at JPEG quality 97 and the camera's highest 4:3 resolution. Where the phone offers its own capture enhancement (HDR, night), PaperForge uses it.
+- A redesigned crop magnifier: it stays clear of your finger, marks the point with a crosshair and adds arrow-key nudges.
+- Edge finding: PageNet v3 finds the top sheet of a stack, and outlines whole multi-colour covers.
+
 ## Highlights of v2.0.0
 
 - Once the phone is still, the camera outline shows the final crop, and it moves smoothly.
@@ -44,7 +51,7 @@ Interface screenshots are from an emulator.
 
 ## Download and install
 
-1. Download `PaperForge-2.0.0-full-arm64-v8a.apk` from the [releases page](https://github.com/HABAI182/paperforge-android/releases/latest).
+1. Download `PaperForge-2.0.1-full-arm64-v8a.apk` from the [releases page](https://github.com/HABAI182/paperforge-android/releases/latest).
 2. Optionally check it against `SHA256SUMS.txt` on the same page.
 3. Allow installs from unknown sources. Installing over an older PaperForge keeps your documents.
 
