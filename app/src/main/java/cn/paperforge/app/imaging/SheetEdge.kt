@@ -30,10 +30,14 @@ internal object SheetEdge {
 
     fun enabled() = ScanConfig.int("sheetEdge", 1) != 0
 
+    /** The beyond-the-line checks of the last [refine] on this thread, for diagnostics. */
+    val checks: ThreadLocal<MutableList<String>> = ThreadLocal.withInitial { mutableListOf() }
+
     class Result(val quad: Quad, val sides: String)
 
     /** [photo] is RGBA or RGB, at any size. */
     fun refine(photo: Mat, quad: Quad): Result? {
+        checks.get().clear()
         if (!enabled() || photo.empty() || !quad.valid()) return null
         val rgb = Mat()
         val gray = Mat()
@@ -87,7 +91,7 @@ internal object SheetEdge {
                 val across = if (side == "left" || side == "right") padX else padY
                 val along = if (side == "left" || side == "right") padY else padX
                 val band = (across + ScanConfig.float("sheetEdgeBand", .12f) * (vw - 2 * across)).toInt()
-                val line = innermost(vw, vh, band, along, pixels, inside, at) ?: continue
+                val line = innermost(vw, vh, band, along, across, pixels, inside, at) ?: continue
                 lines[side] = line
             }
             if (lines.isEmpty()) return null
@@ -135,7 +139,7 @@ internal object SheetEdge {
      * checked only along the page's own length, [along] in from each end, since beyond the page lie the
      * desk and the sheets below.
      */
-    private fun innermost(vw: Int, vh: Int, band: Int, along: Double, pixels: ByteArray, inside: ByteArray, at: (Int, Int) -> Int): DoubleArray? {
+    private fun innermost(vw: Int, vh: Int, band: Int, along: Double, across: Double, pixels: ByteArray, inside: ByteArray, at: (Int, Int) -> Int): DoubleArray? {
         if (band < 4 * STEP + 8 || band + 60 >= vw) return null
         fun value(x: Int, y: Int) = pixels[at(x, y)].toInt() and 255
         fun valid(x: Int, y: Int) = inside[at(x, y)] != 0.toByte()
@@ -229,9 +233,66 @@ internal object SheetEdge {
                 }
                 y += 4
             }
-            if (total > 0 && dark.toFloat() / total < clear) return line
+            if (total > 0 && dark.toFloat() / total < clear && !pageGoesOn(line, vw, vh, band, along, across, pixels, inside, at)) return line
         }
         return null
+    }
+
+    /**
+     * Whether the page itself goes on beyond [line]: the strip between it and the detector's side carries
+     * print or writing nearly as densely as the page does. Beyond a top sheet's edge lie only the edges of the
+     * sheets below, or the desk. On single receipts and leaflets a fold crease or a printed border near the edge
+     * passed as such an edge, and the crop cut off part of the page: on 20 DocUNet photos the share of the true
+     * page kept fell from 0.94 to 0.89 against the earlier detector.
+     */
+    private fun pageGoesOn(line: DoubleArray, vw: Int, vh: Int, band: Int, along: Double, across: Double, pixels: ByteArray, inside: ByteArray, at: (Int, Int) -> Int): Boolean {
+        if (ScanConfig.int("sheetEdgeBeyondCheck", 1) == 0) return false
+        fun value(x: Int, y: Int) = pixels[at(x, y)].toInt() and 255
+        fun valid(x: Int, y: Int) = inside[at(x, y)] != 0.toByte()
+        val span = vh - 2 * along
+        // Dark counts by distance from the line, so that lines running beside it (the lower sheets' own
+        // edges, dark in most rows) can be told from print and writing, which is scattered.
+        val reach = max(0, (line[0] * vh / 2 + line[1] - across).toInt())
+        val darkAt = IntArray(reach + 1)
+        val totalAt = IntArray(reach + 1)
+        var innerDark = 0
+        var innerTotal = 0
+        var y = (along + .05 * span).toInt()
+        while (y < vh - along - .05 * span) {
+            var paperSum = 0
+            var paperCount = 0
+            for (x in band until min(vw, band + 80)) if (valid(x, y)) { paperSum += value(x, y); paperCount++ }
+            if (paperCount > 0) {
+                val paper = paperSum.toFloat() / paperCount
+                for (x in band until min(vw, band + 80)) if (valid(x, y)) { innerTotal++; if (value(x, y) < .7f * paper) innerDark++ }
+                // From just short of the line out to just inside the detector's side, clear of both.
+                val lineX = (line[0] * y + line[1]).toInt()
+                for (d in 4..reach) {
+                    val x = lineX - d
+                    if (x <= across.toInt() + 4 || x < 0) break
+                    if (!valid(x, y)) continue
+                    totalAt[d]++
+                    if (value(x, y) < .7f * paper) darkAt[d]++
+                }
+            }
+            y += 3
+        }
+        var beyondDark = 0
+        var beyondTotal = 0
+        for (d in totalAt.indices) {
+            if (totalAt[d] == 0) continue
+            beyondTotal += totalAt[d]
+            if (darkAt[d] < .5f * totalAt[d]) beyondDark += darkAt[d]
+        }
+        // A strip only a few pixels wide is the slivers of the sheets below, or the edge's own shadow.
+        if (reach < ScanConfig.int("sheetEdgeBeyondWidth", 20) || beyondTotal < 200 || innerTotal == 0) return false
+        val beyond = beyondDark.toFloat() / beyondTotal
+        val inner = innerDark.toFloat() / innerTotal
+        // Measured: real stacks showed at most 0.024 of print beyond the top sheet's edge (exam pages, a book with
+        // fingers), single pages cut at a crease or border 0.028-0.123. The margin is thin; see the changelog.
+        val goesOn = beyond >= ScanConfig.float("sheetEdgeBeyondInk", .026f) && beyond >= ScanConfig.float("sheetEdgeBeyondShare", .35f) * inner
+        checks.get().add("w%d b%.3f i%.3f %s".format(reach, beyond, inner, if (goesOn) "page" else "edge"))
+        return goesOn
     }
 
     private fun pad(q: List<DoubleArray>): List<DoubleArray> {

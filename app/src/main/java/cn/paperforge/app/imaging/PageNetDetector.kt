@@ -85,6 +85,8 @@ object PageNetDetector {
                         @Suppress("UNCHECKED_CAST")
                         val logits = output[0].value as Array<Array<Array<FloatArray>>>
                         val channel = logits[0][0]
+                        val edge = logits[0][1]
+                        boundary.set(FloatArray(OUTPUT * OUTPUT) { i -> 1f / (1f + exp(-edge[i / OUTPUT][i % OUTPUT])) })
                         return FloatArray(OUTPUT * OUTPUT) { i ->
                             val value = channel[i / OUTPUT][i % OUTPUT]
                             1f / (1f + exp(-value))
@@ -96,6 +98,140 @@ object PageNetDetector {
             android.util.Log.w("PaperForgeDetector", "PageNet unavailable", e)
             return null
         }
+    }
+
+    /** The sheet-boundary map of the last [mask] call on this thread (sigmoid, [OUTPUT]x[OUTPUT]). */
+    private val boundary = ThreadLocal<FloatArray?>()
+
+    /**
+     * Moves each side of [quad] inward onto the strongest ridge of the network's own sheet-boundary map, within
+     * [reach] of the frame. A faint fringe of the mask onto a neighbouring sheet or a pale desk pushes a side
+     * outward, while the boundary map still marks the sheet's real edge. Sides only move inward, and a move must
+     * beat the current side by more the farther it goes, so a sheet whose mask is right keeps its quad.
+     */
+    private fun snapInward(quad: Quad, edge: FloatArray): Quad {
+        val n = OUTPUT
+        val blurred = Mat()
+        val map = Mat(n, n, CvType.CV_32FC1)
+        val values: FloatArray
+        try {
+            map.put(0, 0, edge)
+            Imgproc.GaussianBlur(map, blurred, Size(3.0, 3.0), 0.0)
+            values = FloatArray(n * n).also { blurred.get(0, 0, it) }
+        } finally {
+            map.release()
+            blurred.release()
+        }
+        fun at(x: Double, y: Double): Float {
+            val x0 = floor(x).toInt().coerceIn(0, n - 2)
+            val y0 = floor(y).toInt().coerceIn(0, n - 2)
+            val fx = (x - x0).toFloat().coerceIn(0f, 1f)
+            val fy = (y - y0).toFloat().coerceIn(0f, 1f)
+            val a = values[y0 * n + x0] * (1 - fx) + values[y0 * n + x0 + 1] * fx
+            val b = values[(y0 + 1) * n + x0] * (1 - fx) + values[(y0 + 1) * n + x0 + 1] * fx
+            return a * (1 - fy) + b * fy
+        }
+        fun mean(ax: Double, ay: Double, bx: Double, by: Double): Float {
+            var total = 0f
+            var count = 0
+            for (k in 0 until 48) {
+                val t = .1 + .8 * k / 47
+                val x = ax + (bx - ax) * t
+                val y = ay + (by - ay) * t
+                if (x < 0 || y < 0 || x > n - 1 || y > n - 1) continue
+                total += at(x, y)
+                count++
+            }
+            return if (count < 24) -1f else total / count
+        }
+        fun continuity(ax: Double, ay: Double, bx: Double, by: Double): Float {
+            var on = 0
+            var count = 0
+            for (k in 0 until 48) {
+                val t = .1 + .8 * k / 47
+                val x = ax + (bx - ax) * t
+                val y = ay + (by - ay) * t
+                if (x < 0 || y < 0 || x > n - 1 || y > n - 1) continue
+                if (at(x, y) > .35f) on++
+                count++
+            }
+            return if (count < 24) 0f else on.toFloat() / count
+        }
+        val far = ScanConfig.float("pageNetEdgeSnapFar", .3f) * n
+        val farGain = ScanConfig.float("pageNetEdgeSnapFarGain", .3f)
+        val farContinuity = ScanConfig.float("pageNetEdgeSnapFarContinuity", .9f)
+        val pts = quad.points.map { doubleArrayOf(it.x * n - .5, it.y * n - .5) }
+        val cx = pts.sumOf { it[0] } / 4
+        val cy = pts.sumOf { it[1] } / 4
+        val reach = ScanConfig.float("pageNetEdgeSnapReach", .06f) * n
+        val penalty = ScanConfig.float("pageNetEdgeSnapPenalty", .15f)
+        val lines = (0..3).map { i ->
+            val a = pts[i]
+            val c = pts[(i + 1) % 4]
+            val length = hypot(c[0] - a[0], c[1] - a[1]).coerceAtLeast(1e-6)
+            val dx = (c[0] - a[0]) / length
+            val dy = (c[1] - a[1]) / length
+            var nx = -dy
+            var ny = dx
+            val mx = (a[0] + c[0]) / 2
+            val my = (a[1] + c[1]) / 2
+            if ((cx - mx) * nx + (cy - my) * ny < 0) { nx = -nx; ny = -ny }
+            val here = mean(a[0], a[1], c[0], c[1])
+            var best = here
+            var line = doubleArrayOf(a[0], a[1], c[0], c[1])
+            // A long move, in or out, only onto a ridge that is nearly continuous and clearly stronger: a drawing
+            // can leave the mask unsure over part of the sheet, while its edge stays plain in the boundary map.
+            var farBest = -1f
+            var farLine: DoubleArray? = null
+            val half = length / 2 * 1.2
+            val angle = ScanConfig.int("pageNetEdgeSnapAngle", 5)
+            // Half-pixel steps near the side, whole pixels for the long moves: the same answers at half the work.
+            val turns = (-angle..angle).map { Math.toRadians(it.toDouble()).let { r -> doubleArrayOf(cos(r), sin(r)) } }
+            var off = -far.toDouble()
+            while (off <= far + 1e-6) {
+                val near = off >= 0 && off <= reach
+                if (!near && abs(off - Math.round(off)) > 1e-6) {
+                    off += .5
+                    continue
+                }
+                for (turn in turns) {
+                    val ux = dx * turn[0] - dy * turn[1]
+                    val uy = dx * turn[1] + dy * turn[0]
+                    val px = mx + nx * off
+                    val py = my + ny * off
+                    val ax = px - ux * half
+                    val ay = py - uy * half
+                    val bx = px + ux * half
+                    val by = py + uy * half
+                    val score = mean(ax, ay, bx, by)
+                    if (off >= 0 && off <= reach && score > best + penalty * (off / reach)) {
+                        best = score
+                        line = doubleArrayOf(ax, ay, bx, by)
+                    }
+                    if (far > 0 && score >= here + farGain && score > farBest && continuity(ax, ay, bx, by) >= farContinuity) {
+                        farBest = score
+                        farLine = doubleArrayOf(ax, ay, bx, by)
+                    }
+                }
+                off += .5
+            }
+            if (farLine != null && farBest > best) farLine else line
+        }
+        val corners = (0..3).map { i ->
+            val p = lines[(i + 3) % 4]
+            val q = lines[i]
+            val d1x = p[2] - p[0]; val d1y = p[3] - p[1]
+            val d2x = q[2] - q[0]; val d2y = q[3] - q[1]
+            val det = d1x * d2y - d1y * d2x
+            if (abs(det) < 1e-9) return quad
+            val t = ((q[0] - p[0]) * d2y - (q[1] - p[1]) * d2x) / det
+            PointN(
+                (((p[0] + d1x * t) + .5) / n).toFloat().coerceIn(0f, 1f),
+                (((p[1] + d1y * t) + .5) / n).toFloat().coerceIn(0f, 1f),
+            )
+        }
+        val snapped = Quad.ordered(corners)
+        return if (snapped.valid() && snapped.area >= .4f * quad.area) snapped else quad
     }
 
     private class Fit(val points: List<PointN>, val confidence: Float)
@@ -329,11 +465,23 @@ object PageNetDetector {
         val probabilities = mask(source, Rect(0, 0, source.cols(), source.rows())) ?: return null
         val cut = ScanConfig.float("pageNetCut", .15f)
         val base = fit(probabilities, threshold(probabilities, cut)) ?: return null
-        val baseQuad = Quad.ordered(base.points).takeIf { it.valid() } ?: return null
+        val fitted = Quad.ordered(base.points).takeIf { it.valid() } ?: return null
+        val edges = boundary.get()
+        val snapped =
+            if (edges != null && ScanConfig.int("pageNetEdgeSnap", 1) != 0) snapInward(fitted, edges) else fitted
+        // A cover the mask cut at a printed colour boundary: only for a nearly square quad, see [CoverOutline].
+        val extended = if (!preview) CoverOutline.extend(source, snapped) else null
+        val baseQuad = extended ?: snapped
         var quad = baseQuad
         var confidence = base.confidence
-        var method = "pagenet"
-        if (!preview && ScanConfig.int("pageNetRecover", 1) != 0) {
+        var method = if (extended != null) "pagenet+" + CoverOutline.VERSION else "pagenet"
+        // Recovery wins back blank margins the mask drops, which matters on a small sheet such as a receipt.
+        // On a page that fills much of the frame it found the neighbouring page or the paper underneath,
+        // and it costs about a second, so it runs only for small sheets.
+        if (
+            !preview && ScanConfig.int("pageNetRecover", 1) != 0 &&
+                baseQuad.area < ScanConfig.float("pageNetRecoverBelow", .25f)
+        ) {
             val recovered = recover(source, probabilities, cut)?.let { fit(probabilities, it) }
             val recoveredQuad = recovered?.let { Quad.ordered(it.points) }?.takeIf { it.valid() }
             // A much larger answer is the sheet underneath or the desk, not a recovered margin.
@@ -342,6 +490,15 @@ object PageNetDetector {
                 // Recovered blank paper reads as unsure to the mask, so it must not lower this.
                 confidence = max(base.confidence, recovered.confidence)
                 method = "pagenet-recovered"
+            }
+        }
+        // A pile of the same ruled paper reads as one sheet to the mask; the rules show where the top sheet ends.
+        // Piles of notebook pages fill much of the frame; on a small sheet such as a receipt, printed text lines
+        // would pass for rules.
+        if (!preview && quad.area >= ScanConfig.float("ruleEndsAbove", .25f)) {
+            TopSheetRules.refine(source, quad)?.let {
+                quad = it
+                method += "+" + TopSheetRules.VERSION
             }
         }
         return DetectionResult(

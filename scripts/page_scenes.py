@@ -20,6 +20,18 @@ from PIL import Image, ImageDraw, ImageFont
 
 INPUT = 320
 RENDER = 512
+# Weight of open-notebook spreads among the scene cases; 0 reproduces the first scene sets.
+SPREADS = 1
+# A hard set (--hard): mostly a top sheet against the same paper (below it, beside it, or facing it), and
+# technical drawings.
+HARD = 0
+
+
+def same_paper(top, rng):
+    """Another sheet of the top sheet's paper: the same sheet turned, so tone and ruling match."""
+    other = top[::-1, ::-1] if rng.random() < 0.5 else top[:, ::-1]
+    gain = rng.uniform(0.9, 1.08)
+    return np.ascontiguousarray(np.clip(other.astype(np.float32) * gain, 0, 255).astype(np.uint8))
 
 
 # ---------------------------------------------------------------- sheets
@@ -106,6 +118,102 @@ def crumple(sheet, rng):
     return np.clip(sheet.astype(np.float32) * gain[..., None], 0, 255).astype(np.uint8)
 
 
+def cover(rng, h, w):
+    """A printed cover, as on exercise books and textbooks: flat colour panels, stripe and hatch fields, a
+    skyline-like print band and large type. Its inner colour boundaries must not read as the sheet's edge."""
+    def colour():
+        if rng.random() < 0.5:  # the blues, teals and reds of school covers
+            hue = rng.choice([100, 95, 105, 88, 0, 170, 20, 140, 60])
+        else:
+            hue = rng.randint(0, 179)
+        hsv = np.uint8([[[hue, rng.randint(90, 255), rng.randint(110, 245)]]])
+        return tuple(int(c) for c in cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)[0, 0])
+
+    base = (rng.randint(232, 252),) * 3 if rng.random() < 0.5 else colour()
+    sheet = np.full((h, w, 3), base, np.uint8)
+    for _ in range(rng.randint(1, 4)):
+        c = colour() if rng.random() < 0.8 else (rng.randint(225, 252),) * 3
+        shape = rng.choice(["band", "band", "panel", "circle", "stripes", "hatch", "skyline"])
+        if shape == "band":  # two-tone: a full-width block from some height to an edge
+            y = rng.randint(int(h * 0.3), int(h * 0.8))
+            if rng.random() < 0.5:
+                sheet[y:] = c
+            else:
+                sheet[:y] = c
+        elif shape == "panel":
+            x0, y0 = rng.randint(0, w // 2), rng.randint(0, h // 2)
+            sheet[y0:rng.randint(y0 + h // 4, h), x0:rng.randint(x0 + w // 4, w)] = c
+        elif shape == "circle":
+            cv2.circle(sheet, (rng.randint(0, w), rng.randint(0, h)), rng.randint(w // 3, w), c, -1, cv2.LINE_AA)
+        elif shape == "stripes":
+            y0, y1 = sorted(rng.randint(0, h) for _ in range(2))
+            step, wave = rng.randint(4, 11), rng.uniform(0, 0.15) * h
+            for y in range(y0, max(y1, y0 + h // 5), step):
+                pts = [(x, int(y + wave * math.sin(x / w * 3.1))) for x in range(0, w + 20, 20)]
+                cv2.polylines(sheet, [np.int32(pts)], False, c, 1, cv2.LINE_AA)
+        elif shape == "hatch":
+            y0 = rng.randint(h // 3, h - h // 6)
+            region = sheet[y0:] if rng.random() < 0.7 else sheet[: h - y0]
+            region[:] = c
+            dark = tuple(int(v * 0.7) for v in c)
+            step = rng.randint(4, 9)
+            for k in range(-region.shape[0], region.shape[1], step):
+                cv2.line(region, (k, region.shape[0]), (k + region.shape[0], 0), dark, 1, cv2.LINE_AA)
+        else:  # a printed silhouette band, like a campus skyline
+            y = rng.randint(int(h * 0.6), int(h * 0.9))
+            x = 0
+            while x < w:
+                bw = rng.randint(4, 40)
+                cv2.rectangle(sheet, (x, y - rng.randint(0, h // 4)), (x + bw, y + rng.randint(10, h // 8)), c, -1)
+                x += bw + rng.randint(0, 6)
+    image = Image.fromarray(sheet)
+    draw = ImageDraw.Draw(image)
+    ink = (rng.randint(0, 60),) * 3 if rng.random() < 0.6 else colour()
+    for _ in range(rng.randint(1, 3)):
+        font = _font(rng.randint(26, 80))
+        draw.text((rng.randint(5, max(6, w // 3)), rng.randint(5, h - 90)), _words(rng, rng.randint(2, 5)), font=font, fill=ink)
+    if rng.random() < 0.6:  # name fields with underlines
+        y = rng.randint(h // 2, h - 80)
+        for k in range(3):
+            draw.text((w // 6, y + 34 * k), _words(rng, 4), font=_font(18), fill=(20, 20, 20))
+            draw.line((w // 2, y + 34 * k + 22, w - w // 8, y + 34 * k + 22), fill=(20, 20, 20), width=1)
+    return np.array(image)
+
+
+def drawing(sheet, rng):
+    """A technical drawing: large outlines, circles, centre lines and hatching in black ink. Long dark strokes
+    across the page are drawing, not the sheet's edge."""
+    h, w = sheet.shape[:2]
+    ink = (rng.randint(0, 50),) * 3
+    if rng.random() < 0.6:  # title-block frame
+        m = rng.randint(6, 20)
+        cv2.rectangle(sheet, (m, m), (w - m, h - m), ink, rng.choice([1, 2]))
+    for _ in range(rng.randint(3, 9)):
+        shape = rng.choice(["rect", "circle", "circle", "poly", "centre", "hatch"])
+        cx, cy = rng.randint(0, w), rng.randint(0, h)
+        size = rng.randint(min(w, h) // 10, min(w, h) // 2)
+        thick = rng.choice([1, 1, 2, 3])
+        if shape == "rect":
+            cv2.rectangle(sheet, (cx - size // 2, cy - size // 3), (cx + size // 2, cy + size // 3), ink, thick, cv2.LINE_AA)
+        elif shape == "circle":
+            for k in range(rng.randint(1, 4)):
+                cv2.circle(sheet, (cx, cy), max(4, size // 2 - k * size // 8), ink, thick, cv2.LINE_AA)
+        elif shape == "poly":
+            pts = np.int32([(cx + rng.randint(-size, size), cy + rng.randint(-size, size)) for _ in range(rng.randint(3, 7))])
+            cv2.polylines(sheet, [pts], True, ink, thick, cv2.LINE_AA)
+        elif shape == "centre":  # dash-dot centre lines, often running nearly edge to edge
+            vertical = rng.random() < 0.5
+            for s in range(0, h if vertical else w, 18):
+                a, b = (cx, s), (cx, s + 11)
+                if not vertical:
+                    a, b = (s, cy), (s + 11, cy)
+                cv2.line(sheet, a, b, ink, 1, cv2.LINE_AA)
+        else:
+            for k in range(-size, size, rng.randint(5, 10)):
+                cv2.line(sheet, (cx + k, cy - size // 3), (cx + k + size // 3, cy), ink, 1, cv2.LINE_AA)
+    return sheet
+
+
 REAL_SHEETS: list = []
 
 
@@ -131,8 +239,12 @@ def make_sheet(rng, backgrounds):
     base = tuple(int(c + rng.randint(-10, 8)) for c in base)
     sheet = np.full((h, w, 3), base, np.uint8)
     ink = (225, 225, 225) if tone == "dark" else (rng.randint(10, 80), rng.randint(10, 60), rng.randint(10, 60))
-    kind = rng.choice(["lined", "lined", "lined", "print", "print", "mixed", "blank", "colour"])
-    if kind == "lined":
+    kind = rng.choice(["lined", "lined", "lined", "print", "print", "mixed", "blank", "colour", "cover", "cover"] + ["drawing"] * (2 * HARD))
+    if kind == "cover":
+        sheet = cover(rng, h, w)
+    elif kind == "drawing":
+        sheet = drawing(sheet, rng)
+    elif kind == "lined":
         step = rng.randint(22, 34)
         rule = (rng.randint(140, 190), rng.randint(130, 170), rng.randint(120, 160))
         for y in range(rng.randint(30, 60), h - 8, step):
@@ -216,6 +328,8 @@ def background(rng, photos):
         y, x = rng.randint(0, h - size), rng.randint(0, w - size)
         return cv2.resize(p[y:y + size, x:x + size], (RENDER, RENDER)).astype(np.float32)
     colour = np.float32([rng.randint(20, 235) for _ in range(3)])
+    if SPREADS and rng.random() < 0.4:  # a white or light grey desk: white paper on white is the hard case
+        colour = np.float32([rng.randint(190, 245)] * 3) + np.float32([rng.randint(-6, 6) for _ in range(3)])
     gen = np.random.default_rng(rng.getrandbits(32))
     long_grain = rng.random() < 0.5
     tex = gen.normal(0, 1, (RENDER // 4, 8) if long_grain else (RENDER // 8, RENDER // 8)).astype(np.float32)
@@ -254,6 +368,30 @@ def fingers(scene, rng, quad):
     scene[:] = overlay
 
 
+def pens(scene, rng, quad):
+    """Pens and pencils lying along an edge of the sheet, mostly just outside it. They are not the sheet."""
+    if rng.random() > 0.35:
+        return
+    for _ in range(rng.randint(1, 2)):
+        i = rng.randint(0, 3)
+        a, b = quad[i], quad[(i + 1) % 4]
+        d = (b - a) / max(1.0, float(np.linalg.norm(b - a)))
+        n = np.float32([d[1], -d[0]])  # outward for the clockwise corner order of place()
+        length = rng.uniform(0.4, 0.95) * float(np.linalg.norm(b - a))
+        start = a + (b - a) * rng.uniform(0, 0.4) + n * rng.uniform(-8, 45)
+        turn = math.radians(rng.gauss(0, 6))
+        dd = np.float32([d[0] * math.cos(turn) - d[1] * math.sin(turn), d[0] * math.sin(turn) + d[1] * math.cos(turn)])
+        end = start + dd * length
+        width = rng.randint(7, 20)
+        body = rng.choice([(200, 200, 205), (230, 232, 235), (40, 40, 45), (120, 120, 125), tuple(float(rng.randint(30, 230)) for _ in range(3))])
+        p, q = tuple(int(v) for v in start), tuple(int(v) for v in end)
+        cv2.line(scene, p, q, tuple(c * 0.55 for c in body), width + 3, cv2.LINE_AA)
+        cv2.line(scene, p, q, body, width, cv2.LINE_AA)
+        cv2.line(scene, p, q, tuple(min(255, c * 1.25 + 30) for c in body), max(1, width // 4), cv2.LINE_AA)
+        tip = end + dd * rng.uniform(10, 25)
+        cv2.line(scene, q, tuple(int(v) for v in tip), (30, 30, 30), max(2, width // 3), cv2.LINE_AA)
+
+
 def lighting(scene, rng):
     gen = np.random.default_rng(rng.getrandbits(32))
     yy, xx = np.mgrid[0:RENDER, 0:RENDER].astype(np.float32) / RENDER
@@ -285,20 +423,66 @@ def scene_sample(rng, photos, pool):
     scene = background(rng, photos)
     distractors(scene, rng)
     top = rng.choice(pool)
+    case = rng.choice(["plain", "stack", "stack", "under", "under", "gutter"] + ["spread", "spread"] * SPREADS)
+    if HARD:
+        case = rng.choice(["plain", "stack", "under", "under", "under", "spread", "spread", "spread"])
+    if HARD == 2:  # piles first: fanned and offset stacks of the same paper
+        case = rng.choice(["plain", "stack", "stack", "stack", "stack", "under", "spread"])
+    def lower(pick):
+        # In the hard set the paper underneath is usually the top sheet's own paper.
+        if not HARD or rng.random() < 0.25:
+            return pick
+        if rng.random() < 0.6:
+            return same_paper(top, rng)
+        # plain white or cream paper, as under a cover or a booklet
+        tone = rng.randint(215, 250)
+        blank = np.full(top.shape, (tone - rng.randint(0, 25), tone - rng.randint(0, 10), tone), np.uint8)
+        return np.clip(blank.astype(np.float32) + np.random.default_rng(rng.getrandbits(32)).normal(0, 2, top.shape), 0, 255).astype(np.uint8)
     area = rng.choice([rng.uniform(0.05, 0.3), rng.uniform(0.05, 0.3), rng.uniform(0.15, 0.92), rng.uniform(0.45, 0.92)])
+    if case == "spread":
+        area = rng.uniform(0.3, 0.75)
     quad = place(rng, top.shape, area)
-    case = rng.choice(["plain", "stack", "stack", "under", "under", "gutter"])
     sheet, alpha, pad = curl(top, rng)
+    if case == "spread":
+        # An open notebook: the facing page is the same paper, joined at a gutter that is a soft shadow,
+        # and often curls up bright toward it.
+        other = np.ascontiguousarray(top[::-1, ::-1] if rng.random() < 0.5 else top[:, ::-1])
+        other = np.clip(other.astype(np.float32) * rng.uniform(0.9, 1.15), 0, 255).astype(np.uint8)
+        o, o_alpha, _ = curl(other, rng)
+        k = rng.choice([1, 3])  # the shared side: right or left of the top page
+        across = (quad[0] - quad[1]) if k == 1 else (quad[1] - quad[0])
+        facing = quad - across * rng.uniform(0.97, 1.01)
+        paste(scene, cv2.resize(o, (sheet.shape[1], sheet.shape[0])), cv2.resize(o_alpha, (sheet.shape[1], sheet.shape[0])), pad, facing, rng, shadow=False)
+    if case == "spread":
+        a_top, _ = paste(scene, sheet, alpha, pad, quad, rng, shadow=False)
+        a_pt, b_pt = (quad[1], quad[2]) if k == 1 else (quad[3], quad[0])
+        line = np.zeros((RENDER, RENDER), np.float32)
+        cv2.line(line, tuple(int(v) for v in a_pt), tuple(int(v) for v in b_pt), 1.0, rng.randint(2, 7), cv2.LINE_AA)
+        line = cv2.GaussianBlur(line, (0, 0), rng.uniform(2, 8))
+        scene *= (1 - line[..., None] / max(line.max(), 1e-6) * rng.uniform(0.15, 0.55))
+        pens(scene, rng, quad)
+        fingers(scene, rng, quad)
+        lighting(scene, rng)
+        return camera(scene, rng), (a_top > 0.5).astype(np.uint8)
     if case == "stack":
         # A pile: lower sheets poke out by small offsets along one or two sides.
         direction = np.float32([rng.choice([-1, -1, 1, 0]), rng.choice([0, 0, 1, -1])])
+        # A fanned pile (hard set): each lower sheet is also turned a few degrees about a corner, so the top
+        # sheet's edge crosses the pile's outline at an angle, and its own edge casts a thin shadow line.
+        fan = HARD and rng.random() < 0.6
+        pivot = quad[rng.randrange(4)]
         for k in range(rng.randint(1, 5), 0, -1):
-            under, under_alpha, under_pad = curl(rng.choice(pool), rng)
+            under, under_alpha, under_pad = curl(lower(rng.choice(pool)), rng)
             offset = direction * k * rng.uniform(1.5, 9) + np.float32([rng.gauss(0, 1.2), rng.gauss(0, 1.2)])
-            paste(scene, cv2.resize(under, (sheet.shape[1], sheet.shape[0])), cv2.resize(under_alpha, (sheet.shape[1], sheet.shape[0])), pad, quad + offset, rng, shadow=False)
+            placed = quad + offset
+            if fan:
+                ang = math.radians(k * rng.uniform(1.0, 3.5) * rng.choice([-1, 1]))
+                rot = np.float32([[math.cos(ang), -math.sin(ang)], [math.sin(ang), math.cos(ang)]])
+                placed = (quad - pivot) @ rot.T + pivot + offset * 0.5
+            paste(scene, cv2.resize(under, (sheet.shape[1], sheet.shape[0])), cv2.resize(under_alpha, (sheet.shape[1], sheet.shape[0])), pad, placed, rng, shadow=False)
     elif case == "under":
         # A larger document under the page, showing past one or more edges.
-        under, under_alpha, _ = curl(rng.choice(pool), rng)
+        under, under_alpha, _ = curl(lower(rng.choice(pool)), rng)
         centre = quad.mean(0)
         grown = centre + (quad - centre) * rng.uniform(1.15, 1.8) + np.float32([rng.gauss(0, 40), rng.gauss(0, 40)])
         paste(scene, cv2.resize(under, (sheet.shape[1], sheet.shape[0])), cv2.resize(under_alpha, (sheet.shape[1], sheet.shape[0])), pad, grown, rng)
@@ -308,6 +492,7 @@ def scene_sample(rng, photos, pool):
         side = quad[1] - quad[0]
         paste(scene, cv2.resize(other, (sheet.shape[1], sheet.shape[0])), cv2.resize(other_alpha, (sheet.shape[1], sheet.shape[0])), pad, quad + side * rng.choice([-1.0, 1.0]) * rng.uniform(0.98, 1.03), rng, shadow=False)
     a, _ = paste(scene, sheet, alpha, pad, quad, rng)
+    pens(scene, rng, quad)
     fingers(scene, rng, quad)
     lighting(scene, rng)
     image = camera(scene, rng)
@@ -316,7 +501,9 @@ def scene_sample(rng, photos, pool):
 
 
 def _chunk(job) -> int:
-    start, count, seed, coco, total, out, real = job
+    start, count, seed, coco, total, out, real, hard = job
+    global HARD
+    HARD = hard
     cv2.setNumThreads(0)
     rng = random.Random(seed)
     if real and not REAL_SHEETS:
@@ -352,7 +539,11 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=1000)
     parser.add_argument("--real", type=Path, help="directory of the project's own page images, flat and cropped")
     parser.add_argument("--preview", action="store_true")
+    parser.add_argument("--hard", action="store_true", help="the hard set: same paper around the top sheet, drawings")
+    parser.add_argument("--piles", action="store_true", help="the hard set weighted to fanned and offset piles")
     args = parser.parse_args()
+    global HARD
+    HARD = 2 if args.piles else int(args.hard)
     args.out.mkdir(parents=True, exist_ok=True)
     if args.preview:
         rng = random.Random(3)
@@ -369,7 +560,7 @@ def main() -> None:
         return
     for name, shape in (("images.bin", (args.count, INPUT, INPUT, 3)), ("masks.bin", (args.count, INPUT // 2, INPUT // 2))):
         np.memmap(args.out / name, dtype=np.uint8, mode="w+", shape=shape).flush()
-    jobs = [(s, min(args.chunk, args.count - s), args.seed + i, str(args.coco) if args.coco else None, args.count, str(args.out), str(args.real) if args.real else None) for i, s in enumerate(range(0, args.count, args.chunk))]
+    jobs = [(s, min(args.chunk, args.count - s), args.seed + i, str(args.coco) if args.coco else None, args.count, str(args.out), str(args.real) if args.real else None, HARD) for i, s in enumerate(range(0, args.count, args.chunk))]
     done = 0
     with multiprocessing.Pool(args.processes) as workers:
         for count in workers.imap_unordered(_chunk, jobs):

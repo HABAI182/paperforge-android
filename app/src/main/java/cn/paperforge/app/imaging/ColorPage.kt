@@ -26,14 +26,35 @@ internal object ColorPage {
             val c = small.channels()
             var coloured = 0
             val n = bytes.size / c
+            val mask = ByteArray(n)
             for (i in 0 until n) {
                 val r = bytes[i * c].toInt() and 255
                 val g = bytes[i * c + 1].toInt() and 255
                 val b = bytes[i * c + 2].toInt() and 255
                 val hi = max(r, max(g, b))
-                if (hi > 60 && hi - min(r, min(g, b)) > 45) coloured++
+                if (hi > 60 && hi - min(r, min(g, b)) > 45) {
+                    coloured++
+                    mask[i] = 1
+                }
             }
-            return coloured >= ScanConfig.float("colorPageShare", .25f) * n
+            if (coloured >= ScanConfig.float("colorPageShare", .25f) * n) return true
+            // Uncertain pages keep their colours: a cover with solid printed colour blocks over 8% of it, most of its
+            // colour in large areas. A pale tinted panel is too weak to count as coloured, and on the paper path it was
+            // flattened to white with halos round its text. Document pages measure 0-3% here, and pen ink is strokes.
+            if (coloured < ScanConfig.float("colorPageSolidShare", .08f) * n) return false
+            val solidMask = Mat(small.rows(), small.cols(), CvType.CV_8UC1)
+            val opened = Mat()
+            val kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, Size(9.0, 9.0))
+            try {
+                solidMask.put(0, 0, mask)
+                Imgproc.morphologyEx(solidMask, opened, Imgproc.MORPH_OPEN, kernel)
+                val solid = Core.countNonZero(opened)
+                return solid >= ScanConfig.float("colorPageSolid", .75f) * coloured
+            } finally {
+                solidMask.release()
+                opened.release()
+                kernel.release()
+            }
         } finally {
             small.release()
         }

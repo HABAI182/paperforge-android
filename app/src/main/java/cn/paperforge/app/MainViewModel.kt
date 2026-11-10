@@ -3267,7 +3267,17 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             java.util.zip.ZipOutputStream(file.outputStream()).use { zip ->
                 all.forEachIndexed { index, page ->
                     currentCoroutineContext().ensureActive()
-                    val bitmap = cn.paperforge.app.imaging.ScanProcessor.render(page, 2800)
+                    // The camera's photo, untouched, goes out as the camera saved it: no resize, no second JPEG.
+                    if (format != "png" && cn.paperforge.app.pdf.OriginalPhoto.untouched(page)) {
+                        zip.putNextEntry(java.util.zip.ZipEntry("page-%04d.%s".format(index + 1, format)))
+                        java.io.File(page.original).inputStream().use { it.copyTo(zip) }
+                        zip.closeEntry()
+                        return@forEachIndexed
+                    }
+                    val original = page.filter == "ORIGINAL"
+                    // An Original page keeps the photo's own resolution; scans keep the 2800-pixel work size.
+                    val edge = if (original) maxOf(2800, cn.paperforge.app.pdf.OriginalPhoto.nativeEdge(page)) else 2800
+                    val bitmap = cn.paperforge.app.imaging.ScanProcessor.render(page, edge)
                     try {
                         zip.putNextEntry(
                             java.util.zip.ZipEntry("page-%04d.%s".format(index + 1, format))
@@ -3275,7 +3285,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                         bitmap.compress(
                             if (format == "png") android.graphics.Bitmap.CompressFormat.PNG
                             else android.graphics.Bitmap.CompressFormat.JPEG,
-                            94,
+                            if (original) 97 else 94,
                             zip,
                         )
                         zip.closeEntry()

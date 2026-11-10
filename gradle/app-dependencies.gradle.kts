@@ -23,6 +23,8 @@ dependencies {
     add("implementation", "androidx.camera:camera-camera2:1.4.2")
     add("implementation", "androidx.camera:camera-lifecycle:1.4.2")
     add("implementation", "androidx.camera:camera-view:1.4.2")
+    // The phone maker's own capture processing (HDR / night, chosen per scene) where the phone offers it.
+    add("implementation", "androidx.camera:camera-extensions:1.4.2")
     add("implementation", "androidx.exifinterface:exifinterface:1.4.1")
     add("implementation", "androidx.room:room-runtime:2.7.1")
     add("implementation", "androidx.room:room-ktx:2.7.1")

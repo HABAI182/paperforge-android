@@ -73,11 +73,59 @@ object PdfEngine {
                                         "LATIN",
                                 )
                     val dpi = cn.paperforge.app.imaging.ScanConfig.dpi(resolution)
-                    var bitmap =
-                        ScanProcessor.render(
-                            page,
-                            cn.paperforge.app.imaging.ScanConfig.edge(resolution),
-                        )
+                    val presetEdge = cn.paperforge.app.imaging.ScanConfig.edge(resolution)
+                    // The camera's photo, untouched: embedded as the camera saved it (no resize, no second JPEG).
+                    if (
+                        !lossless &&
+                            resolution != "DRAFT" &&
+                            OriginalPhoto.untouched(page) &&
+                            (layout == null || (layout!!.orientationCorrection == 0 && layout!!.deskewDegrees == 0f))
+                    ) {
+                        val (pw, ph) = requireNotNull(OriginalPhoto.size(page))
+                        // The page keeps the physical size the preset gives; only its pixels are the original's.
+                        val fit = minOf(1f, presetEdge.toFloat() / maxOf(pw, ph))
+                        val bw = pw * fit
+                        val bh = ph * fit
+                        val size =
+                            when (paper) {
+                                "A5" -> PDRectangle.A5
+                                "Letter" -> PDRectangle.LETTER
+                                "Auto",
+                                "Original" -> PDRectangle(bw * 72f / dpi, bh * 72f / dpi)
+                                else -> PDRectangle.A4
+                            }
+                        val card = paper == "ID"
+                        val pdfPage =
+                            if (card && index % 2 == 1) doc.getPage(doc.numberOfPages - 1)
+                            else PDPage(size).also { doc.addPage(it) }
+                        val margin = if (paper in listOf("Auto", "Original")) 0f else 12f
+                        val scale =
+                            if (card) minOf(242.65f / bw, 153.07f / bh)
+                            else minOf((size.width - 2 * margin) / bw, (size.height - 2 * margin) / bh)
+                        val w = bw * scale
+                        val h = bh * scale
+                        val image =
+                            java.io.FileInputStream(page.original).use {
+                                com.tom_roush.pdfbox.pdmodel.graphics.image.JPEGFactory.createFromStream(doc, it)
+                            }
+                        val x = (size.width - w) / 2
+                        val y =
+                            if (card) (if (index % 2 == 0) size.height * .66f else size.height * .33f) - h / 2
+                            else (size.height - h) / 2
+                        PDPageContentStream(doc, pdfPage, PDPageContentStream.AppendMode.APPEND, true, true)
+                            .use { it.drawImage(image, x, y, w, h) }
+                        if (font != null && layout != null)
+                            PdfTextLayer.append(doc, pdfPage, font, layout!!, x, y, w, h, mapping)
+                        progress((index + 1) * 100 / pages.size)
+                        return@forEachIndexed
+                    }
+                    // An Original page is the photo itself: rendered at the photo's own resolution, not shrunk
+                    // to the preset (unless DRAFT asks for small files).
+                    val renderEdge =
+                        if (page.filter == "ORIGINAL" && resolution != "DRAFT")
+                            maxOf(presetEdge, OriginalPhoto.nativeEdge(page))
+                        else presetEdge
+                    var bitmap = ScanProcessor.render(page, renderEdge)
                     try {
                         layout
                             ?.takeIf { it.orientationCorrection != 0 }
@@ -115,8 +163,11 @@ object PdfEngine {
                                 "A5" -> PDRectangle.A5
                                 "Letter" -> PDRectangle.LETTER
                                 "Auto",
-                                "Original" ->
-                                    PDRectangle(bitmap.width * 72f / dpi, bitmap.height * 72f / dpi)
+                                "Original" -> {
+                                    // Physical size as at the preset, however many pixels the page has.
+                                    val fit = minOf(1f, presetEdge.toFloat() / maxOf(bitmap.width, bitmap.height))
+                                    PDRectangle(bitmap.width * fit * 72f / dpi, bitmap.height * fit * 72f / dpi)
+                                }
                                 else -> PDRectangle.A4
                             }
                         val card = paper == "ID"
@@ -150,7 +201,9 @@ object PdfEngine {
                                     )
                                         "WORKBOOK"
                                     else page.filter,
-                                    quality,
+                                    // An Original page is the photo: a third JPEG generation at the general
+                                    // export quality (86 by default) blurred the detail it is kept for.
+                                    if (page.filter == "ORIGINAL") maxOf(quality, 95) else quality,
                                     effectiveDpi,
                                 )
                         val x = (size.width - w) / 2

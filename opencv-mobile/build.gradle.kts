@@ -18,6 +18,10 @@ android {
                 providers.gradleProperty("paperforgeOpenCvSource").orNull?.let {
                     arguments += "-DPAPERFORGE_OPENCV_SOURCE=$it"
                 }
+                // Benchmarks only: an optimised OpenCV in a debug build, so timings on the emulator reflect release.
+                if (providers.gradleProperty("paperforgeOpenCvOptimised").orNull == "true") {
+                    arguments += "-DCMAKE_BUILD_TYPE=Release"
+                }
             }
         }
     }

@@ -26,9 +26,18 @@ class RuleFrameTest {
     private val desk = Scalar(170.0, 120.0, 70.0)
     private val line = Scalar(120.0, 120.0, 120.0)
 
+    // Rule framing is off by default since PageNet v3 finds the top sheet itself; these tests check the step.
+    private var snapshot: org.json.JSONObject? = null
+
     @Before
     fun load() {
         assertTrue(OpenCVLoader.initLocal())
+        snapshot = cn.paperforge.app.imaging.ScanConfig.replaceForBenchmark(org.json.JSONObject().put("ruleFrame", 1))
+    }
+
+    @org.junit.After
+    fun restore() {
+        snapshot?.let { cn.paperforge.app.imaging.ScanConfig.restoreAfterBenchmark(it) }
     }
 
     private fun photo(): Mat = Mat(1600, 1200, CvType.CV_8UC3, desk)

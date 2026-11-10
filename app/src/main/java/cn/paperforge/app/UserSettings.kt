@@ -72,6 +72,13 @@ object UserSettings {
                 edit.putFloat("enhanceStrength", 1f)
             edit.apply()
         }
+        // quickScanDefaultsV1 wrote 94 over the old default, so every install kept it and the camera's own detail
+        // was lost at capture; 94 there was that migration, not a choice. The default is now 97.
+        if (!prefs.getBoolean("cameraJpegDetailV1", false)) {
+            val edit = prefs.edit().putBoolean("cameraJpegDetailV1", true)
+            if (prefs.getFloat("cameraJpeg", 97f) == 94f) edit.remove("cameraJpeg")
+            edit.apply()
+        }
         if (!prefs.contains("autoShutter"))
             prefs
                 .edit()

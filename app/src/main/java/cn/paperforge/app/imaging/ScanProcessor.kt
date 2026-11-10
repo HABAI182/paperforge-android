@@ -125,13 +125,33 @@ object ScanProcessor {
         detectorOverride: String? = null,
         lockReference: Boolean = cn.paperforge.app.UserSettings[SettingKeys.LockCrop],
     ): DetectionResult {
-        val image = decode(file, 4000)
+        val times = stageTimes.get().apply { clear() }
+        var mark = System.nanoTime()
+        fun lap(name: String) {
+            val now = System.nanoTime()
+            times[name] = (now - mark) / 1e6
+            mark = now
+        }
+        // Corners are fractions of the photo, so detection needs no more than this: every stage works at
+        // 900-1500 pixels anyway, and a full-size decode only cost time and memory.
+        val image = decode(file, ScanConfig.int("detectDecodeEdge", 2000))
+        val mat = Mat()
         return try {
-            framedByRules(image, outlined(image, detectDecoded(image, previewQuad, reference, detectorOverride, lockReference)))
+            Utils.bitmapToMat(image, mat)
+            lap("decode")
+            val detected = detectDecoded(image, mat, previewQuad, reference, detectorOverride, lockReference)
+            lap("detect")
+            val outline = outlined(mat, detected)
+            lap("outline")
+            framedByRules(mat, outline).also { lap("frame") }
         } finally {
+            mat.release()
             image.recycle()
         }
     }
+
+    /** Milliseconds per stage of the last [detectFile] on this thread, for benchmarks. */
+    val stageTimes: ThreadLocal<MutableMap<String, Double>> = ThreadLocal.withInitial { linkedMapOf() }
 
     /**
      * The page a capture of [frame] (RGBA, upright) would be cut along: the same detection, edge check and
@@ -198,6 +218,7 @@ object ScanProcessor {
 
     private fun detectDecoded(
         image: Bitmap,
+        mat: Mat,
         previewQuad: Quad?,
         reference: CaptureReference?,
         detectorOverride: String?,
@@ -205,9 +226,7 @@ object ScanProcessor {
     ): DetectionResult {
         return run {
             if (previewQuad != null && previewQuad.valid() && lockReference) {
-                val mat = Mat()
-                try {
-                    Utils.bitmapToMat(image, mat)
+                run {
                     if (reference != null) {
                         val signature = CameraQualityAnalyzer.analyze(mat, previewQuad)
                         val reason =
@@ -291,10 +310,8 @@ object ScanProcessor {
                             ),
                         notes = mapOf("stillReason" to decision.reason),
                     )
-                } finally {
-                    mat.release()
                 }
-            } else detectResult(image, detectorOverride = detectorOverride)
+            } else LearnedDocumentDetector.detect(mat, false, detectorOverride)
         }
     }
 

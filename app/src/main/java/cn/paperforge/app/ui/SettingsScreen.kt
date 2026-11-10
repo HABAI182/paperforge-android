@@ -171,7 +171,8 @@ fun SettingsScreen(vm: MainViewModel) {
                     SettingSlider("稳定后拍摄等待", "stableMs", 600f, 300f..2000f, "ms")
                     SettingSlider("两次自动拍摄最短间隔", "cooldownMs", 1500f, 800f..5000f, "ms")
                     SettingSlider("取景分析间隔", "analysisMs", 160f, 100f..500f, "ms")
-                    SettingSlider("拍照 JPEG 画质", "cameraJpeg", 94f, 75f..100f, "")
+                    SettingSlider("拍照 JPEG 画质", "cameraJpeg", 97f, 75f..100f, "")
+                    SettingToggle("使用手机自带拍照增强（HDR/夜景，手机支持时）", "cameraExtension", true)
                 }
             }
             if (visible("增强 图片 滤镜 扫描", "scan")) {

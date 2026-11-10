@@ -2,9 +2,9 @@
  "name": "PaperForge PageNet",
  "origin": "Original architecture trained from random initialisation; no third-party weights.",
  "trainingData": "Procedural sheets over COCO val2017 photographs or procedural surfaces. Real photographs were used only to choose a checkpoint and report results.",
- "note": "v2",
+ "note": "v3: fine-tuned from v2 with printed covers, pens, open-notebook spreads, sheets on the same paper, technical drawings and light desks",
  "bytes": 1074027,
- "sha256": "31cdf7e6cf62755c436585744606ebce28feca131c9672ce6b5d73810cd83b31",
+ "sha256": "2b2a4b63f6c0e45a964965cb7b4ab4897f684e52d3c3726dcac589c8d4057bba",
  "input": {
   "name": "image",
   "shape": [
@@ -28,5 +28,5 @@
    "sheet boundary"
   ]
  },
- "maxError": 2.2292137145996094e-05
+ "maxError": 2.2172927856445312e-05
 }

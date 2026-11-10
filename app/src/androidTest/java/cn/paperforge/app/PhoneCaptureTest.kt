@@ -101,6 +101,9 @@ class PhoneCaptureTest {
                         detectionMethod = detection.method,
                     )
                 val name = file.nameWithoutExtension
+                // Opt-in stage images (warp, page boundary, ink, ghost, tone, white, guard, final) per photo.
+                cn.paperforge.app.imaging.EdgeInkDiagnostics.directory =
+                    if (arguments.getString("stages") == "1") File(root, "$name-stages").apply { mkdirs() } else null
                 val rendered = ScanProcessor.render(page, AutomaticScanBudget.edge())
                 // Enlarged as the import path enlarges it, so this is the page the phone makes.
                 val (source, sourceScale) = FlatDocument.workSource(rendered, AutomaticScanBudget.edge())
@@ -154,6 +157,7 @@ class PhoneCaptureTest {
                 File(root, "runs.json").writeText(rows.toString(1))
             }
         } finally {
+            cn.paperforge.app.imaging.EdgeInkDiagnostics.directory = null
             ScanConfig.restoreAfterBenchmark(snapshot)
         }
     }
@@ -177,12 +181,20 @@ class PhoneCaptureTest {
             val mat = Mat()
             try {
                 Utils.bitmapToMat(frame, mat)
+                val overrides = JSONObject(InstrumentationRegistry.getArguments().getString("overrides") ?: "{}")
+                val snapshot = ScanConfig.replaceForBenchmark(overrides)
+                ScanProcessor.detectFile(file, null) // warm
+                val stillStarted = System.nanoTime()
                 val still = ScanProcessor.detectFile(file, null)
+                val stillMs = (System.nanoTime() - stillStarted) / 1e6
+                val stages = JSONObject(ScanProcessor.stageTimes.get().mapValues { it.value.toInt() } +
+                    cn.paperforge.app.imaging.TopSheetRules.times.get().mapValues { it.value.toInt() })
+                val sheetChecks = cn.paperforge.app.imaging.SheetEdge.checks.get().joinToString("; ")
                 fun gap(q: cn.paperforge.app.model.Quad?) =
                     if (q == null || still.quad == null) 1.0
                     else
                         q.points.zip(still.quad!!.points).maxOf { (a, b) -> kotlin.math.hypot(a.x - b.x, a.y - b.y) }.toDouble()
-                val row = JSONObject().put("file", file.name).put("still", text(still.quad)).put("stillMethod", still.method)
+                val row = JSONObject().put("file", file.name).put("still", text(still.quad)).put("stillMethod", still.method).put("sheetChecks", sheetChecks).put("stillMs", stillMs).put("stages", stages)
                 // The detector alone, as the camera had it, and with the camera's edge check (each frame checked,
                 // not the steady-outline reuse, so the time is the check's own).
                 val variants =
@@ -191,17 +203,21 @@ class PhoneCaptureTest {
                         "live" to { cn.paperforge.app.imaging.EdgeQuad.live(mat) },
                         // The camera's call on a still frame: checked on the second frame, then reused.
                         "steady" to { cn.paperforge.app.imaging.EdgeQuad.liveSteady(mat) },
+                        // The capture's own detection on the frame, which the steady outline shows.
+                        "frame" to { ScanProcessor.detectFrame(mat) },
                     )
                 for ((name, run) in variants) {
                     run() // warm
                     val started = System.nanoTime()
                     val result = run()
                     row.put(name, text(result.quad))
+                        .put("${name}Cover", cn.paperforge.app.imaging.CoverOutline.notes.get())
                         .put("${name}Method", result.method)
                         .put("${name}Ms", (System.nanoTime() - started) / 1e6)
                         .put("${name}Gap", gap(result.quad))
                 }
                 rows.put(row)
+                ScanConfig.restoreAfterBenchmark(snapshot)
             } finally {
                 mat.release()
                 frame.recycle()

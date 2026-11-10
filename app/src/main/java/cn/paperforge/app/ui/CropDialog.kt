@@ -1,9 +1,13 @@
 package cn.paperforge.app.ui
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -13,10 +17,15 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
@@ -25,6 +34,8 @@ import cn.paperforge.app.data.PageRow
 import cn.paperforge.app.imaging.ScanProcessor
 import cn.paperforge.app.model.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -57,7 +68,43 @@ fun CropDialog(
     var corner by rememberSaveable(page.id) { mutableIntStateOf(0) }
     var notice by remember { mutableStateOf("") }
     val outlineColor = MaterialTheme.colorScheme.primary
-    var dragPoint by remember { mutableStateOf(Offset.Unspecified) }
+    // A sharper copy for the loupe, loaded once the view's own preview is up.
+    val detail = if (bitmap != null) pageBitmap(photo, 2400, true) else null
+    // The handle being placed: 0-3 corners, 4-7 edges (top, right, bottom, left), -1 none. It stays selected after
+    // the finger lifts so the nudge buttons can move it.
+    var selected by remember(page.id) { mutableIntStateOf(-1) }
+    // Where along the selected edge the finger took hold of it, 0..1; the loupe looks there.
+    var edgeAt by remember { mutableFloatStateOf(.5f) }
+    // The fingertip, in crop-view pixels, while a handle is dragged.
+    var finger by remember { mutableStateOf(Offset.Unspecified) }
+    var loupeWanted by remember { mutableStateOf(false) }
+    var nudges by remember { mutableIntStateOf(0) }
+    LaunchedEffect(nudges) {
+        if (nudges > 0) {
+            loupeWanted = true
+            kotlinx.coroutines.delay(1500)
+            if (!finger.isSpecified) loupeWanted = false
+        }
+    }
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    fun nudge(dx: Int, dy: Int, times: Int = 1) {
+        val handle = selected
+        val b = bitmap ?: return
+        if (handle < 0) return
+        // 0.1% of the photo's long side per step, the same distance across and down.
+        val long = maxOf(b.width, b.height) / 1000f
+        val sx = dx * times * long / b.width
+        val sy = dy * times * long / b.height
+        points =
+            if (handle >= 4) CropGeometry.moveEdge(Quad(points), handle - 4, sx, sy).points
+            else {
+                val p = points[handle]
+                val candidate = points.toMutableList()
+                candidate[handle] = PointN((p.x + sx).coerceIn(0f, 1f), (p.y + sy).coerceIn(0f, 1f))
+                if (Quad(candidate).valid()) candidate else points
+            }
+        nudges++
+    }
     var detecting by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     LaunchedEffect(points, aspect) { if (embedded) onDraft(Quad(points), aspect) }
@@ -80,7 +127,10 @@ fun CropDialog(
                     ) {
                         if (!embedded)
                             Text("沿纸边拖动四角或整边", style = MaterialTheme.typography.headlineSmall)
-                        Text("拖动圆点或边线中点；放大镜辅助对齐。", style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            "拖动圆点或边线中点，手指可放在圆点旁边；放大镜会避开手指。松手后可用方向键逐步微调。",
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
                         Box(
                             Modifier.height(canvasHeight).fillMaxWidth(),
                             contentAlignment = Alignment.Center,
@@ -95,12 +145,14 @@ fun CropDialog(
                                         if (maxWidth / maxHeight > ratio)
                                             Modifier.fillMaxHeight().aspectRatio(ratio)
                                         else Modifier.fillMaxWidth().aspectRatio(ratio)
-                                    Box(
-                                        imageModifier.magnifier(
-                                            sourceCenter = { dragPoint },
-                                            zoom = 2f,
-                                        )
-                                    ) {
+                                    val density = androidx.compose.ui.platform.LocalDensity.current
+                                    val viewW = constraints.maxWidth.toFloat()
+                                    val viewH = constraints.maxHeight.toFloat()
+                                    val shown =
+                                        if (viewW / viewH > ratio) Size(viewH * ratio, viewH)
+                                        else Size(viewW, viewW / ratio)
+                                    val origin = Offset((viewW - shown.width) / 2, (viewH - shown.height) / 2)
+                                    Box(imageModifier) {
                                         Image(
                                             b.asImageBitmap(),
                                             "裁切原图",
@@ -130,76 +182,78 @@ fun CropDialog(
                                                 }
                                                 .pointerInput(b) {
                                                     awaitEachGesture {
-                                                        val down =
-                                                            awaitFirstDown(
-                                                                requireUnconsumed = false
-                                                            )
+                                                        val down = awaitFirstDown(requireUnconsumed = false)
+                                                        val w = size.width.toFloat()
+                                                        val h = size.height.toFloat()
                                                         val handle =
                                                             CropGeometry.hit(
                                                                 Quad(points),
-                                                                size.width.toFloat(),
-                                                                size.height.toFloat(),
+                                                                w,
+                                                                h,
                                                                 down.position.x,
                                                                 down.position.y,
                                                                 36.dp.toPx(),
                                                                 24.dp.toPx(),
                                                             )
-                                                        var last = down.position
-                                                        if (handle >= 0) {
-                                                            down.consume()
-                                                            dragPoint = down.position
+                                                        if (handle < 0) {
+                                                            selected = -1
+                                                            return@awaitEachGesture
                                                         }
+                                                        down.consume()
+                                                        val start = points
+                                                        if (handle >= 4) {
+                                                            val a = start[handle - 4]
+                                                            val c = start[(handle - 3) % 4]
+                                                            val dx = (c.x - a.x) * w
+                                                            val dy = (c.y - a.y) * h
+                                                            edgeAt =
+                                                                (((down.position.x - a.x * w) * dx +
+                                                                        (down.position.y - a.y * h) * dy) /
+                                                                        (dx * dx + dy * dy).coerceAtLeast(1f))
+                                                                    .coerceIn(.08f, .92f)
+                                                        }
+                                                        selected = handle
+                                                        finger = down.position
+                                                        loupeWanted = true
+                                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                                        var last = down.position
                                                         try {
                                                             do {
                                                                 val event = awaitPointerEvent()
                                                                 val change =
-                                                                    event.changes.firstOrNull {
-                                                                        it.id == down.id
-                                                                    } ?: break
-                                                                if (handle >= 0) {
-                                                                    change.consume()
-                                                                    val amount =
-                                                                        change.position - last
-                                                                    if (handle >= 4)
-                                                                        points =
-                                                                            CropGeometry.moveEdge(
-                                                                                    Quad(points),
-                                                                                    handle - 4,
-                                                                                    amount.x /
-                                                                                        size.width,
-                                                                                    amount.y /
-                                                                                        size.height,
-                                                                                )
-                                                                                .points
-                                                                    else {
-                                                                        val candidate =
-                                                                            points.toMutableList()
-                                                                        candidate[handle] =
-                                                                            PointN(
-                                                                                (change.position.x /
-                                                                                        size.width)
-                                                                                    .coerceIn(
-                                                                                        0f,
-                                                                                        1f,
-                                                                                    ),
-                                                                                (change.position.y /
-                                                                                        size.height)
-                                                                                    .coerceIn(
-                                                                                        0f,
-                                                                                        1f,
-                                                                                    ),
+                                                                    event.changes.firstOrNull { it.id == down.id }
+                                                                        ?: break
+                                                                change.consume()
+                                                                if (handle >= 4) {
+                                                                    val amount = change.position - last
+                                                                    points =
+                                                                        CropGeometry.moveEdge(
+                                                                                Quad(points),
+                                                                                handle - 4,
+                                                                                amount.x / w,
+                                                                                amount.y / h,
                                                                             )
-                                                                        if (Quad(candidate).valid())
-                                                                            points = candidate
-                                                                    }
-                                                                    dragPoint = change.position
+                                                                            .points
+                                                                } else {
+                                                                    // Moves with the finger from where it went down, so
+                                                                    // the corner does not jump under the fingertip: a
+                                                                    // finger held beside the corner leaves it in view.
+                                                                    val moved = change.position - down.position
+                                                                    val p = start[handle]
+                                                                    val candidate = points.toMutableList()
+                                                                    candidate[handle] =
+                                                                        PointN(
+                                                                            (p.x + moved.x / w).coerceIn(0f, 1f),
+                                                                            (p.y + moved.y / h).coerceIn(0f, 1f),
+                                                                        )
+                                                                    if (Quad(candidate).valid()) points = candidate
                                                                 }
+                                                                finger = change.position
                                                                 last = change.position
-                                                            } while (
-                                                                event.changes.any { it.pressed }
-                                                            )
+                                                            } while (event.changes.any { it.pressed })
                                                         } finally {
-                                                            dragPoint = Offset.Unspecified
+                                                            finger = Offset.Unspecified
+                                                            loupeWanted = false
                                                         }
                                                     }
                                                 }
@@ -207,53 +261,144 @@ fun CropDialog(
                                             val path =
                                                 Path().apply {
                                                     points.forEachIndexed { i, p ->
-                                                        if (i == 0)
-                                                            moveTo(
-                                                                p.x * size.width,
-                                                                p.y * size.height,
-                                                            )
-                                                        else
-                                                            lineTo(
-                                                                p.x * size.width,
-                                                                p.y * size.height,
-                                                            )
+                                                        if (i == 0) moveTo(p.x * size.width, p.y * size.height)
+                                                        else lineTo(p.x * size.width, p.y * size.height)
                                                     }
                                                     close()
                                                 }
                                             drawPath(path, outlineColor.copy(alpha = .15f))
                                             drawPath(path, Color.White, style = Stroke(5.dp.toPx()))
-                                            drawPath(
-                                                path,
-                                                outlineColor,
-                                                style = Stroke(2.5.dp.toPx()),
-                                            )
+                                            drawPath(path, outlineColor, style = Stroke(2.5.dp.toPx()))
                                             points.indices.forEach { i ->
-                                                val a = points[i]
-                                                val b = points[(i + 1) % 4]
-                                                val middle =
+                                                val a = Offset(points[i].x * size.width, points[i].y * size.height)
+                                                val c =
                                                     Offset(
-                                                        (a.x + b.x) * .5f * size.width,
-                                                        (a.y + b.y) * .5f * size.height,
+                                                        points[(i + 1) % 4].x * size.width,
+                                                        points[(i + 1) % 4].y * size.height,
                                                     )
+                                                if (selected == i + 4) {
+                                                    drawLine(Color.White, a, c, 7.dp.toPx())
+                                                    drawLine(outlineColor, a, c, 4.dp.toPx())
+                                                }
+                                                val middle = (a + c) / 2f
                                                 drawCircle(Color.White, 9.dp.toPx(), middle)
                                                 drawCircle(outlineColor, 5.dp.toPx(), middle)
                                             }
-                                            points.forEach { p ->
-                                                drawCircle(
-                                                    Color.White,
-                                                    10.dp.toPx(),
-                                                    Offset(p.x * size.width, p.y * size.height),
-                                                )
-                                                drawCircle(
-                                                    outlineColor,
-                                                    5.dp.toPx(),
-                                                    Offset(p.x * size.width, p.y * size.height),
-                                                )
+                                            points.forEachIndexed { i, p ->
+                                                val at = Offset(p.x * size.width, p.y * size.height)
+                                                if (i == selected) {
+                                                    // A ring with a centre dot: the exact point stays visible.
+                                                    drawCircle(Color.White, 13.dp.toPx(), at, style = Stroke(4.dp.toPx()))
+                                                    drawCircle(outlineColor, 13.dp.toPx(), at, style = Stroke(2.dp.toPx()))
+                                                    drawCircle(Color.White, 2.5.dp.toPx(), at)
+                                                    drawCircle(outlineColor, 1.5.dp.toPx(), at)
+                                                } else {
+                                                    drawCircle(Color.White, 10.dp.toPx(), at)
+                                                    drawCircle(outlineColor, 5.dp.toPx(), at)
+                                                }
                                             }
                                         }
                                     }
+                                    // The loupe, over the whole view so it can sit beside the photo when there is room.
+                                    val target = handleTarget(points, selected, edgeAt)
+                                    val loupeOn = loupeWanted && target != null
+                                    val loupeAlpha by
+                                        animateFloatAsState(
+                                            if (loupeOn) 1f else 0f,
+                                            tween(if (loupeOn) 90 else 200),
+                                            label = "loupe",
+                                        )
+                                    val radius = with(density) { 56.dp.toPx() }.coerceAtMost(minOf(viewW, viewH) * .26f)
+                                    val placed = remember { arrayOfNulls<PointN>(1) }
+                                    val spot =
+                                        if (loupeOn)
+                                            LoupePlacement.place(
+                                                    viewW,
+                                                    viewH,
+                                                    PointN(
+                                                        origin.x + target.x * shown.width,
+                                                        origin.y + target.y * shown.height,
+                                                    ),
+                                                    if (finger.isSpecified)
+                                                        PointN(origin.x + finger.x, origin.y + finger.y)
+                                                    else null,
+                                                    radius,
+                                                    with(density) { 40.dp.toPx() },
+                                                    with(density) { 6.dp.toPx() },
+                                                    placed[0],
+                                                )
+                                                .also { placed[0] = it }
+                                        else {
+                                            placed[0] = null
+                                            null
+                                        }
+                                    val loupeCenter = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
+                                    LaunchedEffect(spot) {
+                                        val to = spot?.let { Offset(it.x, it.y) } ?: return@LaunchedEffect
+                                        if (loupeAlpha < .05f) loupeCenter.snapTo(to)
+                                        else
+                                            loupeCenter.animateTo(
+                                                to,
+                                                spring(dampingRatio = .85f, stiffness = Spring.StiffnessMediumLow),
+                                            )
+                                    }
+                                    val shownTarget = remember { arrayOfNulls<PointN>(1) }
+                                    if (target != null) shownTarget[0] = target
+                                    val lens = remember(detail, b) { (detail ?: b).asImageBitmap() }
+                                    Canvas(
+                                        Modifier.matchParentSize()
+                                            .clearAndSetSemantics {
+                                                testTag = "crop-loupe"
+                                                if (spot != null) this[LoupeSpot] = Offset(spot.x, spot.y)
+                                            }
+                                            .graphicsLayer { alpha = loupeAlpha }
+                                    ) {
+                                        // Every animated value is read before any early return: a draw that read
+                                        // none of them was never redrawn when the loupe faded in.
+                                        val visible = loupeAlpha
+                                        val at = loupeCenter.value
+                                        val t = target ?: shownTarget[0]
+                                        if (visible <= 0f || t == null) return@Canvas
+                                        drawCropLoupe(
+                                            lens,
+                                            at,
+                                            radius,
+                                            3f,
+                                            shown,
+                                            t,
+                                            points,
+                                            outlineColor,
+                                        )
+                                    }
                                 }
                             } ?: CircularProgressIndicator()
+                        }
+                        if (selected >= 0) {
+                            val label = listOf("左上角", "右上角", "右下角", "左下角", "上边", "右边", "下边", "左边")[selected]
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                Text(
+                                    "微调$label",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                NudgeKey(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "${label}左移", "crop-nudge-left") {
+                                    nudge(-1, 0, it)
+                                }
+                                NudgeKey(Icons.Filled.KeyboardArrowUp, "${label}上移", "crop-nudge-up") {
+                                    nudge(0, -1, it)
+                                }
+                                NudgeKey(Icons.Filled.KeyboardArrowDown, "${label}下移", "crop-nudge-down") {
+                                    nudge(0, 1, it)
+                                }
+                                NudgeKey(Icons.AutoMirrored.Filled.KeyboardArrowRight, "${label}右移", "crop-nudge-right") {
+                                    nudge(1, 0, it)
+                                }
+                                TextButton(onClick = { selected = -1 }) { Text("完成") }
+                            }
                         }
                         Row(
                             Modifier.horizontalScroll(rememberScrollState()),
@@ -405,5 +550,64 @@ fun CropDialog(
                 }
             }
         }
+    }
+}
+
+/** Where the loupe is placed in the crop view, in view pixels, for tests. */
+val LoupeSpot = SemanticsPropertyKey<Offset>("LoupeSpot")
+
+/** The point the loupe looks at: a corner, or the place along an edge where the finger took hold of it. */
+private fun handleTarget(points: List<PointN>, handle: Int, along: Float): PointN? =
+    when (handle) {
+        in 0..3 -> points[handle]
+        in 4..7 -> {
+            val a = points[handle - 4]
+            val b = points[(handle - 3) % 4]
+            PointN(a.x + (b.x - a.x) * along, a.y + (b.y - a.y) * along)
+        }
+        else -> null
+    }
+
+/** One step per tap; held, it repeats after 0.4 s and speeds up after ten steps. */
+@Composable
+private fun NudgeKey(icon: ImageVector, description: String, tag: String, onStep: (Int) -> Unit) {
+    val step by rememberUpdatedState(onStep)
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        modifier =
+            Modifier.size(44.dp)
+                .testTag(tag)
+                .semantics {
+                    role = Role.Button
+                    contentDescription = description
+                    onClick {
+                        step(1)
+                        true
+                    }
+                }
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onPress = {
+                            coroutineScope {
+                                // Undispatched: the first step lands even when the tap is released at once.
+                                val repeat = launch(start = kotlinx.coroutines.CoroutineStart.UNDISPATCHED) {
+                                    step(1)
+                                    delay(400)
+                                    var count = 0
+                                    while (true) {
+                                        step(if (count < 10) 1 else 3)
+                                        count++
+                                        delay(60)
+                                    }
+                                }
+                                tryAwaitRelease()
+                                repeat.cancel()
+                            }
+                        }
+                    )
+                },
+    ) {
+        Box(contentAlignment = Alignment.Center) { Icon(icon, contentDescription = null) }
     }
 }

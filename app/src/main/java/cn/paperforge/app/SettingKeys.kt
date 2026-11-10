@@ -54,7 +54,10 @@ object SettingKeys {
     val StableMs = SettingKey.Number("stableMs", 600f, 300f..2000f)
     val CooldownMs = SettingKey.Number("cooldownMs", 1500f, 800f..5000f)
     val AnalysisMs = SettingKey.Number("analysisMs", 160f, 100f..500f)
-    val CameraJpeg = SettingKey.Number("cameraJpeg", 94f, 75f..100f)
+    // 97 as stock cameras save; 94 lost fine detail the scan step then had to recover.
+    val CameraJpeg = SettingKey.Number("cameraJpeg", 97f, 75f..100f)
+    // Use the phone's own capture processing (CameraX Extensions, AUTO) when it offers it together with live analysis.
+    val CameraExtension = SettingKey.Bool("cameraExtension", true)
     val Filter =
         SettingKey.Text(
             "filter",
@@ -161,6 +164,7 @@ object SettingKeys {
             CooldownMs,
             AnalysisMs,
             CameraJpeg,
+            CameraExtension,
             Filter,
             EnhanceStrength,
             Brightness,

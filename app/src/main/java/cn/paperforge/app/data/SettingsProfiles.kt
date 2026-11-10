@@ -153,6 +153,7 @@ class SettingsProfiles(context: Context) {
                         "cooldownMs",
                         "analysisMs",
                         "cameraJpeg",
+                        "cameraExtension",
                         "filter",
                         "enhanceStrength",
                         "brightness",

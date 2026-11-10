@@ -552,7 +552,19 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                                     .setJpegQuality(
                                                         UserSettings[SettingKeys.CameraJpeg].toInt()
                                                     )
-                                                    .setTargetAspectRatio(AspectRatio.RATIO_4_3)
+                                                    // The largest 4:3 photo the camera offers, said outright rather
+                                                    // than left to the aspect-ratio default.
+                                                    .setResolutionSelector(
+                                                        ResolutionSelector.Builder()
+                                                            .setAspectRatioStrategy(
+                                                                AspectRatioStrategy
+                                                                    .RATIO_4_3_FALLBACK_AUTO_STRATEGY
+                                                            )
+                                                            .setResolutionStrategy(
+                                                                ResolutionStrategy.HIGHEST_AVAILABLE_STRATEGY
+                                                            )
+                                                            .build()
+                                                    )
                                                     .setCaptureMode(
                                                         ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY
                                                     )
@@ -930,7 +942,7 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                             camera =
                                                 provider?.bindToLifecycle(
                                                     lifecycle,
-                                                    CameraSelector.DEFAULT_BACK_CAMERA,
+                                                    captureSelector(context, provider),
                                                     group,
                                                 )
                                             capture = c
@@ -1226,3 +1238,24 @@ private fun postCaptureHintText(hints: List<CaptureHint>): String =
         CaptureHint.BRIGHT in hints -> "照片过亮，建议避开强光重拍"
         else -> ""
     }
+
+/**
+ * The back camera, with the phone maker's own capture processing (CameraX Extensions, AUTO: HDR or night as the scene
+ * needs) when the phone offers it together with live image analysis, which the outline needs. Phones without it, or
+ * with the setting off, get the plain camera as before.
+ */
+private fun captureSelector(context: android.content.Context, provider: ProcessCameraProvider?): CameraSelector {
+    val base = CameraSelector.DEFAULT_BACK_CAMERA
+    if (provider == null || !cn.paperforge.app.UserSettings[cn.paperforge.app.SettingKeys.CameraExtension]) return base
+    return runCatching {
+            val extensions =
+                androidx.camera.extensions.ExtensionsManager.getInstanceAsync(context, provider)
+                    .get(1500, java.util.concurrent.TimeUnit.MILLISECONDS)
+            val mode = androidx.camera.extensions.ExtensionMode.AUTO
+            if (extensions.isExtensionAvailable(base, mode) && extensions.isImageAnalysisSupported(base, mode))
+                extensions.getExtensionEnabledCameraSelector(base, mode)
+            else base
+        }
+        .getOrDefault(base)
+}
+
