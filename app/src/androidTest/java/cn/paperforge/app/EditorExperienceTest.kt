@@ -86,8 +86,9 @@ class EditorExperienceTest {
                 compose.onNodeWithTag("scan-canvas").fetchSemanticsNode().boundsInRoot.height
             assertTrue("Fullscreen should reclaim controls", fullHeight > normalHeight + 100)
             compose.onNodeWithTag("scan-canvas").performTouchInput { swipeRight() }
+            // Fullscreen hides the "n / N" badge (#31 decision 5), so check which page is on screen.
             compose.waitUntil(10000) {
-                compose.onAllNodesWithText("1 / 2").fetchSemanticsNodes().isNotEmpty()
+                runCatching { compose.onNodeWithTag("scan-page-${pages[0].id}").assertIsDisplayed() }.isSuccess
             }
             compose.waitUntil(10000) {
                 runCatching { compose.onNodeWithContentDescription("扫描预览").assertIsDisplayed() }
