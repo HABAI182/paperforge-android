@@ -1244,7 +1244,7 @@ private fun postCaptureHintText(hints: List<CaptureHint>): String =
  * needs) when the phone offers it together with live image analysis, which the outline needs. Phones without it, or
  * with the setting off, get the plain camera as before.
  */
-private fun captureSelector(context: android.content.Context, provider: ProcessCameraProvider?): CameraSelector {
+internal fun captureSelector(context: android.content.Context, provider: ProcessCameraProvider?): CameraSelector {
     val base = CameraSelector.DEFAULT_BACK_CAMERA
     if (provider == null || !cn.paperforge.app.UserSettings[cn.paperforge.app.SettingKeys.CameraExtension]) return base
     return runCatching {

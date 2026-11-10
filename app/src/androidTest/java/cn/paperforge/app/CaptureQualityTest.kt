@@ -66,10 +66,29 @@ class CaptureQualityTest {
             mapOf("AUTO" to ExtensionMode.AUTO, "HDR" to ExtensionMode.HDR, "NIGHT" to ExtensionMode.NIGHT)
                 .filterValues { extensions.isExtensionAvailable(CameraSelector.DEFAULT_BACK_CAMERA, it) }
                 .keys
+        // The camera screen's own selector: Extensions AUTO when the phone offers it with image analysis, else the
+        // plain back camera. With the setting off it must be the plain camera.
+        val selector = cn.paperforge.app.ui.captureSelector(context, provider)
+        val expectExtension =
+            extensions.isExtensionAvailable(CameraSelector.DEFAULT_BACK_CAMERA, ExtensionMode.AUTO) &&
+                extensions.isImageAnalysisSupported(CameraSelector.DEFAULT_BACK_CAMERA, ExtensionMode.AUTO)
+        if (!expectExtension) assertTrue("falls back to the plain back camera", selector === CameraSelector.DEFAULT_BACK_CAMERA)
+        val wasOn = UserSettings[SettingKeys.CameraExtension]
+        try {
+            UserSettings.set(SettingKeys.CameraExtension, false)
+            assertTrue(
+                "setting off gives the plain camera",
+                cn.paperforge.app.ui.captureSelector(context, provider) === CameraSelector.DEFAULT_BACK_CAMERA,
+            )
+            assertTrue("no provider gives the plain camera", cn.paperforge.app.ui.captureSelector(context, null) === CameraSelector.DEFAULT_BACK_CAMERA)
+        } finally {
+            UserSettings.set(SettingKeys.CameraExtension, wasOn)
+        }
         instrumentation.runOnMainSync {
             owner.registry.currentState = Lifecycle.State.RESUMED
             provider.unbindAll()
-            provider.bindToLifecycle(owner, CameraSelector.DEFAULT_BACK_CAMERA, capture)
+            // Bound exactly as the camera screen binds it (capture only here), through the same selector.
+            provider.bindToLifecycle(owner, selector, capture)
         }
         val root = File(context.filesDir, "phone-out/capture-quality").apply { mkdirs() }
         val file = File(root, "capture.jpg")
