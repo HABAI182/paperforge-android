@@ -105,7 +105,14 @@ class UpdateCatalogFeedbackTest {
     @Test
     fun latestAvailableUnavailableAndIncompatibleAreDistinct() = runBlocking {
         Catalog().use { server ->
-            val client = GitHubUpdates("", server.url, integrated = true)
+            val client =
+                GitHubUpdates(
+                    "",
+                    server.url,
+                    integrated = true,
+                    webRoot = server.url,
+                    mirrors = emptyList(),
+                )
             val latest =
                 client.check(
                     "fixture/paperforge",
