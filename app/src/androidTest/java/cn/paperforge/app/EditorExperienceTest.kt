@@ -102,16 +102,23 @@ class EditorExperienceTest {
             }
             screenshot.recycle()
             compose.onNodeWithContentDescription("退出全屏检查").performClick()
-            compose.onNodeWithText("增强", useUnmergedTree = true).performClick()
-            compose.onNodeWithText("清晰文字").performClick()
+            // 2.0 editor: "滤镜" opens the filter row (原图, 练习册, 强力去背景, 灰度).
+            compose.onNodeWithText("滤镜", useUnmergedTree = true).performClick()
+            compose.onNodeWithText("灰度").performClick()
             compose.waitUntil(10000) {
-                !model.busy.value && model.pages.value.first().filter == "TEXT"
+                !model.busy.value && model.pages.value.first().filter == "GRAY"
             }
             compose.onNodeWithText("对比原图").performClick()
-            compose.onNodeWithContentDescription("原图对照").assertIsDisplayed()
+            compose.waitUntil(5000) {
+                runCatching { compose.onNodeWithContentDescription("原图对照").assertIsDisplayed() }.isSuccess
+            }
             compose.onNodeWithText("查看增强").performClick()
             compose.onNodeWithText("收起").performClick()
-            compose.onNodeWithText("裁切", useUnmergedTree = true).performClick()
+            compose.onNodeWithText("裁剪旋转", useUnmergedTree = true).performClick()
+            // The crop view appears once the photo is decoded.
+            compose.waitUntil(15000) {
+                compose.onAllNodesWithTag("crop-canvas").fetchSemanticsNodes().isNotEmpty()
+            }
             compose.onNodeWithTag("crop-canvas").performTouchInput {
                 swipe(
                     androidx.compose.ui.geometry.Offset(width * .50125f, height * .08833f),
@@ -119,12 +126,34 @@ class EditorExperienceTest {
                     400,
                 )
             }
-            compose.onNodeWithText("A4/A5").performClick()
-            compose.onNodeWithText("应用").performClick()
-            compose.waitUntil(10000) {
-                !model.busy.value && model.pages.value.first().outputAspect > .7f
+            // The nudge keys appear after the drag and push the shape presets down the scrolling panel.
+            compose.onNodeWithText("A4/A5").performScrollTo().performClick()
+            compose.onNodeWithText("保存").performClick()
+            // A finished page is cut again from its photo on save, with the A4/A5 shape baked into the new image
+            // (its outputAspect field is then 0), so check the saved shape and the crop on the source photo.
+            val before = pages[0]
+            try {
+                compose.waitUntil(30000) {
+                    val now = model.pages.value.first()
+                    !model.busy.value && (now.outputAspect > .7f || now.original != before.original)
+                }
+            } catch (timeout: androidx.compose.ui.test.ComposeTimeoutException) {
+                val now = model.pages.value.first()
+                throw AssertionError(
+                    "not saved: busy=${model.busy.value} aspect=${now.outputAspect} sameFile=${now.original == before.original} " +
+                        "corners=${now.corners} filter=${now.filter} method=${now.detectionMethod} " +
+                        "flat=${cn.paperforge.app.data.PageResources.metadata(now).has("flatDocument")} " +
+                        "cropOpen=${compose.onAllNodesWithTag("crop-canvas").fetchSemanticsNodes().size} " +
+                        "saveButtons=${compose.onAllNodesWithText("保存").fetchSemanticsNodes().size}",
+                    timeout,
+                )
             }
-            val edited = cn.paperforge.app.model.Quad.decode(model.pages.value.first().corners)
+            val saved = model.pages.value.first()
+            val shown = runBlocking { kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { cn.paperforge.app.imaging.ScanProcessor.render(saved, 1200) } }
+            assertEquals("saved page has the A4/A5 shape", .7071f, shown.width.toFloat() / shown.height, .02f)
+            shown.recycle()
+            val edited =
+                cn.paperforge.app.model.Quad.decode(cn.paperforge.app.data.PageResources.sourceAppearance(saved).corners)
             assertTrue(edited.points[0].y > .09f && edited.points[1].y > .10f)
             assertEquals(.2425f, edited.points[0].x, .001f)
             compose.waitForIdle()
@@ -137,7 +166,12 @@ class EditorExperienceTest {
             }
             shot.recycle()
             compose.onNodeWithText("更多", useUnmergedTree = true).performClick()
-            compose.onNodeWithText("保存本页诊断包（含原图）").performScrollTo().performClick()
+            // The 2.0 "more" sheet groups its tools; the diagnostic package is under 文档与记录.
+            compose.onNodeWithText("文档与记录").performScrollTo().performClick()
+            compose.onNodeWithText("保存本页诊断包（含原图）").let { item ->
+                runCatching { item.performScrollTo() }
+                item.performClick()
+            }
             compose.waitUntil(15000) { model.output.value?.exists() == true && !model.busy.value }
             val diagnostic = requireNotNull(model.output.value)
             java.util.zip.ZipFile(diagnostic).use { zip ->
@@ -149,7 +183,7 @@ class EditorExperienceTest {
                             .bufferedReader()
                             .readText()
                     )
-                assertEquals("TEXT", report.getString("filter"))
+                assertEquals("GRAY", report.getString("filter"))
                 assertEquals(64, report.getString("originalSha256").length)
                 assertTrue(report.getLong("renderMs") >= 0)
             }

@@ -400,38 +400,20 @@ fun CropDialog(
                                 TextButton(onClick = { selected = -1 }) { Text("完成") }
                             }
                         }
-                        Row(
-                            Modifier.horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            listOf(
-                                    "原比例" to 0f,
-                                    "A4/A5" to .7071068f,
-                                    "方形" to 1f,
-                                    "证件" to (85.6f / 54f),
-                                )
-                                .forEach { (label, ratio) ->
-                                    FilterChip(
-                                        aspect == ratio,
-                                        { aspect = ratio },
-                                        label = { Text(label) },
-                                    )
-                                }
-                            TextButton(
-                                onClick = {
-                                    points = CropGeometry.expand(Quad(points), .025f).points
-                                }
+                        // Outline tools first, then the output shape; both rows wrap instead of scrolling, so
+                        // nothing sits off the edge of the screen.
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(
+                                onClick = { points = CropGeometry.expand(Quad(points), .025f).points }
                             ) {
                                 Text("外扩")
                             }
-                            TextButton(
-                                onClick = {
-                                    points = CropGeometry.expand(Quad(points), -.025f).points
-                                }
+                            OutlinedButton(
+                                onClick = { points = CropGeometry.expand(Quad(points), -.025f).points }
                             ) {
                                 Text("内缩")
                             }
-                            TextButton(
+                            OutlinedButton(
                                 onClick = {
                                     points = Quad.decode(page.corners).points
                                     aspect = page.outputAspect
@@ -440,6 +422,29 @@ fun CropDialog(
                                 Text("重置")
                             }
                         }
+                        val shapes =
+                            listOf(
+                                "原比例" to 0f,
+                                "A4/A5" to .7071068f,
+                                "方形" to 1f,
+                                "证件" to (85.6f / 54f),
+                            )
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            shapes.forEach { (label, ratio) ->
+                                FilterChip(
+                                    aspect == ratio,
+                                    { aspect = ratio },
+                                    label = { Text(label) },
+                                )
+                            }
+                        }
+                        Text(
+                            shapes.firstOrNull { it.second == aspect && it.second > 0f }?.let {
+                                "保存后页面按“${it.first}”比例输出；裁剪框按纸边画，不必改成这个比例。"
+                            } ?: "保存后页面保持裁剪出的原比例。",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                         TextButton(onClick = { precise = !precise }) {
                             Text(if (precise) "收起位置调整" else "按位置调整")
                         }

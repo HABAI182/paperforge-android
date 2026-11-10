@@ -23,6 +23,8 @@ A revision of 2.0.0 (internal build 20042). It focuses on original-photo detail,
 - **Corners follow your finger.** A dragged corner moves relative to your finger instead of jumping under the fingertip.
 - **Fine adjustment.** After you let go, arrow keys nudge the corner by about 0.1% of the photo's long side per tap. Holding a key repeats.
 - **All Android versions.** The magnifier now appears on every version; Android 8 had none.
+- **Tool order.** Expand, Shrink and Reset now come before the shape presets (Original, A4/A5, Square, ID). Both rows wrap instead of running off the right edge of the screen.
+- **Preset note.** Choosing a shape now shows a note: it shapes the saved page, while the crop outline still follows the paper edge.
 
 ### Automatic edge finding
 
