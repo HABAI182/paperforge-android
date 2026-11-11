@@ -141,6 +141,9 @@ object ScanProcessor {
             lap("decode")
             val detected = detectDecoded(image, mat, previewQuad, reference, detectorOverride, lockReference)
             lap("detect")
+            // A matched canonical viewfinder frame already passed these same geometry checks. Applying
+            // them again at the still resolution silently moves the frame the user just accepted.
+            if (detected.diagnostics["canonicalFrameReused"] == 1f) return detected
             val outline = outlined(mat, detected)
             lap("outline")
             framedByRules(mat, outline).also { lap("frame") }
@@ -260,6 +263,21 @@ object ScanProcessor {
                                 notes = fresh.notes + mapOf("stillReason" to "reference-$reason"),
                             )
                         }
+                        if (reference.canonicalFrame) {
+                            return DetectionResult(
+                                previewQuad,
+                                reference.confidence,
+                                "viewfinder-locked",
+                                mapOf(
+                                    "referenceAgeMs" to reference.age.toFloat(),
+                                    "referenceReused" to 1f,
+                                    "canonicalFrameReused" to 1f,
+                                    "stillMaxCornerShift" to 0f,
+                                    "stillAdopted" to 0f,
+                                ),
+                                notes = mapOf("stillReason" to "matched-displayed-frame"),
+                            )
+                        }
                     }
                     val refined =
                         if (reference != null && ScanConfig.int("pageNetRefine", 1) == 0) previewQuad
@@ -375,7 +393,7 @@ object ScanProcessor {
                         if (ocrSampling) 1.5f else 1f,
                         page.workbookDetail(),
                         page.deskewDegrees,
-                        !page.framedByRules(),
+                        !page.hasExactCropFrame(),
                         sourceScale = trace.sourceScaleAt(source.width, source.height),
                     )
                 } finally {
@@ -414,17 +432,13 @@ object ScanProcessor {
                     if (ocrSampling) 1.5f else 1f,
                     page.workbookDetail(),
                     page.deskewDegrees,
-                    !page.framedByRules(),
+                    !page.hasExactCropFrame(),
                 )
             return result
         } finally {
             decoded.bitmap.recycle()
         }
     }
-
-    private fun PageRow.framedByRules() =
-        detectionMethod?.contains(RuleFrame.VERSION) == true ||
-            processingMetadata?.contains("\"exactFrame\":true") == true
 
     fun transform(
         bitmap: Bitmap,

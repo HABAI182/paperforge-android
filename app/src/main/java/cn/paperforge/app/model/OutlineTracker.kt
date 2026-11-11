@@ -5,7 +5,7 @@ package cn.paperforge.app.model
 
 import kotlin.math.*
 
-/** Display only. Capture/edits always use raw detection and original still pixels. */
+/** Smooth the accepted viewfinder frame; a capture snapshots this same outline on original pixels. */
 class OutlineTracker(private val weight: Float = 3f, private val switchFrames: Int = 2) {
     private var displayed: Quad? = null
     private var pending: Quad? = null
@@ -13,6 +13,14 @@ class OutlineTracker(private val weight: Float = 3f, private val switchFrames: I
     private var missed = 0
     private var lastTime: Long? = null
     private var viewport: Long? = null
+
+    /** A frame that can be both drawn and captured now, excluding a coast or a pending page switch. */
+    @Synchronized
+    fun updateCurrent(raw: Quad?, confidence: Float, now: Long, epoch: Long = 0): Quad? =
+        update(raw, confidence, emptyList(), now, epoch)?.takeIf {
+            raw != null && raw.valid() && confidence.isFinite() && confidence >= .55f &&
+                distance(it, raw) <= .04f
+        }
 
     @Synchronized
     fun update(

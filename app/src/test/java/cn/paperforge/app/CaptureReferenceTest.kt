@@ -6,6 +6,19 @@ import org.junit.Test
 
 class CaptureReferenceTest {
     @Test
+    fun canonicalFrameIsOptInAndKeepsReferenceValidityChecks() {
+        val scene = listOf(.1f, .2f, .8f, .7f)
+        val legacy = CaptureReference(Quad.Full, 1000, 1200, 600, 800, "viewport", 1L, .9f, scene, scene)
+        assertFalse(legacy.canonicalFrame)
+        val canonical = legacy.copy(canonicalFrame = true)
+        assertTrue(canonical.canonicalFrame)
+        assertEquals("matched", canonical.reason(1500, 2000, scene, scene))
+        assertEquals("stale", canonical.copy(requestedAt = 1500).reason(1500, 2000, scene, scene))
+        assertEquals("motion", canonical.copy(motion = .1f).reason(1500, 2000, scene, scene))
+        assertEquals("viewport-changed", canonical.reason(2000, 1500, scene, scene))
+    }
+
+    @Test
     fun staleMovedOrChangedFramesUseThePhotoWhileExposureAloneCanReuse() {
         val scene = listOf(.1f, .2f, .8f, .7f)
         val r =

@@ -215,8 +215,11 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
         if (imageCapture != null && doc != null && !busy && snapping.compareAndSet(false, true)) {
             taking = true
             cameraError = null
-            val snapshot = rawQuad.takeIf { SystemClock.elapsedRealtime() - rawAt < 700 }
             val atShutter = reference?.copy(requestedAt = SystemClock.elapsedRealtime())
+            val snapshot =
+                if (SystemClock.elapsedRealtime() - rawAt < 700)
+                    atShutter?.quad ?: rawQuad
+                else null
             val targetAtShutter = vm.replacement.value
             gate.markCaptured(
                 snapshot,
@@ -669,11 +672,6 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                                                 cn.paperforge.app.imaging.EdgeQuad
                                                                     .liveSteady(upright)
                                                             val detected = detection.quad
-                                                            val quality =
-                                                                CameraQualityAnalyzer.analyze(
-                                                                    upright,
-                                                                    detected,
-                                                                )
                                                             val frameWidth = upright.cols()
                                                             val frameHeight = upright.rows()
                                                             val sensorNs = image.imageInfo.timestamp
@@ -683,6 +681,20 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                                                 image.width.toLong() * 10000 +
                                                                     image.height * 10 +
                                                                     image.imageInfo.rotationDegrees
+                                                            val acceptedFrame =
+                                                                outline.updateCurrent(
+                                                                    detected,
+                                                                    detection.confidence,
+                                                                    now,
+                                                                    viewportEpoch,
+                                                                )
+                                                            // Match signatures from the SAME accepted frame,
+                                                            // not the detector quad before display smoothing.
+                                                            val quality =
+                                                                CameraQualityAnalyzer.analyze(
+                                                                    upright,
+                                                                    acceptedFrame ?: detected,
+                                                                )
                                                             val luminance =
                                                                 (quality.sample
                                                                         ?.brightness
@@ -718,7 +730,7 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                                                                         quality
                                                                                             .sceneSignature,
                                                                                     ),
-                                                                                previous.quad.points
+                                                                                (rawQuad ?: previous.quad).points
                                                                                     .zip(
                                                                                         detected
                                                                                             .points
@@ -734,8 +746,9 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                                                                     },
                                                                             )
                                                                         else 0f
+                                                                    quad = acceptedFrame
                                                                     reference =
-                                                                        detected?.let {
+                                                                        acceptedFrame?.let {
                                                                             CaptureReference(
                                                                                 it,
                                                                                 now,
@@ -750,20 +763,13 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                                                                     .sceneSignature,
                                                                                 quality.signature,
                                                                                 motion,
+                                                                                canonicalFrame = true,
                                                                             )
                                                                         }
                                                                     rawQuad = detected
                                                                     edgeConfidence =
                                                                         detection.confidence
                                                                     rawAt = now
-                                                                    quad =
-                                                                        outline.update(
-                                                                            detected,
-                                                                            detection.confidence,
-                                                                            quality.signature,
-                                                                            now,
-                                                                            viewportEpoch,
-                                                                        )
                                                                     overlay =
                                                                         preview.outputTransform
                                                                             ?.let { target ->
@@ -803,6 +809,9 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                                                                         }
                                                                                 }
                                                                             }
+                                                                    // No canonical promise before CameraX can
+                                                                    // map and actually display this outline.
+                                                                    if (overlay == null) reference = null
                                                                     light = luminance
                                                                     if (detected != null) {
                                                                         val anchor = focusAnchor
@@ -970,39 +979,11 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                 camera?.cameraControl?.enableTorch(false)
                             }
                         }
-                    // The outline glides to each new position instead of jumping: every corner follows a critically
-                    // damped spring that keeps its speed when a new target arrives mid-move, so the frequent small
-                    // updates and the snap to the capture's crop read as one smooth motion.
-                    val glide = remember { List(8) { androidx.compose.animation.core.Animatable(0f) } }
-                    var gliding by remember { mutableStateOf(false) }
-                    LaunchedEffect(overlay) {
-                        val target = overlay?.takeIf { it.size == 4 }?.flatMap { listOf(it.x, it.y) }
-                        if (target == null) {
-                            gliding = false
-                            return@LaunchedEffect
-                        }
-                        if (!gliding) {
-                            target.forEachIndexed { i, v -> glide[i].snapTo(v) }
-                            gliding = true
-                            return@LaunchedEffect
-                        }
-                        kotlinx.coroutines.coroutineScope {
-                            target.forEachIndexed { i, v ->
-                                launch {
-                                    glide[i].animateTo(
-                                        v,
-                                        androidx.compose.animation.core.spring(
-                                            dampingRatio = 1f,
-                                            stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow,
-                                        ),
-                                    )
-                                }
-                            }
-                        }
-                    }
+                    // OutlineTracker already smooths this exact capture frame. A second screen-space
+                    // spring would draw different corners from those persisted at shutter time.
                     if (UserSettings[SettingKeys.ShowOutline])
                         Canvas(Modifier.fillMaxSize()) {
-                            (if (gliding) List(4) { PointN(glide[2 * it].value, glide[2 * it + 1].value) } else null)?.let { points ->
+                            overlay?.takeIf { it.size == 4 }?.let { points ->
                                 val path =
                                     Path().apply {
                                         points.forEachIndexed { i, p ->

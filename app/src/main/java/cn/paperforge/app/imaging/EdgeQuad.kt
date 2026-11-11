@@ -20,36 +20,12 @@ internal object EdgeQuad {
     const val VERSION = "edge-quad-1"
     private const val WORK = 900.0
 
-    private class LiveCheck(val detected: Quad, val result: Quad?, val at: Long)
-
-    @Volatile private var lastLive: LiveCheck? = null
-    @Volatile private var lastFound: Quad? = null
-
-    private fun near(a: Quad, b: Quad) = a.points.zip(b.points).all { (p, q) -> hypot(p.x - q.x, p.y - q.y) < .03f }
-
     /**
-     * The camera's outline. While the camera moves, the quick detector's outline is shown. Once that outline has
-     * held still for two frames, the frame goes through the capture's own detection ([ScanProcessor.detectFrame]),
-     * so what is shown is what the capture will cut; that answer stands while the quick outline stays where it
-     * was, and is worked out again every 3 seconds. The quick outline alone showed a cover's light panel while
-     * the capture cut the whole cover.
+     * One inference and the capture's geometric checks on this frame. Previously a quick inference was
+     * followed by a second full inference, then its corners were reused for three seconds on different
+     * frames. Smoothing belongs in OutlineTracker; it must not cache an old crop in the detector.
      */
-    fun liveSteady(frame: Mat): DetectionResult {
-        val found = LearnedDocumentDetector.detect(frame, preview = true)
-        val quad = found.quad
-        val steady = quad != null && lastFound?.let { near(it, quad) } == true
-        lastFound = quad
-        if (quad == null) return found
-        val now = android.os.SystemClock.elapsedRealtime()
-        val last = lastLive
-        val same = last != null && near(last.detected, quad)
-        val better =
-            if (same && (now - last!!.at < 3000 || !steady)) last.result
-            else if (steady)
-                runCatching { ScanProcessor.detectFrame(frame).quad }.getOrNull().also { lastLive = LiveCheck(quad, it, now) }
-            else null
-        return if (better == null) found else found.copy(quad = better, method = found.method + "+capture-crop")
-    }
+    fun liveSteady(frame: Mat): DetectionResult = ScanProcessor.detectFrame(frame)
 
     /**
      * The camera's live outline: the detector on a preview [frame] (RGBA, upright), or its [detection] when

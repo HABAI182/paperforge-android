@@ -117,7 +117,8 @@ data class CaptureSpec(
                             .put("confidence", r.confidence)
                             .put("scene", JSONArray(r.scene))
                             .put("paper", JSONArray(r.paper))
-                            .put("motion", r.motion),
+                            .put("motion", r.motion)
+                            .put("canonicalFrame", r.canonicalFrame),
                     )
                 }
             }
@@ -142,6 +143,7 @@ data class CaptureSpec(
                         values("scene"),
                         values("paper"),
                         r.optDouble("motion", 0.0).toFloat(),
+                        r.optBoolean("canonicalFrame", false),
                     )
                 }
             return CaptureSpec(

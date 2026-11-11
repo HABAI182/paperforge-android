@@ -495,7 +495,7 @@ object FlatDocument {
         workEdge: Int = ScanConfig.int("flatWorkEdge", 2400),
         automatic: Boolean = false,
     ): PageRow {
-        val exactFrame = page.detectionMethod?.contains(RuleFrame.VERSION) == true
+        val exactFrame = page.hasExactCropFrame()
         val stackFrame = page.detectionMethod?.contains(SheetEdge.VERSION) == true
         val rendered =
             ScanProcessor.render(

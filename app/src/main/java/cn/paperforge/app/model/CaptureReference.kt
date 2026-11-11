@@ -3,7 +3,8 @@ package cn.paperforge.app.model
 import kotlin.math.*
 
 /**
- * Raw analysis corners, never the display-smoothed outline. Sensor timestamps are diagnostic only.
+ * The frame accepted by the viewfinder at analysis time. New references carry the exact displayed
+ * outline; legacy tasks retain their raw-detector semantics. Sensor timestamps are diagnostic only.
  */
 data class CaptureReference(
     val quad: Quad,
@@ -17,6 +18,7 @@ data class CaptureReference(
     val scene: List<Float>,
     val paper: List<Float>,
     val motion: Float = 0f,
+    val canonicalFrame: Boolean = false,
 ) {
     val age
         get() = requestedAt - analyzedAt
