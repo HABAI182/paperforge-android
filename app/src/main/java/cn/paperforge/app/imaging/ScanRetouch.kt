@@ -134,7 +134,14 @@ object ScanRetouch {
             val h = source.height
             if (request.mode == "FLAT_SCAN") {
                 require(request.modelSha == NeuralPaper.SHA)
-                return@withContext FlatDocument.process(context, source, request.strength, progress)
+                // The queued FLAT_SCAN worker uses this automatic tone path too.
+                return@withContext FlatDocument.process(
+                        context,
+                        source,
+                        request.strength,
+                        progress,
+                        automatic = true,
+                    )
                     .bitmap
             }
             if (request.mode == "AI_CLEAN") {

@@ -17,7 +17,11 @@ data class DewarpTrace(
     val sourceFile: File,
     val version: String,
     val currentOutput: String,
+    val sourceScale: Float? = null,
 ) {
+    fun sourceScaleAt(width: Int, height: Int): Float? =
+        ToneSourceScale.atSize(sourceScale, grid.width, grid.height, width, height)
+
     /** Replay only the immutable geometry; filter edits must never enhance enhanced pixels. */
     fun sourceAppearance(maxEdge: Int, cleanPaper: Boolean = false): Bitmap {
         val decoded = ScanProcessor.decode(input, maxEdge)
@@ -152,6 +156,11 @@ data class DewarpTrace(
             val meta = PageResources.metadata(page)
             val steps = meta.optJSONArray("steps") ?: return null
             val resources = PageResources.entries(page).associateBy { it.id }
+            val flat = meta.optJSONObject("flatDocument")
+            val sourceScale = ToneSourceScale.recorded(
+                flat?.optDouble("sourceScale", Double.NaN),
+                flat?.optJSONObject("structure")?.optDouble("sourceScale", Double.NaN),
+            )
             for (i in steps.length() - 1 downTo 0) {
                 val step = steps.getJSONObject(i)
                 if (
@@ -164,6 +173,7 @@ data class DewarpTrace(
                         File(resources.getValue(step.getString("original")).path),
                         step.getString("algorithm"),
                         page.original,
+                        sourceScale,
                     )
                 }
             }

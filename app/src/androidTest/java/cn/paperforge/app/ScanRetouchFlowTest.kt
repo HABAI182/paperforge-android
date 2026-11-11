@@ -40,6 +40,25 @@ class ScanRetouchFlowTest {
         }
 
     @Test
+    fun flatScanPreviewUsesTheSameAutomaticTonePathAsTheWorker() = runBlocking {
+        val input = Bitmap.createBitmap(400, 560, Bitmap.Config.ARGB_8888)
+        Canvas(input).apply {
+            drawColor(Color.rgb(232, 228, 216))
+            val pen = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.BLACK; textSize = 18f }
+            for (y in 70..490 step 42) drawText("int main(void) 1/2 x-1 .,:;", 22f, y.toFloat(), pen)
+        }
+        val preview = ScanRetouch.apply(app, input, RetouchRequest("FLAT_SCAN", 1f))
+        val worker = FlatDocument.process(app, input, 1f, automatic = true).bitmap
+        try {
+            assertEquals(worker.width, preview.width)
+            assertEquals(worker.height, preview.height)
+            assertArrayEquals(pixels(worker), pixels(preview))
+        } finally {
+            listOf(input, preview, worker).forEach { it.recycle() }
+        }
+    }
+
+    @Test
     fun learnedRepairUsesSelectionAndNeverChangesUnselectedPixels() = runBlocking {
         val imported = File(app.filesDir, "retouch-proof-input/migan.onnx")
         assertTrue("Push the pinned MI-GAN model before this focused check", imported.isFile)

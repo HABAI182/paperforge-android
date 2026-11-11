@@ -556,6 +556,7 @@ object FlatDocument {
                             .put("appearanceModel", 2)
                             .put("bakedFilter", "WORKBOOK")
                             .put("bakedStrength", 1f)
+                            .put("sourceScale", sourceScale.toDouble())
                             .put("enhancement", ScanConfig.fingerprint())
                             .put("structure", result.diagnostics?.let(::JSONObject))
                             .put("foregroundSha256", if (ai && !automatic) NeuralPaper.SHA else "")

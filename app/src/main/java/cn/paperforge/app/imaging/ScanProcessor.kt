@@ -376,6 +376,7 @@ object ScanProcessor {
                         page.workbookDetail(),
                         page.deskewDegrees,
                         !page.framedByRules(),
+                        sourceScale = trace.sourceScaleAt(source.width, source.height),
                     )
                 } finally {
                     source.recycle()
@@ -440,6 +441,7 @@ object ScanProcessor {
         workbookDetail: Float? = null,
         deskewDegrees: Float = 0f,
         protectEdgeInk: Boolean = true,
+        sourceScale: Float? = null,
     ): Bitmap {
         require(quad.valid()) { "裁切四角不能交叉或重合" }
         // If ink touches the crop frame, push that side outwards instead of clipping the stroke.
@@ -471,6 +473,7 @@ object ScanProcessor {
                 )
         val edge =
             min(max(sourceW, sourceH) * samplingScale, min(targetEdge.toDouble() * 1.25, 4096.0))
+        var toneSamplingScale = (edge / max(sourceW, sourceH)).toFloat()
         val outW = (if (aspect >= 1) edge else edge * aspect).roundToInt().coerceAtLeast(32)
         val outH = (if (aspect >= 1) edge / aspect else edge).roundToInt().coerceAtLeast(32)
         val source = Mat()
@@ -491,6 +494,7 @@ object ScanProcessor {
         val quarter = ((rotation % 360) + 360) % 360
         if (deskewDegrees != 0f) {
             val ratio = minOf(1.0, targetEdge.toDouble() / maxOf(outW, outH))
+            toneSamplingScale *= ratio.toFloat()
             val rw = (outW * ratio).roundToInt().coerceAtLeast(1)
             val rh = (outH * ratio).roundToInt().coerceAtLeast(1)
             val rotatedW = if (quarter == 90 || quarter == 270) rh else rw
@@ -534,12 +538,17 @@ object ScanProcessor {
             source.release()
             if (deskewDegrees == 0f && max(warped.cols(), warped.rows()) > targetEdge) {
                 val ratio = targetEdge.toDouble() / max(warped.cols(), warped.rows())
+                toneSamplingScale *= ratio.toFloat()
                 Imgproc.resize(warped, warped, Size(), ratio, ratio, Imgproc.INTER_AREA)
             }
             Imgproc.cvtColor(warped, rgb, Imgproc.COLOR_RGBA2RGB)
             EdgeInkDiagnostics.dump("02-warp", rgb)
             ToneZones.withExactFrame(!protectEdgeInk) {
-                EnhancePipeline.apply(rgb, dst, filter, strength, workbookDetail)
+                if (sourceScale == null)
+                    EnhancePipeline.apply(rgb, dst, filter, strength, workbookDetail)
+                else ToneZones.withSourceScale(sourceScale * toneSamplingScale) {
+                    EnhancePipeline.apply(rgb, dst, filter, strength, workbookDetail)
+                }
             }
             EdgeInkDiagnostics.dump("09-final", dst)
             if (brightness != 0f || contrast != 1f)
