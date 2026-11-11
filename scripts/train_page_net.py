@@ -80,7 +80,7 @@ class PageNet(nn.Module):
         self.up = nn.ModuleList(Block(c[i + 1] + c[i], c[i]) for i in range(4))
         self.head = nn.Conv2d(c[0], 2, 1)
 
-    def forward(self, x):
+    def features(self, x):
         features = [self.stem(x)]
         for layer in self.down:
             features.append(layer(features[-1]))
@@ -88,7 +88,10 @@ class PageNet(nn.Module):
         for i in range(3, -1, -1):
             y = F.interpolate(y, size=features[i].shape[2:], mode="bilinear", align_corners=False)
             y = self.up[i](torch.cat([y, features[i]], 1))
-        return self.head(y)
+        return y
+
+    def forward(self, x):
+        return self.head(self.features(x))
 
 
 def loss_fn(out, mask, edge):

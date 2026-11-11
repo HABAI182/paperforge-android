@@ -273,7 +273,7 @@ def make_sheet(rng, backgrounds):
     return np.clip(sheet.astype(np.float32) + grain, 0, 255).astype(np.uint8)
 
 
-def curl(sheet, rng):
+def curl(sheet, rng, *, with_corners=False):
     """Bend a sheet in-plane so its edges stop being straight lines; returns image and alpha."""
     h, w = sheet.shape[:2]
     pad = int(0.08 * max(h, w))
@@ -286,7 +286,18 @@ def curl(sheet, rng):
     fx, fy = rng.uniform(0.6, 2.2), rng.uniform(0.6, 2.2)
     map_x = xs + strength * np.sin(ys / ch * fy * 6.28 + py).astype(np.float32)
     map_y = ys + strength * np.sin(xs / cw * fx * 6.28 + px).astype(np.float32)
-    return cv2.remap(canvas, map_x, map_y, cv2.INTER_LINEAR), cv2.remap(alpha, map_x, map_y, cv2.INTER_LINEAR), pad
+    result = cv2.remap(canvas, map_x, map_y, cv2.INTER_LINEAR), cv2.remap(alpha, map_x, map_y, cv2.INTER_LINEAR), pad
+    if not with_corners:
+        return result
+    # map_x/map_y pull an output pixel from the original sheet. The visible
+    # corner is therefore the inverse map of the original corner, NOT the
+    # unchanged pre-curl control point used by paste's homography.
+    original = np.float64([[pad, pad], [pad+w-1, pad], [pad+w-1, pad+h-1], [pad, pad+h-1]])
+    visible = original.copy()
+    for _ in range(24):
+        visible[:,0] = original[:,0] - strength*np.sin(visible[:,1]/ch*fy*6.28+py)
+        visible[:,1] = original[:,1] - strength*np.sin(visible[:,0]/cw*fx*6.28+px)
+    return (*result, visible.astype(np.float32))
 
 
 def place(rng, sheet_shape, area):
@@ -419,7 +430,7 @@ def camera(scene, rng):
     return image
 
 
-def scene_sample(rng, photos, pool):
+def scene_sample(rng, photos, pool, *, with_quad=False):
     scene = background(rng, photos)
     distractors(scene, rng)
     top = rng.choice(pool)
@@ -442,7 +453,10 @@ def scene_sample(rng, photos, pool):
     if case == "spread":
         area = rng.uniform(0.3, 0.75)
     quad = place(rng, top.shape, area)
-    sheet, alpha, pad = curl(top, rng)
+    if with_quad:
+        sheet, alpha, pad, visible_corners = curl(top, rng, with_corners=True)
+    else:
+        sheet, alpha, pad = curl(top, rng)
     if case == "spread":
         # An open notebook: the facing page is the same paper, joined at a gutter that is a soft shadow,
         # and often curls up bright toward it.
@@ -454,7 +468,7 @@ def scene_sample(rng, photos, pool):
         facing = quad - across * rng.uniform(0.97, 1.01)
         paste(scene, cv2.resize(o, (sheet.shape[1], sheet.shape[0])), cv2.resize(o_alpha, (sheet.shape[1], sheet.shape[0])), pad, facing, rng, shadow=False)
     if case == "spread":
-        a_top, _ = paste(scene, sheet, alpha, pad, quad, rng, shadow=False)
+        a_top, matrix = paste(scene, sheet, alpha, pad, quad, rng, shadow=False)
         a_pt, b_pt = (quad[1], quad[2]) if k == 1 else (quad[3], quad[0])
         line = np.zeros((RENDER, RENDER), np.float32)
         cv2.line(line, tuple(int(v) for v in a_pt), tuple(int(v) for v in b_pt), 1.0, rng.randint(2, 7), cv2.LINE_AA)
@@ -463,7 +477,8 @@ def scene_sample(rng, photos, pool):
         pens(scene, rng, quad)
         fingers(scene, rng, quad)
         lighting(scene, rng)
-        return camera(scene, rng), (a_top > 0.5).astype(np.uint8)
+        result = camera(scene, rng), (a_top > 0.5).astype(np.uint8)
+        return (*result, cv2.perspectiveTransform(visible_corners[None], matrix)[0]) if with_quad else result
     if case == "stack":
         # A pile: lower sheets poke out by small offsets along one or two sides.
         direction = np.float32([rng.choice([-1, -1, 1, 0]), rng.choice([0, 0, 1, -1])])
@@ -491,13 +506,13 @@ def scene_sample(rng, photos, pool):
         other, other_alpha, _ = curl(rng.choice(pool), rng)
         side = quad[1] - quad[0]
         paste(scene, cv2.resize(other, (sheet.shape[1], sheet.shape[0])), cv2.resize(other_alpha, (sheet.shape[1], sheet.shape[0])), pad, quad + side * rng.choice([-1.0, 1.0]) * rng.uniform(0.98, 1.03), rng, shadow=False)
-    a, _ = paste(scene, sheet, alpha, pad, quad, rng)
+    a, matrix = paste(scene, sheet, alpha, pad, quad, rng)
     pens(scene, rng, quad)
     fingers(scene, rng, quad)
     lighting(scene, rng)
     image = camera(scene, rng)
     mask = (a > 0.5).astype(np.uint8)
-    return image, mask
+    return (image, mask, cv2.perspectiveTransform(visible_corners[None], matrix)[0]) if with_quad else (image, mask)
 
 
 def _chunk(job) -> int:
