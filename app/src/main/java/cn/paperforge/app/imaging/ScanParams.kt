@@ -34,10 +34,14 @@ object ScanConfig {
 
     fun float(name: String, fallback: Float) = values.optDouble(name, fallback.toDouble()).toFloat()
 
-    /** Includes benchmark overlays; old checkpoints cannot silently reuse a different look. */
+    /** Includes appearance overlays; old checkpoints cannot silently reuse a different look. */
     fun fingerprint(): String {
         val ordered =
-            values.keys().asSequence().sorted().joinToString("|") { "$it=${values.get(it)}" }
+            values.keys().asSequence()
+                // Detection consumes this before the persisted crop exists. Adding its new speed
+                // setting must not invalidate every already-baked page's appearance fingerprint.
+                .filter { it != "pageNetRecoveryIterations" }
+                .sorted().joinToString("|") { "$it=${values.get(it)}" }
         return MessageDigest.getInstance("SHA-256")
             .digest(
                 (FlatDocument.VERSION +

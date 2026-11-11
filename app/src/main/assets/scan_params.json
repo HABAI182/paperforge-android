@@ -225,6 +225,7 @@
   "pageNetRefine": 1,
   "pageNetCut": 0.15,
   "pageNetRecover": 1,
+  "pageNetRecoveryIterations": 2,
   "pageNetRecoverBelow": 0.25,
   "pageNetRecoverReach": 0.15,
   "pageNetRecoverKeep": 1.6,

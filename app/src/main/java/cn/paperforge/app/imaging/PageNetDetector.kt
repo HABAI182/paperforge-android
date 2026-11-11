@@ -301,7 +301,11 @@ object PageNetDetector {
             // GrabCut starts from a random clustering, and on a sheet lying on a same-coloured sheet
             // the start can change the answer. Fixed, so the same photo always gets the same crop.
             Core.setRNGSeed(0)
-            Imgproc.grabCut(rgb, labels, Rect(), mat(), mat(), 3, Imgproc.GC_INIT_WITH_MASK)
+            Imgproc.grabCut(
+                rgb, labels, Rect(), mat(), mat(),
+                ScanConfig.int("pageNetRecoveryIterations", 2).coerceIn(1, 5),
+                Imgproc.GC_INIT_WITH_MASK,
+            )
             labels.get(0, 0, labelBytes)
             val sheet = mat()
             sheet.create(RECOVER, RECOVER, CvType.CV_8UC1)
