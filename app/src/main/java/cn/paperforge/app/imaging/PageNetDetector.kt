@@ -69,6 +69,7 @@ object PageNetDetector {
                     else -> small.copyTo(rgb)
                 }
                 val pixels = ByteArray(3 * INPUT * INPUT).also { rgb.get(0, 0, it) }
+                input.set(pixels)
                 val plane = INPUT * INPUT
                 for (i in 0 until plane) for (c in 0..2)
                     tensorValues[c * plane + i] = (pixels[3 * i + c].toInt() and 255) / 255f
@@ -102,6 +103,9 @@ object PageNetDetector {
 
     /** The sheet-boundary map of the last [mask] call on this thread (sigmoid, [OUTPUT]x[OUTPUT]). */
     private val boundary = ThreadLocal<FloatArray?>()
+
+    /** The [INPUT]x[INPUT] RGB the network saw in the last [mask] call on this thread. */
+    private val input = ThreadLocal<ByteArray?>()
 
     /**
      * Moves each side of [quad] inward onto the strongest ridge of the network's own sheet-boundary map, within
@@ -473,12 +477,19 @@ object PageNetDetector {
         val edges = boundary.get()
         val snapped =
             if (edges != null && ScanConfig.int("pageNetEdgeSnap", 1) != 0) snapInward(fitted, edges) else fitted
+        // A mask that stopped at a box printed on the page grows to the page's own edge, see [SheetFrame]. After the
+        // snap, which follows the network's boundary map and so would pull the side back onto the printed box; in
+        // the preview too, so the live outline is the crop.
+        val framed = input.get()?.let { SheetFrame.expand(snapped, it) }
         // A cover the mask cut at a printed colour boundary: only for a nearly square quad, see [CoverOutline].
-        val extended = if (!preview) CoverOutline.extend(source, snapped) else null
-        val baseQuad = extended ?: snapped
+        val extended = if (!preview && framed == null) CoverOutline.extend(source, snapped) else null
+        val baseQuad = framed ?: extended ?: snapped
         var quad = baseQuad
         var confidence = base.confidence
-        var method = if (extended != null) "pagenet+" + CoverOutline.VERSION else "pagenet"
+        var method =
+            if (framed != null) "pagenet+" + SheetFrame.VERSION
+            else if (extended != null) "pagenet+" + CoverOutline.VERSION
+            else "pagenet"
         // Recovery wins back blank margins the mask drops, which matters on a small sheet such as a receipt.
         // On a page that fills much of the frame it found the neighbouring page or the paper underneath,
         // and it costs about a second, so it runs only for small sheets.
