@@ -76,8 +76,15 @@ object BackupStore {
         val tasks: List<LocalTaskRow>,
     )
 
-    /** [missing] counts files the library still listed but that were no longer on disk. */
-    data class BackupResult(val missing: Int)
+    /**
+     * [missing] counts files the library still listed but that were no longer on disk. [missingPages] counts the
+     * pages among them whose own image is gone: those pages cannot come back from this backup, and are named in
+     * paperforge.json "missingPages" so a restore leaves them out instead of bringing back a page with no image.
+     */
+    data class BackupResult(val missing: Int, val missingPages: Int = 0)
+
+    /** What a restore brought back, and the pages it left out because their image was not in the backup. */
+    data class RestoreReport(val documents: Int, val skippedPages: Int)
 
     suspend fun backup(repo: Repository, output: File): BackupResult {
         val (documents, pages, history, outputs, tasks) =
@@ -114,6 +121,8 @@ object BackupStore {
         // Skip it instead of failing the whole backup, and list its archive name so restore
         // knows the entry is absent on purpose rather than a damaged archive.
         val missing = paths.filterNot { File(it).isFile }.toSet()
+        // A page without its image is not a page: it is reported on its own, never as a skipped side file.
+        val missingPages = pages.filter { it.original in missing }
         val mapping =
             (paths.associateWith {
                 "files/${UUID.randomUUID()}.${File(it).extension.ifBlank { "bin" }}"
@@ -136,6 +145,10 @@ object BackupStore {
             JSONObject()
                 .put("format", 3)
                 .put("missing", JSONArray(missing.map(mapping::getValue)))
+                .put(
+                    "missingPages",
+                    JSONArray(missingPages.map { JSONObject().put("documentId", it.documentId).put("pageId", it.id) }),
+                )
                 .put(
                     "documentOrigins",
                     JSONObject().apply {
@@ -296,7 +309,7 @@ object BackupStore {
         } finally {
             temporary.delete()
         }
-        return BackupResult(missing.size)
+        return BackupResult(missing.size, missingPages.size)
     }
 
     suspend fun restore(
@@ -304,7 +317,15 @@ object BackupStore {
         uri: Uri,
         policy: DuplicatePolicy = DuplicatePolicy.APPEND_ALL,
         applyWorkspace: Boolean = true,
-    ): Int {
+    ): Int = restoreReport(repo, uri, policy, applyWorkspace).documents
+
+    suspend fun restoreReport(
+        repo: Repository,
+        uri: Uri,
+        policy: DuplicatePolicy = DuplicatePolicy.APPEND_ALL,
+        applyWorkspace: Boolean = true,
+    ): RestoreReport {
+        var skippedPages = 0
         val archive = File(repo.context.cacheDir, "restore-${UUID.randomUUID()}.zip")
         repo.context.contentResolver.openInputStream(uri)?.use { input ->
             archive.outputStream().use { input.copyTo(it) }
@@ -548,6 +569,9 @@ object BackupStore {
                     (0 until p.length())
                         .map { DocumentCodec.page(p.getJSONObject(it)) }
                         .filterNot { it.documentId in skipped }
+                        // The backup recorded this page's image as already gone: the page is left out, and
+                        // counted, rather than restored pointing at a file that does not exist.
+                        .filterNot { (it.original in missing).also { gone -> if (gone) skippedPages++ } }
                         .map { page(it) }
                 val histories =
                     (0 until h.length())
@@ -898,7 +922,7 @@ object BackupStore {
                 (repo.context.applicationContext as? cn.paperforge.app.PaperForgeApp)
                     ?.backgroundScope
                     ?.launch { cn.paperforge.app.imaging.CaptureTasks.recover(repo) }
-                return restored.size
+                return RestoreReport(restored.size, skippedPages)
             }
         } catch (e: Exception) {
             if (!published)

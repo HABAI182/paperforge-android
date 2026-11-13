@@ -3345,7 +3345,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             val result = BackupStore.backup(repo, file)
             outputLocked.value = false
             output.value = file
-            if (result.missing > 0)
+            if (result.missingPages > 0)
+                messages.send(
+                    "备份已完成，但有 ${result.missingPages} 页的原图已丢失，这些页无法从此备份恢复" +
+                        (if (result.missing > result.missingPages) "；另跳过 ${result.missing - result.missingPages} 个已不存在的文件" else "")
+                )
+            else if (result.missing > 0)
                 messages.send("备份已完成，已跳过 ${result.missing} 个已不存在的文件")
         }
 
@@ -3392,7 +3397,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         perform("正在恢复备份") {
             assembly.cancelLoading()
             assembly.flush()
-            val count = BackupStore.restore(repo, uri, policy, applyWorkspace)
+            val report = BackupStore.restoreReport(repo, uri, policy, applyWorkspace)
+            val count = report.documents
             canUndoNames.value = LibraryPreferences(repo.context).renameUndo().isNotEmpty()
             libraryFolderPaths.value = LibraryPreferences(repo.context).folders()
             folderUndo = null
@@ -3400,7 +3406,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             comparison.refreshFamilies()
             assembly.reload()
             val workspace = if (applyWorkspace) "已应用设置和工作区" else "已保留本机设置和工作区"
-            messages.send("已追加 $count 份文档；$workspace；配方和规则已合并，新规则已停用")
+            val lost = if (report.skippedPages > 0) "；${report.skippedPages} 页的原图在备份时已丢失，未恢复" else ""
+            messages.send("已追加 $count 份文档$lost；$workspace；配方和规则已合并，新规则已停用")
         }
 
     private fun markDraft() = File(repo.folder(selected.value!!.id), "annotations.json")
