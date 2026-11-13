@@ -323,7 +323,7 @@ internal object ToneZones {
             val keep = mat()
             Core.bitwise_or(grown, rules, keep)
             if (ScanConfig.int("toneZonesEdgeDebris", 1) != 0)
-                dropEdgeDebris(page, keep, thin, owned)
+                dropEdgeDebris(page, keep, thin, owned, relative)
             if (exterior != null) Core.subtract(keep, exterior, keep)
             lap("edgeDebris")
             val finger = if (channels == 3) fingerZone(page, thin, darkSeeds, minSeed, owned) else null
@@ -350,11 +350,112 @@ internal object ToneZones {
             fun nearTopOrBottom(track: RuleTrack) = track.heights[track.heights.size / 2].let { it <= stripAcross || it >= height - stripAcross }
             // With an exact frame, a line this close to it is the sheet's own edge. Otherwise it may be a
             // table's border, so it is left to the older path and not cleared.
-            val across = if (exactFrame) trackedAcross else trackedAcross.filterNot(::nearTopOrBottom)
-            val drawnAcross = across.filterNot(::nearTopOrBottom)
+            val acrossTracked = if (exactFrame) trackedAcross else trackedAcross.filterNot(::nearTopOrBottom)
+            val drawnAcrossTracked = acrossTracked.filterNot(::nearTopOrBottom)
             // A faint long vertical is a crease or the edge of a sheet, not a printed line.
             val faintDown = ScanConfig.float("toneZonesRuleFaintDown", .80f)
-            val drawnDown = down.filter { track -> track.level < faintDown && track.heights[track.heights.size / 2].let { it > stripDown && it < width - stripDown } }
+            val drawnDownTracked = down.filter { track -> track.level < faintDown && track.heights[track.heights.size / 2].let { it > stripDown && it < width - stripDown } }
+            // A rule is cleared and redrawn only where this photo shows it. A track is followed across the page and
+            // carried on to where its neighbours end, so on a grid printed beside drawings, or one that stops short of
+            // the sheet's edge, it ran on through blank paper and through the drawing, and the redraw put a printed
+            // line there that the page never had, after the band had wiped what lay under it. Along each track the
+            // page must be darker than paper by `toneZonesRuleEvidenceShare` of the rule's own contrast, within a
+            // pixel of the line; gaps up to `toneZonesRuleEvidenceGap` (a speck, a highlight) are bridged, longer ones
+            // split the track, and pieces shorter than `toneZonesRuleEvidenceRun` are left to the ink path as they are.
+            val evidenceShare = ScanConfig.float("toneZonesRuleEvidenceShare", .55f).coerceIn(.05f, 1f)
+            val evidenceGap = max(2, (ScanConfig.float("toneZonesRuleEvidenceGap", 6f) * scale).roundToInt())
+            val evidenceRun = max(4, (ScanConfig.float("toneZonesRuleEvidenceRun", 8f) * scale).roundToInt())
+            // A rule that fades (a shadowed margin, a highlight) is still faintly there. Within
+            // `toneZonesRuleWeakReach` of the frame or across an inner gap of that length it is kept when most of
+            // the stretch is at least `toneZonesRuleWeakShare` of the rule's contrast darker than paper. With no
+            // trace at all, nothing is drawn: a grid that stops short of the margin stops there.
+            val weakShare = ScanConfig.float("toneZonesRuleWeakShare", .2f).coerceIn(.02f, 1f)
+            val weakReach = ScanConfig.float("toneZonesRuleWeakReach", .04f).coerceIn(0f, .2f)
+            val weakFill = ScanConfig.float("toneZonesRuleWeakFill", .6f).coerceIn(0f, 1f)
+            val ruleMask = ByteArray(relative.size).also { rules.get(0, 0, it) }
+            val fingerMask = finger?.let { zone -> ByteArray(relative.size).also { zone.get(0, 0, it) } }
+            // Skin or a desk lying over the sheet, judged as dropEdgeDebris judges it, when no finger zone was found.
+            val warmSaturation = ScanConfig.float("toneZonesWarmSaturation", .45f)
+            val colourBytes by lazy { if (channels == 3) ByteArray(relative.size * 3).also { page.get(0, 0, it) } else null }
+            fun occluded(at: Int): Boolean {
+                if (fingerMask != null && fingerMask[at] != 0.toByte()) return true
+                val c = colourBytes ?: return false
+                val r = c[3 * at].toInt() and 255
+                val g = c[3 * at + 1].toInt() and 255
+                val b = c[3 * at + 2].toInt() and 255
+                return r >= 70 && r >= g && g > b && (r - b) >= warmSaturation * r
+            }
+            val evidenceBand = max(2, (2 * scale).roundToInt() + 1)
+            fun supported(track: RuleTrack, vertical: Boolean): List<RuleTrack> {
+                if (ScanConfig.int("toneZonesRuleEvidence", 1) == 0) return listOf(track)
+                val limit = if (vertical) width else height
+                val alongLimit = if (vertical) height else width
+                val cut = track.level + (1f - track.level) * evidenceShare
+                val weakCut = track.level + (1f - track.level) * (1f - weakShare)
+                val n = track.heights.size
+                val darkest = FloatArray(n) { i ->
+                    val along = track.start + i
+                    val centre = track.heights[i].roundToInt()
+                    var value = Float.MAX_VALUE
+                    for (c in centre - 1..centre + 1) {
+                        if (c !in 0 until limit) continue
+                        value = min(value, relative[if (vertical) along * width + c else c * width + along])
+                    }
+                    value
+                }
+                // The track is a smoothed fit, and a slightly curved rule runs a few pixels off it. The rule mask (long
+                // straight thin runs only, never a drawing's slanted strokes or blank paper) within the band that is
+                // cleared counts as seeing the rule too.
+                val seen = BooleanArray(n) { i ->
+                    if (darkest[i] <= cut) return@BooleanArray true
+                    val along = track.start + i
+                    val centre = track.heights[i].roundToInt()
+                    (centre - evidenceBand..centre + evidenceBand).any { c ->
+                        c in 0 until limit && ruleMask[if (vertical) along * width + c else c * width + along] != 0.toByte()
+                    }
+                }
+                fun faint(from: Int, to: Int) = to > from && (from until to).count { darkest[it] <= weakCut } >= weakFill * (to - from)
+                // A finger lying on the sheet hides the rule; the rule is seen on its far side, so it goes on beneath it.
+                fun hidden(from: Int, to: Int): Boolean {
+                    if (to <= from || ScanConfig.int("toneZonesRuleUnderOccluder", 1) == 0) return false
+                    val covered = (from until to).count { k ->
+                        val c = track.heights[k].roundToInt().coerceIn(0, limit - 1)
+                        occluded(if (vertical) (track.start + k) * width + c else c * width + track.start + k)
+                    }
+                    return covered >= weakFill * (to - from)
+                }
+                val reach = (weakReach * alongLimit).roundToInt()
+                // Bridge gaps between supported stretches only: short ones always, longer faint or hidden ones on their trace.
+                var i = 0
+                while (i < n) {
+                    if (seen[i]) { i++; continue }
+                    var j = i
+                    while (j < n && !seen[j]) j++
+                    if (i > 0 && j < n && (j - i <= evidenceGap || (j - i <= reach && faint(i, j)) || hidden(i, j))) for (k in i until j) seen[k] = true
+                    i = j
+                }
+                // On to the frame, where the track was carried there and the rule still shows faintly on the way, or a
+                // finger covers it.
+                val first = seen.indexOfFirst { it }
+                if (first > 0 && track.start == 0 && ((first <= reach && faint(0, first)) || hidden(0, first))) for (k in 0 until first) seen[k] = true
+                val last = seen.indexOfLast { it }
+                if (last in 0 until n - 1 && track.start + n >= alongLimit && ((n - 1 - last <= reach && faint(last + 1, n)) || hidden(last + 1, n)))
+                    for (k in last + 1 until n) seen[k] = true
+                val pieces = ArrayList<RuleTrack>()
+                i = 0
+                while (i < n) {
+                    if (!seen[i]) { i++; continue }
+                    var j = i
+                    while (j < n && seen[j]) j++
+                    if (j - i >= evidenceRun)
+                        pieces += RuleTrack(track.start + i, track.start + j, track.heights.copyOfRange(i, j), track.level)
+                    i = j
+                }
+                return pieces
+            }
+            val across = acrossTracked.flatMap { supported(it, false) }
+            val drawnAcross = drawnAcrossTracked.flatMap { supported(it, false) }
+            val drawnDown = drawnDownTracked.flatMap { supported(it, true) }
             // The old line goes, except where something darker crosses it: that is writing.
             val ruleBand = BooleanArray(relative.size)
             val bandHalf = max(2, (2 * scale).roundToInt() + 1)
@@ -422,7 +523,7 @@ internal object ToneZones {
                 }
             }
             across.forEach { clear(it, false) }
-            down.forEach { clear(it, true) }
+            down.flatMap { supported(it, true) }.forEach { clear(it, true) }
             lap("clearBands")
             val ruleTone = ScanConfig.int("toneZonesRuleTone", 50).toFloat()
             val ruleSureLevel = ScanConfig.float("toneZonesRuleSure", .82f)
@@ -506,46 +607,54 @@ internal object ToneZones {
             // the reference scanner draws a soft thin horizontal as solid as the stroke beside it.
             val lineDepth = lineSeed?.depth
             val lineFull = ScanConfig.float("toneZonesLineSeedFull", .10f).coerceIn(.02f, 1f)
-            var inkShare = 0
-            var ruleShare = 0
-            var lifted = 0.0
-            for (i in relative.indices) {
-                val value = grayBytes[i].toInt() and 255
-                val r = relative[i]
-                val floor = inkFloor[i]
-                // Sharpened for tone only, never for deciding what is kept: an edge pixel lies above its
-                // surroundings and gets lighter, a stroke's middle and a faint line get darker.
-                val sharp = tidyValues[i] + (if (faintMarks[i]) sharpenFaint else sharpen) * (tidyValues[i] - softValues[i])
-                val normal = ((sharp - floor) / max(1f - floor, .2f)).coerceIn(0f, 1f)
-                val curve = targetInk + (targetPaper - targetInk) * smoothStep(if (faintMarks[i]) (normal - curveLowFaint) / rangeFaint else (normal - curveLow) / range)
-                if (ruleBand[i]) {
-                    output[i] = (value + (targetPaper - value) * strength).roundToInt().coerceIn(0, 255).toByte()
-                    lifted += abs(targetPaper - value).toDouble() * strength
-                    ruleShare++
-                    continue
+            // Every pixel is its own: the parts run on the filter threads and the page is the same to the bit.
+            val parts = ParallelFilter.ranges(relative.size) { from, to ->
+                var inkShare = 0
+                var ruleShare = 0
+                var lifted = 0.0
+                for (i in from until to) {
+                    val value = grayBytes[i].toInt() and 255
+                    val r = relative[i]
+                    val floor = inkFloor[i]
+                    // Sharpened for tone only, never for deciding what is kept: an edge pixel lies above its
+                    // surroundings and gets lighter, a stroke's middle and a faint line get darker.
+                    val sharp = tidyValues[i] + (if (faintMarks[i]) sharpenFaint else sharpen) * (tidyValues[i] - softValues[i])
+                    val normal = ((sharp - floor) / max(1f - floor, .2f)).coerceIn(0f, 1f)
+                    val curve = targetInk + (targetPaper - targetInk) * smoothStep(if (faintMarks[i]) (normal - curveLowFaint) / rangeFaint else (normal - curveLow) / range)
+                    if (ruleBand[i]) {
+                        output[i] = (value + (targetPaper - value) * strength).roundToInt().coerceIn(0, 255).toByte()
+                        lifted += abs(targetPaper - value).toDouble() * strength
+                        ruleShare++
+                        continue
+                    }
+                    val onRule = ruled && ruleBytes[i] != 0.toByte() && !crossing[i]
+                    // A pixel much darker than its rule is writing that crosses it, so the curve draws it.
+                    val isRule = onRule && r >= ruleLevel[i] - .12f
+                    val lineTone =
+                        if (lineDepth == null || isRule || lineDepth[i] == 0.toByte()) targetPaper.toFloat()
+                        else targetPaper + (targetInk - targetPaper) * smoothStep((lineDepth[i].toInt() and 255) / 255f / lineFull)
+                    val inked =
+                        min(lineTone, if (isRule) {
+                            val level = ruleLevel[i]
+                            // Only the core of the line reaches full tone, which keeps a rule thin.
+                            val depth = smoothStep(((1f - sharp) / max(1f - level, .05f) - ruleEdge) / (1f - ruleEdge))
+                            val sure = targetPaper + (ruleTone - targetPaper) * depth
+                            // Faint rules fade toward their own tone: they may be the other side of the sheet.
+                            sure + (r * targetPaper - sure) * smoothStep((level - ruleSureLevel) / (ruleFaintLevel - ruleSureLevel))
+                        } else if (ridgeOn && !faintMarks[i] && grownBytes[i] != 0.toByte() && (ridgePath == null || ridgePath[i])) min(curve, ridge(i)) else curve)
+                    if (isRule) ruleShare++ else if (grownBytes[i] != 0.toByte()) inkShare++
+                    val weight = (weights[i] * 1.5f).coerceAtMost(1f)
+                    val mapped = targetPaper + (inked - targetPaper) * weight
+                    val amountHere = value + (mapped - value) * strength
+                    output[i] = amountHere.roundToInt().coerceIn(0, 255).toByte()
+                    lifted += abs(amountHere - value).toDouble()
                 }
-                val onRule = ruled && ruleBytes[i] != 0.toByte() && !crossing[i]
-                // A pixel much darker than its rule is writing that crosses it, so the curve draws it.
-                val isRule = onRule && r >= ruleLevel[i] - .12f
-                val lineTone =
-                    if (lineDepth == null || isRule || lineDepth[i] == 0.toByte()) targetPaper.toFloat()
-                    else targetPaper + (targetInk - targetPaper) * smoothStep((lineDepth[i].toInt() and 255) / 255f / lineFull)
-                val inked =
-                    min(lineTone, if (isRule) {
-                        val level = ruleLevel[i]
-                        // Only the core of the line reaches full tone, which keeps a rule thin.
-                        val depth = smoothStep(((1f - sharp) / max(1f - level, .05f) - ruleEdge) / (1f - ruleEdge))
-                        val sure = targetPaper + (ruleTone - targetPaper) * depth
-                        // Faint rules fade toward their own tone: they may be the other side of the sheet.
-                        sure + (r * targetPaper - sure) * smoothStep((level - ruleSureLevel) / (ruleFaintLevel - ruleSureLevel))
-                    } else if (ridgeOn && !faintMarks[i] && grownBytes[i] != 0.toByte() && (ridgePath == null || ridgePath[i])) min(curve, ridge(i)) else curve)
-                if (isRule) ruleShare++ else if (grownBytes[i] != 0.toByte()) inkShare++
-                val weight = (weights[i] * 1.5f).coerceAtMost(1f)
-                val mapped = targetPaper + (inked - targetPaper) * weight
-                val amountHere = value + (mapped - value) * strength
-                output[i] = amountHere.roundToInt().coerceIn(0, 255).toByte()
-                lifted += abs(amountHere - value).toDouble()
+                Triple(inkShare, ruleShare, lifted)
             }
+            val inkShare = parts.sumOf { it.first }
+            val ruleShare = parts.sumOf { it.second }
+            var lifted = 0.0
+            for (part in parts) lifted += part.third
             lap("pixelLoop")
             // One continuous thin line at one tone, under the writing. A rule too faint to be sure of
             // keeps its own light tone: it may be the other side of the sheet.
@@ -587,19 +696,21 @@ internal object ToneZones {
                     val colour = ByteArray(output.size * 3).also { page.get(0, 0, it) }
                     val castLow = ScanConfig.int("toneZonesCastLow", 50).toFloat()
                     val castHigh = ScanConfig.int("toneZonesCastHigh", 90).toFloat()
-                    for (i in output.indices) {
-                        val target = output[i].toInt() and 255
-                        val delta = target - (grayBytes[i].toInt() and 255)
-                        val red = colour[3 * i].toInt() and 255
-                        val green = colour[3 * i + 1].toInt() and 255
-                        val blue = colour[3 * i + 2].toInt() and 255
-                        val chroma = max(red, max(green, blue)) - min(red, min(green, blue))
-                        val colourful = smoothStep((chroma - castLow) / (castHigh - castLow))
-                        val tint = (1f - (1f - (weights[i] * 1.5f).coerceAtMost(1f)) * strength) * colourful
-                        for (c in 0..2) {
-                            val shifted = ((colour[3 * i + c].toInt() and 255) + delta).coerceIn(0, 255)
-                            colour[3 * i + c] =
-                                (target + (shifted - target) * tint).roundToInt().coerceIn(0, 255).toByte()
+                    ParallelFilter.ranges(output.size) { from, to ->
+                        for (i in from until to) {
+                            val target = output[i].toInt() and 255
+                            val delta = target - (grayBytes[i].toInt() and 255)
+                            val red = colour[3 * i].toInt() and 255
+                            val green = colour[3 * i + 1].toInt() and 255
+                            val blue = colour[3 * i + 2].toInt() and 255
+                            val chroma = max(red, max(green, blue)) - min(red, min(green, blue))
+                            val colourful = smoothStep((chroma - castLow) / (castHigh - castLow))
+                            val tint = (1f - (1f - (weights[i] * 1.5f).coerceAtMost(1f)) * strength) * colourful
+                            for (c in 0..2) {
+                                val shifted = ((colour[3 * i + c].toInt() and 255) + delta).coerceIn(0, 255)
+                                colour[3 * i + c] =
+                                    (target + (shifted - target) * tint).roundToInt().coerceIn(0, 255).toByte()
+                            }
                         }
                     }
                     for (k in lineIndex.indices) {
@@ -1454,7 +1565,7 @@ internal object ToneZones {
      * wood coloured (fingers, a desk), or if it touches the frame and is thick or saturated (a dark
      * wedge, a coloured tab). Handwriting at the edge is thin and dark, so it stays.
      */
-    private fun dropEdgeDebris(page: Mat, keep: Mat, thin: Int, owned: MutableList<Mat>) {
+    private fun dropEdgeDebris(page: Mat, keep: Mat, thin: Int, owned: MutableList<Mat>, relative: FloatArray? = null) {
         val width = keep.cols()
         val height = keep.rows()
         val exact = frameIsExact()
@@ -1553,7 +1664,7 @@ internal object ToneZones {
         }
         keep.put(0, 0, keepBytes)
         if (colour != null) dropWarmBlobs(keep, thick, thin, ::warmAt, owned)
-        dropFrameLines(keep, owned)
+        dropFrameLines(keep, owned, relative)
     }
 
     /**
@@ -1621,9 +1732,11 @@ internal object ToneZones {
     /**
      * Clears long lines running along the frame in its outermost strip: the edge of a stack of pages
      * or of the sheet itself. A ruled line meets the frame instead of following it, so it stays.
-     * Known cost: a printed border closer to the edge than `toneZonesEdgeLineStrip` goes too.
+     * A printed border that close to the edge is told apart by [relative]: it is a dark ink line with paper on
+     * both sides, where a sheet's edge has the desk or a shadow beyond it and the edge of a sheet below is a
+     * soft pale step. Such a line stays (`toneZonesFrameLinePrinted`).
      */
-    private fun dropFrameLines(keep: Mat, owned: MutableList<Mat>) {
+    private fun dropFrameLines(keep: Mat, owned: MutableList<Mat>, relative: FloatArray? = null) {
         val width = keep.cols()
         val height = keep.rows()
         val exact = frameIsExact()
@@ -1644,13 +1757,95 @@ internal object ToneZones {
         val stripY = (height * stripAcross).toInt().coerceAtLeast(1)
         fun rect(w: Int, h: Int) =
             Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(w.toDouble(), h.toDouble())).also(owned::add)
-        fun clear(area: Rect, across: Mat, along: Mat) {
+        val printedCheck = relative != null && ScanConfig.int("toneZonesFrameLinePrinted", 1) != 0
+        val sideOffset = max(6, (4 * max(width, height) / REFERENCE_EDGE).roundToInt())
+        val sidePaper = ScanConfig.float("toneZonesFrameLinePaper", .9f)
+        val printedCore = ScanConfig.float("toneZonesFrameLineCore", .65f)
+        // A sheet's edge in a stack also has paper on both sides and a dark core. What a printed border has and an
+        // edge does not is the page's own lines meeting it from inside: the worksheet's grid border had dozens.
+        val printedCrossings = ScanConfig.int("toneZonesFrameLineCrossings", 3)
+        val crossingDark = ScanConfig.float("toneZonesFrameLineCrossingDark", .8f)
+        // Separate dark stretches along a line, a gap of 2 or more ending one.
+        fun runs(marks: BooleanArray?): Int {
+            if (marks == null) return 0
+            var count = 0
+            var gap = 2
+            for (mark in marks) {
+                if (mark) {
+                    if (gap >= 2) count++
+                    gap = 0
+                } else gap++
+            }
+            return count
+        }
+        // Removes from [line] (a mask over [area]) each run that is printed: paper on both sides, a dark core,
+        // and at least `toneZonesFrameLineCrossings` lines meeting it from the page's side.
+        fun keepPrinted(line: Mat, area: Rect, vertical: Boolean) {
+            val values = relative ?: return
+            val labels = Mat()
+            val stats = Mat()
+            val centroids = Mat()
+            try {
+                val count = Imgproc.connectedComponentsWithStats(line, labels, stats, centroids, 8, CvType.CV_32S)
+                if (count < 2) return
+                val labelValues = IntArray(area.width * area.height).also { labels.get(0, 0, it) }
+                val sides = DoubleArray(count * 2)
+                val sideCount = IntArray(count * 2)
+                val core = Array(count) { ArrayList<Float>() }
+                val alongSize = if (vertical) height else width
+                val meets = HashMap<Int, BooleanArray>()
+                for (i in labelValues.indices) {
+                    val label = labelValues[i]
+                    if (label == 0) continue
+                    val x = area.x + i % area.width
+                    val y = area.y + i / area.width
+                    core[label] += values[y * width + x]
+                    // Just inside the line, towards the middle of the page: dark where a line of the page meets it.
+                    val inside =
+                        if (vertical) (if (x < width / 2) x + sideOffset else x - sideOffset)
+                        else (if (y < height / 2) y + sideOffset else y - sideOffset)
+                    val ix = if (vertical) inside else x
+                    val iy = if (vertical) y else inside
+                    if (ix in 0 until width && iy in 0 until height && values[iy * width + ix] < crossingDark)
+                        meets.getOrPut(label) { BooleanArray(alongSize) }[if (vertical) y else x] = true
+                    for (side in 0..1) {
+                        val offset = if (side == 0) -sideOffset else sideOffset
+                        val sx = if (vertical) x + offset else x
+                        val sy = if (vertical) y else y + offset
+                        if (sx !in 0 until width || sy !in 0 until height) continue
+                        sides[label * 2 + side] += values[sy * width + sx].toDouble()
+                        sideCount[label * 2 + side]++
+                    }
+                }
+                val printed = BooleanArray(count) { label ->
+                    label != 0 && sideCount[label * 2] > 0 && sideCount[label * 2 + 1] > 0 &&
+                        sides[label * 2] / sideCount[label * 2] >= sidePaper &&
+                        sides[label * 2 + 1] / sideCount[label * 2 + 1] >= sidePaper &&
+                        core[label].sorted().let { it[it.size / 2] } <= printedCore &&
+                        (printedCrossings <= 0 || runs(meets[label]) >= printedCrossings)
+                }
+                if (printed.none { it }) return
+                val bytes = ByteArray(labelValues.size).also { line.get(0, 0, it) }
+                for (i in labelValues.indices) if (printed[labelValues[i]]) bytes[i] = 0
+                line.put(0, 0, bytes)
+            } finally {
+                labels.release()
+                stats.release()
+                centroids.release()
+            }
+        }
+        fun clear(area: Rect, across: Mat, along: Mat, vertical: Boolean) {
             val region = keep.submat(area)
             val line = Mat()
             try {
                 // Thickened across the run first, so a slightly tilted edge still forms one straight run.
                 Imgproc.dilate(region, line, across)
                 Imgproc.morphologyEx(line, line, Imgproc.MORPH_OPEN, along)
+                if (printedCheck) {
+                    // Judge the run on the line itself, not on its thickened copy.
+                    Core.bitwise_and(line, region, line)
+                    keepPrinted(line, area, vertical)
+                }
                 Core.subtract(region, line, region)
             } finally {
                 line.release()
@@ -1659,10 +1854,10 @@ internal object ToneZones {
         }
         val vertical = rect(1, (height * run).toInt().coerceAtLeast(3))
         val horizontal = rect((width * runAcross).toInt().coerceAtLeast(3), 1)
-        clear(Rect(0, 0, stripX, height), rect(5, 1), vertical)
-        clear(Rect(width - stripX, 0, stripX, height), rect(5, 1), vertical)
-        clear(Rect(0, 0, width, stripY), rect(1, 5), horizontal)
-        clear(Rect(0, height - stripY, width, stripY), rect(1, 5), horizontal)
+        clear(Rect(0, 0, stripX, height), rect(5, 1), vertical, true)
+        clear(Rect(width - stripX, 0, stripX, height), rect(5, 1), vertical, true)
+        clear(Rect(0, 0, width, stripY), rect(1, 5), horizontal, false)
+        clear(Rect(0, height - stripY, width, stripY), rect(1, 5), horizontal, false)
         // With an exact frame, the sheet's own edge can still leave a dashed line a few pixels in, where the
         // crop ran a hair outside it. Only pieces that run along the frame go: a dot written in the margin stays.
         val exactStray = if (exact) ScanConfig.float("toneZonesExactStray", .008f) else 0f

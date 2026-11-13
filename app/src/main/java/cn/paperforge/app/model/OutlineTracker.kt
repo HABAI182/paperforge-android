@@ -5,8 +5,23 @@ package cn.paperforge.app.model
 
 import kotlin.math.*
 
-/** Smooth the accepted viewfinder frame; a capture snapshots this same outline on original pixels. */
-class OutlineTracker(private val weight: Float = 3f, private val switchFrames: Int = 2) {
+/**
+ * Smooth the accepted viewfinder frame; a capture snapshots this same outline on original pixels.
+ *
+ * Two outlines come out of every frame. [Frame.accepted] is this frame's own page, smoothed, and is the only one a
+ * capture may use. [Frame.shown] is what the viewfinder draws: the same outline, held through a single missed
+ * frame, a pending page switch, or a frame whose confidence dipped below the acceptance level but stayed above
+ * [holdConfidence] while it still matched the outline on screen. The viewfinder used to draw the accepted outline,
+ * so each of those frames took the outline off the screen and the next put it back: the live outline blinked,
+ * most often with the MobileNetV3 detector, whose confidence on a held page moved around the 0.55 cut.
+ */
+class OutlineTracker(
+    private val weight: Float = 3f,
+    private val switchFrames: Int = 2,
+    private val holdConfidence: Float = .45f,
+) {
+    data class Frame(val shown: Quad?, val accepted: Quad?)
+
     private var displayed: Quad? = null
     private var pending: Quad? = null
     private var pendingFrames = 0
@@ -17,10 +32,19 @@ class OutlineTracker(private val weight: Float = 3f, private val switchFrames: I
     /** A frame that can be both drawn and captured now, excluding a coast or a pending page switch. */
     @Synchronized
     fun updateCurrent(raw: Quad?, confidence: Float, now: Long, epoch: Long = 0): Quad? =
-        update(raw, confidence, emptyList(), now, epoch)?.takeIf {
-            raw != null && raw.valid() && confidence.isFinite() && confidence >= .55f &&
-                distance(it, raw) <= .04f
-        }
+        track(raw, confidence, now, epoch).accepted
+
+    /** The outline to draw and, when this frame confirms it, the same outline for capture. See the class comment. */
+    @Synchronized
+    fun track(raw: Quad?, confidence: Float, now: Long, epoch: Long = 0): Frame {
+        val shown = update(raw, confidence, emptyList(), now, epoch)
+        val accepted =
+            shown?.takeIf {
+                raw != null && raw.valid() && confidence.isFinite() && confidence >= ACCEPT &&
+                    distance(it, raw) <= .04f
+            }
+        return Frame(shown, accepted)
+    }
 
     @Synchronized
     fun update(
@@ -35,7 +59,11 @@ class OutlineTracker(private val weight: Float = 3f, private val switchFrames: I
         val stale = viewport != epoch || time == null || now <= time || now - time > 600
         lastTime = now
         viewport = epoch
-        if (raw == null || !raw.valid() || !confidence.isFinite() || confidence < .55f) {
+        // Once an outline is on screen, a frame of the same page a little under the acceptance level still
+        // tracks it rather than counting as a miss.
+        val holding = current != null && !stale && raw != null && raw.valid() && distance(current, raw) <= .04f
+        val needed = if (holding) min(holdConfidence, ACCEPT) else ACCEPT
+        if (raw == null || !raw.valid() || !confidence.isFinite() || confidence < needed) {
             pending = null
             pendingFrames = 0
             if (stale || current == null || ++missed > 1) reset() else return current
@@ -71,6 +99,10 @@ class OutlineTracker(private val weight: Float = 3f, private val switchFrames: I
 
     private fun distance(a: Quad, b: Quad) =
         a.points.zip(b.points).maxOf { (p, q) -> hypot(p.x - q.x, p.y - q.y) }
+
+    private companion object {
+        const val ACCEPT = .55f
+    }
 
     @Synchronized
     fun reset() {

@@ -31,6 +31,27 @@ class OutlineTrackerTest {
         assertNotEquals(rectangle(.13f), reference.quad)
     }
 
+    @Test
+    fun shownOutlineHoldsThroughAMissADipAndASwitchWhileCaptureNeedsTheCurrentFrame() {
+        val tracker = OutlineTracker(weight = 3f, switchFrames = 2)
+        val paper = rectangle(.1f)
+        val other = rectangle(.3f)
+        assertEquals(OutlineTracker.Frame(paper, paper), tracker.track(paper, .9f, 1000))
+        val missed = tracker.track(null, 0f, 1160)
+        assertEquals("one missed frame does not take the outline off the screen", paper, missed.shown)
+        assertNull(missed.accepted)
+        val dip = tracker.track(paper, .5f, 1320)
+        assertEquals("a dip under the acceptance level keeps tracking the same page", paper, dip.shown)
+        assertNull("but is not a crop", dip.accepted)
+        val switching = tracker.track(other, .9f, 1480)
+        assertEquals(paper, switching.shown)
+        assertNull(switching.accepted)
+        assertEquals(OutlineTracker.Frame(other, other), tracker.track(other, .9f, 1640))
+        assertNull("a new page needs the acceptance level to appear", OutlineTracker().track(paper, .5f, 1000).shown)
+        assertNull("deep dips still count as misses", tracker.track(other, .3f, 1800).accepted)
+        assertNull(tracker.track(other, .3f, 1960).shown)
+    }
+
     private fun rectangle(left: Float) =
         Quad(
             listOf(

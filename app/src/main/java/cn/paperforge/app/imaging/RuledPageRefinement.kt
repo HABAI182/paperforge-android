@@ -335,6 +335,42 @@ object RuledPageRefinement {
                 )
                 val observed = FloatArray(path.size)
                 pathMat.get(0, 0, observed)
+                // The path is followed across the whole page, also where the rule is not there. On a grid printed
+                // beside drawings it ran on along the drawings' slanted edges, and the map then bent the drawings
+                // to "straighten" a rule that never crossed them. The rule's own extent is the longest run of
+                // columns where it is seen and nearly level (paper curls a rule gently, a drawn edge is steep), with
+                // gaps of up to `ruledEvidenceGapColumns` bridged. Beyond it the rule keeps its last height, so
+                // nothing outside what was observed is bent; a rule seen over too little of the page is not used.
+                if (ScanConfig.int("ruledEvidenceSpan", 1) != 0) {
+                    val strong = max(2f, profile[seed] * .25f)
+                    val steepest = ScanConfig.float("ruledEvidenceSlope", .15f) * step
+                    val seen = BooleanArray(path.size) { c ->
+                        bins[c][start + path[c]] >= strong &&
+                            (c == 0 || abs(observed[c] - observed[c - 1]) <= steepest) &&
+                            (c == path.lastIndex || abs(observed[c + 1] - observed[c]) <= steepest)
+                    }
+                    val gap = ScanConfig.int("ruledEvidenceGapColumns", 3)
+                    var bestFrom = -1
+                    var bestTo = -1
+                    var c = 0
+                    while (c < seen.size) {
+                        if (!seen[c]) { c++; continue }
+                        var last = c
+                        var k = c + 1
+                        while (k < seen.size) {
+                            if (seen[k]) { last = k; k++; continue }
+                            var g = k
+                            while (g < seen.size && !seen[g]) g++
+                            if (g < seen.size && g - k <= gap) { last = g; k = g + 1 } else break
+                        }
+                        if (last - c > bestTo - bestFrom) { bestFrom = c; bestTo = last }
+                        c = last + 1
+                    }
+                    val minimumSpan = ScanConfig.float("ruledEvidenceMinimumSpan", .45f)
+                    if (bestFrom < 0 || (bestTo - bestFrom + 1) < minimumSpan * path.size) continue
+                    for (k in 0 until bestFrom) observed[k] = observed[bestFrom]
+                    for (k in bestTo + 1 until observed.size) observed[k] = observed[bestTo]
+                }
                 val ys = smoothRidge(observed, ScanConfig.float("ruledCurveSmoothing", 12f))
                 fun expand(samples: FloatArray) =
                     FloatArray(width) { x ->

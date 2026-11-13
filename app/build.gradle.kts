@@ -42,6 +42,9 @@ android {
     buildTypes {
         debug {
             providers.gradleProperty("paperforgeIdSuffix").orNull?.let { applicationIdSuffix = it }
+            // -PpaperforgeDebuggable=false measures the pipeline as a release build runs it (EnhanceBenchmarkTest):
+            // a debuggable build ran the Kotlin pixel loops tens of times slower.
+            providers.gradleProperty("paperforgeDebuggable").orNull?.let { isDebuggable = it.toBoolean() }
         }
         release {
             isMinifyEnabled = true

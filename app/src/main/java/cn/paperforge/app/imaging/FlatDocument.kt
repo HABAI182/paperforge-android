@@ -86,24 +86,25 @@ object FlatDocument {
             Utils.bitmapToMat(source, rgba)
             // A wrong crop fans the rules out, which the later stages read as no structure at all or
             // as waves. They estimate from the corrected page; the source is still sampled only once.
-            val rectified = RuleRectify.estimate(rgba)
-            rectified?.warp(rgba, rgba)
+            val rectified = StepTimes.time("g.ruleRectify") { RuleRectify.estimate(rgba)?.also { it.warp(rgba, rgba) } }
             val textScale =
                 minOf(1.0, ScanConfig.int("flatTextAnalysisEdge", 800).toDouble() / maxOf(w, h))
             Imgproc.resize(rgba, thumbnail, Size(), textScale, textScale, Imgproc.INTER_AREA)
-            val probe = WorkbookStructure.analyze(thumbnail, textFallback = false)
+            val probe = StepTimes.time("g.probe") { WorkbookStructure.analyze(thumbnail, textFallback = false) }
             val textEstimate =
                 if (probe.horizontal.confidence < .7 && ScanConfig.int("flatTextCurves", 1) != 0)
-                    TextLineDewarp.estimate(thumbnail, 1f)
+                    StepTimes.time("g.textLines") { TextLineDewarp.estimate(thumbnail, 1f) }
                 else null
             // Distributed long rules or broad text-ridges justify the cost of ruled tracking.
             // Printed paragraphs/code use the already estimated text grid directly.
             val ruled =
                 if (probe.horizontal.confidence >= .7 || (textEstimate?.meanSpan ?: 0.0) >= .75)
-                    RuledPageRefinement.estimate(
-                        rgba,
-                        ScanConfig.int("ruledHeaderExtension", 1) != 0,
-                    )
+                    StepTimes.time("g.ruled") {
+                        RuledPageRefinement.estimate(
+                            rgba,
+                            ScanConfig.int("ruledHeaderExtension", 1) != 0,
+                        )
+                    }
                 else null
             val text =
                 if (ruled == null && ScanConfig.int("flatTextCurves", 1) != 0)
@@ -164,7 +165,7 @@ object FlatDocument {
                 remap(thumbnail, preview, map(thumbnail.cols(), thumbnail.rows(), ::base))
             else thumbnail.copyTo(preview)
             // Analyze the coarse curved-grid result so global skew is never corrected twice.
-            val structure = WorkbookStructure.analyze(preview, textFallback = text == null)
+            val structure = StepTimes.time("g.structure") { WorkbookStructure.analyze(preview, textFallback = text == null) }
             val affine = WorkbookStructure.Mapping(w, h, structure)
             // Residual rigid tilt and low-frequency bend after the existing curve + affine
             // stage. The estimate runs on a small aligned preview; the final resample below
@@ -177,7 +178,7 @@ object FlatDocument {
                         base(if (structure.active) affine.input(it) else it)
                     }
                 remap(thumbnail, aligned, alignedValues)
-                straighten = GridStraighten.analyze(aligned)?.takeIf(GridStraighten::acceptable)
+                straighten = StepTimes.time("g.straighten") { GridStraighten.analyze(aligned)?.takeIf(GridStraighten::acceptable) }
             }
             // Lines still tilted after every stage above: an exam printed askew on its sheet. See [TextLevel].
             fun corrected(point: PointN): PointN {
@@ -189,7 +190,7 @@ object FlatDocument {
             if (ScanConfig.int("textLevel", 1) != 0) {
                 val levelPreview = mat()
                 remap(thumbnail, levelPreview, map(thumbnail.cols(), thumbnail.rows(), ::corrected))
-                level = TextLevel.estimate(levelPreview)
+                level = StepTimes.time("g.textLevel") { TextLevel.estimate(levelPreview) }
             }
             val diagnostics =
                 structure
@@ -232,8 +233,10 @@ object FlatDocument {
                 }
             // Estimate geometry from the clean probe, but sample untouched colour once. Skin
             // and shadow cues must remain available to the final appearance/edge cleanup.
-            if (samplingSource !== source || rectified != null) Utils.bitmapToMat(samplingSource, rgba)
-            remap(rgba, out, values)
+            StepTimes.time("g.remap") {
+                if (samplingSource !== source || rectified != null) Utils.bitmapToMat(samplingSource, rgba)
+                remap(rgba, out, values)
+            }
             val image =
                 Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888).also {
                     Utils.matToBitmap(out, it)
@@ -372,13 +375,16 @@ object FlatDocument {
                     VERSION,
                 )
             progress(3)
-            val preparedSource = sourcePaper(source)
-            val preparedAt = android.os.SystemClock.elapsedRealtime()
-            val shape =
-                try {
-                    geometry(preparedSource, source)
-                } finally {
-                    preparedSource.recycle()
+            var preparedAt = 0L
+            val (shape, geometrySteps) =
+                StepTimes.record {
+                    val preparedSource = StepTimes.time("sourcePaper") { sourcePaper(source) }
+                    preparedAt = android.os.SystemClock.elapsedRealtime()
+                    try {
+                        geometry(preparedSource, source)
+                    } finally {
+                        preparedSource.recycle()
+                    }
                 }
             progress(18)
             val geometryAt = android.os.SystemClock.elapsedRealtime()
@@ -475,7 +481,7 @@ object FlatDocument {
                     .put("paperBoundary", boundaryEvidence)
                     .put("edge", maxOf(source.width, source.height))
                     .put("sourceScale", sourceScale.toDouble())
-                    .put("steps", steps)
+                    .put("steps", (steps ?: JSONObject()).also { all -> for (key in geometrySteps.keys()) all.put(key, geometrySteps.get(key)) })
                     .put("heapMb", Runtime.getRuntime().maxMemory() / (1 shl 20))
                     .put(
                         "foregroundBackend",

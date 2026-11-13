@@ -95,20 +95,25 @@ internal object ColorPage {
             Core.inRange(hsv, Scalar(165.0, 30.0, 50.0), Scalar(180.0, 180.0, 255.0), skinHigh)
             Core.bitwise_or(skin, skinHigh, skin)
             Core.subtract(coloured, skin, coloured)
+            // The opening below keeps a subset of these pixels, so too few here means too few after it: the
+            // large opening, a third of a second on a phone page, is skipped on the plain pages that are most.
+            if (Core.countNonZero(coloured) < ScanConfig.float("colorPrintsShare", .01f) * rgb.total()) return
             val edge = max(rgb.cols(), rgb.rows())
             val k = max(9, (ScanConfig.float("colorPrintsWidth", .012f) * edge).roundToInt()) or 1
             val shape = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, Size(k.toDouble(), k.toDouble())).also(owned::add)
             val prints = mat()
-            Imgproc.morphologyEx(coloured, prints, Imgproc.MORPH_OPEN, shape)
+            // On the filter threads, the same to the bit: one thread took 3.5 s on a 1300 x 1970 page and 17 s
+            // on a 1860 x 2800 one on the emulator, the largest single step of the page.
+            StepTimes.time("cp.open") { ParallelFilter.morphology(coloured, prints, Imgproc.MORPH_OPEN, shape) }
             if (Core.countNonZero(prints) < ScanConfig.float("colorPrintsShare", .01f) * rgb.total()) return
             // Out to the print's own soft border, then feathered.
             val grow = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, Size((k / 2 or 1).toDouble(), (k / 2 or 1).toDouble())).also(owned::add)
-            Imgproc.dilate(prints, prints, grow)
+            ParallelFilter.dilate(prints, prints, grow)
             val weight = mat()
             prints.convertTo(weight, CvType.CV_32F, 1.0 / 255)
-            Imgproc.GaussianBlur(weight, weight, Size(0.0, 0.0), k / 4.0)
+            ParallelFilter.gaussian(weight, weight, k / 4.0)
             val colour = mat()
-            enhance(rgb, colour)
+            StepTimes.time("cp.enhance") { enhance(rgb, colour) }
             val toned = mat()
             destination.convertTo(toned, CvType.CV_32FC3)
             val vivid = mat()

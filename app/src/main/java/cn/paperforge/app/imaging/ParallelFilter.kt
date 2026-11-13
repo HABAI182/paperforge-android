@@ -1,5 +1,6 @@
 package cn.paperforge.app.imaging
 
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import kotlin.math.ceil
@@ -64,6 +65,28 @@ internal object ParallelFilter {
         if (inPlace) {
             target.copyTo(destination)
             target.release()
+        }
+    }
+
+    /**
+     * [body] over the index range [0, size) in contiguous parts on the filter threads, each part's result in
+     * order. For per-pixel loops whose pixels are independent: each part writes only its own indices, so the
+     * output is the same to the bit as one pass. Small ranges, a call from a filter thread, and `parallelLoops` 0
+     * run in one part on the caller.
+     */
+    fun <T> ranges(size: Int, body: (Int, Int) -> T): List<T> {
+        if (threads <= 1 || size < ScanConfig.int("parallelLoopsMinPixels", 250_000) ||
+            ScanConfig.int("parallelLoops", 1) == 0 || Thread.currentThread().name == "paperforge-filter"
+        ) return listOf(body(0, size))
+        val jobs = (0 until threads).map { k ->
+            val from = (size.toLong() * k / threads).toInt()
+            val to = (size.toLong() * (k + 1) / threads).toInt()
+            pool.submit<T> { body(from, to) }
+        }
+        return try {
+            jobs.map { it.get() }
+        } catch (e: ExecutionException) {
+            throw e.cause ?: e
         }
     }
 

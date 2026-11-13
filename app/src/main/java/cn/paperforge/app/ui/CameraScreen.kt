@@ -107,6 +107,9 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
     var previewSize by remember { mutableStateOf(IntSize.Zero) }
     var stability by remember { mutableFloatStateOf(0f) }
     var edgeConfidence by remember { mutableFloatStateOf(0f) }
+    // The outline turns green at 0.72 and back to white only under 0.64, so a confidence hovering at the cut
+    // does not flash the colour.
+    var edgeSure by remember { mutableStateOf(false) }
     var camera by remember { mutableStateOf<Camera?>(null) }
     var capture by remember { mutableStateOf<ImageCapture?>(null) }
     var cameraError by remember { mutableStateOf<String?>(null) }
@@ -681,13 +684,14 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                                                 image.width.toLong() * 10000 +
                                                                     image.height * 10 +
                                                                     image.imageInfo.rotationDegrees
-                                                            val acceptedFrame =
-                                                                outline.updateCurrent(
+                                                            val tracked =
+                                                                outline.track(
                                                                     detected,
                                                                     detection.confidence,
                                                                     now,
                                                                     viewportEpoch,
                                                                 )
+                                                            val acceptedFrame = tracked.accepted
                                                             // Match signatures from the SAME accepted frame,
                                                             // not the detector quad before display smoothing.
                                                             val quality =
@@ -769,11 +773,17 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                                                     rawQuad = detected
                                                                     edgeConfidence =
                                                                         detection.confidence
+                                                                    edgeSure =
+                                                                        tracked.shown != null &&
+                                                                            (if (edgeSure) edgeConfidence >= .64f
+                                                                            else edgeConfidence >= .72f)
                                                                     rawAt = now
                                                                     overlay =
                                                                         preview.outputTransform
                                                                             ?.let { target ->
-                                                                                quad?.let { q ->
+                                                                                // The held outline: it stays through a
+                                                                                // missed frame instead of blinking.
+                                                                                tracked.shown?.let { q ->
                                                                                     val points =
                                                                                         q.points
                                                                                             .flatMap {
@@ -993,7 +1003,7 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                     }
                                 drawPath(
                                     path,
-                                    if (edgeConfidence >= .72f) Color(0xFF86E5B8)
+                                    if (edgeSure) Color(0xFF86E5B8)
                                     else Color.White.copy(alpha = .65f),
                                     style = Stroke(3.dp.toPx()),
                                 )
