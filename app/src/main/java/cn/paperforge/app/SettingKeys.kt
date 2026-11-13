@@ -34,7 +34,7 @@ sealed class SettingKey<T : Any>(val name: String, val default: T) {
 
 object SettingKeys {
     val Detector =
-        SettingKey.Text("detector", "HYBRID", setOf("HYBRID", "STANDARD", "INDEPENDENT"))
+        SettingKey.Text("detector", "HYBRID", setOf("HYBRID", "STANDARD", "INDEPENDENT", "PAGENET_V2"))
     val OutlineWeight = SettingKey.Number("outlineWeight", 3f, 1f..8f)
     val OutlineSwitchFrames = SettingKey.Number("outlineSwitchFrames", 2f, 1f..6f)
     val DewarpStrength = SettingKey.Number("dewarpStrength", 1f, 0f..1f)

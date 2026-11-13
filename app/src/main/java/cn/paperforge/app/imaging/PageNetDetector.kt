@@ -20,31 +20,42 @@ import org.opencv.imgproc.Imgproc
  * still capture does not trust the mask's outline: the mask seeds a GrabCut on the photo, and blank
  * paper the mask missed is recovered because it looks like the rest of the sheet and not like the
  * desk. See [recover]. Measured by scripts/eval_page_crop.py.
+ *
+ * [Model.V2] is an opt-in second network with the same input and output contract (detector setting
+ * PAGENET_V2), see docs/development/DETECTION-RESEARCH-2026-11.md. Everything after the mask is shared.
  */
 object PageNetDetector {
     const val VERSION = "pagenet-3"
     private const val INPUT = 320
     private const val OUTPUT = 160
     private const val RECOVER = 320
+
+    /** A page network: its asset, the mask threshold it was selected with, and its method tag. */
+    enum class Model(val asset: String, val cutKey: String, val defaultCut: Float, val tag: String) {
+        STANDARD("pagenet/pagenet.onnx", "pageNetCut", .15f, "pagenet"),
+        // MobileNetV3-Small U-Net x1.5, models-r4/mbv3w15; checkpoint and threshold chosen on real photos.
+        V2("pagenet/pagenet-v2.onnx", "pageNetV2Cut", .3f, "pagenet2"),
+    }
+
     private var context: Context? = null
-    private var session: OrtSession? = null
-    private var failure: String? = null
+    private val sessions = HashMap<Model, OrtSession>()
+    private val failures = HashMap<Model, String>()
     private val environment by lazy { OrtEnvironment.getEnvironment() }
 
     fun initialize(context: Context) {
         this.context = context.applicationContext
     }
 
-    private fun session(): OrtSession {
-        session?.let {
+    private fun session(model: Model): OrtSession {
+        sessions[model]?.let {
             return it
         }
-        val bytes = checkNotNull(context).assets.open("pagenet/pagenet.onnx").use { it.readBytes() }
+        val bytes = checkNotNull(context).assets.open(model.asset).use { it.readBytes() }
         return OrtSession.SessionOptions().use { options ->
             options.setIntraOpNumThreads(2)
             options.setInterOpNumThreads(1)
             options.setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT)
-            environment.createSession(bytes, options).also { session = it }
+            environment.createSession(bytes, options).also { sessions[model] = it }
         }
     }
 
@@ -54,8 +65,8 @@ object PageNetDetector {
      * texture the network has never seen.
      */
     @Synchronized
-    private fun mask(source: Mat, area: Rect): FloatArray? {
-        if (context == null || failure != null) return null
+    private fun mask(source: Mat, area: Rect, model: Model = Model.STANDARD): FloatArray? {
+        if (context == null || failures[model] != null) return null
         try {
             val tensorValues = FloatArray(3 * INPUT * INPUT)
             val crop = source.submat(area)
@@ -82,7 +93,7 @@ object PageNetDetector {
                     longArrayOf(1, 3, INPUT.toLong(), INPUT.toLong()),
                 )
                 .use { tensor ->
-                    session().run(mapOf("image" to tensor)).use { output ->
+                    session(model).run(mapOf("image" to tensor)).use { output ->
                         @Suppress("UNCHECKED_CAST")
                         val logits = output[0].value as Array<Array<Array<FloatArray>>>
                         val channel = logits[0][0]
@@ -95,8 +106,8 @@ object PageNetDetector {
                     }
                 }
         } catch (e: Exception) {
-            failure = e.javaClass.simpleName + ": " + e.message
-            android.util.Log.w("PaperForgeDetector", "PageNet unavailable", e)
+            failures[model] = e.javaClass.simpleName + ": " + e.message
+            android.util.Log.w("PaperForgeDetector", "PageNet ${model.name} unavailable", e)
             return null
         }
     }
@@ -468,10 +479,10 @@ object PageNetDetector {
      * Null means the model is unavailable or saw no sheet. A [preview] frame skips recovery: it only
      * guides the user, and the capture is detected again as a still.
      */
-    fun detect(source: Mat, preview: Boolean = false): DetectionResult? {
+    fun detect(source: Mat, preview: Boolean = false, model: Model = Model.STANDARD): DetectionResult? {
         val started = System.nanoTime()
-        val probabilities = mask(source, Rect(0, 0, source.cols(), source.rows())) ?: return null
-        val cut = ScanConfig.float("pageNetCut", .15f)
+        val probabilities = mask(source, Rect(0, 0, source.cols(), source.rows()), model) ?: return null
+        val cut = ScanConfig.float(model.cutKey, model.defaultCut)
         val base = fit(probabilities, threshold(probabilities, cut)) ?: return null
         val fitted = Quad.ordered(base.points).takeIf { it.valid() } ?: return null
         val edges = boundary.get()
@@ -487,9 +498,9 @@ object PageNetDetector {
         var quad = baseQuad
         var confidence = base.confidence
         var method =
-            if (framed != null) "pagenet+" + SheetFrame.VERSION
-            else if (extended != null) "pagenet+" + CoverOutline.VERSION
-            else "pagenet"
+            if (framed != null) model.tag + "+" + SheetFrame.VERSION
+            else if (extended != null) model.tag + "+" + CoverOutline.VERSION
+            else model.tag
         // Recovery wins back blank margins the mask drops, which matters on a small sheet such as a receipt.
         // On a page that fills much of the frame it found the neighbouring page or the paper underneath,
         // and it costs about a second, so it runs only for small sheets.
@@ -504,7 +515,7 @@ object PageNetDetector {
                 quad = recoveredQuad
                 // Recovered blank paper reads as unsure to the mask, so it must not lower this.
                 confidence = max(base.confidence, recovered.confidence)
-                method = "pagenet-recovered"
+                method = model.tag + "-recovered"
             }
         }
         // A pile of the same ruled paper reads as one sheet to the mask; the rules show where the top sheet ends.

@@ -78,6 +78,13 @@ no third-party weights. Training scenes are procedural sheets composited over CO
 photographs, used as backgrounds and not redistributed (those photographs carry Flickr's various
 Creative Commons terms), or over procedural surfaces. Provenance: pagenet/pagenet.json.
 
+PaperForge PageNet v2 (opt-in detector “新模型识边”): an original MobileNetV3-Small-layout U-Net, trained
+from random initialisation with no third-party weights, on the same kind of procedural scenes and on photographs
+from “A New Image Dataset for Document Corner Localization” (Mendeley Data x3nm4cxr83, CC BY 4.0). Its checkpoint
+was chosen on photographs from SmartDoc 2015 Challenge 1 (J.-C. Burie et al., ICDAR 2015, Zenodo 1230218, CC BY 4.0)
+and “Labeled receipt images” (Auad, Alves, Kakizaki, Reis, Silva, Zenodo 13688441, CC BY 4.0). No dataset image
+is included. CC BY 4.0: https://creativecommons.org/licenses/by/4.0/. Provenance: pagenet/pagenet-v2.json.
+
 PaperForge Ink v1: an original 537-parameter ONNX foreground matte classifier, trained only
 on procedurally generated glyphs and synthetic noise. It gates existing ink and never
 generates replacement text. No third-party dataset, model, owner photo or competitor output

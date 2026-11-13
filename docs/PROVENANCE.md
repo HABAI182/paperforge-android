@@ -23,6 +23,7 @@ Running a competitor's app on the same photos and comparing its exported pages i
 | Model | Origin | Licence |
 |---|---|---|
 | PageNet (`assets/pagenet`) | Original network, trained from random initialisation by `scripts/train_page_net.py` on `scripts/page_scenes.py` scenes | Project-owned weights. COCO val2017 photos were used as training backgrounds; those photos carry Flickr's various Creative Commons terms and are not redistributed |
+| PageNet v2, opt-in (`assets/pagenet/pagenet-v2.*`) | Original MobileNetV3-Small-layout U-Net (width 1.5), trained from random initialisation by `scripts/train_page_models.py` on `scripts/page_scenes.py` / `scripts/realistic_scenes.py` scenes. A quarter of the batches were photographs from Mendeley Data x3nm4cxr83, training groups only. The checkpoint was chosen on half of SmartDoc 2015 Challenge 1 (Zenodo 1230218) and half of the Auad et al. receipt photos (Zenodo 13688441) | Project-owned weights. Mendeley x3nm4cxr83, SmartDoc 2015 and the receipt set are CC BY 4.0, credited here and in `pagenet-v2.json`. COCO val2017 as for PageNet. No dataset image is redistributed |
 | DocQuadNet | MakeACopy | Apache-2.0 |
 | DocRes | Published research model | MIT |
 | PaperForge Ink v1 | Original, procedural data | Project-owned |

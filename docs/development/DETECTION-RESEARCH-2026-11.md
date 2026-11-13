@@ -92,10 +92,22 @@ Labels used throughout:
   - +6.7 MB APK;
   - no timing yet on a real ARM phone.
 - **Next steps, in order:**
-  1. Ship the ×1.5 model as an opt-in detector engine, so real captures (gallery import) can be compared on the owner's own documents without changing the default.
+  1. Done: the ×1.5 model is an opt-in detector engine (below), so real captures (gallery import) can be compared on the owner's own documents without changing the default.
   2. Gather a larger set of real cover and notebook photos with one agreed rule for whether a visible page block belongs to the crop.
   3. Sharpen the `TopSheetRules` trigger.
   4. Time the model on a phone.
+
+## Opt-in engine "新模型识边（试用）" (PAGENET_V2)
+
+Settings → 扫描与拍摄 → 纸张定位 offers the round-4 ×1.5 model (`models-r4/mbv3w15`, seed 7) as an opt-in engine. The default stays HYBRID with the production PageNet.
+
+**Implementation:**
+- **Network.** `PageNetDetector.Model.V2` loads `assets/pagenet/pagenet-v2.onnx` (7.8 MB, provenance in `pagenet-v2.json`). Its mask threshold is `pageNetV2Cut`, default 0.3, the cut its checkpoint was selected with. Its methods are tagged `pagenet2…`.
+- **Pipeline.** Everything after the mask is shared with HYBRID: snap, SheetFrame, CoverOutline, recovery, TopSheetRules, refine and the frame-only rule. Live preview uses the same engine. `PageNetDetector.exterior`, the clean-up on an already warped page, stays on the production network.
+
+**Verification:**
+- **Desktop runner.** The JVM runner built from the app sources, with `jvmPageNetV2=1`, reproduces the round-4 results quad for quad: owner 114/114, public 334/334, receipts 396/396, SmartDoc 1798/1800. The two SmartDoc differences are one frame on the GrabCut recovery path, shifted by 0.03. OpenCV's parallel GrabCut is not bit-stable under different CPU load; this is existing behaviour. The STANDARD path is unchanged: 0 differing quads on owner and public.
+- **Device test.** `PageNetV2EngineTest` checks the engine on device: the v2 network runs and finds the page in preview and still, and HYBRID keeps the production network.
 
 ## On-device cost
 

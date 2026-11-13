@@ -147,6 +147,7 @@ fun SettingsScreen(vm: MainViewModel) {
                             "HYBRID" to "自动识边",
                             "STANDARD" to "传统识边",
                             "INDEPENDENT" to "独立识边（试用）",
+                            "PAGENET_V2" to "新模型识边（试用）",
                         ),
                     )
                     SettingSlider("纸框平滑程度", "outlineWeight", 3f, 1f..8f, "")

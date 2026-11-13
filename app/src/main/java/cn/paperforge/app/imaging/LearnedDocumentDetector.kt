@@ -165,7 +165,9 @@ object LearnedDocumentDetector {
         val engine = engineOverride ?: UserSettings[SettingKeys.Detector]
         if (engine == "INDEPENDENT") return IndependentDocumentDetector.detect(source, preview)
         if (engine == "STANDARD") return frameOnly(DocumentDetector.detect(source, preview))
-        PageNetDetector.detect(source, preview)?.let { found ->
+        // PAGENET_V2 is HYBRID with the opt-in second page network; every later step is the same.
+        val model = if (engine == "PAGENET_V2") PageNetDetector.Model.V2 else PageNetDetector.Model.STANDARD
+        PageNetDetector.detect(source, preview, model)?.let { found ->
             val quad = found.quad ?: return@let
             return frameOnly(
                 if (preview || ScanConfig.int("pageNetRefine", 1) == 0) found
