@@ -989,11 +989,40 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                                 camera?.cameraControl?.enableTorch(false)
                             }
                         }
-                    // OutlineTracker already smooths this exact capture frame. A second screen-space
-                    // spring would draw different corners from those persisted at shutter time.
+                    // The outline on screen glides to each new detection instead of stepping at the analysis rate
+                    // (about six a second). Display only: a capture still takes the tracker's accepted outline of
+                    // the current frame, never these in-between corners. Each corner closes the gap with a time
+                    // constant of 90 ms, 45 ms when the target is more than 5 % of the screen away, so a held page
+                    // stays still, a slow move is fluid and a fast one is not left behind. A new outline appears
+                    // where it is, and a lost one goes at once.
+                    var drawn by remember { mutableStateOf<List<PointN>?>(null) }
+                    LaunchedEffect(Unit) {
+                        var last = 0L
+                        while (true) {
+                            androidx.compose.runtime.withFrameNanos { now ->
+                                val dt = if (last == 0L) 0f else ((now - last) / 1e9f).coerceIn(0f, .1f)
+                                last = now
+                                val target = overlay?.takeIf { it.size == 4 }
+                                val current = drawn
+                                if (target == null || current == null) {
+                                    if (drawn != target) drawn = target
+                                    return@withFrameNanos
+                                }
+                                val diagonal = maxOf(1f, hypot(previewSize.width.toFloat(), previewSize.height.toFloat()))
+                                val far = current.zip(target).maxOf { (c, t) -> hypot(t.x - c.x, t.y - c.y) }
+                                if (far < .25f) {
+                                    if (far > 0f) drawn = target
+                                    return@withFrameNanos
+                                }
+                                val tau = if (far / diagonal > .05f) .045f else .09f
+                                val k = 1f - kotlin.math.exp(-dt / tau)
+                                drawn = current.zip(target).map { (c, t) -> PointN(c.x + (t.x - c.x) * k, c.y + (t.y - c.y) * k) }
+                            }
+                        }
+                    }
                     if (UserSettings[SettingKeys.ShowOutline])
                         Canvas(Modifier.fillMaxSize()) {
-                            overlay?.takeIf { it.size == 4 }?.let { points ->
+                            drawn?.takeIf { it.size == 4 }?.let { points ->
                                 val path =
                                     Path().apply {
                                         points.forEachIndexed { i, p ->
