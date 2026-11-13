@@ -101,13 +101,24 @@ class ScanCoreWorkflowTest {
                     repo.dao.updatePage(it.copy(ocrText = "stale text"))
                 }
             }
+            // HYBRID's default learned model is PageNet (pagenet, pagenet-recovered, + refinements). A
+            // fallback to the older edge network or the classic detector, or a full-frame "nothing found",
+            // would mean the default model was not what cropped this capture.
+            val method = page.detectionMethod
             assertTrue(
-                "New default model must actually be used",
-                page.detectionMethod!!.startsWith("neural-edge"),
+                "Default PageNet model must crop the capture, got $method",
+                method != null && method.startsWith("pagenet") && !method.contains("frame-only"),
             )
+            assertNotEquals("PageNet's crop must be saved, not the full frame", Quad.Full.encode(), page.corners)
             compose.runOnIdle { model.open(doc) }
             compose.waitUntil(10000) { model.pages.value.isNotEmpty() }
-            compose.onNodeWithContentDescription("曲面校正").performClick()
+            // Curve correction lives in the editor's grouped「更多」sheet (EditorMoreSheet), category
+            // 「画面与修复」, not the toolbar.
+            compose.onNodeWithContentDescription("更多").performClick()
+            compose.waitForIdle()
+            compose.onNodeWithText("画面与修复").performScrollTo().performClick()
+            compose.waitForIdle()
+            compose.onNodeWithText("曲面校正").performScrollTo().performClick()
             compose.waitUntil(20000) {
                 runCatching { compose.onNodeWithText("应用").assertIsEnabled() }.isSuccess
             }
