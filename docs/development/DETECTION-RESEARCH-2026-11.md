@@ -59,6 +59,44 @@ Labels used throughout:
    - These results are stable across swapped splits and thresholds (`work/topsheet-decoder/select_experiment.py`).
    - Superseded by the stronger single model in round 4, but still an option if a candidate regresses somewhere specific.
 
+7. **The round-4 result reproduces across seeds.** A second ×1.5 run (seed 21) gave:
+
+   | Set | mean / severe / bad |
+   |---|---|
+   | SmartDoc test half | 0.958 / 0 / 13 |
+   | Public167 | 0.935 / 2 / 14 |
+   | Owner | 0.914 / 0 / 5 |
+   | Receipts test half | 0.890 / 2 / 14 |
+
+   - **Robust:** the clutter and public gains.
+   - **Not robust:** single owner photos vary between seeds. `calc-cover` scored 0.82 with seed 7 and 0.74 with seed 21; `math-booklet` 0.98 and 0.90.
+8. **Round 5 rejected both of its hypotheses** (`models-r5`). Both seeds were continued 12k steps with EMA 0.999 and a 10k book-block scene set (thick striped page blocks under covers, cover-only labels).
+
+   | Model | Owner mean / severe | SmartDoc test half | `calc-cover` | `blue-book` | `cover-on-book` |
+   |---|---|---|---:|---:|---:|
+   | Production | 0.915 / 0 | 0.840 / 89 | 0.87 | 0.97 | 0.99 |
+   | r5, seed 7 | 0.920 / 0 | 0.954 / 1 | 0.82 | 0.92 | 0.96 |
+   | r5, seed 21 | 0.902 / 1 | 0.956 / 1 | 0.77 | 0.91 | 0.95 |
+
+   - **Book covers did not improve**, and EMA did not remove the seed spread.
+   - **The labels are ambiguous.** The owner truth for `calc-cover` includes the white page block beside the cover, while `blue-book` excludes it. No single labelling rule fits both, so the remaining 0.03–0.05 IoU cover gap is partly label convention. More synthetic cover data will not settle it.
+
+## Where this leaves the model decision
+
+- **Production stays.** No candidate is promoted.
+- **What the ×1.5 model fixes.** It removes production's catastrophic clutter failures, reproducibly in two seeds and on independent data: SmartDoc severe 89 → 0–2, public 15 → 2–4.
+- **What still blocks promotion:**
+  - book covers 0.03–0.13 looser on the owner photos;
+  - seed-dependent results on single owner photos;
+  - slightly more receipt failures with the full-frame fallback;
+  - +6.7 MB APK;
+  - no timing yet on a real ARM phone.
+- **Next steps, in order:**
+  1. Ship the ×1.5 model as an opt-in detector engine, so real captures (gallery import) can be compared on the owner's own documents without changing the default.
+  2. Gather a larger set of real cover and notebook photos with one agreed rule for whether a visible page block belongs to the crop.
+  3. Sharpen the `TopSheetRules` trigger.
+  4. Time the model on a phone.
+
 ## On-device cost
 
 Measured with `ModelBenchmarkTest` on the API 35 x86_64 emulator, using ORT with 2 threads and ALL_OPT. These are two runs while a training job used the GPU. It is not a phone's ARM CPU; time on a real phone before any promotion.

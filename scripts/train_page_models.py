@@ -364,6 +364,8 @@ def main():
     ap.add_argument("--shares", type=float, nargs=2, default=(0.25, 0.4), help="public photos, realistic set")
     ap.add_argument("--holdout", type=int, default=1000, help="last scenes of each realistic set, kept for validation")
     ap.add_argument("--eval-every", type=int, default=2000)
+    ap.add_argument("--ema", type=float, default=0.0,
+                    help="exponential moving average of weights (and BatchNorm buffers), e.g. 0.999; evaluated, saved and exported in place of the raw weights")
     ap.add_argument("--seed", type=int, default=7, help="weight init seed; the loader seed is derived from it (7 -> 11, as before)")
     ap.add_argument("--real-val", type=Path, help="real-photo validation npz (build_real_val.py); leads checkpoint selection")
     ap.add_argument("--precision", choices=["fp16", "bf16"], default="fp16",
@@ -397,6 +399,11 @@ def main():
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, args.lr, total_steps=args.steps, pct_start=0.06 if not args.warm else 0.02)
     scaler = torch.amp.GradScaler(device, enabled=dtype == torch.float16)  # bf16 needs no loss scaling
+    ema = None
+    if args.ema:
+        ema = torch.optim.swa_utils.AveragedModel(model, multi_avg_fn=torch.optim.swa_utils.get_ema_multi_avg_fn(args.ema),
+                                                  use_buffers=True)
+    scored = (lambda: ema.module) if ema is not None else (lambda: model)
     history, best, started, total = [], -1e9, time.time(), 0.0
     if args.warm:
         row = {"step": 0, **evaluate(model, device, public, synth_val, real=real)}
@@ -413,9 +420,11 @@ def main():
         scaler.step(opt)
         scaler.update()
         sched.step()
+        if ema is not None:
+            ema.update_parameters(model)
         total += loss.item()
         if step % args.eval_every == 0 or step == args.steps:
-            report = evaluate(model, device, public, synth_val, real=real)
+            report = evaluate(scored(), device, public, synth_val, real=real)
             cut, best_here = max(report.items(), key=lambda kv: kv[1]["score"])
             row = {"step": step, "loss": total / args.eval_every, "minutes": round((time.time() - started) / 60, 1), "bestCut": cut, **report}
             total = 0.0
@@ -424,7 +433,7 @@ def main():
             (args.out / "history.json").write_text(json.dumps(history, indent=1), encoding="utf-8")
             if best_here["score"] > best:
                 best = best_here["score"]
-                torch.save(model.state_dict(), args.out / "best.pt")
+                torch.save(scored().state_dict(), args.out / "best.pt")
                 (args.out / "best.json").write_text(json.dumps({"step": step, "cut": float(cut), **best_here}, indent=1), encoding="utf-8")
     model.load_state_dict(torch.load(args.out / "best.pt", map_location=device, weights_only=True))
     export(model, args.out / "model.onnx")

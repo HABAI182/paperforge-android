@@ -35,7 +35,7 @@ def stored(root, count):
 
 def build(job, hard, limit):
     images, masks = Sink(), Sink()
-    rs.chunk(job, start_hard=hard, limit=limit, images=images, masks=masks)
+    rs.chunk(job[:8] + (hard, job[8] if len(job) > 8 else False), limit=limit, images=images, masks=masks)
     return images, masks
 
 
@@ -70,12 +70,14 @@ def main():
     ap.add_argument("--coco", type=Path, required=True)
     ap.add_argument("--verify", type=int, default=6)
     ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--crossers", action="store_true", help="the set was generated with --crossers")
     args = ap.parse_args()
     meta = json.loads((args.root / "scenes.json").read_text(encoding="utf-8"))
     count, seed = meta["count"], meta["seed"]
     cases = args.cases or rs.CASES
     paths = [r["texture"] for r in json.loads((args.textures / "manifest.json").read_text(encoding="utf-8"))["records"]]
-    jobs = [(str(args.root), count, i, min(i + 100, count), seed, paths, str(args.coco), cases) for i in range(0, count, 100)]
+    jobs = [(str(args.root), count, i, min(i + 100, count), seed, paths, str(args.coco), cases, args.crossers)
+            for i in range(0, count, 100)]
     table, unmatched, ambiguous = {}, [], []
     with concurrent.futures.ProcessPoolExecutor(max_workers=args.workers) as pool:
         for first, found in pool.map(identify, jobs):
@@ -94,7 +96,8 @@ def main():
         "startHard": {str(k): v for k, v in sorted(table.items())}, "unmatchedChunks": unmatched, "chunksIdenticalUnderSeveralStarts": ambiguous,
         "verifiedWholeChunks": [{"first": f, "identical": bool(v)} for f, v in checks],
         "rebuild": f"realistic_scenes.py --textures <public-textures> --coco <val2017> --out <dir> --count {count} --seed {seed}"
-                   + (f" --cases {' '.join(cases)}" if args.cases else "") + " --regen-table regen_table.json",
+                   + (f" --cases {' '.join(cases)}" if args.cases else "") + (" --crossers" if args.crossers else "")
+                   + " --regen-table regen_table.json",
         "exact": ok,
     }
     (args.root / "regen_table.json").write_text(json.dumps(record, indent=1), encoding="utf-8")

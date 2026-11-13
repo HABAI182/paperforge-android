@@ -10,6 +10,8 @@ Adds, on top of page_scenes' geometry, lighting and camera model:
 - neighbouring pages beside the top sheet (an open booklet's facing page, the next sheet on the desk) that run
   out of the frame, joined to it by a gutter or a slight overlap;
 - a sheet lying on a larger flat object (cardboard box, concrete slab, laptop, board, book, bigger sheet);
+- a book cover over a thick page block (book-block): layered page edges, 3-18 px at render scale, toward one
+  corner, in the cover's shadow; the label is the cover alone, as the owner's cover photos are annotated;
 - a cluttered pale desk (mouse, mug, fruit, magazine) with cables, pens and highlighters lying across the page,
   sometimes on a few other sheets. Crossing objects split the page in the image, never in the label: the label
   is the whole page, as real annotations are.
@@ -281,13 +283,13 @@ def compositor(rng, photos, pool, textures):
         scene = np.full((R, R, 3), tone, np.float32) + np.random.default_rng(rng.getrandbits(32)).normal(0, 2, (R, R, 3))
     else:
         scenes.distractors(scene, rng)
-    if case == "book":
+    if case in ("book", "book-block"):
         top = scenes.cover(rng, rng.randint(440, 640), rng.randint(320, 460))
     elif case in ("white-stack", "white-desk"):
         top = rng.choice(textures) if (textures and rng.random() < 0.5) else white_paper((rng.randint(460, 700), rng.randint(320, 500), 3), rng)
     else:
         top = rng.choice(pool)
-    if case != "book" and rng.random() < 0.5:
+    if case not in ("book", "book-block") and rng.random() < 0.5:
         top = fold(top, rng)
     area = rng.choice([rng.uniform(0.15, 0.5), rng.uniform(0.3, 0.85), rng.uniform(0.45, 0.9)])
     if case == "small-clutter":
@@ -298,6 +300,8 @@ def compositor(rng, photos, pool, textures):
         area = rng.uniform(0.05, 0.35)
     elif case == "cluttered-desk":
         area = rng.uniform(0.06, 0.35)
+    elif case == "book-block":
+        area = rng.uniform(0.25, 0.85)
     quad = scenes.place(rng, top.shape, area)
     sheet, alpha, pad = bend(top, rng)
     if case == "white-stack":
@@ -339,6 +343,24 @@ def compositor(rng, photos, pool, textures):
         cream = np.float32([rng.randint(200, 235), rng.randint(215, 240), rng.randint(225, 248)])
         scene[:] = scene * (1 - block[..., None]) + cream * block[..., None]
         a, _ = scenes.paste(scene, sheet, alpha, pad, quad, rng)
+    elif case == "book-block":
+        if rng.random() < 0.5:  # lying on notes or another book
+            notes = rng.choice(pool)
+            n, na, _ = bend(notes, rng)
+            centre = quad.mean(0)
+            grown = centre + (quad - centre) * rng.uniform(1.15, 1.8) + np.float32([rng.gauss(0, 30), rng.gauss(0, 30)])
+            scenes.paste(scene, cv2.resize(n, (sheet.shape[1], sheet.shape[0])), cv2.resize(na, (sheet.shape[1], sheet.shape[0])), pad, grown, rng)
+        corner = quad[rng.randrange(4)] - quad.mean(0)
+        direction = corner / max(1.0, float(np.linalg.norm(corner)))
+        direction = direction + np.float32([rng.gauss(0, 0.2), rng.gauss(0, 0.2)])
+        thick = rng.uniform(3, 18)
+        cream = np.float32([rng.randint(195, 235), rng.randint(210, 240), rng.randint(220, 248)])
+        layers = max(2, int(thick / 1.5))
+        for k, t in enumerate(np.linspace(thick, 0.5, layers)):  # far pages first: striped page edges
+            block = scenes.paste(np.zeros_like(scene), np.full_like(sheet, 1), alpha, pad, np.float32(quad + direction * t), rng, shadow=False)[0]
+            tone = cream * (rng.uniform(0.86, 0.95) if k % 2 else rng.uniform(0.96, 1.02))
+            scene[:] = scene * (1 - block[..., None]) + tone * block[..., None]
+        a, _ = scenes.paste(scene, sheet, alpha, pad, quad, rng, shadow=rng.random() < 0.7)
     elif case == "small-clutter":
         if rng.random() < 0.6:
             edge_paper(scene, rng, pool)
