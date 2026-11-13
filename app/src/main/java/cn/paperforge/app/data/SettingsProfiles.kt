@@ -229,7 +229,7 @@ class SettingsProfiles(context: Context) {
                         name,
                         JSONObject(
                             mapOf(
-                                "detector" to "HYBRID",
+                                "detector" to "PAGENET_V2",
                                 "filter" to "AUTO",
                                 "scanAspect" to 0f,
                                 "captureTimer" to 0f,

@@ -34,7 +34,10 @@ sealed class SettingKey<T : Any>(val name: String, val default: T) {
 
 object SettingKeys {
     val Detector =
-        SettingKey.Text("detector", "HYBRID", setOf("HYBRID", "STANDARD", "INDEPENDENT", "PAGENET_V2"))
+        // MobileNetV3 x1.5 (PAGENET_V2) is the default in this experimental build: on the held-out SmartDoc and
+        // public photos it removed nearly all severe crop failures (89 -> 2, 15 -> 4) with the full crop pipeline;
+        // see docs/development/DETECTION-NEXT-2026-11-13.md. PageNet stays selectable as HYBRID.
+        SettingKey.Text("detector", "PAGENET_V2", setOf("HYBRID", "STANDARD", "INDEPENDENT", "PAGENET_V2"))
     val OutlineWeight = SettingKey.Number("outlineWeight", 3f, 1f..8f)
     val OutlineSwitchFrames = SettingKey.Number("outlineSwitchFrames", 2f, 1f..6f)
     val DewarpStrength = SettingKey.Number("dewarpStrength", 1f, 0f..1f)
