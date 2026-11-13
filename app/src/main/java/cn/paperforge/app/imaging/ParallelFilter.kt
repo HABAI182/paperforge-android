@@ -90,6 +90,23 @@ internal object ParallelFilter {
         }
     }
 
+    /**
+     * [count] independent jobs on the filter threads, results in order; for a few coarse jobs that each do much
+     * work (the bands of a page). One at a time on the caller with `parallelLoops` 0, one thread, or when
+     * called from a filter thread.
+     */
+    fun <T> tasks(count: Int, body: (Int) -> T): List<T> {
+        if (count <= 1 || threads <= 1 || ScanConfig.int("parallelLoops", 1) == 0 ||
+            Thread.currentThread().name == "paperforge-filter"
+        ) return List(count) { body(it) }
+        val jobs = (0 until count).map { k -> pool.submit<T> { body(k) } }
+        return try {
+            jobs.map { it.get() }
+        } catch (e: ExecutionException) {
+            throw e.cause ?: e
+        }
+    }
+
     /** GaussianBlur with a computed kernel size, as `Size(0.0, 0.0)` gives. */
     fun gaussian(source: Mat, destination: Mat, sigmaX: Double, sigmaY: Double = 0.0) {
         val reach = ceil(4 * max(sigmaX, sigmaY)).toInt() + 2
