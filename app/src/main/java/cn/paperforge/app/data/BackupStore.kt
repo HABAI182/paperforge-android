@@ -76,7 +76,10 @@ object BackupStore {
         val tasks: List<LocalTaskRow>,
     )
 
-    suspend fun backup(repo: Repository, output: File) {
+    /** [missing] counts files the library still listed but that were no longer on disk. */
+    data class BackupResult(val missing: Int)
+
+    suspend fun backup(repo: Repository, output: File): BackupResult {
         val (documents, pages, history, outputs, tasks) =
             repo.database.withTransaction {
                 Snapshot(
@@ -107,6 +110,10 @@ object BackupStore {
                         )
                     })
                 .distinct()
+        // A recorded file can vanish outside the app (e.g. an old export deleted from storage).
+        // Skip it instead of failing the whole backup, and list its archive name so restore
+        // knows the entry is absent on purpose rather than a damaged archive.
+        val missing = paths.filterNot { File(it).isFile }.toSet()
         val mapping =
             (paths.associateWith {
                 "files/${UUID.randomUUID()}.${File(it).extension.ifBlank { "bin" }}"
@@ -128,6 +135,7 @@ object BackupStore {
         val metadata =
             JSONObject()
                 .put("format", 3)
+                .put("missing", JSONArray(missing.map(mapping::getValue)))
                 .put(
                     "documentOrigins",
                     JSONObject().apply {
@@ -266,7 +274,7 @@ object BackupStore {
                     "paperforge.json",
                     JSONObject().put("bytes", metadataBytes.size).put("sha256", sha(metadataBytes)),
                 )
-                paths.forEach { path ->
+                (paths - missing).forEach { path ->
                     coroutineContext.ensureActive()
                     zip.putNextEntry(ZipEntry(mapping.getValue(path)))
                     val digest = java.security.MessageDigest.getInstance("SHA-256")
@@ -288,6 +296,7 @@ object BackupStore {
         } finally {
             temporary.delete()
         }
+        return BackupResult(missing.size)
     }
 
     suspend fun restore(
@@ -416,6 +425,13 @@ object BackupStore {
                         }
                         .distinct()
                         .associateWith { UUID.randomUUID().toString() }
+                // Entries the backup skipped because the file was already gone from the library.
+                val missing =
+                    metadata
+                        .optJSONArray("missing")
+                        ?.let { array -> (0 until array.length()).map { array.getString(it) } }
+                        .orEmpty()
+                        .toSet()
                 val files = mutableMapOf<Pair<String, String>, String>()
                 fun copy(entry: String, docId: String): String =
                     files.getOrPut(entry to docId) {
@@ -426,12 +442,14 @@ object BackupStore {
                         ) {
                             "备份路径不合法"
                         }
-                        val source = zip.getEntry(entry) ?: error("备份缺少文件")
                         val target =
                             File(
                                 if (docId.isEmpty()) repo.exports else repo.folder(docId),
                                 "${UUID.randomUUID()}.${File(entry).extension}",
                             )
+                        // Keep the reference as dangling as it was in the backed-up library.
+                        if (entry in missing) return@getOrPut target.path
+                        val source = zip.getEntry(entry) ?: error("备份缺少文件")
                         created.add(target)
                         val digest = java.security.MessageDigest.getInstance("SHA-256")
                         val copied =
@@ -511,9 +529,9 @@ object BackupStore {
                         resources.optJSONArray(doc.id)?.let { array ->
                             val id = ids.getValue(doc.id)
                             val entries =
-                                DocumentResources.decode(array).map {
-                                    it.copy(path = copy(it.path, id))
-                                }
+                                DocumentResources.decode(array)
+                                    .filterNot { it.path in missing }
+                                    .map { it.copy(path = copy(it.path, id)) }
                             created.add(DocumentResources.write(repo, id, entries))
                         }
                     }
@@ -566,7 +584,8 @@ object BackupStore {
                                     .map { OutputRow.decode(array.getJSONObject(it)) }
                                     .filterNot {
                                         it.sourceDocumentId in skipped ||
-                                            it.outputDocumentId in skipped
+                                            it.outputDocumentId in skipped ||
+                                            it.path in missing
                                     }
                                     .map { old ->
                                         val outputId = old.outputDocumentId?.let(ids::get)

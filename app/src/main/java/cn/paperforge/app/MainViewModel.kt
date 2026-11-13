@@ -3342,9 +3342,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             textConversionSave?.join()
             assembly.flush()
             val file = File(repo.exports, "PaperForge-backup-${System.currentTimeMillis()}.zip")
-            BackupStore.backup(repo, file)
+            val result = BackupStore.backup(repo, file)
             outputLocked.value = false
             output.value = file
+            if (result.missing > 0)
+                messages.send("备份已完成，已跳过 ${result.missing} 个已不存在的文件")
         }
 
     fun exportPreferences() =
