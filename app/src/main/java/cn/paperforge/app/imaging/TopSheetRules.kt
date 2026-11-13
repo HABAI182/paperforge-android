@@ -181,7 +181,44 @@ object TopSheetRules {
             for (x in (.4 * w).toInt() until (.6 * w).toInt()) sum += values[y * w + x].toInt() and 255
             if (sum.toDouble() / (.2 * w) > tau) rows++
         }
-        return if (rows >= ScanConfig.int("ruleEndsMinimumRows", 8)) tau else null
+        if (rows < ScanConfig.int("ruleEndsMinimumRows", 8)) return null
+        return if (ruled(values, w, h, tau)) tau else null
+    }
+
+    /**
+     * Ruling, not print. Rows of printed text also leave horizontal energy in the middle of the page, and on receipts
+     * the step read them as notebook rules and cut the receipt down to a block of its text (12 of the 50 crops under
+     * 0.8 IoU of the MobileNetV3 engine on the held-out photos). A ruled sheet's lines run across most of the page,
+     * at an even spacing; a text row is broken by the gaps between characters and words. So at least
+     * `ruleEndsMinimumLines` lines must each have rule energy over `ruleEndsLineCoverage` of the page's inner
+     * width, with gaps whose median absolute deviation is at most `ruleEndsSpacingSpread` of their median.
+     */
+    private fun ruled(values: ByteArray, w: Int, h: Int, tau: Double): Boolean {
+        if (ScanConfig.int("ruleEndsLongLines", 1) == 0) return true
+        val coverageNeeded = ScanConfig.float("ruleEndsLineCoverage", .6f)
+        val from = (.1 * w).toInt()
+        val to = (.9 * w).toInt()
+        val long = BooleanArray(h) { y ->
+            var hit = 0
+            for (x in from until to) if ((values[y * w + x].toInt() and 255) > tau) hit++
+            hit >= coverageNeeded * (to - from)
+        }
+        // Adjacent long rows are one line's thickness: each line is the middle of its run of rows.
+        val lines = ArrayList<Double>()
+        var start = -1
+        for (y in 0..h) {
+            val on = y < h && long[y]
+            if (on && start < 0) start = y
+            if (!on && start >= 0) {
+                lines += (start + y - 1) / 2.0
+                start = -1
+            }
+        }
+        if (lines.size < ScanConfig.int("ruleEndsMinimumLines", 6)) return false
+        val gaps = lines.zipWithNext { a, b -> b - a }.sorted()
+        val median = gaps[gaps.size / 2]
+        val spread = gaps.map { abs(it - median) }.sorted()[gaps.size / 2]
+        return spread <= ScanConfig.float("ruleEndsSpacingSpread", .25f) * median
     }
 
     /** Prefix sums per row (mirrored for the right side), so a window mean costs two lookups. */
