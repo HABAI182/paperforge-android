@@ -527,6 +527,13 @@ object PageNetDetector {
                 method += "+" + TopSheetRules.VERSION
             }
         }
+        // An open notebook or book with the facing page cut off by the frame: the crop keeps the whole page only.
+        if (!preview) {
+            NeighborPage.refine(source, quad)?.let {
+                quad = it
+                method += "+" + NeighborPage.VERSION
+            }
+        }
         return DetectionResult(
             quad,
             confidence.coerceIn(0f, .999f),
