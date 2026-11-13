@@ -53,6 +53,8 @@ object CaptureTasks {
     ): LocalTaskRow =
         withContext(Dispatchers.IO) {
             repo.database.withTransaction {
+                // A new scan becomes a library document with its first capture, in this transaction.
+                repo.ensureDocument(documentId)
                 val doc = repo.dao.document(documentId) ?: error("来源文档已移除")
                 val pages = repo.dao.pages(documentId)
                 val existing = pages.firstOrNull { it.id == target }

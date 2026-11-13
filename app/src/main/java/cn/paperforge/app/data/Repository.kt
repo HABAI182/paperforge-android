@@ -21,13 +21,39 @@ class Repository(val context: Context, val database: PaperDatabase) {
     private val root = File(context.filesDir, "documents").apply { mkdirs() }
     val exports = File(context.filesDir, "exports").apply { mkdirs() }
 
-    suspend fun newScan(): DocumentRow =
+    /** A new scan written to the library at once, for callers that fill it straight away. */
+    suspend fun newScan(): DocumentRow = scanRow().also { dao.putDocument(it) }
+
+    private fun scanRow() =
         DocumentRow(
-                UUID.randomUUID().toString(),
-                "PaperForge ${java.text.SimpleDateFormat("MM-dd-yyyy HH.mm",java.util.Locale.ROOT).format(java.util.Date())}",
-                lastOpened = System.currentTimeMillis(),
-            )
-            .also { dao.putDocument(it) }
+            UUID.randomUUID().toString(),
+            "PaperForge ${java.text.SimpleDateFormat("MM-dd-yyyy HH.mm",java.util.Locale.ROOT).format(java.util.Date())}",
+            lastOpened = System.currentTimeMillis(),
+        )
+
+    /**
+     * New scans the camera or a gallery import opened but that have nothing saved in them yet. Opening the
+     * scanner and leaving without a photo used to leave an empty "0 页" document in the library; now the row
+     * is only written by [ensureDocument], in the same transaction as the first capture task or page.
+     * Kept in memory only: a scan that never got a page does not survive the process, which is the point.
+     */
+    private val pendingScans = java.util.concurrent.ConcurrentHashMap<String, DocumentRow>()
+
+    /** A new scan that is not in the library until something is saved into it. See [pendingScans]. */
+    fun draftScan(): DocumentRow = scanRow().also { pendingScans[it.id] = it }
+
+    /** True for a scan opened with [draftScan], whose row is written by [ensureDocument]. */
+    fun isPendingScan(id: String) = pendingScans.containsKey(id)
+
+    /**
+     * Writes the draft scan [id] to the library if it is not there yet; a no-op for any other document. Called
+     * inside the transaction that saves the scan's first capture or page, so a rolled-back save writes nothing.
+     */
+    suspend fun ensureDocument(id: String) {
+        val pending = pendingScans[id] ?: return
+        if (dao.document(id) == null) dao.putDocument(pending.copy(lastOpened = System.currentTimeMillis()))
+        else pendingScans.remove(id)
+    }
 
     fun folder(id: String) = File(root, id).apply { mkdirs() }
 
@@ -59,6 +85,7 @@ class Repository(val context: Context, val database: PaperDatabase) {
                         cn.paperforge.app.imaging.CaptureMetadata.encode(reference, detection),
                 )
             database.withTransaction {
+                ensureDocument(id)
                 val position =
                     maxOf(
                         dao.pages(id).maxOfOrNull { it.position } ?: -1,
@@ -94,6 +121,7 @@ class Repository(val context: Context, val database: PaperDatabase) {
                         // These are already rendered app pages: preserve framing and avoid a
                         // second detector/filter pass when reusing them as conversion inputs.
                         database.withTransaction {
+                            ensureDocument(id)
                             val position =
                                 maxOf(
                                     dao.pages(id).maxOfOrNull { it.position } ?: -1,
@@ -117,6 +145,8 @@ class Repository(val context: Context, val database: PaperDatabase) {
                     }
                 } catch (e: Exception) {
                     file.delete()
+                    // A draft scan that this import never saved anything into leaves no empty folder either.
+                    if (isPendingScan(id) && dao.document(id) == null) File(root, id).delete()
                     throw e
                 }
             }

@@ -539,7 +539,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun newScan(camera: Boolean = true) =
         perform("正在建立草稿") {
-            val doc = repo.newScan()
+            // From the camera, the scan joins the library with its first capture (see Repository.draftScan);
+            // an empty document opened straight in the editor is saved at once, as before.
+            val doc = if (camera) repo.draftScan() else repo.newScan()
             selected.value = doc
             screen.value = if (camera) "capture" else "editor"
         }
@@ -595,7 +597,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             val doc =
                 selected.value?.takeIf {
                     it.kind == "scan" && screen.value in listOf("editor", "capture")
-                } ?: repo.newScan()
+                } ?: repo.draftScan()
             selected.value = doc
             repo.importImages(doc.id, uris)
             screen.value = "editor"
