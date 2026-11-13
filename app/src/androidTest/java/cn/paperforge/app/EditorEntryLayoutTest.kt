@@ -21,8 +21,9 @@ import org.junit.runner.RunWith
  * never raw touch injection, so it is not blocked by the local AVD touch-injection issue recorded in
  * docs/development/HANDOFF-2026-10-31.md.
  *
- * Covered: persistent thumbnail strip, the six bottom primary actions, the grouped「更多」sheet with
- * a working rotation item, and the new in-editor receipt entry (no cached OCR → guidance dialog).
+ * Covered: persistent thumbnail strip, the six bottom primary actions (since 2.0.0: 加页, 裁剪旋转, 滤镜,
+ * 此页重拍, 导出 PDF, 更多), the grouped「更多」sheet (categories first, then items) with a working
+ * rotation item, the in-editor receipt entry, delete with confirmation and undo, and both add-page entries.
  */
 @RunWith(AndroidJUnit4::class)
 class EditorEntryLayoutTest {
@@ -74,7 +75,7 @@ class EditorEntryLayoutTest {
             }
 
             // 2) The six bottom primary actions are all reachable.
-            listOf("加页", "裁剪", "滤镜", "识字", "删除", "更多").forEach { label ->
+            listOf("加页", "裁剪旋转", "滤镜", "此页重拍", "导出 PDF", "更多").forEach { label ->
                 compose.onNodeWithContentDescription(label).assertIsDisplayed()
             }
             capture("issue31-editor-default.png")
@@ -95,54 +96,39 @@ class EditorEntryLayoutTest {
             }
             compose.onNodeWithTag("thumbnail-strip").assertIsDisplayed()
 
-            // 3) The grouped「更多」sheet opens and its rotation item works.
-            compose.onNodeWithContentDescription("更多").performClick()
-            compose.waitForIdle()
-            compose.onNodeWithText("识别与文字").assertIsDisplayed()
-            compose.onNodeWithText("页面与结构").performScrollTo().assertIsDisplayed()
-            capture("issue31-more-menu.png")
+            // 3) The grouped「更多」sheet opens on its categories; 页面编排 holds the rotation item.
+            openMoreGroup("页面编排", screenshot = "issue31-more-menu.png")
             compose.onNodeWithText("顺时针旋转 90°").performScrollTo().performClick()
             compose.waitUntil(20000) {
                 !model.busy.value && model.pages.value.firstOrNull()?.rotation == 90
             }
             assertEquals(90, model.pages.value.first().rotation)
 
-            // 4) The receipt entry opens from the editor; no cached OCR → guidance, no crash.
-            compose.onNodeWithContentDescription("更多").performClick()
-            compose.waitForIdle()
-            compose
-                .onNodeWithText("票据信息（OCR 字段核对／CSV、XLSX）")
-                .performScrollTo()
-                .performClick()
-            compose.waitForIdle()
-            compose.waitUntil(30000) {
-                compose
-                    .onAllNodesWithText(
-                        "这份文档还没有可用的离线 OCR 文字，无法抽取票据字段。请先识别文字后再试。"
-                    )
-                    .fetchSemanticsNodes()
-                    .isNotEmpty()
+            // 4) The receipt entry opens from the editor and closes again. It now recognises missing text
+            // offline, then shows the field review or a retry / manual-entry message; both are「票据信息」.
+            openMoreGroup("导出与票据")
+            compose.onNodeWithText("票据信息核对").performScrollTo().performClick()
+            compose.waitUntil(30000) { compose.onAllNodesWithText("票据信息").fetchSemanticsNodes().isNotEmpty() }
+            compose.waitUntil(120000) {
+                runCatching { compose.onNodeWithText("取消").assertIsEnabled() }.isSuccess
             }
-            compose.onNodeWithText("知道了").performClick()
-            compose.waitForIdle()
+            compose.onNodeWithText("取消").performClick()
+            compose.waitUntil(10000) { compose.onAllNodesWithText("票据信息").fetchSemanticsNodes().isEmpty() }
 
-            // 5) Delete keeps its second confirmation, and the top-bar undo restores the page.
-            compose.onNodeWithContentDescription("删除").performClick()
+            // 5) Delete (更多 · 页面编排 since 2.0.0) keeps its confirmation; the top-bar undo restores the page.
+            openMoreGroup("页面编排")
+            compose.onNodeWithText("删除本页").performScrollTo().performClick()
             compose.onNodeWithText("删除这一页？").assertIsDisplayed()
             compose.onNodeWithText("删除").performClick()
             compose.waitUntil(20000) { !model.busy.value && model.pages.value.size == 1 }
             compose.onNodeWithContentDescription("撤销").performClick()
             compose.waitUntil(20000) { !model.busy.value && model.pages.value.size == 2 }
 
-            // 6) Second add-page entry: 更多 → 添加页面… opens the same sheet.
-            compose.onNodeWithContentDescription("更多").performClick()
-            compose.waitForIdle()
-            compose
-                .onNodeWithText("添加页面…（拍摄／导入／重拍／复制）")
-                .performScrollTo()
-                .performClick()
+            // 6) Second add-page entry: 更多 · 页面编排 · 添加页面 opens the same sheet.
+            openMoreGroup("页面编排")
+            compose.onNodeWithText("添加页面").performScrollTo().performClick()
             compose.waitUntil(10000) {
-                compose.onAllNodesWithText("添加页面").fetchSemanticsNodes().isNotEmpty()
+                compose.onAllNodesWithText("导入图片（可多选）").fetchSemanticsNodes().isNotEmpty()
             }
             compose.onNodeWithText("导入图片（可多选）").assertIsDisplayed()
             compose.onNodeWithText("取消").performClick()
@@ -153,6 +139,17 @@ class EditorEntryLayoutTest {
             compose.runOnIdle { model.screen.value = "home" }
             runBlocking { repo.deleteDocument(doc) }
         }
+    }
+
+    /** Opens「更多」, checks it starts on its categories, and opens [group]. */
+    private fun openMoreGroup(group: String, screenshot: String? = null) {
+        compose.onNodeWithContentDescription("更多").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("识别与文字").assertIsDisplayed()
+        compose.onNodeWithText(group).performScrollTo().assertIsDisplayed()
+        screenshot?.let { capture(it) }
+        compose.onNodeWithText(group).performScrollTo().performClick()
+        compose.waitForIdle()
     }
 
     private fun capture(name: String) {

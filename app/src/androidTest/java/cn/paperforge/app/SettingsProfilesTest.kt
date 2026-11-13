@@ -47,8 +47,10 @@ class SettingsProfilesTest {
             profiles.defaults(setOf("scan"))
             assertEquals("DARK", UserSettings.string("theme", "SYSTEM"))
             assertEquals(64f, UserSettings.number("quality", 0f), .001f)
-            assertEquals("AUTO", UserSettings.string("filter", "NONE"))
-            assertEquals(0f, UserSettings.number("scanAspect", -1f), .001f)
+            // Restoring the scan group's defaults returns each key to its declared default (the filter
+            // default became WORKBOOK with the workbook preset).
+            assertEquals(SettingKeys.Filter.default, UserSettings.string("filter", "NONE"))
+            assertEquals(SettingKeys.ScanAspect.default, UserSettings.number("scanAspect", -1f), .001f)
             val old =
                 JSONObject()
                     .put("format", 1)
