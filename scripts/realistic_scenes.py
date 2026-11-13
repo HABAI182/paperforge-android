@@ -9,7 +9,10 @@ Adds, on top of page_scenes' geometry, lighting and camera model:
 - small sheets on busy patterned surfaces (fabric, clutter), with paper cut off at the frame edge as a non-target;
 - neighbouring pages beside the top sheet (an open booklet's facing page, the next sheet on the desk) that run
   out of the frame, joined to it by a gutter or a slight overlap;
-- a sheet lying on a larger flat object (cardboard box, concrete slab, laptop, board, book, bigger sheet).
+- a sheet lying on a larger flat object (cardboard box, concrete slab, laptop, board, book, bigger sheet);
+- a cluttered pale desk (mouse, mug, fruit, magazine) with cables, pens and highlighters lying across the page,
+  sometimes on a few other sheets. Crossing objects split the page in the image, never in the label: the label
+  is the whole page, as real annotations are.
 The label is always the top sheet's own mask. Page textures are Codex's audited public-training textures
 (Mendeley x3nm4cxr83, CC BY 4.0; held-out groups and owner photos excluded) and procedural sheets;
 backgrounds are COCO photographs, never redistributed.
@@ -203,13 +206,77 @@ def support(rng, pool, h, w):
     return np.clip(out, 0, 255).astype(np.uint8)
 
 
+def crossers(scene, rng, quad, count=None):
+    """Long thin objects lying across the sheet: cables (smooth dark curves with a soft shadow) and pens or
+    highlighters. They break the page into pieces in the image; the label stays the whole page."""
+    centre = quad.mean(0)
+    size = float(np.linalg.norm(quad[2] - quad[0]))
+    for _ in range(count if count is not None else rng.choice([1, 1, 2, 3])):
+        if rng.random() < 0.55:  # cable: a smooth curve through the page, often running off the frame
+            ang = rng.uniform(0, math.pi)
+            d = np.float32([math.cos(ang), math.sin(ang)])
+            n = np.float32([-d[1], d[0]])
+            through = centre + n * rng.uniform(-0.35, 0.35) * size
+            bend = rng.uniform(-0.25, 0.25) * size
+            pts = np.int32([through + d * t * size * rng.uniform(0.95, 1.05) + n * bend * (1 - t * t)
+                            for t in np.linspace(-1.2, 1.2, 40)])
+            width = rng.randint(3, 9)
+            colour = rng.choice([(25, 25, 28), (40, 40, 45), (210, 210, 215), (60, 60, 70)])
+            shade = np.zeros(scene.shape[:2], np.float32)
+            cv2.polylines(shade, [pts + np.int32([rng.randint(1, 4), rng.randint(2, 6)])], False, 1.0, width + 2, cv2.LINE_AA)
+            scene *= 1 - cv2.GaussianBlur(shade, (0, 0), 2.5)[..., None] * rng.uniform(0.15, 0.35)
+            cv2.polylines(scene, [pts], False, colour, width, cv2.LINE_AA)
+        else:  # pen, marker or highlighter lying across the page
+            ang = rng.uniform(0, math.pi)
+            d = np.float32([math.cos(ang), math.sin(ang)])
+            start = centre + np.float32([rng.uniform(-0.3, 0.3), rng.uniform(-0.3, 0.3)]) * size - d * rng.uniform(0.1, 0.3) * size
+            end = start + d * rng.uniform(0.2, 0.45) * size
+            width = rng.randint(6, 16)
+            body = rng.choice([(40, 40, 45), (230, 232, 235), (60, 220, 230), (60, 200, 120), (40, 120, 230),
+                               tuple(float(rng.randint(30, 230)) for _ in range(3))])
+            p0, p1 = tuple(int(v) for v in start), tuple(int(v) for v in end)
+            cv2.line(scene, tuple(int(v) for v in start + np.float32([2, 4])), tuple(int(v) for v in end + np.float32([2, 4])),
+                     (90, 90, 90), width + 2, cv2.LINE_AA)
+            cv2.line(scene, p0, p1, body, width, cv2.LINE_AA)
+            cv2.line(scene, p0, p1, tuple(min(255.0, c * 1.25 + 30) for c in body), max(1, width // 4), cv2.LINE_AA)
+            cap = end + d * rng.uniform(0.04, 0.1) * size
+            cv2.line(scene, p1, tuple(int(v) for v in cap), tuple(c * 0.6 for c in body), width + 2, cv2.LINE_AA)
+
+
+def desk_objects(scene, rng, quad):
+    """Mouse, mug, fruit and a magazine around (rarely touching) the sheet on a pale desk."""
+    size = float(np.linalg.norm(quad[2] - quad[0]))
+    for _ in range(rng.randint(1, 4)):
+        kind = rng.choice(["mouse", "mug", "fruit", "magazine"])
+        c = (rng.uniform(0, R), rng.uniform(0, R))
+        if kind == "magazine":
+            w, h = size * rng.uniform(0.4, 0.7), size * rng.uniform(0.5, 0.9)
+            box = cv2.boxPoints(((c[0], c[1]), (w, h), rng.uniform(0, 90)))
+            cv2.fillPoly(scene, [np.int32(box)], tuple(float(rng.randint(20, 200)) for _ in range(3)), cv2.LINE_AA)
+            for _ in range(rng.randint(2, 6)):  # cover print
+                spot = box.mean(0) + np.float32([rng.gauss(0, w / 4), rng.gauss(0, h / 4)])
+                cv2.circle(scene, tuple(int(v) for v in spot), rng.randint(4, 20),
+                           tuple(float(rng.randint(0, 255)) for _ in range(3)), -1, cv2.LINE_AA)
+        elif kind == "mug":
+            r = int(size * rng.uniform(0.1, 0.18))
+            cv2.circle(scene, (int(c[0]) + 4, int(c[1]) + 6), r, (150, 150, 150), -1, cv2.LINE_AA)
+            cv2.circle(scene, (int(c[0]), int(c[1])), r, (235, 235, 238), -1, cv2.LINE_AA)
+            cv2.circle(scene, (int(c[0]), int(c[1])), int(r * 0.8), (60, 70, 80), -1, cv2.LINE_AA)
+        elif kind == "fruit":
+            cv2.circle(scene, (int(c[0]), int(c[1])), int(size * rng.uniform(0.04, 0.08)), (30, 110, 230), -1, cv2.LINE_AA)
+        else:
+            axes = (int(size * rng.uniform(0.06, 0.09)), int(size * rng.uniform(0.1, 0.14)))
+            cv2.ellipse(scene, (int(c[0]), int(c[1])), axes, rng.uniform(0, 180), 0, 360, (30, 30, 35), -1, cv2.LINE_AA)
+
+
 CASES = ["white-stack", "white-stack", "notebooks", "book", "plain-fold", "white-desk"]
+CROSSERS = False  # crossing objects on other cases; off for sets made before 2026-11-13 (keeps their rebuild exact)
 
 
 def compositor(rng, photos, pool, textures):
     case = rng.choice(CASES)
     scene = busy(rng, photos) if (case == "small-clutter" and rng.random() < 0.6) else scenes.background(rng, photos)
-    if case == "white-desk" or (case == "white-stack" and rng.random() < 0.4):
+    if case in ("white-desk", "cluttered-desk") or (case == "white-stack" and rng.random() < 0.4):
         tone = rng.randint(200, 248)
         scene = np.full((R, R, 3), tone, np.float32) + np.random.default_rng(rng.getrandbits(32)).normal(0, 2, (R, R, 3))
     else:
@@ -229,6 +296,8 @@ def compositor(rng, photos, pool, textures):
         area = rng.uniform(0.35, 0.8)
     elif case == "on-object":
         area = rng.uniform(0.05, 0.35)
+    elif case == "cluttered-desk":
+        area = rng.uniform(0.06, 0.35)
     quad = scenes.place(rng, top.shape, area)
     sheet, alpha, pad = bend(top, rng)
     if case == "white-stack":
@@ -274,6 +343,20 @@ def compositor(rng, photos, pool, textures):
         if rng.random() < 0.6:
             edge_paper(scene, rng, pool)
         a, _ = scenes.paste(scene, sheet, alpha, pad, quad, rng, shadow=rng.random() < 0.5)
+    elif case == "cluttered-desk":
+        if rng.random() < 0.5:  # a few loose sheets under the page, offset like a casual pile
+            for _ in range(rng.randint(1, 3)):
+                u, ua, _ = bend(white_paper(top.shape, rng), rng)
+                ang = math.radians(rng.uniform(-12, 12))
+                rot = np.float32([[math.cos(ang), -math.sin(ang)], [math.sin(ang), math.cos(ang)]])
+                c = quad.mean(0)
+                placed = (quad - c) @ rot.T + c + np.float32([rng.gauss(0, 12), rng.gauss(0, 12)])
+                scenes.paste(scene, cv2.resize(u, (sheet.shape[1], sheet.shape[0])), cv2.resize(ua, (sheet.shape[1], sheet.shape[0])),
+                             pad, placed, rng, shadow=rng.random() < 0.4)
+        desk_objects(scene, rng, quad)
+        a, _ = scenes.paste(scene, sheet, alpha, pad, quad, rng, shadow=rng.random() < 0.5)
+        subtle_edge(scene, a, rng)
+        crossers(scene, rng, quad)
     elif case == "on-object":
         grow = rng.uniform(1.3, 2.4)
         centre = quad.mean(0)
@@ -310,6 +393,8 @@ def compositor(rng, photos, pool, textures):
         if case == "white-desk":
             subtle_edge(scene, a, rng)
     scenes.pens(scene, rng, quad)
+    if case != "cluttered-desk" and CROSSERS and rng.random() < 0.25:
+        crossers(scene, rng, quad, count=rng.choice([1, 1, 2]))
     scenes.fingers(scene, rng, quad)
     scenes.lighting(scene, rng)
     if rng.random() < 0.3:  # haze / low contrast
@@ -326,6 +411,8 @@ def chunk(job, *, start_hard=0, limit=None, images=None, masks=None):
     root, count, first, last, seed, texture_paths, coco, cases = job[:8]
     if len(job) > 8:
         start_hard = job[8]
+    global CROSSERS
+    CROSSERS = len(job) > 9 and bool(job[9])
     global CASES
     CASES = cases
     scenes.HARD = start_hard
@@ -368,6 +455,7 @@ def main():
     parser.add_argument("--workers", type=int, default=8)
     parser.add_argument("--seed", type=int, default=20261112)
     parser.add_argument("--cases", nargs="+", default=None, help="case list to draw from (repeat a name to weight it)")
+    parser.add_argument("--crossers", action="store_true", help="also lay cables/pens across the page in 25 percent of other cases")
     parser.add_argument("--regen-table", type=Path, help="regen_table.json of a set made before 2026-11-12, to rebuild it exactly")
     args = parser.parse_args()
     root = args.out.resolve()
@@ -390,6 +478,8 @@ def main():
         start = {int(k): v for k, v in table["startHard"].items()}
     jobs = [(str(root), args.count, i, min(i + 100, args.count), args.seed, paths, str(args.coco), case_list, start.get(i, 0))
             for i in range(0, args.count, 100)]
+    if args.crossers:
+        jobs = [j + (True,) for j in jobs]
     totals = {}
     with concurrent.futures.ProcessPoolExecutor(max_workers=args.workers) as pool:
         done = 0
@@ -400,7 +490,7 @@ def main():
             if done % 2000 < 100:
                 print(json.dumps({"completed": done, "total": args.count, "seconds": round(time.perf_counter() - started)}), flush=True)
     (root / "scenes.json").write_text(json.dumps({
-        "count": args.count, "input": 320, "mask": 160, "seed": args.seed, "cases": totals, "caseList": case_list,
+        "count": args.count, "input": 320, "mask": 160, "seed": args.seed, "cases": totals, "caseList": case_list, "crossers": bool(args.crossers),
         "textures": "Mendeley x3nm4cxr83 (CC BY 4.0) public-training textures + procedural sheets",
         "texturesManifestSplit": manifest.get("splitSha256"),
         "publicValidationUsed": False, "ownerPhotosUsed": False,

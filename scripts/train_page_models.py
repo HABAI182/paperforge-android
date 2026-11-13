@@ -87,12 +87,17 @@ class UpBlock(nn.Module):
 
 
 class MobileNetV3UNet(nn.Module):
-    """MobileNetV3-Small layout (Howard et al. 2019), width 1.0, trained from scratch."""
+    """MobileNetV3-Small layout (Howard et al. 2019), trained from scratch. width scales every channel count
+    (rounded to multiples of 8, as MobileNetV3 does); width 1.0 is the round 1-3 model, parameter for parameter."""
 
-    def __init__(self):
+    def __init__(self, width=1.0):
         super().__init__()
         HS, RE = nn.Hardswish, nn.ReLU
-        self.stem = ConvBN(3, 16, 3, 2, act=HS)  # 1/2
+
+        def c(n):
+            return n if width == 1.0 else max(8, int(n * width + 4) // 8 * 8)
+
+        self.stem = ConvBN(3, c(16), 3, 2, act=HS)  # 1/2
         cfg = [  # cin, exp, cout, k, s, se, act
             [(16, 16, 16, 3, 2, True, RE)],  # 1/4
             [(16, 72, 24, 3, 2, False, RE), (24, 88, 24, 3, 1, False, RE)],  # 1/8
@@ -100,10 +105,12 @@ class MobileNetV3UNet(nn.Module):
              (40, 120, 48, 5, 1, True, HS), (48, 144, 48, 5, 1, True, HS)],  # 1/16
             [(48, 288, 96, 5, 2, True, HS), (96, 576, 96, 5, 1, True, HS), (96, 576, 96, 5, 1, True, HS)],  # 1/32
         ]
-        self.stages = nn.ModuleList(nn.Sequential(*[InvertedResidual(*c) for c in stage]) for stage in cfg)
-        self.context = ConvBN(96, 96, 1, act=HS)
-        self.up = nn.ModuleList([UpBlock(96, 48, 48), UpBlock(48, 24, 32), UpBlock(32, 16, 24), UpBlock(24, 16, 16)])
-        self.head = nn.Conv2d(16, 2, 1)
+        cfg = [[(c(a), c(e), c(o), k, st, se, act) for a, e, o, k, st, se, act in stage] for stage in cfg]
+        self.stages = nn.ModuleList(nn.Sequential(*[InvertedResidual(*x) for x in stage]) for stage in cfg)
+        self.context = ConvBN(c(96), c(96), 1, act=HS)
+        self.up = nn.ModuleList([UpBlock(c(96), c(48), c(48)), UpBlock(c(48), c(24), c(32)), UpBlock(c(32), c(16), c(24)),
+                                 UpBlock(c(24), c(16), c(16))])
+        self.head = nn.Conv2d(c(16), 2, 1)
 
     def forward(self, x):
         feats = [self.stem(x)]
@@ -197,7 +204,8 @@ class LiteSeg(nn.Module):
 
 
 def build(arch):
-    return {"pagenet": PageNet, "mbv3unet": MobileNetV3UNet, "liteseg": LiteSeg}[arch]()
+    return {"pagenet": PageNet, "mbv3unet": MobileNetV3UNet, "liteseg": LiteSeg,
+            "mbv3unet-w15": lambda: MobileNetV3UNet(1.5)}[arch]()
 
 
 # ---------------------------------------------------------------- data
@@ -297,11 +305,12 @@ def probabilities(model, images, device, size=32):
     return np.concatenate(out)
 
 
-def evaluate(model, device, public, synth_val, cuts=(0.15, 0.3, 0.5)):
+def evaluate(model, device, public, synth_val, cuts=(0.15, 0.3, 0.5), real=None):
     model.eval()
     images, masks, quads, _, val_ids = public
     pp = probabilities(model, images[val_ids], device)
     sp = probabilities(model, synth_val[0], device)
+    rp = probabilities(model, real[0], device) if real is not None else None
     report = {}
     for cut in cuts:
         pub = []
@@ -319,6 +328,20 @@ def evaluate(model, device, public, synth_val, cuts=(0.15, 0.3, 0.5)):
             # Severe failures cost far more than a small mean change.
             "score": float(pub.mean() + syn.mean() - 0.01 * ((pub < 0.5).sum() + (syn < 0.5).sum() * len(pub) / len(syn))),
         }
+        if rp is not None:
+            rv = []
+            for p, q in zip(rp, real[1]):
+                f = quad_from_mask(p, cut=cut)
+                rv.append(0.0 if f is None else quad_iou(f, q))
+            rv = np.array(rv)
+            n = len(rv)
+            report[str(cut)].update({
+                "realMean": float(rv.mean()), "realSevere": int((rv < 0.5).sum()), "realBad": int((rv < 0.8).sum()),
+                # Independent real photos lead; Mendeley and synthetic count half. Severe failures per set are
+                # scaled to the real set's size.
+                "score": float(rv.mean() + 0.5 * (pub.mean() + syn.mean()) - 0.01 * (
+                    (rv < 0.5).sum() + 0.5 * (pub < 0.5).sum() * n / len(pub) + 0.5 * (syn < 0.5).sum() * n / len(syn))),
+            })
     model.train()
     return report
 
@@ -330,7 +353,7 @@ def export(model, path):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--arch", choices=["pagenet", "mbv3unet", "liteseg"], required=True)
+    ap.add_argument("--arch", choices=["pagenet", "mbv3unet", "liteseg", "mbv3unet-w15"], required=True)
     ap.add_argument("--scenes", type=Path, nargs="+", required=True)
     ap.add_argument("--public", type=Path, required=True, help="public-data.npz (split.json beside it)")
     ap.add_argument("--out", type=Path, required=True)
@@ -341,13 +364,15 @@ def main():
     ap.add_argument("--shares", type=float, nargs=2, default=(0.25, 0.4), help="public photos, realistic set")
     ap.add_argument("--holdout", type=int, default=1000, help="last scenes of each realistic set, kept for validation")
     ap.add_argument("--eval-every", type=int, default=2000)
+    ap.add_argument("--seed", type=int, default=7, help="weight init seed; the loader seed is derived from it (7 -> 11, as before)")
+    ap.add_argument("--real-val", type=Path, help="real-photo validation npz (build_real_val.py); leads checkpoint selection")
     ap.add_argument("--precision", choices=["fp16", "bf16"], default="fp16",
                     help="autocast type; bf16 + --channels-last measured 1.16-1.38x faster on an RTX 5060 (perf/profile-1.log)")
     ap.add_argument("--channels-last", action="store_true", help="NHWC memory format; only fast together with bf16")
     args = ap.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "invocation.json").write_text(json.dumps({k: str(v) for k, v in vars(args).items()}, indent=1), encoding="utf-8")
-    torch.manual_seed(7)
+    torch.manual_seed(args.seed)
     device = "cuda"
     model = build(args.arch).to(device)
     if args.warm:
@@ -364,13 +389,17 @@ def main():
                  np.concatenate([np.array(s[3][s[1] - args.holdout:]) for s in realistic]))
     print(json.dumps({"arch": args.arch, "parameters": params, "publicTrain": len(public[3]), "publicVal": len(public[4]),
                       "synthVal": len(synth_val[0]), "sets": [s[0] for s in sets]}), flush=True)
-    stream = batches(sets, args.holdout, public, args.shares, args.batch, 11)
+    real = None
+    if args.real_val:
+        rv = np.load(args.real_val)
+        real = (rv["images"], rv["quads"])
+    stream = batches(sets, args.holdout, public, args.shares, args.batch, args.seed + 4)
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, args.lr, total_steps=args.steps, pct_start=0.06 if not args.warm else 0.02)
     scaler = torch.amp.GradScaler(device, enabled=dtype == torch.float16)  # bf16 needs no loss scaling
     history, best, started, total = [], -1e9, time.time(), 0.0
     if args.warm:
-        row = {"step": 0, **evaluate(model, device, public, synth_val)}
+        row = {"step": 0, **evaluate(model, device, public, synth_val, real=real)}
         history.append(row); print(json.dumps(row), flush=True)
     for step in range(1, args.steps + 1):
         x, m, e = next(stream)
@@ -386,7 +415,7 @@ def main():
         sched.step()
         total += loss.item()
         if step % args.eval_every == 0 or step == args.steps:
-            report = evaluate(model, device, public, synth_val)
+            report = evaluate(model, device, public, synth_val, real=real)
             cut, best_here = max(report.items(), key=lambda kv: kv[1]["score"])
             row = {"step": step, "loss": total / args.eval_every, "minutes": round((time.time() - started) / 60, 1), "bestCut": cut, **report}
             total = 0.0
