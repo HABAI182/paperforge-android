@@ -99,6 +99,31 @@ class RetakePreviewTest {
         }
     }
 
+    /** How long after the shutter the page shows the new photo, and how long the whole finish takes (logcat). */
+    @Test
+    fun theNewPhotoShowsLongBeforeTheFinishEnds() = cleanly {
+        val (document, before) = workbookPage()
+        val retake = photo(document.id, "scan-core/white-desk-0.jpg", before.id)
+        val start = System.nanoTime()
+        CaptureTasks.accept(repo, retake.id)
+        var shownAt = 0L
+        withTimeout(240_000) {
+            while (repo.dao.task(retake.id)?.state in LocalTaskRow.active) {
+                if (shownAt == 0L && repo.dao.pages(document.id).single().original == CaptureTasks.raw(retake).path)
+                    shownAt = System.nanoTime()
+                delay(20)
+            }
+        }
+        val doneAt = System.nanoTime()
+        assertEquals(LocalTaskState.SUCCEEDED, repo.dao.task(retake.id)!!.state)
+        assertTrue("the new photo was never shown before the finish", shownAt != 0L)
+        android.util.Log.i(
+            "RetakeTiming",
+            "shown after %.0f ms, finished after %.0f ms".format((shownAt - start) / 1e6, (doneAt - start) / 1e6),
+        )
+        assertTrue(shownAt < doneAt)
+    }
+
     @Test
     fun repeatedRetakesKeepEveryPhotoAndAFailedRetakeLeavesThePage() = cleanly {
         UserSettings.set("filter", "ORIGINAL")
