@@ -28,8 +28,8 @@ internal data class CaptureMode(
 internal val captureModes =
     listOf(
         CaptureMode("document", "扫描文档", "WORKBOOK", 0f, "自动裁边 · 练习册增强"),
+        CaptureMode("book", "书本", "WORKBOOK", 0f, "打开的书或本子 · 选左页、右页或两页"),
         CaptureMode("color", "原色", "AUTO", 0f, "保留彩色内容与印章"),
-        CaptureMode("clean", "去透页", "CLEAN", 0f, "增强纸白 · 抑制背面透字"),
         CaptureMode("card", "证件", "ORIGINAL", 85.6f / 54f, "证件比例 · 拍摄后可调整裁边"),
     )
 
@@ -91,6 +91,42 @@ internal fun ScanCaptureModes(enabled: Boolean) {
                                 if (selected) Color(0xFF86E5B8) else Color.Transparent,
                                 androidx.compose.foundation.shape.RoundedCornerShape(1.dp),
                             )
+                    )
+                }
+            }
+        }
+        if (mode.id == "book") BookPageToggle(enabled)
+    }
+}
+
+/**
+ * 书本 mode: which page of the open book to keep. The photo is split at the gutter before it is finished, so 左页
+ * or 右页 gives one clean page and 两页 gives both, left first.
+ */
+@Composable
+internal fun BookPageToggle(enabled: Boolean) {
+    var page by remember { mutableStateOf(UserSettings.string("bookPage", "BOTH")) }
+    Surface(
+        color = Color.Black.copy(alpha = .5f),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
+    ) {
+        Row(Modifier.padding(3.dp)) {
+            listOf("LEFT" to "左页", "RIGHT" to "右页", "BOTH" to "两页").forEach { (value, label) ->
+                Surface(
+                    modifier = Modifier.semantics { selected = page == value },
+                    onClick = {
+                        page = value
+                        UserSettings.set("bookPage", value)
+                    },
+                    enabled = enabled,
+                    color = if (page == value) Color.White.copy(alpha = .24f) else Color.Transparent,
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+                ) {
+                    Text(
+                        label,
+                        Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                        color = Color.White,
+                        style = MaterialTheme.typography.labelLarge,
                     )
                 }
             }

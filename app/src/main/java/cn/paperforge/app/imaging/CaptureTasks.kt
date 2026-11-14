@@ -334,7 +334,7 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                             )
                         }
                     val file = CaptureTasks.raw(row)
-                    val result =
+                    var result =
                         CaptureTasks.decodeSlot.withLock {
                             ScanProcessor.detectFile(
                                 file,
@@ -345,6 +345,37 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                             )
                         }
                     currentCoroutineContext().ensureActive()
+                    // 书本 mode: the user said this is an open book and which page they want, so the spread is split
+                    // here, before anything is published or flattened. 两页 keeps the left page on this task's row
+                    // and adds the right page after it below.
+                    var rightHalf: Quad? = null
+                    var bookPending = false
+                    val book = spec.preset.book
+                    val spread = result.quad
+                    if (book.isNotEmpty() && row.targetPageId == null && spread != null) {
+                        val halves = CaptureTasks.decodeSlot.withLock { BookPages.halves(file, spread) }
+                        if (halves != null && halves.source != BookPages.Source.SHADOW) {
+                            // Not a certain gutter: nothing is cut. The whole spread is kept, unflattened, and the
+                            // editor asks the user to place the split, starting from this suggestion.
+                            bookPending = true
+                            result =
+                                result.copy(
+                                    method = result.method + "+book-pending",
+                                    notes =
+                                        result.notes +
+                                            (SpreadGutter.BOOK_NOTE to
+                                                "%s,%.4f,%.4f".format(java.util.Locale.ROOT, book, halves.top, halves.bottom)),
+                                )
+                        } else if (halves != null) {
+                            val keep = if (book == BookPages.RIGHT) halves.right else halves.left
+                            if (book == BookPages.BOTH) rightHalf = halves.right
+                            result =
+                                result.copy(
+                                    quad = keep,
+                                    method = result.method + "+book-" + book.lowercase() + "-" + halves.source.name.lowercase(),
+                                )
+                        }
+                    }
                     val detected =
                         spec.preset
                             .page(checkNotNull(row.pageId), document, row.position, file.path)
@@ -353,6 +384,15 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                                 processingMetadata =
                                     JSONObject(CaptureMetadata.encode(spec.reference, result))
                                         .put("captureJob", id)
+                                        .also { json ->
+                                            // Without a camera frame the capture block is empty: the pending split
+                                            // still has to reach the editor.
+                                            result.notes[SpreadGutter.BOOK_NOTE]?.let { note ->
+                                                val capture = json.optJSONObject("capture") ?: JSONObject().also { json.put("capture", it) }
+                                                val notes = capture.optJSONObject("notes") ?: JSONObject().also { capture.put("notes", it) }
+                                                notes.put(SpreadGutter.BOOK_NOTE, note)
+                                            }
+                                        }
                                         .toString(),
                                 detectionConfidence = result.confidence,
                                 detectionMethod = result.method,
@@ -425,6 +465,7 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                             // CLEAN is the camera's show-through mode, so it gets the same finished page.
                             spec.preset.filter in setOf("WORKBOOK", "CLEAN") &&
                                 result.quad != null &&
+                                !bookPending &&
                                 ScanConfig.int("workbookAutoFlatten", 1) == 1
                         ) {
                             CaptureTasks.finishSlot.withLock {
@@ -455,6 +496,37 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                                 )
                             }
                         } else null
+                    // 两页: the right page, cut from the same photo and finished the same way.
+                    val rightPage =
+                        rightHalf?.let { half ->
+                            val raw =
+                                detected.copy(
+                                    id = UUID.randomUUID().toString(),
+                                    corners = half.encode(),
+                                    detectionMethod =
+                                        result.method.replace("+book-both-", "+book-right-"),
+                                )
+                            if (flat == null) raw
+                            else
+                                CaptureTasks.finishSlot.withLock {
+                                    FlatDocument.prepare(
+                                        repo,
+                                        raw,
+                                        spec.preset.aiFinish &&
+                                            cn.paperforge.app.UserSettings[
+                                                    cn.paperforge.app.SettingKeys.ScanAiFinish],
+                                        spec.preset.flatAspect,
+                                        workEdge = AutomaticScanBudget.edge(),
+                                        automatic = true,
+                                        progress = {
+                                            currentCoroutineContext().ensureActive()
+                                            check(repo.dao.task(id)?.state != LocalTaskState.CANCELLED) {
+                                                "任务已停止"
+                                            }
+                                        },
+                                    )
+                                }.copy(id = raw.id)
+                        }
                     repo.database.withTransaction {
                         val current = repo.dao.task(id)
                         if (
@@ -466,10 +538,8 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                         val pages = repo.dao.pages(document)
                         val target = pages.firstOrNull { it.id == row.targetPageId }
                         val original = pages.firstOrNull { it.id == row.pageId }
-                        val metadata =
-                            JSONObject(CaptureMetadata.encode(spec.reference, result))
-                                .put("captureJob", id)
-                                .toString()
+                        // The same metadata the framing was published with, notes included.
+                        val metadata = detected.processingMetadata
                         var flatTarget: String? = null
                         var detail = if (result.quad == null) "未找到完整纸边，已保留全图" else "纸张已保存"
                         var state =
@@ -552,6 +622,12 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                                     if (spec.preset.aiFinish) "纸面展平与 AI 去透页已完成，可撤销"
                                     else "纸面展平已完成，可撤销"
                             }
+                        }
+                        if (rightPage != null && flatTarget != null &&
+                            repo.dao.pages(document).any { it.id == flatTarget }
+                        ) {
+                            repo.insertAfter(flatTarget, rightPage.copy(documentId = document))
+                            detail = "已拆为左右两页，" + detail
                         }
                         repo.dao.touch(document, System.currentTimeMillis())
                         repo.dao.taskState(id, state, 100, detail, null)

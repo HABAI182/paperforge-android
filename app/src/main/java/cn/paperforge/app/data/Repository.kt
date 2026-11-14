@@ -509,6 +509,18 @@ class Repository(val context: Context, val database: PaperDatabase) {
         }
 
     /**
+     * [page] placed right after [anchorId] in its document, later pages moving down one: a book capture's right
+     * page next to its left one. One step, so undo takes it out again.
+     */
+    suspend fun insertAfter(anchorId: String, page: PageRow) =
+        database.withTransaction {
+            val all = dao.pages(page.documentId)
+            val index = all.indexOfFirst { it.id == anchorId }
+            require(index >= 0) { "左页已移除" }
+            replacePages(page.documentId, all, all.toMutableList().apply { add(index + 1, page) }, anchorId)
+        }
+
+    /**
      * Split one spread into left (position 0) and right (position 1) pages sharing the original
      * file. [topFraction]/[bottomFraction] are the left page's inner edge; the optional
      * [rightTopFraction]/[rightBottomFraction] are the right page's inner edge and default to the

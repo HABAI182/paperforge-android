@@ -33,7 +33,8 @@ fun scanFilterName(filter: String) =
         "AUTO" -> "自然"
         "TEXT" -> "清晰文字"
         "WORKBOOK" -> "练习册"
-        "CLEAN" -> "强力去背景"
+        // Merged into 练习册; pages saved with it render as 练习册.
+        "CLEAN" -> "练习册"
         "GRAY" -> "灰度"
         "BW" -> "柔和黑白"
         "COLOR" -> "彩色"
@@ -56,6 +57,8 @@ fun ScanEditorLayout(
     taskStatus: String? = null,
     /** The active page was captured as an open two-page spread: offer to split it, or keep it as one page. */
     spreadHint: Boolean = false,
+    /** A 书本 capture whose gutter was not certain: the split waits for the user to place it. */
+    bookPending: Boolean = false,
     taskCount: Int = 0,
     renameRequest: Int = 0,
     fullscreenRequest: Int = 0,
@@ -239,22 +242,35 @@ fun ScanEditorLayout(
                         Text("查看任务", style = MaterialTheme.typography.labelMedium)
                     }
                 }
-            if (!fullscreen && taskStatus == null && spreadHint)
+            if (!fullscreen && taskStatus == null && bookPending)
+                Surface(
+                    color = MaterialTheme.colorScheme.tertiaryContainer,
+                    modifier = Modifier.fillMaxWidth().testTag("book-pending"),
+                ) {
+                    Row(Modifier.padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            "书本：没有找到确定的书脊，照片还没分割",
+                            Modifier.weight(1f),
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                        TextButton({ onAction("keepSpread") }) { Text("保留整页") }
+                        TextButton({ onAction("bookSplit") }) { Text("确认分割") }
+                    }
+                }
+            else if (!fullscreen && taskStatus == null && spreadHint)
                 Surface(
                     color = MaterialTheme.colorScheme.tertiaryContainer,
                     modifier = Modifier.fillMaxWidth().testTag("spread-hint"),
                 ) {
-                    Row(
-                        Modifier.padding(start = 16.dp, end = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            "这页像是书本或笔记本的左右两页",
-                            Modifier.weight(1f),
-                            style = MaterialTheme.typography.labelMedium,
-                        )
-                        TextButton({ onAction("keepSpread") }) { Text("保留") }
-                        TextButton({ onAction("autoSplit") }) { Text("拆为两页") }
+                    Column(Modifier.padding(start = 16.dp, end = 4.dp, top = 6.dp)) {
+                        Text("这页像是书本或笔记本的左右两页", style = MaterialTheme.typography.labelMedium)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            TextButton({ onAction("keepSpread") }) { Text("保留整页") }
+                            Spacer(Modifier.weight(1f))
+                            TextButton({ onAction("splitLeft") }) { Text("左页") }
+                            TextButton({ onAction("splitRight") }) { Text("右页") }
+                            TextButton({ onAction("autoSplit") }) { Text("两页") }
+                        }
                     }
                 }
             Box(Modifier.weight(1f).fillMaxWidth().testTag("scan-canvas")) {

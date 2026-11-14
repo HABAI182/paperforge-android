@@ -16,6 +16,8 @@ data class CapturePreset(
     val lockCrop: Boolean,
     val aiFinish: Boolean = true,
     val flatAspect: Float = .70710678f,
+    /** The camera's 书本 mode: which page of a spread to keep ([BookPages.LEFT], RIGHT or BOTH); empty otherwise. */
+    val book: String = "",
 ) {
     /**
      * The camera's mode rail stores its recipe in the shared settings. A gallery photo was not taken in
@@ -26,7 +28,8 @@ data class CapturePreset(
         val railFilter =
             mapOf("color" to "AUTO", "clean" to "CLEAN", "card" to "ORIGINAL")[
                 UserSettings.string("captureMode", "document")]
-        return if (filter == railFilter) copy(filter = "WORKBOOK", aspect = 0f) else this
+        // A gallery photo is never split as a book page: the rail's 书本 choice was for the camera.
+        return (if (filter == railFilter) copy(filter = "WORKBOOK", aspect = 0f) else this).copy(book = "")
     }
 
     fun page(id: String, document: String, position: Int, path: String) =
@@ -53,6 +56,7 @@ data class CapturePreset(
             .put("lockCrop", lockCrop)
             .put("aiFinish", aiFinish)
             .put("flatAspect", flatAspect)
+            .put("book", book)
 
     companion object {
         fun current(existing: PageRow? = null): CapturePreset {
@@ -72,6 +76,11 @@ data class CapturePreset(
                 p.getBoolean("lockCrop"),
                 p.optBoolean("scanAiFinish", false),
                 if (p.optString("flatPaper", "ISO") == "SOURCE") 0f else .70710678f,
+                // A retake replaces one page and is never split.
+                if (existing == null && UserSettings.string("captureMode", "document") == "book")
+                    UserSettings.string("bookPage", BookPages.BOTH)
+                        .takeIf { it in setOf(BookPages.LEFT, BookPages.RIGHT, BookPages.BOTH) } ?: BookPages.BOTH
+                else "",
             )
         }
 
@@ -86,6 +95,7 @@ data class CapturePreset(
                 j.getBoolean("lockCrop"),
                 j.optBoolean("aiFinish", false),
                 j.optDouble("flatAspect", .70710678).toFloat(),
+                j.optString("book", ""),
             )
     }
 }

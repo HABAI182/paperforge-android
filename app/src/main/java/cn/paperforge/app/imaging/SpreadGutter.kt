@@ -27,7 +27,8 @@ import org.opencv.imgproc.Imgproc
 object SpreadGutter {
     const val Method = "paper-valley"
 
-    class Thresholds(val valley: Float, val bands: Float)
+    /** [from]..[to]: where across the crop the gutter may be. */
+    class Thresholds(val valley: Float, val bands: Float, val from: Float = .30f, val to: Float = .70f)
 
     val Strict get() = Thresholds(ScanConfig.float("spreadGutterValley", .08f), ScanConfig.float("spreadGutterBands", .75f))
     val Asked get() = Thresholds(ScanConfig.float("spreadGutterAskedValley", .05f), ScanConfig.float("spreadGutterAskedBands", .5f))
@@ -54,6 +55,26 @@ object SpreadGutter {
         if (down < 1) return null
         val aspect = across / down
         if (aspect < ScanConfig.float("spreadAspectMin", 1f) || aspect > ScanConfig.float("spreadAspectMax", 1.9f)) return null
+        val gray = warpGray(photo, quad) ?: return null
+        try {
+            val found = find(gray, Strict)
+            if (!found.found) return null
+            return "%.4f,%.4f".format(java.util.Locale.ROOT, found.top, found.bottom)
+        } finally {
+            gray.release()
+        }
+    }
+
+    /** The crop of [photo] by [quad], flat, grey, 1600 px on its long side, as the editor renders a page; null if
+     * the quad is degenerate. The caller releases it. */
+    fun warpGray(photo: Mat, quad: cn.paperforge.app.model.Quad): Mat? {
+        val w = photo.cols() - 1.0
+        val h = photo.rows() - 1.0
+        val p = quad.points.map { org.opencv.core.Point(it.x * w, it.y * h) }
+        fun len(a: org.opencv.core.Point, b: org.opencv.core.Point) = kotlin.math.hypot(a.x - b.x, a.y - b.y)
+        val across = max(len(p[0], p[1]), len(p[3], p[2]))
+        val down = max(len(p[0], p[3]), len(p[1], p[2]))
+        if (across < 8 || down < 8) return null
         val scale = 1600.0 / max(across, down)
         val ww = max(2, (across * scale).roundToInt())
         val hh = max(2, (down * scale).roundToInt())
@@ -71,12 +92,9 @@ object SpreadGutter {
             val transform = Imgproc.getPerspectiveTransform(src, dst).also(owned::add)
             val page = Mat().also(owned::add)
             Imgproc.warpPerspective(photo, page, transform, Size(ww.toDouble(), hh.toDouble()), Imgproc.INTER_AREA)
-            val gray = Mat().also(owned::add)
+            val gray = Mat()
             Imgproc.cvtColor(page, gray, if (photo.channels() == 4) Imgproc.COLOR_RGBA2GRAY else Imgproc.COLOR_RGB2GRAY)
-            val found = find(gray, Strict)
-            val top = found.top
-            if (!found.found) return null
-            return "%.4f,%.4f".format(java.util.Locale.ROOT, top, found.bottom)
+            return gray
         } finally {
             owned.forEach(Mat::release)
         }
@@ -93,11 +111,32 @@ object SpreadGutter {
             }
             .getOrDefault(false)
 
-    /** [processingMetadata] without the spread mark: after a split, or when the user keeps the spread. */
+    /** Note key of a 书本 capture whose gutter was not certain: "keep,top,bottom", the split waiting for the user. */
+    const val BOOK_NOTE = "bookPending"
+
+    /** A 书本 capture waiting for the user to confirm its split: the page kept (LEFT, RIGHT or BOTH) and the
+     * suggested gutter as fractions of the crop's width at its top and bottom; null if there is none. */
+    fun bookPending(processingMetadata: String?): Triple<String, Float, Float>? =
+        runCatching {
+                val note =
+                    org.json.JSONObject(processingMetadata ?: return null)
+                        .optJSONObject("capture")
+                        ?.optJSONObject("notes")
+                        ?.optString(BOOK_NOTE, "")
+                        .orEmpty()
+                val parts = note.split(",")
+                if (parts.size != 3) null else Triple(parts[0], parts[1].toFloat(), parts[2].toFloat())
+            }
+            .getOrNull()
+
+    /** [processingMetadata] without the spread and book marks: after a split, or when the user keeps the page. */
     fun withoutNote(processingMetadata: String): String =
         runCatching {
                 val json = org.json.JSONObject(processingMetadata)
-                json.optJSONObject("capture")?.optJSONObject("notes")?.remove(NOTE)
+                json.optJSONObject("capture")?.optJSONObject("notes")?.let {
+                    it.remove(NOTE)
+                    it.remove(BOOK_NOTE)
+                }
                 json.toString()
             }
             .getOrDefault(processingMetadata)
@@ -135,7 +174,7 @@ object SpreadGutter {
             var bestBands = 0f
             var bestLeft = 0f
             var bestRight = 0f
-            for (x in (.30 * w).toInt() until (.70 * w).toInt()) {
+            for (x in (thresholds.from * w).toInt() until (thresholds.to * w).toInt()) {
                 val left = mean(level, x - far, x - near)
                 val right = mean(level, x + near, x + far)
                 val valley = (min(left, right) - level[x]) / max(1f, max(left, right))

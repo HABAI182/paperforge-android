@@ -3165,8 +3165,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * Rendering uses the neutral ORIGINAL filter so a display filter cannot hide the shadow. When
      * no spine is found nothing is written: the page is never cut at a fallback position.
      */
-    fun autoSplitSpread(page: PageRow) =
-        perform("检测书脊并拆分双页") {
+    fun autoSplitSpread(page: PageRow, keep: String = "both") =
+        perform(if (keep == "both") "检测书脊并拆分双页" else if (keep == "left") "只保留左页" else "只保留右页") {
             lastSpineDetection.value = null
             val rotation = ((page.rotation % 360) + 360) % 360
             if (rotation != 0 || page.deskewDegrees != 0f) {
@@ -3190,13 +3190,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             lastSpineDetection.value = detection
             val x = detection.x
             if (!detection.found || x == null) {
-                messages.send("未检测到书脊：${detection.reason}。本页未拆分。")
+                messages.send("未检测到书脊：${detection.reason}。本页未拆分，可在「书籍双页与书脊」里拖动位置手动拆分。")
                 return@perform
             }
             val leftEdge = detection.seamLeft
             val rightEdge = detection.seamRight
             if (leftEdge == null || rightEdge == null) {
-                messages.send("未检测到书脊：${detection.reason}。本页未拆分。")
+                messages.send("未检测到书脊：${detection.reason}。本页未拆分，可在「书籍双页与书脊」里拖动位置手动拆分。")
                 return@perform
             }
             // #23 follow-up: the left page ends on the gutter's left edge and the right page starts
@@ -3209,13 +3209,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 page,
                 leftEdge.top - inset,
                 leftEdge.bottom - inset,
-                "both",
+                keep,
                 rightEdge.top + inset,
                 rightEdge.bottom + inset,
             )
             messages.send(
-                "已拆分双页：左页在前，右页在后（书脊在 ${(x * 100).toInt()}% 处，" +
-                    "置信度 ${(detection.confidence * 100).toInt()}%）"
+                (if (keep == "both") "已拆分双页：左页在前，右页在后"
+                else if (keep == "left") "已只保留左页" else "已只保留右页") +
+                    "（书脊在 ${(x * 100).toInt()}% 处，可撤销）"
             )
         }
 

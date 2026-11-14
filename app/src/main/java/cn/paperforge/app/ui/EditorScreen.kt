@@ -268,8 +268,11 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                 }
                 "more" -> more = true
                 "applyAll" -> active?.let(vm::applyAll)
-                "autoSplit" -> active?.let(vm::autoSplitSpread)
+                "autoSplit" -> active?.let { vm.autoSplitSpread(it) }
+                "splitLeft" -> active?.let { vm.autoSplitSpread(it, "left") }
+                "splitRight" -> active?.let { vm.autoSplitSpread(it, "right") }
                 "keepSpread" -> active?.let(vm::keepSpread)
+                "bookSplit" -> bookSplit = true
                 "ocr" -> active?.let(vm::openOcr)
             }
         },
@@ -293,6 +296,7 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                 }
                 ?.let { "${taskStateName(it.state)} ${it.progress}%  ${it.detail}" },
         spreadHint = !busy && cn.paperforge.app.imaging.SpreadGutter.noted(active?.processingMetadata),
+        bookPending = !busy && cn.paperforge.app.imaging.SpreadGutter.bookPending(active?.processingMetadata) != null,
         renameRequest = renameTick,
         fullscreenRequest = fullscreenTick,
     )
@@ -301,15 +305,24 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
             vm.saveGeometry(active, it)
             crop = false
         }
-    if (bookSplit && active != null)
+    if (bookSplit && active != null) {
+        // A 书本 capture whose gutter was not certain: start from its suggestion and the page the user chose.
+        val pending = cn.paperforge.app.imaging.SpreadGutter.bookPending(active.processingMetadata)
         BookSplitDialog(
             active,
             onDismiss = { bookSplit = false },
+            initialTop = pending?.second ?: .5f,
+            initialBottom = pending?.third ?: pending?.second ?: .5f,
+            initialKeep = when (pending?.first) { "LEFT" -> "left"; "RIGHT" -> "right"; else -> "both" },
+            message =
+                if (pending != null) "没有找到确定的书脊，照片还没有分割。拖动书脊两端对准两页之间，确认后再分割。"
+                else "拖动书脊两端或用下面的滑块，分开左右页；不必从正中硬切。",
             onApply = { top, bottom, keep ->
                 vm.splitBook(active, top, bottom, keep)
                 bookSplit = false
             },
         )
+    }
     if (trace && active != null) DewarpTraceDialog(active) { trace = false }
     if (origins && active != null) PageOriginsDialog(vm, active) { origins = false }
     if (dewarp && active != null) {
