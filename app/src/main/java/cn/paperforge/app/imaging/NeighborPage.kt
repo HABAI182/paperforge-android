@@ -29,8 +29,94 @@ import org.opencv.imgproc.Imgproc
  * side away from the frame; otherwise nothing changes and the editor's manual crop stays the way to choose.
  */
 object NeighborPage {
-    const val VERSION = "neighbor-page-1"
+    const val VERSION = "neighbor-page-2"
     private const val HEIGHT = 600.0
+
+    /**
+     * A cut page is still a page: convex, every corner between 50 and 130 degrees. A line found at a steep slant
+     * once turned a spread into a triangle; then the crop is left as it was.
+     */
+    internal fun plausible(quad: Quad): Boolean {
+        val p = quad.points
+        var sign = 0
+        for (i in 0 until 4) {
+            val a = p[(i + 3) % 4]
+            val b = p[i]
+            val c = p[(i + 1) % 4]
+            val ux = a.x - b.x
+            val uy = a.y - b.y
+            val vx = c.x - b.x
+            val vy = c.y - b.y
+            val cross = ux * vy - uy * vx
+            val s = if (cross > 0) 1 else if (cross < 0) -1 else 0
+            if (s == 0 || (sign != 0 && s != sign)) return false
+            sign = s
+            val cos = (ux * vx + uy * vy) / max(1e-6, hypot(ux.toDouble(), uy.toDouble()) * hypot(vx.toDouble(), vy.toDouble()))
+            val angle = Math.toDegrees(kotlin.math.acos(cos.coerceIn(-1.0, 1.0)))
+            if (angle < 50 || angle > 130) return false
+        }
+        return true
+    }
+
+    /**
+     * The top-to-bottom path, moving at most one pixel sideways per row between [from] and [to], with the most rows
+     * stepping the same way on it (within a pixel), and that share of the rows; null if there is no room.
+     */
+    internal fun seam(sign: ByteArray, w: Int, y0: Int, y1: Int, from: Int, to: Int): Triple<IntArray, Double, Int>? {
+        val cols = to - from
+        val rows = y1 - y0
+        if (cols < 3 || rows < 3) return null
+        var bestPath: IntArray? = null
+        var bestTotal = -1f
+        var bestPolarity = 1
+        for (polarity in intArrayOf(1, -1)) {
+            val hit = FloatArray(rows * cols)
+            for (r in 0 until rows) {
+                val base = (y0 + r) * w
+                for (c in 0 until cols) {
+                    val x = from + c
+                    val near =
+                        (x > 0 && sign[base + x - 1].toInt() == polarity) || sign[base + x].toInt() == polarity ||
+                            (x < w - 1 && sign[base + x + 1].toInt() == polarity)
+                    if (near) hit[r * cols + c] = 1f
+                }
+            }
+            val back = ByteArray(rows * cols)
+            var acc = FloatArray(cols) { hit[it] }
+            for (r in 1 until rows) {
+                val next = FloatArray(cols)
+                for (c in 0 until cols) {
+                    var choice = 0
+                    var value = acc[c]
+                    if (c > 0 && acc[c - 1] > value) {
+                        value = acc[c - 1]
+                        choice = -1
+                    }
+                    if (c < cols - 1 && acc[c + 1] > value) {
+                        value = acc[c + 1]
+                        choice = 1
+                    }
+                    next[c] = value + hit[r * cols + c]
+                    back[r * cols + c] = choice.toByte()
+                }
+                acc = next
+            }
+            var c = 0
+            for (k in 1 until cols) if (acc[k] > acc[c]) c = k
+            if (acc[c] > bestTotal) {
+                bestTotal = acc[c]
+                bestPolarity = polarity
+                val path = IntArray(rows)
+                path[rows - 1] = c
+                for (r in rows - 1 downTo 1) {
+                    c += back[r * cols + c]
+                    path[r - 1] = c
+                }
+                bestPath = IntArray(rows) { path[it] + from }
+            }
+        }
+        return bestPath?.let { Triple(it, bestTotal.toDouble() / rows, bestPolarity) }
+    }
 
     fun refine(photo: Mat, quad: Quad): Quad? {
         if (ScanConfig.int("neighborPage", 1) == 0 || photo.empty() || !quad.valid()) return null
@@ -96,6 +182,7 @@ object NeighborPage {
             var best = 0.0
             var bestA = 0
             var bestD = 0
+            var polarity = 1
             val slant = (ScanConfig.float("neighborPageSlant", .12f) * ww).toInt()
             for (xa in (.04 * ww).toInt() until (ScanConfig.float("neighborPageReach", .48f) * ww).toInt()) {
                 var d = -slant
@@ -115,18 +202,48 @@ object NeighborPage {
                         best = share
                         bestA = xa
                         bestD = d
+                        polarity = if (up >= downs) 1 else -1
                     }
                     d += 2
                 }
             }
-            if (best < need) return null
+            // The edge of a curved page bows: then no straight line has the support, but a seam that follows it does.
+            var seam: IntArray? = null
+            if (best < need) {
+                val found = seam(sign, ww, y0, y1, (.04 * ww).toInt(), (ScanConfig.float("neighborPageReach", .48f) * ww).toInt())
+                if (found == null || found.second < ScanConfig.float("neighborPageSeamSupport", .55f)) return null
+                seam = found.first
+                polarity = found.third
+                // The cut: the straight line through the seam, moved onto the neighbour's side of it at every height,
+                // so a bowed edge leaves a sliver of the facing page rather than taking any of this page.
+                var sy = 0.0
+                var sx = 0.0
+                var syy = 0.0
+                var sxy = 0.0
+                for (r in seam.indices) {
+                    val y = (y0 + r).toDouble()
+                    sy += y
+                    sx += seam[r]
+                    syy += y * y
+                    sxy += y * seam[r]
+                }
+                val n = seam.size.toDouble()
+                val slope = (n * sxy - sy * sx) / max(1e-9, n * syy - sy * sy)
+                val offset = (sx - slope * sy) / n
+                var shift = 0.0
+                for (r in seam.indices) shift = max(shift, offset + slope * (y0 + r) - seam[r])
+                bestA = (offset + slope * y0 - shift).roundToInt()
+                bestD = (slope * (rows - 1)).roundToInt()
+            }
             // A different sheet: the paper on the two sides differs in tone. Medians of strips beside the line.
             fun lineX(y: Int) = bestA + (bestD * (y - y0).toDouble() / (rows - 1)).roundToInt()
+            // Where the edge itself is: the seam when there is one, else the line.
+            fun edgeX(y: Int) = seam?.let { it[(y - y0).coerceIn(0, it.size - 1)] } ?: lineX(y)
             val width = max(8, (.05 * ww).toInt())
             val outside = ArrayList<Int>()
             val inside = ArrayList<Int>()
             for (y in y0 until y1 step 2) {
-                val x = lineX(y)
+                val x = edgeX(y)
                 for (dx in 4 until 4 + width) {
                     if (x - dx >= 0) outside += luma[y * ww + x - dx].toInt() and 255
                     if (x + dx < ww) inside += luma[y * ww + x + dx].toInt() and 255
@@ -136,7 +253,52 @@ object NeighborPage {
             // The paper is the bright part of each strip; ink is a minority.
             fun paper(values: ArrayList<Int>) = values.sorted()[(values.size * .75).toInt()]
             val toneStep = abs(paper(outside) - paper(inside))
-            if (toneStep < ScanConfig.int("neighborPageTone", 8)) return null
+            // Or a single step: where one page lies on another its edge steps once, and the shadow beside it is soft.
+            // A printed line (a grid, a margin rule, a border) is a dark stripe: the opposite step follows within a few
+            // pixels on most rows. Measured: page edges 0.23-0.33 of rows, printed grid lines 0.86-0.93.
+            var paired = 0
+            var sampled = 0
+            for (y in y0 until y1) {
+                val x = edgeX(y)
+                if (x < 7 || x >= ww - 7) continue
+                sampled++
+                val base = y * ww
+                var found = false
+                for (dx in 2..6) {
+                    if (sign[base + x - dx].toInt() == -polarity || sign[base + x + dx].toInt() == -polarity) {
+                        found = true
+                        break
+                    }
+                }
+                if (found) paired++
+            }
+            val singleStep = sampled > 0 && paired.toDouble() / sampled <= ScanConfig.float("neighborPagePaired", .40f)
+            // A straight cut keeps its tone test. A seam can wind along the edges of printed letters (it cut 4 of 198
+            // receipts through their text), so a seam must be a single step, whatever the tone.
+            if (seam != null) {
+                if (!singleStep) return null
+                // Writing never runs across a page's own edge; it runs across a crease. Ink within 6 px of the seam:
+                // page edges 0.06-0.09 of rows, the crease of a receipt 0.25.
+                val paperLevel = mat()
+                Imgproc.dilate(gray, paperLevel, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(31.0, 1.0)))
+                val paperBytes = ByteArray(ww * hh).also { paperLevel.get(0, 0, it) }
+                var inked = 0
+                var looked = 0
+                for (y in y0 until y1) {
+                    val x = edgeX(y)
+                    looked++
+                    for (dx in -6..6) {
+                        val xx = x + dx
+                        if (xx !in 0 until ww) continue
+                        val i = y * ww + xx
+                        if ((paperBytes[i].toInt() and 255) - (luma[i].toInt() and 255) > 45) {
+                            inked++
+                            break
+                        }
+                    }
+                }
+                if (looked == 0 || inked.toDouble() / looked > ScanConfig.float("neighborPageSeamInk", .15f)) return null
+            } else if (toneStep < ScanConfig.int("neighborPageTone", 8)) return null
             // A coloured line is a margin rule or a printed border, not the edge of a sheet.
             val hsv = mat()
             if (photo.channels() == 4) Imgproc.cvtColor(colour, hsv, Imgproc.COLOR_RGBA2RGB) else colour.copyTo(hsv)
@@ -145,14 +307,14 @@ object NeighborPage {
             var saturation = 0L
             var count = 0
             for (y in y0 until y1 step 3) {
-                val x = lineX(y)
+                val x = edgeX(y)
                 if (x !in 0 until ww) continue
                 saturation += hsvBytes[(y * ww + x) * 3 + 1].toInt() and 255
                 count++
             }
             if (count == 0 || saturation / count > ScanConfig.int("neighborPageSaturation", 60)) return null
             // Cut at the line, a little past it so the target page keeps its own edge and nothing of the gutter.
-            val margin = 2.0
+            val margin = if (seam != null) 0.0 else 2.0
             val topX = lineX(0).toDouble() + margin
             val bottomX = lineX(hh - 1).toDouble() + margin
             if (topX >= ww * .55 || bottomX >= ww * .55) return null
@@ -169,7 +331,7 @@ object NeighborPage {
                         PointN((it.x / (w - 1.0)).toFloat().coerceIn(0f, 1f), (it.y / (h - 1.0)).toFloat().coerceIn(0f, 1f))
                     }
                 )
-            return out.takeIf { it.valid() && it.area >= .45f * quad.area && it.area < quad.area }
+            return out.takeIf { it.valid() && it.area >= .45f * quad.area && it.area < quad.area && plausible(it) }
         } finally {
             owned.forEach(Mat::release)
         }
