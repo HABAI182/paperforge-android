@@ -1306,8 +1306,14 @@ internal object ToneZones {
             if (segments.rows() > 0) {
                 val onLine = Mat.zeros(height, width, CvType.CV_8UC1).also(owned::add)
                 val seg = IntArray(4)
+                val grid = if (ScanConfig.int("toneZonesStraightGrid", 0) != 0) gridAngles(darkSeeds, minimum, scale, owned) else DoubleArray(0)
+                val gridTolerance = ScanConfig.float("toneZonesStraightGridTolerance", 2f)
                 for (r in 0 until segments.rows()) {
                     segments.get(r, 0, seg)
+                    if (grid.isNotEmpty()) {
+                        val angle = angleOf(seg)
+                        if (grid.any { g -> abs(((angle - g + 270.0) % 180.0) - 90.0) <= gridTolerance }) continue
+                    }
                     Imgproc.line(onLine, Point(seg[0].toDouble(), seg[1].toDouble()), Point(seg[2].toDouble(), seg[3].toDouble()), Scalar(255.0), 3)
                 }
                 val onBytes = ByteArray(tidy.size).also { onLine.get(0, 0, it) }
@@ -1329,6 +1335,48 @@ internal object ToneZones {
         }
         pathMat.put(0, 0, path)
         return LineSeeds(pathMat, path, depth)
+    }
+
+    private fun angleOf(seg: IntArray): Double =
+        (Math.toDegrees(kotlin.math.atan2((seg[3] - seg[1]).toDouble(), (seg[2] - seg[0]).toDouble())) + 180.0) % 180.0
+
+    /**
+     * The directions of a printed grid: angles (degrees, 0-180) along which the page's dark ink has at least
+     * `toneZonesStraightGridLines` long straight lines at distinct offsets. On a printed grid sheet the other side's
+     * grid shows through as faint lines in exactly these directions, and the straight-line rescue kept them as dashes;
+     * a drawing's faint construction lines run through open paper, where there is no grid. Empty off grid pages.
+     */
+    private fun gridAngles(darkSeeds: Mat, minimum: Float, scale: Float, owned: MutableList<Mat>): DoubleArray {
+        val segments = Mat().also(owned::add)
+        Imgproc.HoughLinesP(darkSeeds, segments, 1.0, PI / 360, max(20, (minimum / 3).roundToInt()), minimum.toDouble(), 4.0 * scale)
+        if (segments.rows() == 0) return DoubleArray(0)
+        val need = ScanConfig.int("toneZonesStraightGridLines", 10)
+        val spacing = max(4.0, 6.0 * scale)
+        val offsets = Array(180) { ArrayList<Double>() }
+        val seg = IntArray(4)
+        for (r in 0 until segments.rows()) {
+            segments.get(r, 0, seg)
+            val angle = angleOf(seg)
+            val bin = angle.roundToInt() % 180
+            val t = Math.toRadians(bin.toDouble())
+            // Offset of the line from the origin, across its direction.
+            offsets[bin].add(-seg[0] * sin(t) + seg[1] * cos(t))
+        }
+        val out = ArrayList<Double>()
+        for (b in 0 until 180) {
+            if (offsets[b].isEmpty() || offsets[b].size < offsets[(b + 179) % 180].size || offsets[b].size < offsets[(b + 1) % 180].size) continue
+            val all = (-1..1).flatMap { offsets[(b + it + 180) % 180] }.sorted()
+            // Lines: offsets merged within the spacing. A grid has many, evenly spaced; a drawing's views have
+            // long lines too, but at uneven offsets.
+            val lines = ArrayList<Double>()
+            for (v in all) if (lines.isEmpty() || v - lines.last() > spacing) lines.add(v)
+            if (lines.size < need) continue
+            val gaps = lines.zipWithNext { a, c -> c - a }
+            val period = gaps.sorted()[gaps.size / 2]
+            val even = gaps.count { g -> abs(g / period - (g / period).roundToInt()) <= .2 && g / period < 3.5 }
+            if (even >= ScanConfig.float("toneZonesStraightGridEven", .8f) * gaps.size) out.add(b.toDouble())
+        }
+        return out.toDoubleArray()
     }
 
     /**
