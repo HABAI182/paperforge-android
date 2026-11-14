@@ -78,7 +78,7 @@ no third-party weights. Training scenes are procedural sheets composited over CO
 photographs, used as backgrounds and not redistributed (those photographs carry Flickr's various
 Creative Commons terms), or over procedural surfaces. Provenance: pagenet/pagenet.json.
 
-PaperForge PageNet v2 (opt-in detector “新模型识边”): an original MobileNetV3-Small-layout U-Net, trained
+PaperForge PageNet v2 (detector “MobileNetV3 ×1.5”, the default in test builds): an original MobileNetV3-Small-layout U-Net, trained
 from random initialisation with no third-party weights, on the same kind of procedural scenes and on photographs
 from “A New Image Dataset for Document Corner Localization” (Mendeley Data x3nm4cxr83, CC BY 4.0). Its checkpoint
 was chosen on photographs from SmartDoc 2015 Challenge 1 (J.-C. Burie et al., ICDAR 2015, Zenodo 1230218, CC BY 4.0)

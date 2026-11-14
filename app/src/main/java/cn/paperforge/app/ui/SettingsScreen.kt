@@ -137,18 +137,14 @@ fun SettingsScreen(vm: MainViewModel) {
                 ) {
                     Text("存储空间与缓存")
                 }
-            if (visible("扫描 取景 相机 自动 裁边 纸张 定位 AI 照片 纸框 显示 模糊 亮度 稳定 等待 分析 间隔 JPEG 画质", "scan")) {
+            if (visible("扫描 取景 相机 自动 裁边 纸张 定位 AI 模型 MobileNet PageNet DocQuad 照片 纸框 显示 模糊 亮度 稳定 等待 分析 间隔 JPEG 画质", "scan")) {
                 PreferenceBlock("扫描与拍摄") {
                     SettingChoices(
                         "纸张定位",
                         "detector",
                         "PAGENET_V2",
-                        listOf(
-                            "PAGENET_V2" to "新模型识边",
-                            "HYBRID" to "自动识边（PageNet）",
-                            "STANDARD" to "传统识边",
-                            "INDEPENDENT" to "独立识边（试用）",
-                        ),
+                        DetectorChoices.labels,
+                        notes = DetectorChoices.notes,
                     )
                     SettingSlider("纸框平滑程度", "outlineWeight", 3f, 1f..8f, "")
                     SettingSlider("切换纸框确认帧数", "outlineSwitchFrames", 2f, 1f..6f, "帧")
@@ -481,6 +477,7 @@ private fun SettingChoices(
     key: String,
     default: String,
     options: List<Pair<String, String>>,
+    notes: Map<String, String> = emptyMap(),
 ) {
     val revision by UserSettings.revision.collectAsState()
     val current =
@@ -511,6 +508,13 @@ private fun SettingChoices(
                     label = { Text(label) },
                 )
             }
+        }
+        notes[current]?.let {
+            Text(
+                it,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
@@ -559,4 +563,26 @@ private fun SettingSlider(
             modifier = Modifier.semantics { contentDescription = title },
         )
     }
+}
+
+/**
+ * 纸张定位: the engines by the models and methods they really run. The stored values are unchanged, so a choice
+ * made under the old names is kept.
+ */
+internal object DetectorChoices {
+    val labels =
+        listOf(
+            "PAGENET_V2" to "MobileNetV3 ×1.5（推荐）",
+            "HYBRID" to "PageNet（旧版）",
+            "STANDARD" to "传统边缘检测",
+            "INDEPENDENT" to "DocQuadNet + 边缘（试用）",
+        )
+    val notes =
+        mapOf(
+            "PAGENET_V2" to
+                "默认。MobileNetV3 ×1.5 分割网络找出纸张，再按纸边和版面修正；网络没找到纸时改用 DocQuadNet 和边缘检测。",
+            "HYBRID" to "上一代默认：PaperForge 自研的小型 PageNet 分割网络，后续修正步骤相同。",
+            "STANDARD" to "不用神经网络，只用 OpenCV 边缘与轮廓找四边形；背景杂乱时容易选错。",
+            "INDEPENDENT" to "DocQuadNet-256 角点网络（来自 MakeACopy）与边缘检测互相核对，两者不一致时取更可信的一方。",
+        )
 }
