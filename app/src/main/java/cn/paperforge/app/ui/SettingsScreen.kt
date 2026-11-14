@@ -181,7 +181,6 @@ fun SettingsScreen(vm: MainViewModel) {
                         listOf(
                             "ORIGINAL" to "原图",
                             "WORKBOOK" to "练习册",
-                            "CLEAN" to "强力去背景",
                             "GRAY" to "灰度",
                         ),
                     )

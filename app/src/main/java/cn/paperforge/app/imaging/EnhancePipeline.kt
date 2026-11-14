@@ -41,15 +41,17 @@ object EnhancePipeline {
     fun apply(
         rgb: Mat,
         destination: Mat,
-        mode: String,
+        requested: String,
         strengthOverride: Float? = null,
         workbookDetailOverride: Float? = null,
     ) {
-        if (mode == "ORIGINAL") {
+        if (requested == "ORIGINAL") {
             rgb.copyTo(destination)
             return
         }
-        if (mode in setOf("WORKBOOK", "CLEAN") && ScanConfig.int("workbookLocalPaper", 1) != 0) {
+        // Pages saved as 强力去背景 (CLEAN) are 练习册 now: on a light page they always looked the same.
+        val mode = if (requested == "CLEAN") "WORKBOOK" else requested
+        if (mode == "WORKBOOK" && ScanConfig.int("workbookLocalPaper", 1) != 0) {
             // A cover or coloured paper keeps its colours: see [ColorPage].
             if (rgb.channels() == 3 && ColorPage.isColorful(rgb)) {
                 StepTimes.time("colorPage") { ColorPage.enhance(rgb, destination) }
@@ -75,7 +77,6 @@ object EnhancePipeline {
                     destination,
                     strength,
                     workbookDetailOverride,
-                    strong = mode == "CLEAN",
                 )
                 // The field extension is solely illumination evidence. Known exterior pixels
                 // cannot be promoted back into foreground by the later contrast/source guard.

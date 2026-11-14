@@ -53,6 +53,14 @@ object UserSettings {
             edit.apply()
         }
         migrateWatermarkShortcut()
+        // 强力去背景 (CLEAN) was 练习册 under another name: light pages took the same tone route, and only its PDF
+        // pages were greyer. It is merged into 练习册; a stored choice of it, or of the camera's 去透页 mode, moves there.
+        if (!prefs.getBoolean("cleanMergedV1", false)) {
+            val edit = prefs.edit().putBoolean("cleanMergedV1", true)
+            if (prefs.getString("filter", "WORKBOOK") == "CLEAN") edit.putString("filter", "WORKBOOK")
+            if (prefs.getString("captureMode", "document") == "clean") edit.putString("captureMode", "document")
+            edit.apply()
+        }
         if (!prefs.getBoolean("workbookAppearanceV2", false))
             prefs
                 .edit()

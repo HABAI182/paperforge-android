@@ -29,7 +29,9 @@ object PdfImageEncoder {
         dpi: Int,
     ): PDImageXObject =
         when (filter) {
-            "WORKBOOK" ->
+            // CLEAN (强力去背景) was merged into 练习册 and is encoded the same way.
+            "WORKBOOK",
+            "CLEAN" ->
                 if (
                     cn.paperforge.app.imaging.ScanConfig.int("workbookLosslessPdf", 1) != 0 &&
                         quality >=
@@ -41,8 +43,7 @@ object PdfImageEncoder {
                     lossless(doc, bitmap)
                 else jpeg(doc, bitmap, false, quality, dpi)
             "BW" -> binary(doc, bitmap)
-            "GRAY",
-            "CLEAN" -> jpeg(doc, bitmap, true, quality, dpi)
+            "GRAY" -> jpeg(doc, bitmap, true, quality, dpi)
             else -> jpeg(doc, bitmap, false, quality, dpi)
         }
 

@@ -32,7 +32,6 @@ object PdfImageEnhancement {
             "AUTO" to "自然",
             "WORKBOOK" to "练习册",
             "BW" to "柔和黑白",
-            "CLEAN" to "强力去背景",
             "GRAY" to "灰度",
         )
 

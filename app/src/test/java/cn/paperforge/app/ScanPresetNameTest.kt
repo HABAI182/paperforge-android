@@ -18,22 +18,22 @@ class ScanPresetNameTest {
             mapOf(
                 "ORIGINAL" to "原图",
                 "WORKBOOK" to "练习册",
-                "CLEAN" to "强力去背景",
                 "GRAY" to "灰度",
             )
         assertEquals(expected.keys, ScanProcessor.filters.toSet())
         expected.forEach { (filter, label) -> assertEquals(label, scanFilterName(filter)) }
+        // 强力去背景 was merged into 练习册: pages saved with it show and render as 练习册.
+        assertEquals("练习册", scanFilterName("CLEAN"))
     }
 
     @Test
     fun pdfEnhancementOffersTheSamePresets() {
         val presets = PdfImageEnhancement.presets
         // PDF enhancement keeps the broader photo set (自然/柔和黑白) that the editor no longer shows.
-        assertEquals(listOf("AUTO", "WORKBOOK", "BW", "CLEAN", "GRAY"), presets.keys.toList())
+        assertEquals(listOf("AUTO", "WORKBOOK", "BW", "GRAY"), presets.keys.toList())
         assertEquals("自然", presets["AUTO"])
         assertEquals("练习册", presets["WORKBOOK"])
         assertEquals("柔和黑白", presets["BW"])
-        assertEquals("强力去背景", presets["CLEAN"])
         assertEquals("灰度", presets["GRAY"])
     }
 }
