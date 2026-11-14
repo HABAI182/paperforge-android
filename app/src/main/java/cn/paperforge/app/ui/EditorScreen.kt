@@ -268,6 +268,8 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                 }
                 "more" -> more = true
                 "applyAll" -> active?.let(vm::applyAll)
+                "autoSplit" -> active?.let(vm::autoSplitSpread)
+                "keepSpread" -> active?.let(vm::keepSpread)
                 "ocr" -> active?.let(vm::openOcr)
             }
         },
@@ -290,6 +292,7 @@ fun EditorScreen(vm: MainViewModel, onImport: () -> Unit) {
                         it.state != cn.paperforge.app.data.LocalTaskState.SUCCEEDED
                 }
                 ?.let { "${taskStateName(it.state)} ${it.progress}%  ${it.detail}" },
+        spreadHint = !busy && cn.paperforge.app.imaging.SpreadGutter.noted(active?.processingMetadata),
         renameRequest = renameTick,
         fullscreenRequest = fullscreenTick,
     )

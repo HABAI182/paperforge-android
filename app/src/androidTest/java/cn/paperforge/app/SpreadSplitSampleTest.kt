@@ -64,8 +64,10 @@ class SpreadSplitSampleTest {
             compose.waitUntil(20000) { model.pages.value.size == 1 }
             compose.waitForIdle()
             compose.onNodeWithText("更多", useUnmergedTree = true).performClick()
+            // Since 2.0.0 the split is under 更多 → 页面编排 → 自动拆分双页.
+            compose.onNodeWithText("页面编排", useUnmergedTree = true).performScrollTo().performClick()
             compose
-                .onNodeWithText("拆分双页 · 自动书脊", useUnmergedTree = true)
+                .onNodeWithText("自动拆分双页", useUnmergedTree = true)
                 .performScrollTo()
                 .performClick()
             compose.waitUntil(30000) { !model.busy.value && model.pages.value.size == 2 }

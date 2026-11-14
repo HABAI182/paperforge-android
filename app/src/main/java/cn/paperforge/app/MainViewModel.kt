@@ -3179,7 +3179,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             val bitmap = cn.paperforge.app.imaging.ScanProcessor.render(analysis, 1600)
             val detection =
                 try {
-                    cn.paperforge.app.imaging.BookSpineDetector.detect(bitmap)
+                    // The paper's own shadow down the fold: on held-out photographs of open books it found 37.5 %
+                    // of the gutters where the earlier band search (BookSpineDetector) found 10 %, and it split
+                    // fewer single sheets by mistake (3.3 % against 4.7 % of SmartDoc's test half). Kept as the
+                    // second try, the band search added 2 spreads and 12 wrong splits, so it is not.
+                    spreadGutter(bitmap)
                 } finally {
                     bitmap.recycle()
                 }
@@ -3212,6 +3216,27 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             messages.send(
                 "已拆分双页：左页在前，右页在后（书脊在 ${(x * 100).toInt()}% 处，" +
                     "置信度 ${(detection.confidence * 100).toInt()}%）"
+            )
+        }
+
+    private fun spreadGutter(bitmap: android.graphics.Bitmap): cn.paperforge.app.imaging.SpineDetection {
+        val rgba = org.opencv.core.Mat()
+        val gray = org.opencv.core.Mat()
+        return try {
+            org.opencv.android.Utils.bitmapToMat(bitmap, rgba)
+            org.opencv.imgproc.Imgproc.cvtColor(rgba, gray, org.opencv.imgproc.Imgproc.COLOR_RGBA2GRAY)
+            cn.paperforge.app.imaging.SpreadGutter.find(gray, cn.paperforge.app.imaging.SpreadGutter.Asked)
+        } finally {
+            rgba.release()
+            gray.release()
+        }
+    }
+
+    /** The user keeps a page marked as an open spread as one page: the split offer goes away. */
+    fun keepSpread(page: PageRow) =
+        perform("保留双页") {
+            repo.savePage(
+                page.copy(processingMetadata = cn.paperforge.app.imaging.SpreadGutter.withoutNote(page.processingMetadata))
             )
         }
 

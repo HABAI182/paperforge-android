@@ -534,11 +534,16 @@ object PageNetDetector {
                 method += "+" + NeighborPage.VERSION
             }
         }
+        // Both pages of an open book or notebook in the crop: the crop stays the whole spread, since either page
+        // or both may be wanted, and the gutter goes with the capture so the editor can offer to split it.
+        val spread = if (!preview) SpreadGutter.mark(source, quad) else null
+        if (spread != null) method += "+spread"
         return DetectionResult(
             quad,
             confidence.coerceIn(0f, .999f),
             method,
             elapsedMs = (System.nanoTime() - started) / 1e6f,
+            notes = if (spread != null) mapOf(SpreadGutter.NOTE to spread) else emptyMap(),
         )
     }
 

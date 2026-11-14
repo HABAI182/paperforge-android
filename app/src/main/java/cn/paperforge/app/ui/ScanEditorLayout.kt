@@ -54,6 +54,8 @@ fun ScanEditorLayout(
     suggestName: (suspend () -> SmartNaming.Suggestion?)? = null,
     highlights: Map<String, List<List<PointN>>> = emptyMap(),
     taskStatus: String? = null,
+    /** The active page was captured as an open two-page spread: offer to split it, or keep it as one page. */
+    spreadHint: Boolean = false,
     taskCount: Int = 0,
     renameRequest: Int = 0,
     fullscreenRequest: Int = 0,
@@ -235,6 +237,24 @@ fun ScanEditorLayout(
                             style = MaterialTheme.typography.labelMedium,
                         )
                         Text("查看任务", style = MaterialTheme.typography.labelMedium)
+                    }
+                }
+            if (!fullscreen && taskStatus == null && spreadHint)
+                Surface(
+                    color = MaterialTheme.colorScheme.tertiaryContainer,
+                    modifier = Modifier.fillMaxWidth().testTag("spread-hint"),
+                ) {
+                    Row(
+                        Modifier.padding(start = 16.dp, end = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            "这页像是书本或笔记本的左右两页",
+                            Modifier.weight(1f),
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                        TextButton({ onAction("keepSpread") }) { Text("保留") }
+                        TextButton({ onAction("autoSplit") }) { Text("拆为两页") }
                     }
                 }
             Box(Modifier.weight(1f).fillMaxWidth().testTag("scan-canvas")) {

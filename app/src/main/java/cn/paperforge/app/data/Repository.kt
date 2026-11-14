@@ -541,6 +541,7 @@ class Repository(val context: Context, val database: PaperDatabase) {
                             outputAspect = 0f,
                             ocrText = null,
                             ocrLayout = null,
+                            processingMetadata = cn.paperforge.app.imaging.SpreadGutter.withoutNote(page.processingMetadata),
                         ),
                         page.copy(
                             id = UUID.randomUUID().toString(),
@@ -548,6 +549,7 @@ class Repository(val context: Context, val database: PaperDatabase) {
                             outputAspect = 0f,
                             ocrText = null,
                             ocrLayout = null,
+                            processingMetadata = cn.paperforge.app.imaging.SpreadGutter.withoutNote(page.processingMetadata),
                         ),
                     )
                     .filterIndexed { index, _ ->
