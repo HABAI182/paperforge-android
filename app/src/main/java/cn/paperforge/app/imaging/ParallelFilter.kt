@@ -6,6 +6,8 @@ import java.util.concurrent.Future
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.sqrt
+import org.opencv.core.CvType
 import org.opencv.core.Mat
 import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
@@ -111,6 +113,40 @@ internal object ParallelFilter {
     fun gaussian(source: Mat, destination: Mat, sigmaX: Double, sigmaY: Double = 0.0) {
         val reach = ceil(4 * max(sigmaX, sigmaY)).toInt() + 2
         strips(source, destination, reach) { a, b -> Imgproc.GaussianBlur(a, b, Size(0.0, 0.0), sigmaX, sigmaY) }
+    }
+
+    /**
+     * A wide Gaussian on a float field, worked out on a smaller copy: what a sigma of 8 px or more leaves has no
+     * detail finer than a few pixels, so it is blurred at a quarter (or half) of the size and drawn back up.
+     * On the bench pages a sigma of 18 at full size was the single largest cost of a page; on a page's paper
+     * field the result is within 0.7 of a grey level on 99.9 % of pixels (mean 0.004). Narrower blurs, and any
+     * non-float image, take the exact path.
+     */
+    fun wideGaussian(source: Mat, destination: Mat, sigma: Double) {
+        val factor = when { sigma >= 16 -> 4; sigma >= 8 -> 2; else -> 1 }
+        if (factor == 1 || source.depth() != CvType.CV_32F || ScanConfig.int("wideGaussianReduced", 1) == 0) {
+            gaussian(source, destination, sigma)
+            return
+        }
+        val width = source.cols()
+        val height = source.rows()
+        val small = Mat()
+        try {
+            Imgproc.resize(
+                source,
+                small,
+                Size(max(1, width / factor).toDouble(), max(1, height / factor).toDouble()),
+                0.0,
+                0.0,
+                Imgproc.INTER_AREA,
+            )
+            // The reduction and the drawing back up blur a little themselves.
+            val reduced = sqrt(max(sigma * sigma - factor * factor / 4.0, sigma * sigma / 4)) / factor
+            Imgproc.GaussianBlur(small, small, Size(0.0, 0.0), reduced)
+            Imgproc.resize(small, destination, Size(width.toDouble(), height.toDouble()), 0.0, 0.0, Imgproc.INTER_LINEAR)
+        } finally {
+            small.release()
+        }
     }
 
     /** morphologyEx: two passes for open and close, so the margin covers both. */

@@ -69,7 +69,7 @@ internal object PaperField {
             ParallelFilter.morphology(gray, closed, Imgproc.MORPH_CLOSE, element)
             closed.convertTo(result, CvType.CV_32F)
             val sigma = (ScanConfig.float("paperFieldBlur", 9f) * scale).toDouble().coerceAtLeast(1.0)
-            ParallelFilter.gaussian(result, result, sigma)
+            ParallelFilter.wideGaussian(result, result, sigma)
             // The blur carries light across a hard shadow edge. Shaded paper measured against that
             // brighter value reads as ink and draws a line along the edge, so it is never allowed.
             closed.convertTo(sharp, CvType.CV_32F)

@@ -417,11 +417,8 @@ internal object WorkbookPaperBoundary {
             // Linear upscale + threshold: the exterior contour follows the probe silhouette instead
             // of 2-3 px nearest-neighbour stairs.
             Imgproc.resize(expanded, mask, rgb.size(), 0.0, 0.0, Imgproc.INTER_LINEAR)
-            val maskBytes = ByteArray(rgb.cols() * rgb.rows()).also { mask.get(0, 0, it) }
-            for (i in maskBytes.indices) {
-                maskBytes[i] = if ((maskBytes[i].toInt() and 255) >= 128) 255.toByte() else 0
-            }
-            mask.put(0, 0, maskBytes)
+            // >= 128 becomes 255, the rest 0: the same as a loop over the bytes, without the copy out and back.
+            Imgproc.threshold(mask, mask, 127.0, 255.0, Imgproc.THRESH_BINARY)
             // Full-resolution stroke veto: exact holes, one-pixel fringe.
             run {
                 val gray = mat()
@@ -431,29 +428,19 @@ internal object WorkbookPaperBoundary {
                     max(15, (min(rgb.cols(), rgb.rows()) * .05f).roundToInt() or 1)
                         .coerceAtMost(61)
                 Imgproc.medianBlur(gray, baseline, window)
-                val grayBytes = ByteArray(rgb.cols() * rgb.rows()).also { gray.get(0, 0, it) }
-                val baseBytes = ByteArray(grayBytes.size).also { baseline.get(0, 0, it) }
-                val strokes = ByteArray(grayBytes.size)
                 val contrast =
                     ScanConfig.float("workbookBoundaryStrokeContrast", 26f).coerceIn(12f, 80f)
                 // Every stroke is protected here, up to the page edge. Printed text from a page
                 // under the sheet is removed by the PageNet exterior, which is applied after this.
-                var count = 0
-                for (y in 0 until rgb.rows()) {
-                    val row = y * rgb.cols()
-                    for (x in 0 until rgb.cols()) {
-                        val i = row + x
-                        val value = grayBytes[i].toInt() and 255
-                        val base = baseBytes[i].toInt() and 255
-                        if (base - value >= contrast && value < paperLuma * .92f) {
-                            strokes[i] = 255.toByte()
-                            count++
-                        }
-                    }
-                }
+                // A stroke pixel: base - value >= contrast and value < paperLuma * .92, on whole grey levels,
+                // worked out with saturating byte operations to the same pixels as a loop over them.
                 val strokeMat = mat()
-                strokeMat.create(rgb.rows(), rgb.cols(), CvType.CV_8UC1)
-                strokeMat.put(0, 0, strokes)
+                val darkEnough = mat()
+                Core.subtract(baseline, gray, strokeMat)
+                Imgproc.threshold(strokeMat, strokeMat, ceil(contrast.toDouble()) - 1, 255.0, Imgproc.THRESH_BINARY)
+                Imgproc.threshold(gray, darkEnough, ceil((paperLuma * .92f).toDouble()) - 1, 255.0, Imgproc.THRESH_BINARY_INV)
+                Core.bitwise_and(strokeMat, darkEnough, strokeMat)
+                val count = Core.countNonZero(strokeMat)
                 Imgproc.dilate(
                     strokeMat,
                     strokeMat,

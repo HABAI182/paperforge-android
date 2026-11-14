@@ -100,18 +100,35 @@ internal object ColorPage {
             if (Core.countNonZero(coloured) < ScanConfig.float("colorPrintsShare", .01f) * rgb.total()) return
             val edge = max(rgb.cols(), rgb.rows())
             val k = max(9, (ScanConfig.float("colorPrintsWidth", .012f) * edge).roundToInt()) or 1
-            val shape = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, Size(k.toDouble(), k.toDouble())).also(owned::add)
+            val weight = mat()
+            // A print is many times wider than the opening's own detail, and its weight is feathered over k / 4
+            // anyway, so the mask is worked out at half size: the elliptical opening costs k² per pixel, and at
+            // full size it was still 1.7 s of a page on the emulator. Small pages keep the full-size path.
+            val half = ScanConfig.int("colorPrintsHalf", 1) != 0 && k >= 17
+            val factor = if (half) 2 else 1
+            val mask =
+                if (!half) coloured
+                else
+                    mat().also {
+                        Imgproc.resize(coloured, it, Size((rgb.cols() / 2).toDouble(), (rgb.rows() / 2).toDouble()), 0.0, 0.0, Imgproc.INTER_AREA)
+                        Imgproc.threshold(it, it, 127.0, 255.0, Imgproc.THRESH_BINARY)
+                    }
+            val kk = if (half) (k / 2) or 1 else k
+            val shape = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, Size(kk.toDouble(), kk.toDouble())).also(owned::add)
             val prints = mat()
             // On the filter threads, the same to the bit: one thread took 3.5 s on a 1300 x 1970 page and 17 s
             // on a 1860 x 2800 one on the emulator, the largest single step of the page.
-            StepTimes.time("cp.open") { ParallelFilter.morphology(coloured, prints, Imgproc.MORPH_OPEN, shape) }
-            if (Core.countNonZero(prints) < ScanConfig.float("colorPrintsShare", .01f) * rgb.total()) return
+            StepTimes.time("cp.open") { ParallelFilter.morphology(mask, prints, Imgproc.MORPH_OPEN, shape) }
+            if (Core.countNonZero(prints) * factor * factor < ScanConfig.float("colorPrintsShare", .01f) * rgb.total()) return
             // Out to the print's own soft border, then feathered.
-            val grow = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, Size((k / 2 or 1).toDouble(), (k / 2 or 1).toDouble())).also(owned::add)
+            val growSize = ((k / 2 or 1) / factor) or 1
+            val grow = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, Size(growSize.toDouble(), growSize.toDouble())).also(owned::add)
             ParallelFilter.dilate(prints, prints, grow)
-            val weight = mat()
             prints.convertTo(weight, CvType.CV_32F, 1.0 / 255)
-            ParallelFilter.gaussian(weight, weight, k / 4.0)
+            if (half) {
+                Imgproc.GaussianBlur(weight, weight, Size(0.0, 0.0), k / 8.0)
+                Imgproc.resize(weight, weight, Size(rgb.cols().toDouble(), rgb.rows().toDouble()), 0.0, 0.0, Imgproc.INTER_LINEAR)
+            } else ParallelFilter.wideGaussian(weight, weight, k / 4.0)
             val colour = mat()
             StepTimes.time("cp.enhance") { enhance(rgb, colour) }
             val toned = mat()

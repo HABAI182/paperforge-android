@@ -50,13 +50,21 @@ class EnhanceBenchmarkTest {
             val source = BitmapFactory.decodeFile(page.path)!!
             val samples = mutableMapOf<String, MutableList<Double>>()
             var peakNative = 0L
+            var peakJava = 0L
+            val runtime = Runtime.getRuntime()
+            fun gcStat(name: String) = Debug.getRuntimeStat(name)?.toLongOrNull() ?: 0L
             for (run in 0..runs) {
                 System.gc()
                 val before = Debug.getNativeHeapAllocatedSize()
                 val peak = AtomicLong(before)
+                val javaBefore = runtime.totalMemory() - runtime.freeMemory()
+                val javaPeak = AtomicLong(javaBefore)
+                val gcTime = gcStat("art.gc.gc-time")
+                val gcCount = gcStat("art.gc.gc-count")
                 val sampler = Thread {
                     while (!Thread.currentThread().isInterrupted) {
                         peak.accumulateAndGet(Debug.getNativeHeapAllocatedSize()) { a, b -> maxOf(a, b) }
+                        javaPeak.accumulateAndGet(runtime.totalMemory() - runtime.freeMemory()) { a, b -> maxOf(a, b) }
                         try { Thread.sleep(10) } catch (_: InterruptedException) { return@Thread }
                     }
                 }.apply { start() }
@@ -70,6 +78,10 @@ class EnhanceBenchmarkTest {
                     }
                 } else {
                     peakNative = maxOf(peakNative, peak.get() - before)
+                    peakJava = maxOf(peakJava, javaPeak.get() - javaBefore)
+                    // Time the runtime spent collecting garbage during the page, and how often.
+                    samples.getOrPut("gcMs") { mutableListOf() } += (gcStat("art.gc.gc-time") - gcTime).toDouble()
+                    samples.getOrPut("gcCount") { mutableListOf() } += (gcStat("art.gc.gc-count") - gcCount).toDouble()
                     val d = JSONObject(result.diagnostics ?: "{}")
                     for (key in listOf("processingMs", "sourcePreparationMs", "geometryMs", "appearanceMs"))
                         samples.getOrPut(key) { mutableListOf() } += d.optDouble(key, 0.0)
@@ -94,6 +106,7 @@ class EnhanceBenchmarkTest {
                     .put("width", source.width)
                     .put("height", source.height)
                     .put("peakNativeMb", peakNative / 1048576.0)
+                    .put("peakJavaMb", peakJava / 1048576.0)
                     .put("stats", stats),
             )
             source.recycle()
