@@ -699,6 +699,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     (row.targetPageId != null || UserSettings[SettingKeys.ReviewAfterCapture])
             ) {
                 if (replacement.value == row.targetPageId) replacement.value = null
+                // Back on the retaken page, not the document's first page.
+                row.targetPageId?.let { editorPageTarget.value = row.documentId!! to it }
                 screen.value = "editor"
             }
         }

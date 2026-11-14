@@ -378,6 +378,39 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                                 repo.dao.touch(document, System.currentTimeMillis())
                             }
                         }
+                    // A retake shows its new photo on the page as soon as the paper is found, as a new capture
+                    // does; the slower finish replaces it when done. Before this the old image stayed on screen
+                    // until the finish ended, 10-20 s on a phone. The page keeps its look settings, and undo
+                    // brings the old photo back.
+                    else
+                        repo.database.withTransaction {
+                            val current =
+                                repo.dao.pages(document).firstOrNull { it.id == row.targetPageId }
+                            val task = repo.dao.task(id)
+                            if (
+                                current != null &&
+                                    current.revision == spec.expectedTargetRevision &&
+                                    task?.state == LocalTaskState.RUNNING &&
+                                    task.workId == this@CaptureProcessWorker.id.toString() &&
+                                    // Already shown by this task (a retry): nothing to do.
+                                    !(current.original == file.path && current.corners == detected.corners)
+                            ) {
+                                repo.savePage(
+                                    current.copy(
+                                        original = file.path,
+                                        corners = detected.corners,
+                                        rotation = 0,
+                                        deskewDegrees = 0f,
+                                        processingMetadata = detected.processingMetadata,
+                                        detectionConfidence = result.confidence,
+                                        detectionMethod = result.method,
+                                    )
+                                )
+                                val shown = repo.dao.pages(document).first { it.id == current.id }
+                                spec = spec.copy(expectedTargetRevision = shown.revision)
+                                repo.dao.putTask(task.copy(payload = spec.encode().toString()))
+                            }
+                        }
                     repo.database.withTransaction {
                         val current = repo.dao.task(id)
                         if (
@@ -447,17 +480,24 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                                 target?.revision == spec.expectedTargetRevision
                         ) {
                             flatTarget = target.id
-                            repo.savePage(
-                                target.copy(
-                                    original = file.path,
-                                    corners = (result.quad ?: Quad.Full).encode(),
-                                    rotation = 0,
-                                    deskewDegrees = 0f,
-                                    processingMetadata = metadata,
-                                    detectionConfidence = result.confidence,
-                                    detectionMethod = result.method,
+                            // Normally already shown when the paper was found.
+                            if (target.original != file.path || target.corners != detected.corners)
+                                repo.savePage(
+                                    target.copy(
+                                        original = file.path,
+                                        corners = (result.quad ?: Quad.Full).encode(),
+                                        rotation = 0,
+                                        deskewDegrees = 0f,
+                                        processingMetadata = metadata,
+                                        detectionConfidence = result.confidence,
+                                        detectionMethod = result.method,
+                                    )
                                 )
-                            )
+                        } else if (row.targetPageId != null && target?.original == file.path) {
+                            // The new photo was shown, then the user changed the page: their changes stay, and the
+                            // finish is not laid over them.
+                            state = LocalTaskState.SUCCEEDED
+                            detail = "已保留你对本页的修改"
                         } else if (original != null) {
                             if (
                                 original.revision == spec.expectedDraftRevision &&

@@ -41,13 +41,20 @@ data class PagePreview(
     val bitmap: Bitmap? = null,
     val error: String? = null,
     val loading: Boolean = true,
+    /** The page and photo [bitmap] was made from. */
+    val source: String? = null,
 )
 
 @Composable
 fun pagePreview(page: PageRow, edge: Int = 1200, original: Boolean = false): PagePreview {
+    val source = page.id + "\n" + page.original
     val preview by
         produceState(PagePreview(), page, edge, original) {
-            value = value.copy(error = null, loading = true)
+            // A new look of the same photo keeps the old picture until the new one is ready; a new photo (a
+            // retake) never shows the previous one in its place.
+            value =
+                if (value.source == source) value.copy(error = null, loading = true)
+                else PagePreview(loading = true)
             var generated: Bitmap? = null
             try {
                 withContext(Dispatchers.Default) {
@@ -71,7 +78,7 @@ fun pagePreview(page: PageRow, edge: Int = 1200, original: Boolean = false): Pag
                                 }
                             }
                 }
-                value = PagePreview(bitmap = generated, loading = false)
+                value = PagePreview(bitmap = generated, loading = false, source = source)
                 generated = null
             } catch (cancelled: kotlinx.coroutines.CancellationException) {
                 throw cancelled
