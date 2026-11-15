@@ -34,7 +34,7 @@ import org.opencv.imgproc.Imgproc
  * Drawings, sparse pages and maths with little text usually stay below that and are left alone.
  */
 object ContentOrientation {
-    const val VERSION = "orient-1"
+    const val VERSION = "orient-2"
     private const val GLOBAL = 256
     private const val WORK = 512
     private const val LONG = 1024
@@ -43,7 +43,17 @@ object ContentOrientation {
     private const val MIN_INK = 6.0
     private const val EPS = 1e-4
 
-    data class Decision(val turnsClockwise: Int, val posterior: FloatArray, val windows: Int, val agreeing: Int) {
+    data class Decision(
+        val turnsClockwise: Int,
+        val posterior: FloatArray,
+        val windows: Int,
+        val agreeing: Int,
+        /** Line-margin cue for the leading sideways direction (NaN when not consulted). */
+        val cue: Double = Double.NaN,
+        val cueLines: Int = 0,
+        /** True when the turn came from the sideways rule (ensemble sure of the axis, cue sure of the direction). */
+        val byCue: Boolean = false,
+    ) {
         /** Degrees to add to PageRow.rotation (clockwise) to show the page upright. */
         val correction: Int
             get() = ((4 - turnsClockwise) % 4) * 90
@@ -55,6 +65,10 @@ object ContentOrientation {
                 .put("posterior", org.json.JSONArray(posterior.map { (it * 1000).roundToInt() / 1000.0 }))
                 .put("windows", windows)
                 .put("agreeing", agreeing)
+                .apply {
+                    if (!cue.isNaN()) put("cue", (cue * 1000).roundToInt() / 1000.0).put("cueLines", cueLines)
+                    if (byCue) put("byCue", true)
+                }
     }
 
     private class Models(val global: OrtSession, val patches: List<OrtSession>, val params: JSONObject)
@@ -121,7 +135,96 @@ object ContentOrientation {
             best != 0 &&
                 posterior[best] >= m.params.getDouble("T") &&
                 agreeing >= m.params.getInt("M")
-        return Decision(if (accept) best else 0, posterior, p.size, agreeing)
+        if (accept) return Decision(best, posterior, p.size, agreeing)
+        // Sideways rule: the axis is certain but the direction is not. Turn only when the page's own line margins
+        // (lines start at a shared left margin, short lines end early on the right) agree with the leaning direction.
+        val side = m.params.optJSONObject("sideways")
+        if (side != null && best in setOf(1, 3) && posterior[1] + posterior[3] >= side.getDouble("axis") &&
+            posterior[best] >= side.getDouble("lean")
+        ) {
+            val upright = rotateClockwise(globalInput(gray), GLOBAL, (4 - best) % 4)
+            val (c, n) = marginCue(upright, GLOBAL)
+            val ok = n >= side.getInt("lines") && c > side.getDouble("cue")
+            return Decision(if (ok) best else 0, posterior, p.size, agreeing, c, n, ok)
+        }
+        return Decision(0, posterior, p.size, agreeing)
+    }
+
+    private fun rotateClockwise(x: FloatArray, n: Int, times: Int): FloatArray {
+        var out = x
+        repeat(times) { out = rotateClockwise(out, n) }
+        return out
+    }
+
+    /**
+     * Reading-direction cue on a square ink map in 0..1 (same as work/orient/cue.py): line bands from the row
+     * projection, each band's first and last inked column, then (mean right gap - mean left gap + std(ends) -
+     * std(starts)) / text width. Positive when the map reads left to right as given.
+     */
+    internal fun marginCue(x: FloatArray, n: Int): Pair<Double, Int> {
+        val on = BooleanArray(n * n) { x[it] * 255f > 60f }
+        // Printed rules are not writing: clear horizontal runs of at least 35 % of the width (an opening with a
+        // 1 x L kernel), one row above and below too (as cue.py's without_rules).
+        val long = maxOf(8, (n * .35).toInt())
+        val rule = BooleanArray(n * n)
+        for (y in 0 until n) {
+            var start = -1
+            for (c in 0..n) {
+                val v = c < n && on[y * n + c]
+                if (v && start < 0) start = c
+                else if (!v && start >= 0) {
+                    if (c - start >= long) for (k in start until c) rule[y * n + k] = true
+                    start = -1
+                }
+            }
+        }
+        for (y in 0 until n) for (c in 0 until n) {
+            if (rule[y * n + c] || (y > 0 && rule[(y - 1) * n + c]) || (y + 1 < n && rule[(y + 1) * n + c])) on[y * n + c] = false
+        }
+        val rows = DoubleArray(n) { y -> (0 until n).count { on[y * n + it] }.toDouble() / n }
+        val sorted = rows.sorted()
+        val p60 = percentile(sorted, 60.0)
+        val thr = max(.01, p60 * .5)
+        val bands = mutableListOf<Pair<Int, Int>>()
+        var start = -1
+        for (y in 0..n) {
+            val v = y < n && rows[y] > thr
+            if (v && start < 0) start = y
+            else if (!v && start >= 0) {
+                if (y - start >= 4) bands += start to y
+                start = -1
+            }
+        }
+        val spans = mutableListOf<Pair<Int, Int>>()
+        for ((a, b) in bands) {
+            val cols = DoubleArray(n) { c -> if ((a until b).any { on[it * n + c] }) 1.0 else 0.0 }
+            // np.convolve(cols, ones(5)/5, "same") > 0.35
+            val smooth = BooleanArray(n) { c -> (c - 2..c + 2).sumOf { if (it in 0 until n) cols[it] else 0.0 } / 5 > .35 }
+            val idx = smooth.indices.filter { smooth[it] }
+            if (idx.size < n * .05) continue
+            spans += idx.first() to idx.last()
+        }
+        if (spans.size < 4) return 0.0 to spans.size
+        val starts = spans.map { it.first.toDouble() }
+        val ends = spans.map { it.second.toDouble() }
+        val left0 = percentile(starts.sorted(), 10.0)
+        val right0 = percentile(ends.sorted(), 90.0)
+        val width = max(1.0, right0 - left0)
+        val ragged = spans.indices.sumOf { i -> max(0.0, right0 - ends[i]) / width - max(0.0, starts[i] - left0) / width } / spans.size
+        fun std(v: List<Double>): Double {
+            val m = v.average()
+            return kotlin.math.sqrt(v.sumOf { (it - m) * (it - m) } / v.size)
+        }
+        return (ragged + (std(ends) - std(starts)) / width) to spans.size
+    }
+
+    /** numpy's default (linear) percentile of an ascending list. */
+    private fun percentile(sorted: List<Double>, q: Double): Double {
+        if (sorted.isEmpty()) return 0.0
+        val pos = (sorted.size - 1) * q / 100
+        val lo = kotlin.math.floor(pos).toInt()
+        val hi = kotlin.math.ceil(pos).toInt()
+        return sorted[lo] + (sorted[hi] - sorted[lo]) * (pos - lo)
     }
 
     private fun average(list: List<DoubleArray>) = DoubleArray(4) { k -> list.sumOf { it[k] } / list.size }

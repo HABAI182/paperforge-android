@@ -50,6 +50,75 @@ object FlatDocument {
     }
 
     fun geometry(source: Bitmap, samplingSource: Bitmap = source): PageDewarp.Result {
+        // Every stage below follows horizontal rules and text lines. A page photographed sideways has them running
+        // down the photo, so it is measured a quarter turn round and the result turned back (image and grid).
+        if (ScanConfig.int("sidewaysGeometry", 1) != 0 && linesRunDown(source)) {
+            val turn = android.graphics.Matrix().apply { postRotate(90f) }
+            val turned = Bitmap.createBitmap(source, 0, 0, source.width, source.height, turn, true)
+            val turnedSampling =
+                if (samplingSource === source) turned
+                else Bitmap.createBitmap(samplingSource, 0, 0, samplingSource.width, samplingSource.height, turn, true)
+            try {
+                val r = uprightGeometry(turned, turnedSampling)
+                val back = android.graphics.Matrix().apply { postRotate(-90f) }
+                val image = Bitmap.createBitmap(r.bitmap, 0, 0, r.bitmap.width, r.bitmap.height, back, true)
+                if (image !== r.bitmap) r.bitmap.recycle()
+                val w = image.width
+                val h = image.height
+                val side = r.grid.side
+                val values = FloatArray(side * side * 2)
+                for (y in 0 until side) for (x in 0 until side) {
+                    val px = (((x + .5f) * w / side - .5f) / (w - 1)).coerceIn(0f, 1f)
+                    val py = (((y + .5f) * h / side - .5f) / (h - 1)).coerceIn(0f, 1f)
+                    // Original (x, y) is (1 - y, x) on the clockwise-turned page; its inverse is (y', 1 - x').
+                    val q = r.grid.inputPoint(PointN(1f - py, px))
+                    values[2 * (y * side + x)] = q.y
+                    values[2 * (y * side + x) + 1] = 1f - q.x
+                }
+                return r.copy(
+                    bitmap = image,
+                    grid = DewarpGrid(w, h, r.grid.strength, side, values),
+                    algorithm = r.algorithm + "+sideways",
+                )
+            } finally {
+                if (turnedSampling !== turned) turnedSampling.recycle()
+                turned.recycle()
+            }
+        }
+        return uprightGeometry(source, samplingSource)
+    }
+
+    /**
+     * True when long straight lines (rules, table or text lines) run clearly down the page rather than across it:
+     * at least three times as much ink in long vertical runs as in long horizontal ones.
+     */
+    internal fun linesRunDown(source: Bitmap): Boolean {
+        val rgba = Mat()
+        val gray = Mat()
+        val bin = Mat()
+        val across = Mat()
+        val down = Mat()
+        try {
+            Utils.bitmapToMat(source, rgba)
+            val scale = 400.0 / maxOf(source.width, source.height)
+            Imgproc.resize(rgba, rgba, Size(), scale, scale, Imgproc.INTER_AREA)
+            Imgproc.cvtColor(rgba, gray, Imgproc.COLOR_RGBA2GRAY)
+            Imgproc.adaptiveThreshold(gray, bin, 255.0, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY_INV, 15, 8.0)
+            val w = bin.cols()
+            val h = bin.rows()
+            Imgproc.morphologyEx(bin, across, Imgproc.MORPH_OPEN,
+                Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(maxOf(20.0, w * .25), 1.0)))
+            Imgproc.morphologyEx(bin, down, Imgproc.MORPH_OPEN,
+                Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(1.0, maxOf(20.0, h * .25))))
+            val a = Core.countNonZero(across).toDouble()
+            val d = Core.countNonZero(down).toDouble()
+            return d >= ScanConfig.float("sidewaysDominance", 3f) * a && d >= w * h * .004
+        } finally {
+            listOf(rgba, gray, bin, across, down).forEach(Mat::release)
+        }
+    }
+
+    private fun uprightGeometry(source: Bitmap, samplingSource: Bitmap = source): PageDewarp.Result {
         if (ScanConfig.int("workbookIntelligentGeometry", 1) != 0)
             return intelligentGeometry(source, samplingSource)
         val result = legacyGeometry(source)
@@ -199,6 +268,7 @@ object FlatDocument {
                     .put("ruleRectifyMove", rectified?.moved ?: 0.0)
                     .put("curvedGrid", curveActive)
                     .put("ruledLines", ruled?.lines ?: 0)
+                    .put("ruledMaximumShift", ruled?.maximumShift ?: 0f)
                     .put("textCurveLines", text?.lines ?: 0)
                     .put("headerUniformFit", ruled?.fit ?: 1f)
                     .put("headerExtension", ruled?.topExtension ?: 0f)
