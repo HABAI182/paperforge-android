@@ -1,29 +1,65 @@
 package cn.paperforge.app.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.material.icons.automirrored.filled.Redo
+import androidx.compose.material.icons.automirrored.filled.Undo
+import androidx.compose.material.icons.automirrored.filled.ViewList
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cn.paperforge.app.MainViewModel
-import cn.paperforge.app.model.PointN
 import cn.paperforge.app.pdf.*
 import java.io.File
-import java.util.UUID
+import kotlin.math.roundToInt
 import kotlinx.coroutines.*
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+private val swatches =
+    listOf(
+        0xFF000000.toInt() to "黑",
+        0xFF404040.toInt() to "深灰",
+        0xFFC62828.toInt() to "红",
+        0xFF1565C0.toInt() to "蓝",
+        0xFF2E7D32.toInt() to "绿",
+        0xFFE65100.toInt() to "橙",
+    )
+
+/**
+ * Native text editor. The page is the editing surface: tap a text object, or press and hold to select words and
+ * drag to extend; the bar below formats the selection. Every change is checked by rendering the edited page before
+ * it enters the draft, so what is shown is what will be saved.
+ */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun NativePdfEditorScreen(vm: MainViewModel) {
     val source by vm.nativeEditSource.collectAsState()
@@ -31,83 +67,35 @@ fun NativePdfEditorScreen(vm: MainViewModel) {
     val input = doc.pdfPath?.let(::File) ?: return
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var page by rememberSaveable(doc.id) { mutableIntStateOf(0) }
+    val motion = LocalPaperMotion.current
+    val clipboard = LocalClipboardManager.current
+    val feedback = selectionFeedback()
+    val session = remember(doc.id, input) { NativeEditSession(context.applicationContext, input) }
+    DisposableEffect(session) { onDispose { session.close() } }
+    var page by rememberSaveable(doc.id) { mutableIntStateOf(vm.nativeEditPage.value.coerceAtLeast(0)) }
+    var count by remember(doc.id) { mutableIntStateOf(0) }
     var draft by remember(doc.id) { mutableStateOf<NativeEditDraft?>(null) }
-    var fonts by
-        remember(doc.id) {
-            mutableStateOf(
-                listOf(
-                    NativeFontChoice("ORIGINAL", "沿用原字体"),
-                    NativeFontChoice("CJK", "PaperForge 中英字体"),
-                )
-            )
-        }
+    var fonts by remember(doc.id) { mutableStateOf(listOf<NativeFontChoice>()) }
     var attempt by remember { mutableIntStateOf(0) }
     var message by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
-    var fullscreen by rememberSaveable { mutableStateOf(false) }
-    var toolsOpen by remember { mutableStateOf(false) }
-    var selectedKey by remember(doc.id, page) { mutableStateOf<String?>(null) }
-    var query by remember(doc.id, page) { mutableStateOf("") }
-    var preview by remember(doc.id) { mutableStateOf<File?>(null) }
-    var showPreview by remember(doc.id) { mutableStateOf(false) }
-    val previewFiles = remember(doc.id) { mutableListOf<File>() }
-    DisposableEffect(doc.id) { onDispose { previewFiles.forEach { it.delete() } } }
+    var saved by remember(doc.id) { mutableStateOf<NativeEditDraft?>(null) }
 
     LaunchedEffect(doc.id, input, attempt) {
         try {
             val loaded =
                 withContext(Dispatchers.IO) {
                     val sha = PdfAssembly.sha256(input)
-                    NativeEditDraft.load(vm.repo, doc, sha) to NativeEditFonts.list(vm.repo, doc)
+                    Triple(session.open(), NativeEditDraft.load(vm.repo, doc, sha), NativeEditFonts.list(vm.repo, doc))
                 }
-            draft = loaded.first
-            fonts = loaded.second
+            count = loaded.first
+            draft = loaded.second
+            fonts = loaded.third
         } catch (cancel: CancellationException) {
             throw cancel
         } catch (error: Exception) {
             message = error.message ?: "编辑草稿无法读取"
         }
-    }
-    val inspected by
-        produceState<Result<Pair<Int, List<NativePdfEditor.TextObject>>>?>(
-            null,
-            input,
-            page,
-            attempt,
-        ) {
-            value = null
-            value =
-                withContext(Dispatchers.IO) {
-                    runCatching { NativePdfEditor.inspect(input, page) }
-                        .onFailure { if (it is CancellationException) throw it }
-                }
-        }
-    val objects =
-        inspected?.getOrNull()?.second.orEmpty().filter {
-            it.text.isNotEmpty() || it.reason !in setOf("空文字对象", "不可见文字层，请使用OCR校对")
-        }
-    val count = inspected?.getOrNull()?.first ?: 0
-    val selected = objects.firstOrNull { it.key == selectedKey }
-    var text by remember { mutableStateOf("") }
-    var fontId by remember { mutableStateOf("ORIGINAL") }
-    var fontSize by remember { mutableStateOf("") }
-    var fit by remember { mutableStateOf(true) }
-    val controlsState = rememberLazyListState()
-    LaunchedEffect(selectedKey) { if (selectedKey != null) controlsState.animateScrollToItem(1) }
-    LaunchedEffect(selectedKey, draft?.cursor, draft?.states) {
-        val item = selected
-        val edit = draft?.edits?.firstOrNull { it.key == selectedKey }
-        text = edit?.text ?: item?.text.orEmpty()
-        fontId = edit?.font ?: "ORIGINAL"
-        fontSize = (edit?.size ?: item?.size)?.toString().orEmpty()
-        fit = edit?.fit ?: true
-    }
-    fun update(value: NativeEditDraft) {
-        draft = value
-        showPreview = false
-        preview = null
-        message = ""
     }
     LaunchedEffect(draft) {
         draft?.let { value ->
@@ -120,18 +108,149 @@ fun NativePdfEditorScreen(vm: MainViewModel) {
             }
         }
     }
+    LaunchedEffect(count) { if (count > 0 && page >= count) page = 0 }
+    val fontFiles = fonts.filter { it.path.isNotEmpty() }.associate { it.sha256 to File(it.path) }
+
+    // The source page's objects (original text and editability).
+    val originals by
+        produceState<Result<List<NativePdfEditor.TextObject>>?>(null, session, page, attempt) {
+            value = null
+            value = runCatching { session.original(page) }.onFailure { if (it is CancellationException) throw it }
+        }
+    val originalList = originals?.getOrNull().orEmpty()
+    val originalMap = remember(originalList) { originalList.associateBy { it.key } }
+
+    // The shown page: the source page, or a one-page preview with this page's edits.
+    var shown by remember(doc.id, page) { mutableStateOf<NativeEditSession.Shown?>(null) }
+    val pageEdits = draft?.edits.orEmpty().filter { it.page == page }
+    LaunchedEffect(page, pageEdits, fonts) {
+        if (pageEdits.isEmpty()) {
+            shown = null
+            return@LaunchedEffect
+        }
+        if (shown != null && shownEdits(shown) == pageEdits) return@LaunchedEffect
+        try {
+            busy = true
+            val next = session.preview(page, pageEdits, fontFiles)
+            shown?.let { session.discard(it.file) }
+            shown = next.also { it.file.setLastModified(System.currentTimeMillis()) }
+            shownEditsCache[next.file.path] = pageEdits
+        } catch (cancel: CancellationException) {
+            throw cancel
+        } catch (error: Exception) {
+            message = error.message ?: "预览未能生成"
+        } finally {
+            busy = false
+        }
+    }
+    val objects = shown?.objects ?: originalList
+    val shownFile = shown?.file ?: input
+    val shownIndex = if (shown != null) 0 else page
+    val pdf by
+        produceState<Result<PdfSession>?>(null, shownFile) {
+            var pending: PdfSession? = null
+            try {
+                val s = withContext(Dispatchers.IO) { PdfSession(shownFile).also { pending = it } }
+                value = Result.success(s)
+                pending = null
+            } catch (cancel: CancellationException) {
+                throw cancel
+            } catch (error: Exception) {
+                value = Result.failure(error)
+            } finally {
+                pending?.close()
+            }
+        }
+    val pdfSession = pdf?.getOrNull()
+    DisposableEffect(pdfSession) { onDispose { pdfSession?.close() } }
+    var transform by remember(doc.id, page) { mutableStateOf(PageTransform()) }
+
+    // Selection: a character range over shown objects, or a set of whole objects from the list.
+    val model = remember(objects, page) { NativeSelection.page(page, objects) }
+    var selection by remember(doc.id, page) { mutableStateOf<ReaderTextSelection?>(null) }
+    var checked by remember(doc.id, page) { mutableStateOf(setOf<String>()) }
+    var pendingSegments by remember { mutableStateOf<List<NativeSegment>?>(null) }
+    LaunchedEffect(model) {
+        // Keep the selection on the same characters after a change re-reads the page.
+        val keep = pendingSegments ?: selection?.let { NativeSelection.segments(it) }
+        pendingSegments = null
+        selection =
+            keep?.let { segs ->
+                val indices =
+                    model.units.indices.filter { i ->
+                        val u = model.units[i]
+                        val key = model.ordered[u.line].source.removePrefix("obj:")
+                        segs.any { it.key == key && u.span.start < it.end && u.span.end > it.start }
+                    }
+                if (indices.isEmpty()) null else ReaderTextSelection(model, indices.first(), indices.last())
+            }
+    }
+    val segments: List<NativeSegment> =
+        selection?.let { NativeSelection.segments(it) } ?: NativeSelection.whole(objects, checked)
+    val selectedObjects = segments.mapNotNull { s -> objects.firstOrNull { it.key == s.key } }
+    val blocked = selectedObjects.filter { originalMap[it.key]?.editable == false }
+    val selectedText = NativeSelection.text(objects, segments)
+    val edits = draft?.edits.orEmpty()
+    val dirty = draft != null && edits.isNotEmpty() && draft != saved
+
+    /** Checks [next] by rendering this page, then puts it into the draft. */
+    fun commit(next: List<NativePdfEditor.Edit>, keep: List<NativeSegment>? = null, done: String = "") {
+        val current = draft ?: return
+        if (next == current.edits) return
+        scope.launch {
+            busy = true
+            try {
+                val nextPage = next.filter { it.page == page }
+                val result = if (nextPage.isEmpty()) null else session.preview(page, nextPage, fontFiles)
+                shown?.let { session.discard(it.file) }
+                if (result != null) shownEditsCache[result.file.path] = nextPage
+                shown = result
+                pendingSegments = keep
+                draft = current.change(next)
+                val squeezed = result?.outcomes?.filter { it.scale < .999f }.orEmpty()
+                val overflow = result?.outcomes?.any { it.overflow } == true
+                message =
+                    listOfNotNull(
+                            done.ifEmpty { null },
+                            if (squeezed.isNotEmpty())
+                                "为放进原宽度，新文字横向压缩到 ${(squeezed.minOf { it.scale } * 100).roundToInt()}%"
+                            else null,
+                            if (overflow) "有文字超出原来的宽度，可能与后面的内容重叠，请检查" else null,
+                        )
+                        .joinToString("；")
+            } catch (cancel: CancellationException) {
+                throw cancel
+            } catch (error: Exception) {
+                message = error.message ?: "这项修改无法安全应用，已保持原样"
+            } finally {
+                busy = false
+            }
+        }
+    }
+
+    fun restyle(style: NativeStyle, label: String) {
+        val current = draft ?: return
+        if (blocked.isNotEmpty() && blocked.size == selectedObjects.size) {
+            message = blocked.first().reason.ifEmpty { "所选文字不能直接修改" }
+            return
+        }
+        commit(NativeEditOps.restyle(current.edits, originalMap, segments, style), segments, label)
+    }
+
+    var sheet by remember { mutableStateOf("") }
+    var editText by remember { mutableStateOf("") }
+    var fit by remember { mutableStateOf(true) }
+    var leaving by remember { mutableStateOf(false) }
+    var originalMissing by remember { mutableStateOf<List<String>?>(null) }
+
     val importer =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             if (uri != null)
                 scope.launch {
                     busy = true
                     try {
-                        val choice =
-                            withContext(Dispatchers.IO) {
-                                NativeEditFonts.install(vm.repo, doc, uri)
-                            }
-                        fonts = (fonts.filter { it.id != choice.id } + choice)
-                        fontId = choice.id
+                        val choice = withContext(Dispatchers.IO) { NativeEditFonts.install(vm.repo, doc, uri) }
+                        fonts = fonts.filter { it.id != choice.id } + choice
                         message = "已导入 ${choice.label}"
                     } catch (cancel: CancellationException) {
                         throw cancel
@@ -142,471 +261,496 @@ fun NativePdfEditorScreen(vm: MainViewModel) {
                     }
                 }
         }
-    val shownFile = if (showPreview) preview ?: input else input
-    val sessionResult by
-        produceState<Result<PdfSession>?>(null, shownFile) {
-            value = null
-            var pending: PdfSession? = null
-            try {
-                val session =
-                    withContext(Dispatchers.IO) { PdfSession(shownFile).also { pending = it } }
-                value = Result.success(session)
-                pending = null
-            } catch (cancel: CancellationException) {
-                throw cancel
-            } catch (error: Exception) {
-                value = Result.failure(error)
-            } finally {
-                pending?.close()
+
+    fun applyText() {
+        val current = draft ?: return
+        val clean = editText.replace("\r", "")
+        scope.launch {
+            // New text in a subset font often lacks glyphs: use a matching built-in font and say so.
+            val first = selectedObjects.firstOrNull { originalMap[it.key]?.editable == true }
+            val runsAtStart =
+                first?.let { item ->
+                    val seg = segments.first { it.key == item.key }
+                    var at = 0
+                    NativeEditOps.runs(current.edits, originalMap.getValue(item.key)).firstOrNull { r ->
+                        val hit = seg.start < at + r.text.length || r.text.isEmpty()
+                        at += r.text.length
+                        hit
+                    }
+                }
+            var style: NativeStyle? = null
+            var note = "已修改文字"
+            if (first != null && (runsAtStart == null || runsAtStart.font == NativeRun.ORIGINAL)) {
+                val lacking = session.missingInOriginal(first.key, clean)
+                if (lacking.isNotEmpty()) {
+                    val sub = NativeFontLibrary.substitute(context, originalMap.getValue(first.key), clean)
+                    if (sub != null) {
+                        style = NativeStyle(font = sub.id)
+                        note = "原字体只嵌入了用到的字，缺少「${lacking.take(4).joinToString("")}」，新文字改用「${sub.nameZh}」"
+                    }
+                }
             }
+            val next = NativeEditOps.replace(current.edits, originalMap, segments, clean) { style }
+            val withFit = next.map { e -> if (segments.any { it.key == e.key }) e.copy(fit = fit) else e }
+            sheet = ""
+            commit(withFit, null, note)
         }
-    val session = sessionResult?.getOrNull()
-    DisposableEffect(session) { onDispose { session?.close() } }
-    var transform by remember(shownFile, page) { mutableStateOf(PageTransform()) }
-    fun pick(point: PointN): Boolean {
-        if (showPreview) return false
-        val item =
-            objects
-                .filter { it.corners.size == 4 }
-                .filter {
-                    point.x in it.corners[0].x..it.corners[2].x &&
-                        point.y in it.corners[0].y..it.corners[2].y
-                }
-                .minByOrNull {
-                    (it.corners[2].x - it.corners[0].x) * (it.corners[2].y - it.corners[0].y)
-                }
-        selectedKey = item?.key
-        if (item != null) toolsOpen = true
-        return item != null
     }
-    val pendingDraft =
-        draft?.let { value ->
-            if (selected == null || !selected.editable) value
-            else {
-                val points = fontSize.toFloatOrNull()
-                val choice = fonts.firstOrNull { it.id == fontId }
-                if (points == null || points <= 0f || points > 1000f || choice == null) null
-                else {
-                    val changed =
-                        text != selected.text || fontId != "ORIGINAL" || points != selected.size
-                    val edit =
-                        NativePdfEditor.Edit(
-                            page,
-                            selected.index,
-                            selected.text,
-                            text,
-                            fontId,
-                            points,
-                            fit,
-                            choice.sha256,
-                        )
-                    val existing = value.edits.any { it.key == selected.key }
-                    val next =
-                        if (!changed) value.edits.filter { it.key != selected.key }
-                        else if (existing)
-                            value.edits.map { if (it.key == selected.key) edit else it }
-                        else value.edits + edit
-                    value.change(next)
-                }
+
+    BackHandler(enabled = selection != null || checked.isNotEmpty() || sheet.isNotEmpty()) {
+        when {
+            sheet.isNotEmpty() -> sheet = ""
+            else -> {
+                selection = null
+                checked = emptySet()
             }
         }
-    val saveable = pendingDraft?.edits?.isNotEmpty() == true && !busy
+    }
+    BackHandler(enabled = selection == null && checked.isEmpty() && sheet.isEmpty() && dirty) { leaving = true }
+    fun leave() {
+        vm.selected.value = doc
+        vm.screen.value = "reader"
+    }
+
     Scaffold(
         topBar = {
-            if (!fullscreen)
-                TopAppBar(
-                    title = { Text("原生文字编辑") },
-                    navigationIcon = {
-                        IconButton(
-                            onClick = {
-                                vm.selected.value = doc
-                                vm.screen.value = "reader"
-                            }
-                        ) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回阅读")
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = { fullscreen = true }) {
-                            Icon(Icons.Default.Fullscreen, "放大页面")
-                        }
-                    },
-                )
-        }
+            TopAppBar(
+                title = {
+                    Column {
+                        Text("编辑文字")
+                        Text(
+                            buildString {
+                                append("第 ${page + 1} / ${count.coerceAtLeast(1)} 页")
+                                if (edits.isNotEmpty())
+                                    append(if (dirty) " · ${edits.size} 处修改未保存" else " · 已保存")
+                            },
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.testTag("native-edit-status"),
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = { if (dirty) leaving = true else leave() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回阅读")
+                    }
+                },
+                actions = {
+                    IconButton(enabled = draft?.canUndo == true && !busy, onClick = { draft?.let { draft = it.undo(); message = "已撤销" } }) {
+                        Icon(Icons.AutoMirrored.Filled.Undo, "撤销")
+                    }
+                    IconButton(enabled = draft?.canRedo == true && !busy, onClick = { draft?.let { draft = it.redo(); message = "已重做" } }) {
+                        Icon(Icons.AutoMirrored.Filled.Redo, "重做")
+                    }
+                    TextButton(
+                        enabled = edits.isNotEmpty() && !busy && dirty,
+                        onClick = {
+                            val value = draft ?: return@TextButton
+                            vm.queueNativeEdit(value.request())
+                            saved = value
+                            message = "正在保存为新的 PDF「${doc.title} · 原生文字编辑」，原文件保持不变；完成后在文库中打开"
+                        },
+                        modifier = Modifier.testTag("native-edit-save"),
+                    ) {
+                        Text("保存")
+                    }
+                },
+            )
+        },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
-            FlowRow(
-                Modifier.fillMaxWidth().padding(horizontal = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                TextButton(onClick = { page-- }, enabled = page > 0 && !busy) { Text("上一页") }
-                Text("${page + 1} / ${count.coerceAtLeast(1)}", Modifier.padding(vertical = 12.dp))
-                TextButton(onClick = { page++ }, enabled = page + 1 < count && !busy) {
-                    Text("下一页")
+            // What kind of page this is, when it is not ordinary native text.
+            val kind =
+                when {
+                    originals == null -> null
+                    originals?.isFailure == true -> "这一页的文字无法读取：${originals?.exceptionOrNull()?.message}"
+                    originalList.none { it.text.isNotBlank() } ->
+                        "这一页没有可编辑的文字：它是扫描图片，或文字已转成曲线。可在阅读器中识别文字（OCR）后复制。"
+                    originalList.filter { it.text.isNotBlank() }.all { it.invisible } ->
+                        "这一页是扫描图片，文字只是隐藏的识别层（OCR）。可以选择、复制，但修改它不会改变看到的图像，所以不在这里编辑。"
+                    else -> null
                 }
-                FilterChip(!showPreview, { showPreview = false }, label = { Text("原页") })
-                FilterChip(
-                    showPreview,
-                    { showPreview = true },
-                    enabled = preview != null,
-                    label = { Text("修改预览") },
-                )
-                if (fullscreen) TextButton(onClick = { fullscreen = false }) { Text("返回编辑") }
+            AnimatedVisibility(kind != null) {
+                Surface(color = MaterialTheme.colorScheme.secondaryContainer, modifier = Modifier.fillMaxWidth()) {
+                    Text(kind.orEmpty(), Modifier.padding(12.dp), style = MaterialTheme.typography.bodySmall)
+                }
             }
-            @Composable
-            fun pageView(modifier: Modifier) {
-                Box(modifier) {
-                    if (session != null)
-                        ReaderPage(
-                            session,
-                            page,
-                            transform,
-                            0,
-                            true,
-                            if (!showPreview)
-                                selected
-                                    ?.corners
-                                    ?.takeIf { it.size == 4 }
-                                    ?.let { p ->
-                                        listOf(
-                                            PdfSearch.Hit(
-                                                page,
-                                                selected.text,
-                                                p[0].x,
-                                                p[0].y,
-                                                p[2].x,
-                                                p[2].y,
-                                            )
-                                        )
+            Box(Modifier.weight(1f).fillMaxWidth()) {
+                if (pdfSession != null)
+                    ReaderPage(
+                        pdfSession,
+                        shownIndex,
+                        transform,
+                        0,
+                        true,
+                        // Objects chosen in the list are outlined on the page.
+                        if (selection == null)
+                            objects.filter { it.key in checked && it.corners.size == 4 }.map {
+                                PdfSearch.Hit(page, it.text, it.corners[0].x, it.corners[0].y, it.corners[2].x, it.corners[2].y)
+                            }
+                        else emptyList(),
+                        onTransform = { transform = it },
+                        onTap = {
+                            selection = null
+                            checked = emptySet()
+                        },
+                        onLinkTap = { p ->
+                            // A tap selects the whole text object under the finger.
+                            val item =
+                                model.units.indices
+                                    .firstOrNull { i ->
+                                        val u = model.units[i].span
+                                        p.x in (u.left - .004f)..(u.right + .004f) && p.y in (u.top - .004f)..(u.bottom + .004f)
                                     }
-                                    .orEmpty()
-                            else emptyList(),
-                            onTransform = { transform = it },
-                            onTap = {},
-                            onLongPress = { pick(it) },
-                            onLinkTap = { pick(it) },
-                            edgeTurning = false,
-                            fitWidth = true,
-                            initializeAtTop = true,
-                        )
-                    else if (sessionResult?.isFailure == true)
-                        Text("页面读取失败：${sessionResult?.exceptionOrNull()?.message}")
-                    else CircularProgressIndicator(Modifier.padding(24.dp))
-                }
+                                    ?.let { model.ordered[model.units[it].line].source.removePrefix("obj:") }
+                            if (item != null) {
+                                checked = emptySet()
+                                selection = NativeSelection.objectSelection(model, item)
+                                feedback()
+                                true
+                            } else false
+                        },
+                        onSelectStart = { p ->
+                            val s = model.select(p)
+                            if (s != null) {
+                                checked = emptySet()
+                                selection = s
+                            }
+                            s != null
+                        },
+                        onSelectDrag = { p ->
+                            selection =
+                                selection?.let { s ->
+                                    val at = s.model.nearest(p)
+                                    if (at != null && at < s.first) s.move(true, p) else s.move(false, p)
+                                }
+                        },
+                        edgeTurning = false,
+                        fitWidth = true,
+                        initializeAtTop = true,
+                        selection = selection,
+                        onSelectionMove = { start, p -> selection = selection?.move(start, p) },
+                    )
+                else if (pdf?.isFailure == true)
+                    Text("页面读取失败：${pdf?.exceptionOrNull()?.message}", Modifier.padding(16.dp))
+                else CircularProgressIndicator(Modifier.align(Alignment.Center))
+                if (busy) LinearProgressIndicator(Modifier.fillMaxWidth().align(Alignment.TopCenter))
             }
-            @Composable
-            fun controls(modifier: Modifier) {
-                LazyColumn(
-                    modifier.padding(horizontal = 16.dp),
-                    state = controlsState,
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    contentPadding = PaddingValues(bottom = 24.dp),
+            AnimatedVisibility(message.isNotBlank(), enter = fadeIn(motion.settle()), exit = fadeOut(motion.settle())) {
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    item {
-                        Text(
-                            "点选原页文字，或从下方对象列表选择。只改选中的对象；其他文字、图片、链接和页面位置保留。",
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedButton(
-                                enabled = draft?.canUndo == true && !busy,
-                                onClick = { update(draft!!.undo()) },
-                            ) {
-                                Text("撤销")
+                    Text(message, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f).testTag("native-edit-message"))
+                    IconButton(onClick = { message = "" }) { Icon(Icons.Default.Close, "关闭提示") }
+                }
+            }
+            // The contextual bar: page navigation without a selection, tools with one.
+            val hasSelection = segments.isNotEmpty()
+            AnimatedContent(
+                hasSelection,
+                transitionSpec = {
+                    (slideInVertically(motion.lively()) { it / 2 } + fadeIn(motion.settle())) togetherWith
+                        (slideOutVertically(motion.settle()) { it / 2 } + fadeOut(motion.settle()))
+                },
+                label = "native-edit-bar",
+            ) { active ->
+                Surface(tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
+                    if (!active)
+                        Row(
+                            Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            IconButton(enabled = page > 0, onClick = { page-- }) { Icon(Icons.Default.ChevronLeft, "上一页") }
+                            Text("${page + 1} / ${count.coerceAtLeast(1)}")
+                            IconButton(enabled = page + 1 < count, onClick = { page++ }) { Icon(Icons.Default.ChevronRight, "下一页") }
+                            Spacer(Modifier.weight(1f))
+                            TextButton(onClick = { sheet = "list" }, modifier = Modifier.testTag("native-edit-list")) {
+                                Icon(Icons.AutoMirrored.Filled.ViewList, null)
+                                Spacer(Modifier.width(4.dp))
+                                Text("文字列表")
                             }
-                            OutlinedButton(
-                                enabled = draft?.canRedo == true && !busy,
-                                onClick = { update(draft!!.redo()) },
+                            TextButton(
+                                enabled = model.units.isNotEmpty(),
+                                onClick = { selection = ReaderTextSelection(model, 0, model.units.lastIndex) },
                             ) {
-                                Text("重做")
+                                Text("全选本页")
                             }
-                            Text(
-                                "${draft?.edits?.size ?: 0} 个对象已修改",
-                                Modifier.padding(vertical = 12.dp),
-                            )
+                            TextButton(onClick = { vm.openWatermarks(doc) }, modifier = Modifier.testTag("native-edit-watermark")) {
+                                Text("去水印")
+                            }
                         }
-                    }
-                    if (selected != null)
-                        item {
-                            Card {
-                                Column(
-                                    Modifier.fillMaxWidth().padding(14.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                                ) {
-                                    Text(
-                                        "对象 ${selected.index + 1} · ${selected.font.substringAfter('+')}",
-                                        style = MaterialTheme.typography.labelLarge,
-                                    )
-                                    if (!selected.editable) Text(selected.reason)
-                                    OutlinedTextField(
-                                        text,
-                                        { text = it },
-                                        label = { Text("对象文字（单行）") },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        singleLine = true,
-                                        enabled = selected.editable && !busy,
-                                    )
-                                    var expanded by remember { mutableStateOf(false) }
-                                    OutlinedButton(
-                                        enabled = selected.editable && !busy,
-                                        onClick = { expanded = true },
-                                    ) {
-                                        Text(fonts.firstOrNull { it.id == fontId }?.label ?: "导入字体")
-                                    }
-                                    DropdownMenu(expanded, { expanded = false }) {
-                                        fonts.forEach { font ->
-                                            DropdownMenuItem(
-                                                text = { Text(font.label) },
-                                                onClick = {
-                                                    fontId = font.id
-                                                    expanded = false
-                                                },
-                                            )
-                                        }
-                                    }
-                                    TextButton(
-                                        onClick = {
-                                            importer.launch(
-                                                arrayOf(
-                                                    "font/ttf",
-                                                    "application/x-font-ttf",
-                                                    "application/octet-stream",
-                                                )
-                                            )
-                                        },
-                                        enabled = !busy,
-                                    ) {
-                                        Text("导入 TTF 字体")
-                                    }
-                                    OutlinedTextField(
-                                        fontSize,
-                                        { fontSize = it },
-                                        label = { Text("字号 pt") },
-                                        singleLine = true,
-                                        enabled = !busy,
-                                        modifier = Modifier.fillMaxWidth(),
-                                    )
-                                    Row {
-                                        Checkbox(fit, { fit = it }, enabled = !busy)
-                                        Text("过宽时缩小文字", Modifier.padding(top = 12.dp))
-                                    }
-                                    val points = fontSize.toFloatOrNull()
-                                    val choice = fonts.firstOrNull { it.id == fontId }
-                                    val valid =
-                                        selected.editable &&
-                                            !busy &&
-                                            draft != null &&
-                                            choice != null &&
-                                            points != null &&
-                                            points > 0f &&
-                                            points <= 1000f
-                                    Button(
-                                        enabled = valid && pendingDraft != draft,
-                                        onClick = { update(pendingDraft!!) },
-                                    ) {
-                                        Text("应用到草稿")
-                                    }
-                                    if (fontId != "ORIGINAL")
-                                        TextButton(
-                                            enabled = valid,
-                                            onClick = {
-                                                val changed =
-                                                    objects
-                                                        .filter { it.editable }
-                                                        .map { item ->
-                                                            val old =
-                                                                draft!!.edits.firstOrNull {
-                                                                    it.key == item.key
-                                                                }
-                                                            NativePdfEditor.Edit(
-                                                                page,
-                                                                item.index,
-                                                                item.text,
-                                                                old?.text ?: item.text,
-                                                                fontId,
-                                                                old?.size ?: item.size,
-                                                                fit,
-                                                                choice!!.sha256,
-                                                            )
-                                                        }
-                                                update(
-                                                    draft!!.change(
-                                                        draft!!.edits.filter { it.page != page } +
-                                                            changed
-                                                    )
-                                                )
-                                            },
-                                        ) {
-                                            Text("将此字体用于本页文字")
-                                        }
-                                    if (draft?.edits?.any { it.key == selected.key } == true)
-                                        TextButton(
-                                            onClick = {
-                                                update(
-                                                    draft!!.change(
-                                                        draft!!.edits.filter {
-                                                            it.key != selected.key
-                                                        }
-                                                    )
-                                                )
-                                            },
-                                            enabled = !busy,
-                                        ) {
-                                            Text("恢复此对象原样")
-                                        }
+                    else
+                        Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                            Row(
+                                Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    "已选 ${selectedText.replace("\n", "").length} 字 · ${segments.size} 个对象" +
+                                        if (blocked.isNotEmpty()) "（${blocked.size} 个不可改）" else "",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    modifier = Modifier.weight(1f).testTag("native-edit-count"),
+                                )
+                                IconButton(onClick = { selection = null; checked = emptySet() }) {
+                                    Icon(Icons.Default.Close, "取消选择")
                                 }
                             }
-                        }
-                    item {
-                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedButton(
-                                enabled = saveable,
-                                onClick = {
-                                    val value = pendingDraft!!
-                                    update(value)
-                                    val request = value.request()
-                                    busy = true
-                                    message = ""
+                            Row(
+                                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                val canEdit = blocked.size < selectedObjects.size && !busy
+                                ToolChip("编辑文字", Icons.Default.Edit, canEdit, "native-edit-text") {
+                                    editText = selectedText
+                                    fit = edits.firstOrNull { e -> segments.any { it.key == e.key } }?.fit ?: true
+                                    sheet = "text"
+                                }
+                                ToolChip("字体", Icons.Default.FontDownload, canEdit, "native-edit-font") {
+                                    originalMissing = null
                                     scope.launch {
-                                        try {
-                                            val file =
-                                                File(
-                                                    context.cacheDir,
-                                                    "native-preview-${UUID.randomUUID()}.pdf",
-                                                )
-                                            previewFiles += file
-                                            withContext(Dispatchers.IO) {
-                                                NativePdfEditor.apply(
-                                                    context,
-                                                    input,
-                                                    file,
-                                                    request,
-                                                    fonts
-                                                        .filter { it.path.isNotEmpty() }
-                                                        .associate { it.sha256 to File(it.path) },
-                                                )
-                                            }
-                                            preview = file
-                                            showPreview = true
-                                            toolsOpen = false
-                                        } catch (cancel: CancellationException) {
-                                            throw cancel
-                                        } catch (error: Exception) {
-                                            message = error.message ?: "修改预览未能生成"
-                                        } finally {
-                                            busy = false
-                                        }
+                                        val first = selectedObjects.firstOrNull { originalMap[it.key]?.editable == true }
+                                        originalMissing = first?.let { session.missingInOriginal(it.key, selectedText) }
                                     }
-                                },
-                            ) {
-                                Text("预览修改")
-                            }
-                            Button(
-                                enabled = saveable,
-                                onClick = {
-                                    val value = pendingDraft!!
-                                    update(value)
-                                    vm.queueNativeEdit(value.request())
-                                },
-                            ) {
-                                Text("生成修改副本")
-                            }
-                        }
-                        if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-                        if (message.isNotBlank())
-                            Text(message, style = MaterialTheme.typography.bodySmall)
-                        if (draft == null && message.isNotBlank())
-                            TextButton(onClick = { attempt++ }) { Text("重新读取") }
-                    }
-                    item {
-                        OutlinedTextField(
-                            query,
-                            { query = it },
-                            label = { Text("筛选本页文字对象") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    }
-                    if (inspected == null) item { Text("正在读取文字对象…") }
-                    inspected?.exceptionOrNull()?.let { error ->
-                        item {
-                            Text("文字读取失败：${error.message}")
-                            TextButton(onClick = { attempt++ }) { Text("重试") }
-                        }
-                    }
-                    if (objects.isEmpty() && inspected?.isSuccess == true)
-                        item { Text("本页没有可直接改写的文字对象。扫描图或嵌套Form中的文字保留原件，可使用OCR与其他转换工具处理。") }
-                    items(
-                        objects.filter { query.isBlank() || it.text.contains(query, true) },
-                        key = { it.key },
-                    ) { item ->
-                        OutlinedCard(
-                            Modifier.fillMaxWidth().clickable {
-                                selectedKey = item.key
-                                toolsOpen = true
-                            }
-                        ) {
-                            Column(Modifier.padding(12.dp)) {
+                                    sheet = "font"
+                                }
+                                val sizes = selectedObjects.map { o -> edits.firstOrNull { it.key == o.key }?.effectiveRuns?.firstNotNullOfOrNull { it.size } ?: o.size }
+                                IconButton(enabled = canEdit, onClick = { restyle(NativeStyle(sizeFactor = 1 / 1.1f), "字号缩小") }, modifier = Modifier.testTag("native-edit-smaller")) {
+                                    Icon(Icons.Default.TextDecrease, "缩小字号")
+                                }
                                 Text(
-                                    draft?.edits?.firstOrNull { it.key == item.key }?.text
-                                        ?: item.text.ifEmpty { "文字对象 ${item.index + 1}" },
-                                    maxLines = 3,
-                                    style = MaterialTheme.typography.bodyLarge,
+                                    sizes.distinct().let { if (it.size == 1) "%.1f pt".format(it.first()) else "多种字号" },
+                                    style = MaterialTheme.typography.labelMedium,
+                                    modifier = Modifier.clip(MaterialTheme.shapes.small).combinedClickable(enabled = canEdit) { sheet = "size" }.padding(6.dp),
                                 )
+                                IconButton(enabled = canEdit, onClick = { restyle(NativeStyle(sizeFactor = 1.1f), "字号放大") }, modifier = Modifier.testTag("native-edit-bigger")) {
+                                    Icon(Icons.Default.TextIncrease, "放大字号")
+                                }
+                                ToolChip("颜色", Icons.Default.Palette, canEdit, "native-edit-color") { sheet = "color" }
+                                ToolChip("复制", Icons.Default.ContentCopy, true, "native-edit-copy") {
+                                    clipboard.setText(AnnotatedString(selectedText))
+                                    message = "已复制 ${selectedText.length} 个字符"
+                                }
+                                ToolChip("恢复原样", Icons.Default.Restore, segments.any { s -> edits.any { it.key == s.key } }, "native-edit-restore") {
+                                    draft?.let { d -> commit(NativeEditOps.restore(d.edits, segments.map { it.key }.toSet()), segments, "已恢复所选对象") }
+                                }
+                                if (selection != null)
+                                    ToolChip("选整行", Icons.Default.HorizontalRule, true, "native-edit-line") { selection = selection?.line() }
+                            }
+                            if (blocked.isNotEmpty())
                                 Text(
-                                    "#${item.index + 1} · ${item.size} pt · ${item.font.substringAfter('+')}",
+                                    "不可改：" + blocked.map { it.reason }.distinct().joinToString("；"),
                                     style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.padding(horizontal = 16.dp),
                                 )
-                                if (item.reason.isNotEmpty())
-                                    Text(item.reason, style = MaterialTheme.typography.bodySmall)
-                            }
                         }
+                }
+            }
+        }
+    }
+
+    when (sheet) {
+        "text" ->
+            ModalBottomSheet(onDismissRequest = { sheet = "" }, sheetState = rememberModalBottomSheetState(true)) {
+                Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("编辑所选文字", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        if (segments.size > 1) "每行对应页面上的一行；行数不变时逐行替换，否则合并到第一行。文字不会自动换行。"
+                        else "替换后的文字放在原来的位置，后面的文字不会移动。",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    OutlinedTextField(editText, { editText = it }, Modifier.fillMaxWidth().testTag("native-edit-field"), minLines = 1, maxLines = 8)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(fit, { fit = it })
+                        Text("超出原宽度时横向压缩")
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = { sheet = "" }) { Text("取消") }
+                        Button(onClick = { applyText() }, enabled = !busy, modifier = Modifier.testTag("native-edit-apply")) { Text("应用") }
                     }
                 }
             }
-            BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
-                val panelHeight = maxHeight * .88f
-                if (fullscreen) pageView(Modifier.fillMaxSize())
-                else if (maxWidth >= 720.dp)
-                    Row(Modifier.fillMaxSize()) {
-                        pageView(Modifier.weight(1.3f).fillMaxHeight())
-                        controls(Modifier.weight(1f).fillMaxHeight())
-                    }
-                else
-                    Column(Modifier.fillMaxSize()) {
-                        pageView(Modifier.weight(1f).fillMaxWidth())
-                        FlowRow(
-                            Modifier.fillMaxWidth().padding(horizontal = 12.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            OutlinedButton(onClick = { toolsOpen = true }) { Text("文字与字体工具") }
-                            Button(
-                                enabled = saveable,
-                                onClick = {
-                                    val value = pendingDraft!!
-                                    update(value)
-                                    vm.queueNativeEdit(value.request())
-                                },
-                            ) {
-                                Text("保存副本")
+        "font" ->
+            NativeFontPicker(
+                selectedText,
+                fonts,
+                selectedObjects.firstNotNullOfOrNull { o -> edits.firstOrNull { it.key == o.key }?.effectiveRuns?.firstOrNull()?.font } ?: "ORIGINAL",
+                selectedObjects.firstOrNull()?.font.orEmpty(),
+                originalMissing,
+                onPick = { id, sha ->
+                    sheet = ""
+                    if (id != "ORIGINAL") NativeFontPrefs.use(context, id)
+                    restyle(NativeStyle(font = id, fontSha256 = sha), "已更换字体")
+                },
+                onImport = { importer.launch(arrayOf("font/ttf", "application/x-font-ttf", "application/octet-stream")) },
+                onDismiss = { sheet = "" },
+            )
+        "color" ->
+            ModalBottomSheet(onDismissRequest = { sheet = "" }) {
+                Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                    Text("文字颜色", style = MaterialTheme.typography.titleMedium)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(vertical = 12.dp)) {
+                        swatches.forEach { (argb, name) ->
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Box(
+                                    Modifier.size(40.dp).clip(CircleShape).background(Color(argb))
+                                        .combinedClickable {
+                                            sheet = ""
+                                            restyle(NativeStyle(color = argb), "已改为$name")
+                                        }
+                                        .testTag("native-color-$name")
+                                )
+                                Text(name, style = MaterialTheme.typography.labelSmall)
                             }
                         }
-                        if (message.isNotBlank())
-                            Text(
-                                message,
-                                Modifier.padding(horizontal = 16.dp),
-                                style = MaterialTheme.typography.bodySmall,
-                            )
-                        if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-                        if (toolsOpen)
-                            ModalBottomSheet(
-                                onDismissRequest = { toolsOpen = false },
-                                sheetState =
-                                    rememberModalBottomSheetState(skipPartiallyExpanded = true),
-                            ) {
-                                controls(Modifier.fillMaxWidth().heightIn(max = panelHeight))
-                            }
                     }
+                    Text("只改填充颜色；描边文字的描边一起改。", style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        "size" -> {
+            var value by remember { mutableStateOf("") }
+            AlertDialog(
+                onDismissRequest = { sheet = "" },
+                title = { Text("字号") },
+                text = {
+                    OutlinedTextField(value, { value = it }, label = { Text("pt（1–200）") }, singleLine = true, modifier = Modifier.testTag("native-size-field"))
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        val v = value.toFloatOrNull()
+                        if (v != null && v in 1f..200f) {
+                            sheet = ""
+                            restyle(NativeStyle(size = v), "字号改为 $v pt")
+                        } else message = "字号应为 1–200 之间的数字"
+                    }) { Text("应用") }
+                },
+                dismissButton = { TextButton(onClick = { sheet = "" }) { Text("取消") } },
+            )
+        }
+        "list" ->
+            NativeObjectList(
+                objects = objects,
+                originals = originalMap,
+                edits = edits,
+                checked = checked,
+                onChecked = { checked = it; selection = null },
+                onShow = { sheet = "" },
+                onDismiss = { sheet = "" },
+            )
+    }
+    if (leaving)
+        AlertDialog(
+            onDismissRequest = { leaving = false },
+            title = { Text("还有未导出的修改") },
+            text = { Text("修改已作为草稿保留在这份文档里，下次打开可继续。要现在保存为新的 PDF 吗？原文件不会改变。") },
+            confirmButton = {
+                TextButton(onClick = {
+                    leaving = false
+                    draft?.let { vm.queueNativeEdit(it.request()); saved = it }
+                    leave()
+                }) { Text("保存并返回") }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(onClick = { leaving = false; leave() }) { Text("稍后再说") }
+                }
+            },
+        )
+}
+
+private val shownEditsCache = java.util.concurrent.ConcurrentHashMap<String, List<NativePdfEditor.Edit>>()
+
+private fun shownEdits(shown: NativeEditSession.Shown?) = shown?.let { shownEditsCache[it.file.path] }
+
+@Composable
+private fun ToolChip(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, enabled: Boolean, tag: String, onClick: () -> Unit) {
+    AssistChip(
+        onClick = onClick,
+        enabled = enabled,
+        label = { Text(label) },
+        leadingIcon = { Icon(icon, null, Modifier.size(18.dp)) },
+        modifier = Modifier.testTag(tag),
+    )
+}
+
+/**
+ * The page's text objects with multi-selection: tap toggles, long press selects the range from the last tapped row,
+ * plus select all / none / invert. What is checked is outlined on the page and formatted together.
+ */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@Composable
+private fun NativeObjectList(
+    objects: List<NativePdfEditor.TextObject>,
+    originals: Map<String, NativePdfEditor.TextObject>,
+    edits: List<NativePdfEditor.Edit>,
+    checked: Set<String>,
+    onChecked: (Set<String>) -> Unit,
+    onShow: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var query by remember { mutableStateOf("") }
+    var anchor by remember { mutableStateOf<String?>(null) }
+    val listed = objects.filter { it.text.isNotBlank() && !it.invisible }
+    val shown = listed.filter { query.isBlank() || it.text.contains(query, true) }
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(true)) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("本页文字 · 已选 ${checked.size}/${listed.size}", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f).testTag("native-list-count"))
+                Button(onClick = onShow, enabled = checked.isNotEmpty()) { Text("在页面上编辑") }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                TextButton(onClick = { onChecked(shown.filter { originals[it.key]?.editable != false }.map { it.key }.toSet() + checked) }, modifier = Modifier.testTag("native-list-all")) { Text("全选") }
+                TextButton(onClick = { onChecked(emptySet()) }) { Text("全不选") }
+                TextButton(onClick = { onChecked(shown.map { it.key }.toSet() - checked + (checked - shown.map { it.key }.toSet())) }) { Text("反选") }
+            }
+            Text("点按勾选；长按另一行，选中从上次点按到这一行的连续范围。", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            OutlinedTextField(query, { query = it }, label = { Text("筛选") }, singleLine = true, modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp))
+            LazyColumn(Modifier.fillMaxWidth().heightIn(max = 480.dp), contentPadding = PaddingValues(bottom = 24.dp)) {
+                items(shown, key = { it.key }) { item ->
+                    val on = item.key in checked
+                    val editable = originals[item.key]?.editable != false
+                    Row(
+                        Modifier.fillMaxWidth()
+                            .clip(MaterialTheme.shapes.small)
+                            .combinedClickable(
+                                onClick = {
+                                    anchor = item.key
+                                    onChecked(if (on) checked - item.key else checked + item.key)
+                                },
+                                onLongClick = {
+                                    val a = shown.indexOfFirst { it.key == anchor }.takeIf { it >= 0 } ?: shown.indexOf(item)
+                                    val b = shown.indexOf(item)
+                                    val range = shown.subList(minOf(a, b), maxOf(a, b) + 1).filter { originals[it.key]?.editable != false }
+                                    onChecked(checked + range.map { it.key })
+                                    anchor = item.key
+                                },
+                            )
+                            .padding(vertical = 4.dp)
+                            .testTag("native-row-${item.index}"),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Checkbox(on, null, enabled = editable)
+                        Column(Modifier.weight(1f)) {
+                            Text(item.text, maxLines = 2, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyLarge)
+                            Text(
+                                buildString {
+                                    append("%.1f pt · ".format(item.size))
+                                    append(item.font.substringAfter('+').ifEmpty { "未知字体" })
+                                    if (edits.any { it.key == item.key }) append(" · 已修改")
+                                    if (!editable) append(" · ").append(originals[item.key]?.reason)
+                                },
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
             }
         }
     }

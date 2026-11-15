@@ -38,6 +38,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val toolHubReturn = MutableStateFlow("convert")
     val storageReturn = MutableStateFlow("settings")
     val watermarkInput = MutableStateFlow<Uri?>(null)
+    /** Page the native text editor opens on (set by the reader's selection bar). */
+    val nativeEditPage = MutableStateFlow(0)
     val watermarkReturn = MutableStateFlow("home")
 
     fun openWatermarks(document: DocumentRow? = null) {

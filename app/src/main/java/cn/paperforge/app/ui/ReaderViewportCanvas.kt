@@ -77,6 +77,14 @@ internal fun ReaderPage(
     regionDraft: OcrRegion? = null,
     onRegionSelection: (OcrRegion, Boolean) -> Unit = { _, _ -> },
     pageTextFile: java.io.File? = null,
+    /**
+     * Press-and-hold selection. Called while the finger is still down once it has rested for the long-press time;
+     * returning true starts a selection that follows the finger ([onSelectDrag]) until it lifts ([onSelectEnd]).
+     * Null keeps the older release-time long press.
+     */
+    onSelectStart: ((PointN) -> Boolean)? = null,
+    onSelectDrag: (PointN) -> Unit = {},
+    onSelectEnd: () -> Unit = {},
 ) {
     var renderAttempt by remember(session, index) { mutableIntStateOf(0) }
     // Kept while the text fades out, so the switch back to the scan is as smooth as the switch to text.
@@ -97,6 +105,10 @@ internal fun ReaderPage(
     val tap by rememberUpdatedState(onTap)
     val longPress by rememberUpdatedState(onLongPress)
     val linkTap by rememberUpdatedState(onLinkTap)
+    val selectStart by rememberUpdatedState(onSelectStart)
+    val selectDrag by rememberUpdatedState(onSelectDrag)
+    val selectEnd by rememberUpdatedState(onSelectEnd)
+    val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
     val edgeEnabled by rememberUpdatedState(edgeTurning)
     val edgeTurn by rememberUpdatedState(onEdgeTurn)
     val edgeArm by rememberUpdatedState(onEdgeArm)
@@ -362,8 +374,71 @@ internal fun ReaderPage(
                     var moved = false
                     var multiple = false
                     var travelled = Offset.Zero
+                    var pending: androidx.compose.ui.input.pointer.PointerEvent? = null
+                    var heldWithoutSelection = false
+                    if (selectStart != null) {
+                        // Wait for the hold while watching for a pan, a second finger or a release.
+                        var drift = Offset.Zero
+                        pending =
+                            withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                                while (true) {
+                                    val e = awaitPointerEvent()
+                                    val p = e.changes.firstOrNull { it.id == down.id }
+                                    if (p != null) drift = p.position - down.position
+                                    if (
+                                        e.changes.none { it.pressed } ||
+                                            e.changes.count { it.pressed } > 1 ||
+                                            drift.getDistance() > viewConfiguration.touchSlop
+                                    )
+                                        return@withTimeoutOrNull e
+                                }
+                                @Suppress("UNREACHABLE_CODE") null
+                            }
+                        if (pending == null) {
+                            fun source(offset: Offset, t: PageTransform) =
+                                view.source(geometry.point(offset.x, offset.y, t.zoom, t.x, t.y))
+                            if (selectStart!!(source(down.position, initial))) {
+                                haptics.performHapticFeedback(
+                                    androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress
+                                )
+                                tapJob?.cancel()
+                                lastTap = 0
+                                var position = down.position
+                                var t = initial
+                                val edge = 56.dp.toPx()
+                                while (true) {
+                                    val e = withTimeoutOrNull(16) { awaitPointerEvent() }
+                                    if (e != null) {
+                                        val p = e.changes.firstOrNull { it.id == down.id }
+                                        e.changes.forEach { it.consume() }
+                                        if (p == null || !p.pressed) break
+                                        position = p.position
+                                    }
+                                    // Near the top or bottom edge the page scrolls under the finger.
+                                    val ly = geometry.limitY(t.zoom)
+                                    val step =
+                                        when {
+                                            ly <= 0f -> 0f
+                                            position.y < edge -> (edge - position.y) / edge
+                                            position.y > size.height - edge ->
+                                                -(position.y - (size.height - edge)) / edge
+                                            else -> 0f
+                                        }
+                                    if (step != 0f) {
+                                        t = t.copy(y = (t.y + step * .012f).coerceIn(-ly, ly))
+                                        change(t)
+                                    }
+                                    if (e != null || step != 0f) selectDrag(source(position, t))
+                                }
+                                selectEnd()
+                                return@awaitEachGesture
+                            }
+                            heldWithoutSelection = true
+                        }
+                    }
                     do {
-                        val event = awaitPointerEvent()
+                        val event = pending ?: awaitPointerEvent()
+                        pending = null
                         eventTime = event.changes.maxOf { it.uptimeMillis }
                         val fingers = event.changes.count { it.pressed }
                         if (fingers > 1) multiple = true
@@ -437,7 +512,7 @@ internal fun ReaderPage(
                             )
                         val inside =
                             point.x in view.left..view.right && point.y in view.top..view.bottom
-                        if (eventTime - down.uptimeMillis >= 500) {
+                        if (heldWithoutSelection || eventTime - down.uptimeMillis >= 500) {
                             tapJob?.cancel()
                             lastTap = 0
                             if (inside) longPress(point)

@@ -516,8 +516,9 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                                         (doc?.title ?: "合并文档") +
                                             " · " +
                                             DocumentJobs.modeName(mode),
-                                    // An annotated copy is a document of its own, found in the library like any other.
-                                    listed = doc == null || mode == "marks",
+                                    // Annotated and text-edited copies are documents of their own, found in the library
+                                    // like any other (the source document stays unchanged next to them).
+                                    listed = doc == null || mode == "marks" || mode == "native-edit",
                                 )
                             origin?.let { metadata ->
                                 val provenance =

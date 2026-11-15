@@ -682,6 +682,18 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                                             interaction++
                                         },
                                         onLongPress = { p -> selectText(index, p) },
+                                        onSelectStart = { p ->
+                                            selectText(index, p)
+                                            true
+                                        },
+                                        onSelectDrag = { p ->
+                                            selection =
+                                                selection?.takeIf { it.model.page == index }?.let { s ->
+                                                    val at = s.model.nearest(p)
+                                                    if (at != null && at < s.first) s.move(true, p)
+                                                    else s.move(false, p)
+                                                } ?: selection
+                                        },
                                         onReadText = { selectText(index, null) },
                                         selection = selection?.takeIf { it.model.page == index },
                                         onSelectionMove = { start, p ->
@@ -768,6 +780,18 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                                     interaction++
                                 },
                                 onLongPress = { p -> selectText(index, p) },
+                                        onSelectStart = { p ->
+                                            selectText(index, p)
+                                            true
+                                        },
+                                        onSelectDrag = { p ->
+                                            selection =
+                                                selection?.takeIf { it.model.page == index }?.let { s ->
+                                                    val at = s.model.nearest(p)
+                                                    if (at != null && at < s.first) s.move(true, p)
+                                                    else s.move(false, p)
+                                                } ?: selection
+                                        },
                                 onReadText = { selectText(index, null) },
                                 selection = selection?.takeIf { it.model.page == index },
                                 onSelectionMove = { start, p ->
@@ -919,6 +943,14 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                             intelligence = true
                         },
                         onRegion = { startRegion(current.model.page) },
+                        onEdit =
+                            if (file != null && current.model.lines.isNotEmpty() && current.model.lines.all { it.source == "native" }) {
+                                {
+                                    vm.nativeEditPage.value = current.model.page
+                                    selection = null
+                                    vm.queueTool("native-edit")
+                                }
+                            } else null,
                         onClose = { selection = null },
                         modifier = Modifier.padding(8.dp).widthIn(max = 640.dp).fillMaxWidth(),
                     )

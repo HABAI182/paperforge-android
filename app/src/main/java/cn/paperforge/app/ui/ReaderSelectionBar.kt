@@ -22,6 +22,8 @@ internal fun ReaderSelectionBar(
     onText: () -> Unit,
     onRegion: () -> Unit,
     onIntelligence: () -> Unit = {},
+    /** Opens the native text editor on this page; null when the selected text is not native PDF text. */
+    onEdit: (() -> Unit)? = null,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -94,6 +96,15 @@ internal fun ReaderSelectionBar(
                                 )
                             }
                         HorizontalDivider()
+                        if (onEdit != null)
+                            DropdownMenuItem(
+                                text = { Text("编辑文字与字体") },
+                                onClick = {
+                                    more = false
+                                    onEdit()
+                                },
+                                modifier = Modifier.testTag("reader-selection-edit"),
+                            )
                         DropdownMenuItem(
                             text = { Text("翻译与智能工具") },
                             onClick = {
