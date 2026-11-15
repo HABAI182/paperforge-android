@@ -552,11 +552,15 @@ private fun ReaderContent(vm: MainViewModel, onShare: (File) -> Unit) {
                             appearance = true
                             interaction++
                         }
-                        ToolAction(Icons.Default.GridView, "页面", session != null) {
+                        ToolAction(Icons.Default.ViewCarousel, "页面", session != null) {
                             thumbnails = true
                         }
+                        ToolAction(Icons.Default.EditNote, "编辑", !busy && file != null) {
+                            vm.nativeEditPage.value = activePage
+                            vm.queueTool("native-edit")
+                        }
                         ToolAction(Icons.Default.Draw, "批注", !busy) { vm.beginMarks() }
-                        ToolAction(Icons.Default.GridView, "工具", !busy) {
+                        ToolAction(Icons.Default.Apps, "工具", !busy) {
                             toolMode = ""
                             tools = true
                         }

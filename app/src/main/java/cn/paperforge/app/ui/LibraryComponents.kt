@@ -4,6 +4,9 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.*
@@ -126,5 +129,141 @@ fun LibrarySnippet(hit: LibrarySearchHit, query: String, onClick: () -> Unit) {
             maxLines = 3,
             overflow = TextOverflow.Ellipsis,
         )
+    }
+}
+
+/** A chip that opens a small menu; shows the chosen value when it is not the default. */
+@Composable
+private fun MenuChip(
+    label: String,
+    active: Boolean,
+    tag: String,
+    items: List<Pair<String, String>>,
+    selected: String,
+    onPick: (String) -> Unit,
+    footer: (@Composable ColumnScope.(close: () -> Unit) -> Unit)? = null,
+) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        FilterChip(
+            active,
+            { open = true },
+            label = { Text(label, maxLines = 1) },
+            trailingIcon = { Icon(Icons.Default.ArrowDropDown, null, Modifier.size(18.dp)) },
+            modifier = Modifier.height(32.dp).testTag(tag),
+        )
+        DropdownMenu(open, { open = false }) {
+            items.forEach { (key, title) ->
+                DropdownMenuItem(
+                    text = { Text(title) },
+                    onClick = {
+                        open = false
+                        onPick(key)
+                    },
+                    trailingIcon = { if (key == selected) Icon(Icons.Default.Check, null, Modifier.size(18.dp)) },
+                )
+            }
+            footer?.invoke(this) { open = false }
+        }
+    }
+}
+
+/**
+ * The library's filters in one compact row: type, favourites, folder, tag and order as menu chips (each shows its
+ * value when set), saved views, a clear chip when anything is set, and the layout switch at the end.
+ */
+@Composable
+fun LibraryFilterBar(
+    collection: String,
+    onCollection: (String) -> Unit,
+    favorites: Boolean,
+    onFavorites: (Boolean) -> Unit,
+    folder: String,
+    folders: List<String>,
+    onFolder: (String) -> Unit,
+    tag: String,
+    tags: List<String>,
+    onTag: (String) -> Unit,
+    sort: String,
+    onSort: (String) -> Unit,
+    covers: Boolean,
+    onLayout: () -> Unit,
+    saved: List<cn.paperforge.app.data.LibraryFilter>,
+    onSaved: (cn.paperforge.app.data.LibraryFilter) -> Unit,
+    onSave: () -> Unit,
+    onDeleteSaved: (String) -> Unit,
+    onClear: () -> Unit,
+) {
+    val active = collection != "ALL" || favorites || folder.isNotBlank() || tag.isNotBlank() || sort != "MODIFIED"
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            Modifier.weight(1f).rootSwipeChild().horizontalScroll(rememberScrollState()).testTag("library-filter-bar"),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            MenuChip(
+                libraryCollections.first { it.first == collection }.second.let { if (collection == "ALL") "类型" else it },
+                collection != "ALL",
+                "filter-collection",
+                libraryCollections,
+                collection,
+                onCollection,
+            )
+            FilterChip(favorites, { onFavorites(!favorites) }, label = { Text("收藏") }, modifier = Modifier.height(32.dp))
+            if (folders.isNotEmpty())
+                MenuChip(
+                    if (folder.isBlank()) "文件夹" else folder.substringAfterLast('/'),
+                    folder.isNotBlank(),
+                    "filter-folder",
+                    listOf("" to "全部文件夹") + folders.map { it to it },
+                    folder,
+                    onFolder,
+                )
+            if (tags.isNotEmpty())
+                MenuChip(
+                    if (tag.isBlank()) "标签" else "#$tag",
+                    tag.isNotBlank(),
+                    "filter-tag",
+                    listOf("" to "全部标签") + tags.map { it to "#$it" },
+                    tag,
+                    onTag,
+                )
+            MenuChip(
+                librarySorts.first { it.first == sort }.second,
+                sort != "MODIFIED",
+                "filter-sort",
+                librarySorts,
+                sort,
+                onSort,
+            ) { close ->
+                HorizontalDivider()
+                saved.forEach { preset ->
+                    DropdownMenuItem(
+                        text = { Text("视图：" + preset.name) },
+                        onClick = {
+                            close()
+                            onSaved(preset)
+                        },
+                        trailingIcon = {
+                            IconButton(onClick = { onDeleteSaved(preset.name) }) { Icon(Icons.Default.Close, "删除视图 ${preset.name}", Modifier.size(16.dp)) }
+                        },
+                    )
+                }
+                if (active)
+                    DropdownMenuItem(
+                        text = { Text("把当前筛选存为视图…") },
+                        onClick = {
+                            close()
+                            onSave()
+                        },
+                    )
+            }
+            if (active)
+                AssistChip(onClick = onClear, label = { Text("清除") }, leadingIcon = { Icon(Icons.Default.Close, null, Modifier.size(16.dp)) },
+                    modifier = Modifier.height(32.dp).testTag("filter-clear"))
+        }
+        IconButton(onClick = onLayout, modifier = Modifier.size(40.dp)) {
+            Icon(if (covers) Icons.Default.ViewList else Icons.Default.GridView, if (covers) "切换列表布局" else "切换封面布局")
+        }
     }
 }

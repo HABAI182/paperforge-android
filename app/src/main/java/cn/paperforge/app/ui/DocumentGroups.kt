@@ -35,7 +35,7 @@ fun FolderGroupRow(
     onManage: () -> Unit = {},
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().heightIn(max = 36.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 "文件夹",
                 style = MaterialTheme.typography.labelLarge,
@@ -92,10 +92,10 @@ private fun FolderGroupCard(
     Surface(
         onClick = onClick,
         modifier =
-            Modifier.width(152.dp).heightIn(min = 72.dp).testTag(tag).semantics {
+            Modifier.heightIn(min = 36.dp).widthIn(max = 200.dp).testTag(tag).semantics {
                 contentDescription = "$label，$count 份文档"
             },
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         color = container,
         border =
             BorderStroke(
@@ -105,34 +105,23 @@ private fun FolderGroupCard(
             ),
     ) {
         Row(
-            Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 10.dp),
+            Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Icon(
                 icon,
                 null,
-                tint =
-                    if (selected) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(22.dp),
+                tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(18.dp),
             )
-            Column(Modifier.weight(1f)) {
-                Text(
-                    label,
-                    color = content,
-                    style = MaterialTheme.typography.labelLarge,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    "$count 份",
-                    color =
-                        if (selected) MaterialTheme.colorScheme.onPrimaryContainer
-                        else MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.labelSmall,
-                )
-            }
+            Text(label, color = content, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false))
+            Text(
+                "$count",
+                color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.labelSmall,
+            )
         }
     }
 }

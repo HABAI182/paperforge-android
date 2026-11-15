@@ -146,12 +146,12 @@ internal fun LibraryDocumentCard(
             }
         else
             Row(
-                Modifier.padding(if (compact) 8.dp else 14.dp),
+                Modifier.padding(horizontal = if (compact) 8.dp else 12.dp, vertical = if (compact) 6.dp else 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 selection()
                 DocumentCover(document, repository)
-                Column(Modifier.weight(1f).padding(horizontal = 14.dp), content = details)
+                Column(Modifier.weight(1f).padding(horizontal = 12.dp), content = details)
                 if (!selecting) menu()
             }
     }

@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -69,7 +70,6 @@ fun HomeScreen(
                 maxColumns,
             )
     var importMenu by remember { mutableStateOf(false) }
-    var libraryDisplay by remember { mutableStateOf(false) }
     val docs by vm.documents.collectAsState()
     val busy by vm.busy.collectAsState()
     val backgroundTasks by vm.localTasks.collectAsState()
@@ -361,23 +361,6 @@ fun HomeScreen(
             confirmButton = { TextButton(onClick = { moreHits = null }) { Text("关闭") } },
         )
     }
-    if (libraryDisplay)
-        AlertDialog(
-            onDismissRequest = { libraryDisplay = false },
-            title = { Text("文档视图") },
-            text = {
-                SectionCardGrid(
-                    listOf(
-                        WorkspaceSection("LIST", "列表", "紧凑排列，便于查找名称", Icons.Default.ViewList),
-                        WorkspaceSection("COVERS", "封面", "展示文档首页，直观浏览", Icons.Default.GridView),
-                    )
-                ) {
-                    UserSettings.set(SettingKeys.DocumentLayout, it)
-                    libraryDisplay = false
-                }
-            },
-            confirmButton = { TextButton(onClick = { libraryDisplay = false }) { Text("完成") } },
-        )
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
@@ -559,7 +542,6 @@ fun HomeScreen(
                 !busy &&
                     !selecting &&
                     !importMenu &&
-                    !libraryDisplay &&
                     toolCapability == null &&
                     !receiptPicker &&
                     !manageFolders &&
@@ -651,12 +633,6 @@ fun HomeScreen(
                                         Icon(Icons.Default.PendingActions, "任务中心")
                                     }
                                 }
-                                if (tab < 2 && !inTrash)
-                                    TextButton(onClick = { libraryDisplay = true }) {
-                                        Icon(Icons.Default.ViewQuilt, null, Modifier.size(18.dp))
-                                        Spacer(Modifier.width(4.dp))
-                                        Text("视图")
-                                    }
                                 if (tab < 2 && !inTrash)
                                     IconButton(
                                         onClick = {
@@ -768,14 +744,14 @@ fun HomeScreen(
                         item {
                             Row(
                                 Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 if (homeCollection != "RECENT")
                                     FilterChip(
                                         tab == 0,
                                         {
-                                            vm.homeTab.value = 0
+                                            vm.homeTab.value = if (tab == 0) 1 else 0
                                             showTrash = false
                                         },
                                         label = {
@@ -788,49 +764,74 @@ fun HomeScreen(
                                                 }
                                             )
                                         },
+                                        modifier = Modifier.height(32.dp),
                                     )
-                                FilterChip(
-                                    tab == 1 && !favoritesOnly,
-                                    {
-                                        vm.homeTab.value = 1
-                                        collection = "ALL"
-                                        favoritesOnly = false
-                                        folder = ""
-                                        tagQuery = ""
-                                        groupKey = null
-                                    },
-                                    label = { Text("全部") },
-                                )
-                                if (homeCollection != "FAVORITES")
-                                    FilterChip(
-                                        tab == 1 && favoritesOnly,
-                                        {
+                                Box(Modifier.weight(1f)) {
+                                    LibraryFilterBar(
+                                        collection = collection,
+                                        onCollection = {
                                             vm.homeTab.value = 1
+                                            collection = it
+                                            groupKey = null
+                                        },
+                                        favorites = favoritesOnly,
+                                        onFavorites = {
+                                            vm.homeTab.value = 1
+                                            favoritesOnly = it
+                                        },
+                                        folder = folder,
+                                        folders = (docs.map { it.folder } + folderPaths).filter { it.isNotBlank() }.distinct().sorted(),
+                                        onFolder = {
+                                            vm.homeTab.value = 1
+                                            folder = it
+                                            groupKey = null
+                                        },
+                                        tag = tagQuery,
+                                        tags =
+                                            docs.flatMap { it.tags.split(',', '，', ' ', ';', '；') }
+                                                .map { it.trim().removePrefix("#") }
+                                                .filter { it.isNotBlank() }
+                                                .distinct()
+                                                .sorted(),
+                                        onTag = {
+                                            vm.homeTab.value = 1
+                                            tagQuery = it
+                                        },
+                                        sort = sort,
+                                        onSort = { sort = it },
+                                        covers = covers,
+                                        onLayout = {
+                                            UserSettings.set(SettingKeys.DocumentLayout, if (covers) "LIST" else "COVERS")
+                                        },
+                                        saved = savedFilters,
+                                        onSaved = { preset ->
+                                            vm.homeTab.value = 1
+                                            collection = preset.collection
+                                            sort = preset.sort
+                                            folder = preset.folder
+                                            tagQuery = preset.tags
+                                            favoritesOnly = preset.favorites
+                                            groupKey = null
+                                            vm.query.value = preset.query
+                                        },
+                                        onSave = {
+                                            filterName = ""
+                                            savingFilter = true
+                                        },
+                                        onDeleteSaved = { name ->
+                                            library.remove(name)
+                                            savedFilters = library.saved()
+                                        },
+                                        onClear = {
                                             collection = "ALL"
-                                            favoritesOnly = true
+                                            sort = "MODIFIED"
+                                            favoritesOnly = false
                                             folder = ""
                                             tagQuery = ""
                                             groupKey = null
                                         },
-                                        label = { Text("收藏") },
                                     )
-                                Spacer(Modifier.weight(1f))
-                                if (tab == 1)
-                                    IconButton(onClick = { filtersExpanded = !filtersExpanded }) {
-                                        val active =
-                                            collection != "ALL" ||
-                                                folder.isNotBlank() ||
-                                                tagQuery.isNotBlank() ||
-                                                sort != "MODIFIED"
-                                        Icon(
-                                            if (filtersExpanded) Icons.Default.ExpandLess
-                                            else Icons.Default.Tune,
-                                            if (filtersExpanded) "收起筛选与布局" else "筛选与布局",
-                                            tint =
-                                                if (active) MaterialTheme.colorScheme.primary
-                                                else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                    }
+                                }
                             }
                         }
                     if (tab == 3) {
@@ -1080,7 +1081,7 @@ fun HomeScreen(
                             onInfo = { toolCapability = it },
                         )
                     } else {
-                        if (tab in 0..1 && !inTrash && !selecting && search.isBlank())
+                        if (tab in 0..1 && !inTrash && !selecting && search.isBlank() && groups.any { !it.isUnfiled })
                             item(key = "folder-groups") {
                                 FolderGroupRow(
                                     groups = groups,
@@ -1126,125 +1127,6 @@ fun HomeScreen(
                                     largeFont = fontScale > 1.3f,
                                     onSelect = { selecting = true },
                                     onAll = null,
-                                )
-                            }
-                        }
-                        if (tab == 1 && !inTrash && filtersExpanded) {
-                            item {
-                                Row(
-                                    Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    Text(
-                                        "筛选与布局",
-                                        Modifier.weight(1f),
-                                        style = MaterialTheme.typography.titleMedium,
-                                    )
-                                    IconButton(
-                                        onClick = {
-                                            UserSettings.set(
-                                                SettingKeys.DocumentLayout,
-                                                if (covers) "LIST" else "COVERS",
-                                            )
-                                        }
-                                    ) {
-                                        Icon(
-                                            if (covers) Icons.Default.ViewList
-                                            else Icons.Default.GridView,
-                                            if (covers) "切换列表布局" else "切换封面布局",
-                                        )
-                                    }
-                                }
-                            }
-                            item {
-                                LibraryFilterControls(
-                                    collection,
-                                    sort,
-                                    { collection = it },
-                                    { sort = it },
-                                )
-                            }
-                            if (savedFilters.isNotEmpty())
-                                item {
-                                    Row(
-                                        Modifier.rootSwipeChild(rootGate)
-                                            .horizontalScroll(rememberScrollState()),
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                    ) {
-                                        savedFilters.forEach { preset ->
-                                            InputChip(
-                                                false,
-                                                onClick = {
-                                                    collection = preset.collection
-                                                    sort = preset.sort
-                                                    folder = preset.folder
-                                                    tagQuery = preset.tags
-                                                    favoritesOnly = preset.favorites
-                                                    groupKey = null
-                                                    vm.query.value = preset.query
-                                                },
-                                                label = { Text(preset.name) },
-                                                trailingIcon = {
-                                                    Icon(
-                                                        Icons.Default.Close,
-                                                        "删除筛选 ${preset.name}",
-                                                        Modifier.size(16.dp).clickable {
-                                                            library.remove(preset.name)
-                                                            savedFilters = library.saved()
-                                                        },
-                                                    )
-                                                },
-                                            )
-                                        }
-                                    }
-                                }
-                            item {
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    FilterChip(
-                                        favoritesOnly,
-                                        { favoritesOnly = !favoritesOnly },
-                                        label = { Text("收藏") },
-                                    )
-                                    TextButton(
-                                        onClick = {
-                                            filterName = ""
-                                            savingFilter = true
-                                        }
-                                    ) {
-                                        Text("保存筛选")
-                                    }
-                                    TextButton(
-                                        onClick = {
-                                            collection = "ALL"
-                                            sort = "MODIFIED"
-                                            favoritesOnly = false
-                                            folder = ""
-                                            tagQuery = ""
-                                            groupKey = null
-                                            vm.query.value = ""
-                                        }
-                                    ) {
-                                        Text("重置筛选")
-                                    }
-                                }
-                            }
-                            item {
-                                FolderField(
-                                    value = folder,
-                                    onValueChange = {
-                                        folder = it
-                                        groupKey = null
-                                    },
-                                    paths = docs.map { it.folder } + folderPaths,
-                                    label = "按文件夹筛选，含下级",
-                                    rootLabel = "全部文档",
-                                )
-                                OutlinedTextField(
-                                    tagQuery,
-                                    { tagQuery = it },
-                                    label = { Text("按标签筛选") },
-                                    singleLine = true,
-                                    modifier = Modifier.fillMaxWidth().rootSwipeInput(rootGate),
                                 )
                             }
                         }
@@ -1443,76 +1325,47 @@ fun HomeScreen(
                                                 },
                                                 details = {
                                                     Text(
-                                                        (if (doc.favorite) "★ " else "") +
-                                                            doc.title,
-                                                        maxLines = 2,
+                                                        (if (doc.favorite) "★ " else "") + doc.title,
+                                                        maxLines = if (covers) 2 else 1,
                                                         overflow = TextOverflow.Ellipsis,
-                                                        style = MaterialTheme.typography.titleMedium,
+                                                        style = MaterialTheme.typography.titleSmall,
                                                     )
-                                                    if (!inTrash)
-                                                        TextButton(
-                                                            onClick = {
-                                                                moveFiles = listOf(doc.id)
-                                                            },
-                                                            contentPadding = PaddingValues(0.dp),
-                                                            modifier =
-                                                                Modifier.semantics {
-                                                                    contentDescription =
-                                                                        "分类 · ${doc.folder.ifBlank { "未分类" }}"
-                                                                },
-                                                        ) {
-                                                            Icon(
-                                                                Icons.Default.FolderOpen,
-                                                                null,
-                                                                Modifier.size(15.dp),
-                                                            )
-                                                            Spacer(Modifier.width(4.dp))
+                                                    // One line of facts: folder (tap to move) · kind · pages · time.
+                                                    val facts = factsByDocument[doc.id]
+                                                    val when_ =
+                                                        SimpleDateFormat("MM/dd HH:mm", Locale.CHINA)
+                                                            .format(Date(if (tab == 0 || sort == "OPENED") doc.lastOpened else doc.modified))
+                                                    val pages =
+                                                        if (facts == null) ""
+                                                        else if (doc.kind == "pdf" && facts.pageCount == 0) " · 索引待更新"
+                                                        else " · ${facts.pageCount} 页" +
+                                                            (if (facts.recognizedPages in 1 until facts.pageCount) "（${facts.recognizedPages} 页有文字）"
+                                                            else if (facts.recognizedPages == 0 && facts.pageCount > 0) " · 无文字" else "") +
+                                                            (if (facts.hasExport) " · 已导出" else "")
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        modifier = Modifier.padding(top = 2.dp),
+                                                    ) {
+                                                        if (!inTrash)
                                                             Text(
-                                                                doc.folder
-                                                                    .substringAfterLast('/')
-                                                                    .ifBlank { "未分类" },
+                                                                doc.folder.substringAfterLast('/').ifBlank { "未分类" },
                                                                 maxLines = 1,
                                                                 overflow = TextOverflow.Ellipsis,
-                                                                style =
-                                                                    MaterialTheme.typography
-                                                                        .labelSmall,
+                                                                style = MaterialTheme.typography.labelSmall,
+                                                                color = MaterialTheme.colorScheme.primary,
+                                                                modifier =
+                                                                    Modifier.widthIn(max = 96.dp)
+                                                                        .clip(MaterialTheme.shapes.small)
+                                                                        .clickable { moveFiles = listOf(doc.id) }
+                                                                        .semantics { contentDescription = "分类 · ${doc.folder.ifBlank { "未分类" }}，点按移动" },
                                                             )
-                                                        }
-                                                    Text(
-                                                        (if (doc.kind == "scan") "扫描草稿"
-                                                        else "PDF 文档") +
-                                                            " · " +
-                                                            SimpleDateFormat(
-                                                                    "MM/dd HH:mm",
-                                                                    Locale.CHINA,
-                                                                )
-                                                                .format(
-                                                                    Date(
-                                                                        if (
-                                                                            tab == 0 ||
-                                                                                sort == "OPENED"
-                                                                        )
-                                                                            doc.lastOpened
-                                                                        else doc.modified
-                                                                    )
-                                                                ),
-                                                        style = MaterialTheme.typography.labelSmall,
-                                                        color =
-                                                            MaterialTheme.colorScheme
-                                                                .onSurfaceVariant,
-                                                    )
-                                                    factsByDocument[doc.id]?.let { f ->
                                                         Text(
-                                                            (if (
-                                                                doc.kind == "pdf" &&
-                                                                    f.pageCount == 0
-                                                            )
-                                                                "文字索引待更新"
-                                                            else
-                                                                "${f.pageCount} 页 · ${f.recognizedPages} 页含文字") +
-                                                                (if (f.hasExport) " · 已导出" else ""),
-                                                            style =
-                                                                MaterialTheme.typography.labelSmall,
+                                                            (if (!inTrash) " · " else "") +
+                                                                (if (doc.kind == "scan") "扫描" else "PDF") + pages + " · " + when_,
+                                                            maxLines = 1,
+                                                            overflow = TextOverflow.Ellipsis,
+                                                            style = MaterialTheme.typography.labelSmall,
+                                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                         )
                                                     }
                                                     if (doc.tags.isNotBlank())
