@@ -385,6 +385,16 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                                     JSONObject(CaptureMetadata.encode(spec.reference, result))
                                         .put("captureJob", id)
                                         .also { json ->
+                                            // The page's own curved edge beside a facing page, for the renderer: it
+                                            // belongs to this photo only (a finished page renders from another file).
+                                            result.notes[NeighborPage.SEAM_NOTE]?.let { seam ->
+                                                json.put(
+                                                    "pageSeam",
+                                                    JSONObject().put("photo", file.path).put("points", seam),
+                                                )
+                                            }
+                                        }
+                                        .also { json ->
                                             // Without a camera frame the capture block is empty: the pending split
                                             // still has to reach the editor.
                                             result.notes[SpreadGutter.BOOK_NOTE]?.let { note ->
@@ -527,6 +537,38 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                                     )
                                 }.copy(id = raw.id)
                         }
+                    // Which way up. A page photographed sideways was saved sideways: nothing looked at its content. The
+                    // turn is PageRow.rotation, so the user can turn it back, and it is applied only when the content
+                    // is clear (ContentOrientation); otherwise the page stays as photographed.
+                    fun upright(page: PageRow): PageRow {
+                        if (
+                            result.quad == null ||
+                                !cn.paperforge.app.UserSettings[cn.paperforge.app.SettingKeys.AutoOrient] ||
+                                ScanConfig.int("autoOrient", 1) == 0
+                        )
+                            return page
+                        val bitmap =
+                            runCatching { ScanProcessor.render(page, ScanConfig.int("orientEdge", 1600)) }.getOrNull()
+                                ?: return page
+                        try {
+                            val decision =
+                                runCatching { ContentOrientation.decide(applicationContext, bitmap) }.getOrNull()
+                                    ?: return page
+                            val meta =
+                                JSONObject(page.processingMetadata ?: "{}").put("orientation", decision.json())
+                            return page.copy(
+                                rotation = (page.rotation + decision.correction) % 360,
+                                processingMetadata = meta.toString(),
+                            )
+                        } finally {
+                            bitmap.recycle()
+                        }
+                    }
+                    val flatUpright = flat?.let(::upright)
+                    val rightUpright = rightPage?.let { if (flat != null) upright(it) else it }
+                    // Without the finished page (other filters), the crop itself decides.
+                    val cropTurn =
+                        if (flat == null) upright(detected.copy(corners = (result.quad ?: Quad.Full).encode())) else null
                     repo.database.withTransaction {
                         val current = repo.dao.task(id)
                         if (
@@ -538,8 +580,10 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                         val pages = repo.dao.pages(document)
                         val target = pages.firstOrNull { it.id == row.targetPageId }
                         val original = pages.firstOrNull { it.id == row.pageId }
-                        // The same metadata the framing was published with, notes included.
-                        val metadata = detected.processingMetadata
+                        // The same metadata the framing was published with, notes included (and the orientation
+                        // decision when the crop itself was turned).
+                        val metadata = cropTurn?.processingMetadata ?: detected.processingMetadata
+                        val turn = cropTurn?.rotation ?: 0
                         var flatTarget: String? = null
                         var detail = if (result.quad == null) "未找到完整纸边，已保留全图" else "纸张已保存"
                         var state =
@@ -556,7 +600,7 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                                     target.copy(
                                         original = file.path,
                                         corners = (result.quad ?: Quad.Full).encode(),
-                                        rotation = 0,
+                                        rotation = turn,
                                         deskewDegrees = 0f,
                                         processingMetadata = metadata,
                                         detectionConfidence = result.confidence,
@@ -577,6 +621,7 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                                 repo.dao.updatePage(
                                     original.copy(
                                         corners = (result.quad ?: Quad.Full).encode(),
+                                        rotation = turn,
                                         revision = original.revision + 1,
                                         ocrText = null,
                                         ocrLayout = null,
@@ -597,6 +642,7 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                                     .page(checkNotNull(row.pageId), document, position, file.path)
                                     .copy(
                                         corners = (result.quad ?: Quad.Full).encode(),
+                                        rotation = turn,
                                         processingMetadata = metadata,
                                         detectionConfidence = result.confidence,
                                         detectionMethod = result.method,
@@ -616,7 +662,7 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                                     published.corners == detected.corners
                             ) {
                                 repo.savePage(
-                                    flat.copy(id = published.id, position = published.position)
+                                    checkNotNull(flatUpright).copy(id = published.id, position = published.position)
                                 )
                                 detail =
                                     if (spec.preset.aiFinish) "纸面展平与 AI 去透页已完成，可撤销"
@@ -626,7 +672,7 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                         if (rightPage != null && flatTarget != null &&
                             repo.dao.pages(document).any { it.id == flatTarget }
                         ) {
-                            repo.insertAfter(flatTarget, rightPage.copy(documentId = document))
+                            repo.insertAfter(flatTarget, checkNotNull(rightUpright).copy(documentId = document))
                             detail = "已拆为左右两页，" + detail
                         }
                         repo.dao.touch(document, System.currentTimeMillis())

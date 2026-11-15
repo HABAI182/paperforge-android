@@ -48,6 +48,8 @@ object SettingKeys {
     val ScanAspect = SettingKey.Number("scanAspect", 0f, 0f..2.5f)
     val ReviewAfterCapture = SettingKey.Bool("reviewAfterCapture", false)
     val ScanAiFinish = SettingKey.Bool("scanAiFinish", true)
+    /** Turn a page photographed sideways or upside down upright, when its content says so with confidence. */
+    val AutoOrient = SettingKey.Bool("autoOrient", true)
     val FlatPaper = SettingKey.Text("flatPaper", "ISO", setOf("ISO", "SOURCE"))
     val LockCrop = SettingKey.Bool("lockCrop", true)
     val ShowOutline = SettingKey.Bool("showOutline", true)
@@ -167,6 +169,7 @@ object SettingKeys {
             ScanAspect,
             ReviewAfterCapture,
             ScanAiFinish,
+            AutoOrient,
             FlatPaper,
             LockCrop,
             ShowOutline,

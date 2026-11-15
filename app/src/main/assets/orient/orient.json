@@ -1,0 +1,18 @@
+{
+ "version": "orient-1",
+ "globalModel": "orient-global.onnx",
+ "patchModels": [
+  "orient-patch-1.onnx",
+  "orient-patch-2.onnx"
+ ],
+ "w": 2.0,
+ "t": 4,
+ "T": 0.9,
+ "M": 2,
+ "provenance": "Trained in work/orient (gen.py synthetic pages; SmartDoc 2015 selection-half documents, CC BY 4.0; receipts Zenodo 13688441 even half; Wikimedia Commons spread photos, even half). Never on the owner's photos. Calibrated (w, t) on held-back documents; T, M chosen as the lowest threshold with no upright page turned on the calibration split.",
+ "sha256": {
+  "orient-global.onnx": "203025caac025e580df085b1a3df785626c9143cd597465dc10de324faec44eb",
+  "orient-patch-1.onnx": "60db08e82b88a5e463b37eb1053a86d4246bbb5c335e34ce293b3344e889fe54",
+  "orient-patch-2.onnx": "b2edbe5026d2853e240fabf99e07709af652f368b01c45ebfe29d2fd79c42bac"
+ }
+}

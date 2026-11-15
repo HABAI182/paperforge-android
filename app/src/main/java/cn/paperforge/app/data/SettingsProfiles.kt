@@ -143,6 +143,7 @@ class SettingsProfiles(context: Context) {
                         "autoShutter",
                         "reviewAfterCapture",
                         "scanAiFinish",
+                        "autoOrient",
                         "flatPaper",
                         "lockCrop",
                         "showOutline",

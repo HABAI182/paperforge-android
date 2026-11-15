@@ -154,6 +154,7 @@ fun SettingsScreen(vm: MainViewModel) {
                     SettingSlider("手动快门倒计时", "captureTimer", 0f, 0f..10f, "秒")
                     SettingToggle("拍一页即进入编辑", "reviewAfterCapture", false)
                     SettingToggle("扫描后自动轻量 AI 精修", "scanAiFinish", true)
+                    SettingToggle("自动摆正方向（横拍、倒拍的页面转正，可再手动旋转）", "autoOrient", true)
                     SettingChoices(
                         "横线笔记纸面比例",
                         "flatPaper",
