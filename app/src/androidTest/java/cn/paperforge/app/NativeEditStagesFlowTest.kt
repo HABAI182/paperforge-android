@@ -78,20 +78,21 @@ class NativeEditStagesFlowTest {
             val hash = PdfAssembly.sha256(input)
             val edits = JSONArray()
             for (number in 0..1) {
-                val original =
+                val line =
                     NativePdfEditor.inspect(input, number).second.first {
-                        it.text == "BEFORE_${number+1}"
+                        it.text.contains("BEFORE_${number+1}")
                     }
-                edits.put(
-                    NativePdfEditor.Edit(
-                            number,
-                            original.index,
-                            original.text,
-                            if (number == 0) "第一页甲" else "第二页乙",
-                            font = "CJK",
-                        )
-                        .json()
-                )
+                val word = "BEFORE_${number+1}"
+                val at = line.text.indexOf(word)
+                val runs =
+                    NativeTextRuns.replace(
+                        NativeTextRuns.initial(line.text),
+                        at,
+                        at + word.length,
+                        if (number == 0) "第一页甲" else "第二页乙",
+                        NativeStyle(font = "CJK"),
+                    )
+                edits.put(NativePdfEditor.Edit.of(line, runs)!!.json())
             }
             val request = JSONObject().put("sourceSha256", hash).put("edits", edits)
             val task =
@@ -123,13 +124,13 @@ class NativeEditStagesFlowTest {
                 } catch (_: CancellationException) {
                     stopped = true
                 }
+                // Line edits may rewrite forms as well as page streams, so a stopped job restarts from the unchanged
+                // source (no per-page patches). It must leave no partial output and give the same result again.
                 assertTrue(stopped)
-                assertEquals(1, first.generated)
+                assertFalse(File(proof, "interrupted.pdf").exists())
                 val next = resume()
                 val result = File(proof, "resumed.pdf")
                 val report = NativePdfEditor.apply(app, input, result, request, stages = next)
-                assertEquals(1, next.reused)
-                assertEquals(1, next.generated)
                 val text = PdfEngine.text(result).filterNot(Char::isWhitespace)
                 listOf("第一页甲", "第二页乙", "BEFORE_3", "ANCHOR_1", "ANCHOR_2").forEach {
                     assertTrue("Missing $it: $text", text.contains(it))
@@ -145,17 +146,9 @@ class NativeEditStagesFlowTest {
                             .uri,
                     )
                 }
-                val checkpoint =
-                    JSONObject(checkNotNull(repo.dao.task(task.id)).payload)
-                        .getJSONObject("checkpoint")
-                val bytes =
-                    checkpoint
-                        .keys()
-                        .asSequence()
-                        .mapNotNull { checkpoint.optJSONObject(it) }
-                        .filter { it.optString("key").startsWith("native-edit-page-") }
-                        .sumOf { it.getLong("bytes") }
-                assertTrue("Patch should not duplicate shared bitmap", bytes < input.length() / 4)
+                // The shared bitmap stays one object: the edited copy grows only by the subset font.
+                val bytes = result.length() - input.length()
+                assertTrue("Edit should not duplicate shared bitmap ($bytes bytes added)", bytes < input.length() / 4)
                 File(proof, "proof.json")
                     .writeText(
                         JSONObject()

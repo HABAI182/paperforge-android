@@ -18,7 +18,8 @@ data class ReaderTextUnit(
 data class ReaderSelectionUnit(val line: Int, val span: ReaderTextUnit)
 
 class ReaderSelectionPage(val page: Int, val lines: List<ReaderTextBlock>, val order: Int = 0) {
-    val ordered = ReaderDocument.order(lines, order)
+    /** Lines in reading order; [order] -1 keeps the given order (the editor's text model already orders them). */
+    val ordered = if (order < 0) lines else ReaderDocument.order(lines, order)
     val units =
         ordered.flatMapIndexed { index, block ->
             block.units

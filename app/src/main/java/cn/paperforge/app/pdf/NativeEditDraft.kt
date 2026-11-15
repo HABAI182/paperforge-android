@@ -78,18 +78,9 @@ data class NativeEditDraft(
             val file = file(repo, doc, draft.sourceSha256)
             TableJobs.atomic(file, draft.json())
             DocumentResources.register(repo, doc.id, "native-edit-draft", file)
-            draft.states
-                .flatten()
-                .filter { it.fontSha256.isNotEmpty() }
-                .distinctBy { it.fontSha256 }
-                .forEach { edit ->
-                    DocumentResources.register(
-                        repo,
-                        doc.id,
-                        "native-edit-font",
-                        NativeEditFonts.resolve(repo, doc, edit.fontSha256),
-                    )
-                }
+            NativeEditFonts.imported(draft.states.flatten()).forEach { sha ->
+                DocumentResources.register(repo, doc.id, "native-edit-font", NativeEditFonts.resolve(repo, doc, sha))
+            }
         }
     }
 }
@@ -102,6 +93,16 @@ data class NativeFontChoice(
 )
 
 object NativeEditFonts {
+    /** SHA-256 of every imported font the edits' new runs use (built-in fonts and kept glyphs need no file). */
+    fun imported(edits: List<NativePdfEditor.Edit>): List<String> =
+        edits
+            .flatMap { it.fontIds }
+            .filter { (id, sha) ->
+                sha.isNotEmpty() && id != NativeRun.ORIGINAL && id != "CJK" && !NativeFontLibrary.isBuiltIn(id)
+            }
+            .map { it.second }
+            .distinct()
+
     private fun name(file: File) =
         PDDocument().use { pdf -> file.inputStream().use { PDType0Font.load(pdf, it, true).name } }
 

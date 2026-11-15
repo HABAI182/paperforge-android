@@ -125,10 +125,10 @@ class NativePdfEditorFlowTest {
                 val hash = PdfAssembly.sha256(input)
                 val objects = NativePdfEditor.inspect(input, 0).second
                 val rotated = NativePdfEditor.inspect(input, 1).second
-                assertTrue(objects.first { it.text == "ORIGINAL" }.corners.size == 4)
+                assertTrue(objects.first { it.text.contains("ORIGINAL") }.corners.size == 4)
                 assertTrue(
                     rotated
-                        .first { it.text == "ROTATED_OLD" }
+                        .first { it.text.contains("ROTATED_OLD") }
                         .corners
                         .all { it.x in 0f..1f && it.y in 0f..1f }
                 )
@@ -139,57 +139,30 @@ class NativePdfEditorFlowTest {
                 }
                 val choice = NativeEditFonts.install(repo, doc, Uri.fromFile(fontInput))
                 ownedFont = File(choice.path).takeIf { it.path !in beforeFonts }
+                // Each word is replaced inside its visual line; the rest of the line is kept.
+                fun word(
+                    lines: List<NativePdfEditor.TextObject>,
+                    word: String,
+                    replacement: String,
+                    font: String = "ORIGINAL",
+                    size: Float? = null,
+                    fit: Boolean = true,
+                    sha: String = "",
+                ): NativePdfEditor.Edit {
+                    val line = lines.first { it.text.contains(word) }
+                    val at = line.text.indexOf(word)
+                    val style = if (font != "ORIGINAL" || size != null) NativeStyle(font = font, fontSha256 = sha, size = size) else null
+                    val runs = NativeTextRuns.replace(NativeTextRuns.initial(line.text), at, at + word.length, replacement, style)
+                    return NativePdfEditor.Edit.of(line, runs, fit)!!
+                }
                 val changes =
                     listOf(
-                        NativePdfEditor.Edit(
-                            0,
-                            objects.first { it.text == "ORIGINAL" }.index,
-                            "ORIGINAL",
-                            "A MUCH LONGER TITLE",
-                            fit = true,
-                        ),
-                        NativePdfEditor.Edit(
-                            0,
-                            objects.first { it.text == "KERNED" }.index,
-                            "KERNED",
-                            "排版修改",
-                            "CJK",
-                            22f,
-                            false,
-                        ),
-                        NativePdfEditor.Edit(
-                            0,
-                            objects.first { it.text == "QUOTE_OLD" }.index,
-                            "QUOTE_OLD",
-                            "QUOTE_NEW",
-                            fit = false,
-                        ),
-                        NativePdfEditor.Edit(
-                            0,
-                            objects.first { it.text == "DOUBLE_OLD" }.index,
-                            "DOUBLE_OLD",
-                            "DOUBLE_NEW",
-                            fit = true,
-                        ),
-                        NativePdfEditor.Edit(
-                            0,
-                            objects.first { it.text == "ANGLED_OLD" }.index,
-                            "ANGLED_OLD",
-                            "倾斜文字",
-                            "CJK",
-                            20f,
-                            true,
-                        ),
-                        NativePdfEditor.Edit(
-                            1,
-                            rotated.first { it.text == "ROTATED_OLD" }.index,
-                            "ROTATED_OLD",
-                            "旋转字体",
-                            choice.id,
-                            18f,
-                            true,
-                            choice.sha256,
-                        ),
+                        word(objects, "ORIGINAL", "A MUCH LONGER TITLE"),
+                        word(objects, "KERNED", "排版修改", "CJK", 22f, false),
+                        word(objects, "QUOTE_OLD", "QUOTE_NEW", fit = false),
+                        word(objects, "DOUBLE_OLD", "DOUBLE_NEW"),
+                        word(objects, "ANGLED_OLD", "倾斜文字", "CJK", 20f),
+                        word(rotated, "ROTATED_OLD", "旋转字体", choice.id, 18f, sha = choice.sha256),
                     )
                 var draft = NativeEditDraft(hash).change(changes)
                 assertEquals(0, draft.undo().edits.size)
@@ -231,7 +204,7 @@ class NativePdfEditorFlowTest {
                                 .contains(it.filterNot(Char::isWhitespace)),
                         )
                     }
-                assertTrue(NativePdfEditor.inspect(output, 0).second.any { it.text == "倾斜文字" })
+                assertTrue(NativePdfEditor.inspect(output, 0).second.any { it.text.contains("倾斜文字") })
                 PDDocument.load(output).use { pdf ->
                     assertEquals(
                         "FORM_VALUE",

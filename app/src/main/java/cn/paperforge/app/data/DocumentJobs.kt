@@ -213,16 +213,14 @@ object DocumentJobs {
             ?.let { path ->
                 resource("native-edit", path)
                 val request = JSONObject(File(path).readText())
-                cn.paperforge.app.pdf.NativePdfEditor.edits(request)
-                    .filter { it.fontSha256.isNotEmpty() }
-                    .distinctBy { it.fontSha256 }
-                    .forEach { edit ->
+                cn.paperforge.app.pdf.NativeEditFonts.imported(cn.paperforge.app.pdf.NativePdfEditor.edits(request))
+                    .forEach { sha ->
                         resource(
-                            "native-font-${edit.fontSha256}",
+                            "native-font-$sha",
                             cn.paperforge.app.pdf.NativeEditFonts.resolve(
                                     repo,
                                     requireNotNull(doc) { "来源文档已移除" },
-                                    edit.fontSha256,
+                                    sha,
                                 )
                                 .path,
                         )
