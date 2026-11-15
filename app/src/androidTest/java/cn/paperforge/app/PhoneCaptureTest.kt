@@ -84,6 +84,9 @@ class PhoneCaptureTest {
         assertTrue("no photos in files/phone-samples", samples.isNotEmpty())
         val rows = JSONArray()
         val snapshot = ScanConfig.replaceForBenchmark(overrides)
+        // The shipped detector (or -e detector X), never a value an earlier test left in the preferences.
+        val previousDetector = UserSettings[SettingKeys.Detector]
+        UserSettings.set(SettingKeys.Detector, arguments.getString("detector") ?: SettingKeys.Detector.default)
         try {
             for (file in samples) {
                 val started = System.nanoTime()
@@ -159,6 +162,7 @@ class PhoneCaptureTest {
         } finally {
             cn.paperforge.app.imaging.EdgeInkDiagnostics.directory = null
             ScanConfig.restoreAfterBenchmark(snapshot)
+            UserSettings.set(SettingKeys.Detector, previousDetector)
         }
     }
 

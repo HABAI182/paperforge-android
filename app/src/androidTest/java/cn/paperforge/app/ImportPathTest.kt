@@ -33,6 +33,14 @@ class ImportPathTest {
         val samples = File(app.filesDir, "phone-samples").listFiles().orEmpty().sorted()
         assertTrue("no photos in files/phone-samples", samples.isNotEmpty())
         UserSettings.set(SettingKeys.Filter, "WORKBOOK")
+        // The detector the product ships with (or -e detector X): a value left behind by an earlier test once made
+        // every import here use the old PageNet, so crops differed from the owner's phone.
+        val previousDetector = UserSettings[SettingKeys.Detector]
+        UserSettings.set(
+            SettingKeys.Detector,
+            InstrumentationRegistry.getArguments().getString("detector") ?: SettingKeys.Detector.default,
+        )
+        try {
         val repo = app.repository
         val document = repo.newScan()
         val started = System.nanoTime()
@@ -64,6 +72,9 @@ class ImportPathTest {
             assertEquals("page $name was not flattened", "flat-document", page.detectionMethod)
         }
         File(root, "runs.json").writeText(JSONObject().put("seconds", elapsed).put("pages", rows).toString(1))
+        } finally {
+            UserSettings.set(SettingKeys.Detector, previousDetector)
+        }
     }
 
     /**
