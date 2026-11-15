@@ -528,10 +528,12 @@ object PageNetDetector {
             }
         }
         // An open notebook or book with the facing page cut off by the frame: the crop keeps the whole page only.
+        var seamNote: String? = null
         if (!preview) {
             NeighborPage.refine(source, quad)?.let {
                 quad = it
                 method += "+" + NeighborPage.VERSION
+                seamNote = NeighborPage.lastSeam.get()
             }
         }
         // Both pages of an open book or notebook in the crop: the crop stays the whole spread, since either page
@@ -543,7 +545,11 @@ object PageNetDetector {
             confidence.coerceIn(0f, .999f),
             method,
             elapsedMs = (System.nanoTime() - started) / 1e6f,
-            notes = if (spread != null) mapOf(SpreadGutter.NOTE to spread) else emptyMap(),
+            notes =
+                buildMap {
+                    if (spread != null) put(SpreadGutter.NOTE, spread)
+                    seamNote?.let { put(NeighborPage.SEAM_NOTE, it) }
+                },
         )
     }
 

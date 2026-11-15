@@ -8,6 +8,7 @@ import cn.paperforge.app.SettingKeys
 import cn.paperforge.app.data.PageRow
 import cn.paperforge.app.data.workbookDetail
 import cn.paperforge.app.model.CaptureReference
+import cn.paperforge.app.model.PointN
 import cn.paperforge.app.model.Quad
 import cn.paperforge.app.model.StillCrop
 import java.io.File
@@ -436,11 +437,112 @@ object ScanProcessor {
                     page.workbookDetail(),
                     page.deskewDegrees,
                     !page.hasExactCropFrame(),
+                    pageSeam = seamInCrop(page),
                 )
             return result
         } finally {
             decoded.bitmap.recycle()
         }
+    }
+
+    /**
+     * The page's own curved edge (NeighborPage) in crop coordinates (u across, v down, both 0..1), or null. Only for
+     * the photo it was found on: a finished page renders from its own file.
+     */
+    fun seamInCrop(page: PageRow): List<PointN>? {
+        if (ScanConfig.int("neighborPageSeamFill", 1) == 0) return null
+        val seam = cn.paperforge.app.data.PageResources.metadata(page).optJSONObject("pageSeam") ?: return null
+        if (seam.optString("photo") != page.original) return null
+        val points =
+            seam.optString("points").split(';').mapNotNull { s ->
+                s.split(',').takeIf { it.size == 2 }?.let { PointN(it[0].toFloat(), it[1].toFloat()) }
+            }
+        if (points.size < 4) return null
+        val corners = Quad.decode(page.corners).points
+        val src = MatOfPoint2f(*corners.map { Point(it.x.toDouble(), it.y.toDouble()) }.toTypedArray())
+        val dst = MatOfPoint2f(Point(0.0, 0.0), Point(1.0, 0.0), Point(1.0, 1.0), Point(0.0, 1.0))
+        val toCrop = Imgproc.getPerspectiveTransform(src, dst)
+        val input = MatOfPoint2f(*points.map { Point(it.x.toDouble(), it.y.toDouble()) }.toTypedArray())
+        val output = MatOfPoint2f()
+        try {
+            org.opencv.core.Core.perspectiveTransform(input, output, toCrop)
+            return output.toArray().map { PointN(it.x.toFloat(), it.y.toFloat()) }.sortedBy { it.y }
+        } finally {
+            listOf(src, dst, toCrop, input, output).forEach { it.release() }
+        }
+    }
+
+    /**
+     * Fills the sliver of the facing page between the crop's side and the page's own edge [seam] (crop coordinates)
+     * with this page's paper, row by row, in the warped RGBA [warped] before any enhancement. The cut keeps that
+     * sliver so that a bowed edge never costs this page anything; its rule stubs and letters are not this page.
+     * At most 8% of the width; otherwise nothing changes.
+     */
+    private fun fillBeyondSeam(warped: Mat, seam: List<PointN>) {
+        val w = warped.cols()
+        val h = warped.rows()
+        val left = seam.map { it.x }.average() < .5
+        val bytes = ByteArray(w * h * 4).also { warped.get(0, 0, it) }
+        fun edgeAt(v: Double): Double {
+            if (v <= seam.first().y) return seam.first().x.toDouble()
+            if (v >= seam.last().y) return seam.last().x.toDouble()
+            for (i in 1 until seam.size) {
+                val a = seam[i - 1]
+                val b = seam[i]
+                if (v <= b.y) {
+                    val t = if (b.y - a.y > 1e-6f) (v - a.y) / (b.y - a.y) else 0.0
+                    return a.x + (b.x - a.x) * t
+                }
+            }
+            return seam.last().x.toDouble()
+        }
+        val limit = ScanConfig.float("neighborPageSeamFillMax", .08f)
+        val edge = IntArray(h) { y ->
+            val u = edgeAt(y.toDouble() / max(1, h - 1))
+            val inside = if (left) u else 1 - u
+            if (inside <= 0 || inside > limit) -1 else (u * (w - 1)).roundToInt()
+        }
+        if (edge.none { it >= 0 }) return
+        // The paper just inside the edge, per row, smoothed over neighbouring rows.
+        val band = max(12, (.03 * w).roundToInt())
+        val paper = Array(h) { IntArray(3) }
+        for (y in 0 until h) {
+            val x0 = edge[y]
+            if (x0 < 0) continue
+            val from = if (left) x0 + 4 else x0 - 4 - band
+            val values = Array(3) { ArrayList<Int>(band) }
+            for (x in from until from + band) {
+                if (x !in 0 until w) continue
+                val i = (y * w + x) * 4
+                for (c in 0..2) values[c] += bytes[i + c].toInt() and 255
+            }
+            for (c in 0..2) paper[y][c] = values[c].sorted().let { if (it.isEmpty()) 255 else it[(it.size * .75).toInt().coerceAtMost(it.size - 1)] }
+        }
+        val radius = 7
+        for (y in 0 until h) {
+            val x0 = edge[y]
+            if (x0 < 0) continue
+            val tone = IntArray(3)
+            var n = 0
+            for (yy in max(0, y - radius)..minOf(h - 1, y + radius)) {
+                if (edge[yy] < 0) continue
+                for (c in 0..2) tone[c] += paper[yy][c]
+                n++
+            }
+            for (c in 0..2) tone[c] /= max(1, n)
+            val range = if (left) 0..x0 else x0 until w
+            for (x in range) {
+                // Two pixels of feather at the edge itself.
+                val d = kotlin.math.abs(x - x0)
+                val a = if (d >= 2) 1.0 else (d + 1) / 3.0
+                val i = (y * w + x) * 4
+                for (c in 0..2) {
+                    val old = bytes[i + c].toInt() and 255
+                    bytes[i + c] = (old + (tone[c] - old) * a).roundToInt().toByte()
+                }
+            }
+        }
+        warped.put(0, 0, bytes)
     }
 
     fun transform(
@@ -459,6 +561,7 @@ object ScanProcessor {
         deskewDegrees: Float = 0f,
         protectEdgeInk: Boolean = true,
         sourceScale: Float? = null,
+        pageSeam: List<PointN>? = null,
     ): Bitmap {
         require(quad.valid()) { "裁切四角不能交叉或重合" }
         // If ink touches the crop frame, push that side outwards instead of clipping the stroke.
@@ -560,6 +663,7 @@ object ScanProcessor {
                 toneSamplingScale *= ratio.toFloat()
                 Imgproc.resize(warped, warped, Size(), ratio, ratio, Imgproc.INTER_AREA)
             }
+            if (pageSeam != null && deskewDegrees == 0f && warped.channels() == 4) fillBeyondSeam(warped, pageSeam)
             Imgproc.cvtColor(warped, rgb, Imgproc.COLOR_RGBA2RGB)
             EdgeInkDiagnostics.dump("02-warp", rgb)
             ToneZones.withExactFrame(!protectEdgeInk) {

@@ -32,6 +32,16 @@ object NeighborPage {
     const val VERSION = "neighbor-page-2"
     private const val HEIGHT = 600.0
 
+    /** Detection note: the page's own curved edge (photo-normalised "x,y;x,y;..."), see [lastSeam]. */
+    const val SEAM_NOTE = "pageSeam"
+
+    /**
+     * The curved edge found by the last [refine] on this thread that cut along a seam, photo-normalised, or null. The
+     * cut itself is a straight line on the neighbour's side of the seam (nothing of this page is lost), which leaves
+     * a sliver of the facing page where the edge bows; the renderer fills that sliver with paper (ScanProcessor).
+     */
+    val lastSeam: ThreadLocal<String?> = ThreadLocal()
+
     /**
      * A cut page is still a page: convex, every corner between 50 and 130 degrees. A line found at a steep slant
      * once turned a spread into a triangle; then the crop is left as it was.
@@ -119,6 +129,7 @@ object NeighborPage {
     }
 
     fun refine(photo: Mat, quad: Quad): Quad? {
+        lastSeam.set(null)
         if (ScanConfig.int("neighborPage", 1) == 0 || photo.empty() || !quad.valid()) return null
         val frame = ScanConfig.float("neighborPageFrame", .02f)
         val q = quad.points
@@ -331,7 +342,21 @@ object NeighborPage {
                         PointN((it.x / (w - 1.0)).toFloat().coerceIn(0f, 1f), (it.y / (h - 1.0)).toFloat().coerceIn(0f, 1f))
                     }
                 )
-            return out.takeIf { it.valid() && it.area >= .45f * quad.area && it.area < quad.area && plausible(it) }
+            val accepted = out.takeIf { it.valid() && it.area >= .45f * quad.area && it.area < quad.area && plausible(it) }
+            if (accepted != null && seam != null && ScanConfig.int("neighborPageSeamFill", 1) != 0) {
+                // The seam, every 10 rows, back in the photo.
+                val pts = (seam.indices step 10).map { r -> Point(seam[r].toDouble(), (y0 + r).toDouble()) } +
+                    Point(seam.last().toDouble(), (y0 + seam.size - 1).toDouble())
+                val warpedSeam = MatOfPoint2f(*pts.toTypedArray()).also(owned::add)
+                val photoSeam = MatOfPoint2f().also(owned::add)
+                Core.perspectiveTransform(warpedSeam, photoSeam, inverse)
+                lastSeam.set(
+                    photoSeam.toArray().joinToString(";") {
+                        "%.5f,%.5f".format(java.util.Locale.ROOT, it.x / (w - 1.0), it.y / (h - 1.0))
+                    }
+                )
+            }
+            return accepted
         } finally {
             owned.forEach(Mat::release)
         }
