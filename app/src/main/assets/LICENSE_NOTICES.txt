@@ -50,6 +50,8 @@ level 1 (traditional) plus Latin, punctuation, Greek and maths symbols; variable
 - Noto Sans TC Regular, Copyright 2014-2021 Adobe, Reserved Font Name 'Source' (licenses/NotoSansTC-OFL.txt);
   google/fonts/ofl/notosanstc.
 - Noto Sans Math Regular, Copyright 2022 The Noto Project Authors (licenses/NotoSansMath-OFL.txt).
+- Zhuque Fangsong (朱雀仿宋) Regular v0.212, Copyright (c) 2023 Zhejiang JadeFoci Technology Co. Ltd.
+  (licenses/ZhuqueFangsong-OFL.txt); github.com/TrionesType/zhuque. Subset to GB2312 plus symbols.
 - PaperForge Kai Regular is a renamed subset of LXGW WenKai Regular, Copyright 2021-2026 LXGW, with Reserved Font
   Names '霞鹜', '霞鶩', '落霞孤鹜', '落霞孤鶩' and 'LXGW', and Klee One, Copyright 2020 The Klee Project Authors
   (licenses/PaperForgeKai-LXGWWenKai-OFL.txt). Renamed because the subset is a Modified Version.

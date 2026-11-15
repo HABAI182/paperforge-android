@@ -207,7 +207,7 @@ fun NativePdfEditorScreen(vm: MainViewModel) {
                 shown = result
                 pendingSegments = keep
                 draft = current.change(next)
-                val squeezed = result?.outcomes?.filter { it.scale < .999f }.orEmpty()
+                val squeezed = result?.outcomes?.filter { it.scale < .97f }.orEmpty()
                 val overflow = result?.outcomes?.any { it.overflow } == true
                 message =
                     listOfNotNull(
@@ -517,6 +517,26 @@ fun NativePdfEditorScreen(vm: MainViewModel) {
                                     }
                                     sheet = "font"
                                 }
+                                ToolChip("颜色", Icons.Default.Palette, canEdit, "native-edit-color") { sheet = "color" }
+                                IconButton(enabled = canEdit, modifier = Modifier.testTag("native-edit-bold"), onClick = {
+                                    val first = selectedObjects.firstOrNull { originalMap[it.key]?.editable == true }
+                                    if (first != null) {
+                                        val current =
+                                            edits.firstOrNull { it.key == first.key }?.effectiveRuns?.firstOrNull { !it.keepsGlyphs }?.font
+                                                ?: NativeRun.ORIGINAL
+                                        val base =
+                                            if (current == NativeRun.ORIGINAL)
+                                                NativeFontLibrary.substitute(context, originalMap.getValue(first.key), selectedText)?.id
+                                            else current
+                                        val now = base?.let { NativeFontLibrary.find(it) }
+                                        val wantBold = !(now?.bold ?: first.font.contains("bold", true))
+                                        val target = base?.let { NativeFontLibrary.variant(it, wantBold, now?.italic ?: false) }
+                                        if (target == null) message = "这种字体没有${if (wantBold) "粗体" else "常规体"}，可在“字体”中选择"
+                                        else restyle(NativeStyle(font = target.id), if (wantBold) "已加粗（${target.nameZh}）" else "已取消加粗（${target.nameZh}）")
+                                    }
+                                }) {
+                                    Icon(Icons.Default.FormatBold, "加粗")
+                                }
                                 val sizes = selectedObjects.map { o -> edits.firstOrNull { it.key == o.key }?.effectiveRuns?.firstNotNullOfOrNull { it.size } ?: o.size }
                                 IconButton(enabled = canEdit, onClick = { restyle(NativeStyle(sizeFactor = 1 / 1.1f), "字号缩小") }, modifier = Modifier.testTag("native-edit-smaller")) {
                                     Icon(Icons.Default.TextDecrease, "缩小字号")
@@ -529,7 +549,6 @@ fun NativePdfEditorScreen(vm: MainViewModel) {
                                 IconButton(enabled = canEdit, onClick = { restyle(NativeStyle(sizeFactor = 1.1f), "字号放大") }, modifier = Modifier.testTag("native-edit-bigger")) {
                                     Icon(Icons.Default.TextIncrease, "放大字号")
                                 }
-                                ToolChip("颜色", Icons.Default.Palette, canEdit, "native-edit-color") { sheet = "color" }
                                 ToolChip("复制", Icons.Default.ContentCopy, true, "native-edit-copy") {
                                     clipboard.setText(AnnotatedString(selectedText))
                                     message = "已复制 ${selectedText.length} 个字符"

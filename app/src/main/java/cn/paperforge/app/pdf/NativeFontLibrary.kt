@@ -15,6 +15,8 @@ data class LibraryFont(
     val coverage: String,
     val bold: Boolean = false,
     val italic: Boolean = false,
+    /** Fonts of one family share this key; bold/italic switch between them. */
+    val family: String = id,
 ) {
     enum class Category(val label: String) {
         SANS("黑体 · 无衬线"),
@@ -37,24 +39,38 @@ object NativeFontLibrary {
 
     val all: List<LibraryFont> =
         listOf(
-            LibraryFont("CJK", "思源黑体（常规）", "Noto Sans SC", LibraryFont.Category.SANS, "fonts/PaperForgeCJK-Regular.ttf", "简体全字库 + 英文"),
-            LibraryFont("builtin:sans-sc-bold", "思源黑体（粗）", "Noto Sans SC Bold", LibraryFont.Category.SANS, "fonts/editor/NotoSansSC-Bold.ttf", "简体常用字（GB2312）+ 英文", bold = true),
-            LibraryFont("builtin:serif-sc", "思源宋体（常规）", "Noto Serif SC", LibraryFont.Category.SERIF, "fonts/editor/NotoSerifSC-Regular.ttf", "简体常用字（GB2312）+ 英文"),
-            LibraryFont("builtin:serif-sc-bold", "思源宋体（粗）", "Noto Serif SC Bold", LibraryFont.Category.SERIF, "fonts/editor/NotoSerifSC-Bold.ttf", "简体常用字（GB2312）+ 英文", bold = true),
-            LibraryFont("builtin:kai", "PaperForge 楷体", "PaperForge Kai (LXGW WenKai)", LibraryFont.Category.SCRIPT, "fonts/editor/PaperForgeKai-Regular.ttf", "简体常用字（GB2312）+ 英文"),
-            LibraryFont("builtin:sans-tc", "思源黑体 繁體", "Noto Sans TC", LibraryFont.Category.SANS, "fonts/editor/NotoSansTC-Regular.ttf", "繁體常用字（Big5 一級）+ 英文"),
-            LibraryFont("builtin:liberation-sans", "Liberation Sans", "Arial 同宽", LibraryFont.Category.SANS, "$OFFICE/LiberationSans-Regular.ttf", "英文与西文"),
-            LibraryFont("builtin:liberation-sans-bold", "Liberation Sans 粗体", "Arial Bold 同宽", LibraryFont.Category.SANS, "$OFFICE/LiberationSans-Bold.ttf", "英文与西文", bold = true),
-            LibraryFont("builtin:carlito", "Carlito", "Calibri 同宽", LibraryFont.Category.SANS, "$OFFICE/Carlito-Regular.ttf", "英文与西文"),
-            LibraryFont("builtin:liberation-serif", "Liberation Serif", "Times New Roman 同宽", LibraryFont.Category.SERIF, "$OFFICE/LiberationSerif-Regular.ttf", "英文与西文"),
-            LibraryFont("builtin:liberation-serif-bold", "Liberation Serif 粗体", "Times New Roman Bold 同宽", LibraryFont.Category.SERIF, "$OFFICE/LiberationSerif-Bold.ttf", "英文与西文", bold = true),
-            LibraryFont("builtin:liberation-serif-italic", "Liberation Serif 斜体", "Times New Roman Italic 同宽", LibraryFont.Category.SERIF, "$OFFICE/LiberationSerif-Italic.ttf", "英文与西文", italic = true),
-            LibraryFont("builtin:caladea", "Caladea", "Cambria 同宽", LibraryFont.Category.SERIF, "$OFFICE/Caladea-Regular.ttf", "英文与西文"),
-            LibraryFont("builtin:gentium", "Gentium Book Basic", "Gentium Book Basic", LibraryFont.Category.SERIF, "$OFFICE/GenBkBasR.ttf", "英文与西文"),
-            LibraryFont("builtin:liberation-mono", "Liberation Mono", "Courier New 同宽", LibraryFont.Category.MONO, "$OFFICE/LiberationMono-Regular.ttf", "英文与代码"),
-            LibraryFont("builtin:math", "Noto Sans Math", "数学符号", LibraryFont.Category.SYMBOL, "fonts/editor/NotoSansMath-Regular.ttf", "数学符号与希腊字母"),
-            LibraryFont("builtin:opensymbol", "OpenSymbol", "符号", LibraryFont.Category.SYMBOL, "$OFFICE/opens___.ttf", "符号与箭头"),
+            LibraryFont("CJK", "思源黑体", "Noto Sans SC", LibraryFont.Category.SANS, "fonts/PaperForgeCJK-Regular.ttf", "简体全字库 + 英文", family = "sans-sc"),
+            LibraryFont("builtin:sans-sc-bold", "思源黑体 粗", "Noto Sans SC Bold", LibraryFont.Category.SANS, "fonts/editor/NotoSansSC-Bold.ttf", "简体常用字（GB2312）+ 英文", bold = true, family = "sans-sc"),
+            LibraryFont("builtin:serif-sc", "思源宋体", "Noto Serif SC", LibraryFont.Category.SERIF, "fonts/editor/NotoSerifSC-Regular.ttf", "简体常用字（GB2312）+ 英文", family = "serif-sc"),
+            LibraryFont("builtin:serif-sc-bold", "思源宋体 粗", "Noto Serif SC Bold", LibraryFont.Category.SERIF, "fonts/editor/NotoSerifSC-Bold.ttf", "简体常用字（GB2312）+ 英文", bold = true, family = "serif-sc"),
+            LibraryFont("builtin:fangsong", "朱雀仿宋", "Zhuque Fangsong", LibraryFont.Category.SERIF, "fonts/editor/ZhuqueFangsong-Regular.ttf", "简体常用字（GB2312），公文常用", family = "fangsong"),
+            LibraryFont("builtin:kai", "PaperForge 楷体", "PaperForge Kai (LXGW WenKai)", LibraryFont.Category.SCRIPT, "fonts/editor/PaperForgeKai-Regular.ttf", "简体常用字（GB2312）+ 英文", family = "kai"),
+            LibraryFont("builtin:sans-tc", "思源黑体 繁體", "Noto Sans TC", LibraryFont.Category.SANS, "fonts/editor/NotoSansTC-Regular.ttf", "繁體常用字（Big5 一級）+ 英文", family = "sans-tc"),
+            LibraryFont("builtin:liberation-sans", "Liberation Sans", "Arial 同宽", LibraryFont.Category.SANS, "$OFFICE/LiberationSans-Regular.ttf", "英文与西文", family = "liberation-sans"),
+            LibraryFont("builtin:liberation-sans-bold", "Liberation Sans 粗", "Arial Bold 同宽", LibraryFont.Category.SANS, "$OFFICE/LiberationSans-Bold.ttf", "英文与西文", bold = true, family = "liberation-sans"),
+            LibraryFont("builtin:liberation-sans-italic", "Liberation Sans 斜", "Arial Italic 同宽", LibraryFont.Category.SANS, "$OFFICE/LiberationSans-Italic.ttf", "英文与西文", italic = true, family = "liberation-sans"),
+            LibraryFont("builtin:liberation-sans-bolditalic", "Liberation Sans 粗斜", "Arial Bold Italic 同宽", LibraryFont.Category.SANS, "$OFFICE/LiberationSans-BoldItalic.ttf", "英文与西文", bold = true, italic = true, family = "liberation-sans"),
+            LibraryFont("builtin:carlito", "Carlito", "Calibri 同宽", LibraryFont.Category.SANS, "$OFFICE/Carlito-Regular.ttf", "英文与西文", family = "carlito"),
+            LibraryFont("builtin:carlito-bold", "Carlito 粗", "Calibri Bold 同宽", LibraryFont.Category.SANS, "$OFFICE/Carlito-Bold.ttf", "英文与西文", bold = true, family = "carlito"),
+            LibraryFont("builtin:carlito-italic", "Carlito 斜", "Calibri Italic 同宽", LibraryFont.Category.SANS, "$OFFICE/Carlito-Italic.ttf", "英文与西文", italic = true, family = "carlito"),
+            LibraryFont("builtin:liberation-serif", "Liberation Serif", "Times New Roman 同宽", LibraryFont.Category.SERIF, "$OFFICE/LiberationSerif-Regular.ttf", "英文与西文", family = "liberation-serif"),
+            LibraryFont("builtin:liberation-serif-bold", "Liberation Serif 粗", "Times New Roman Bold 同宽", LibraryFont.Category.SERIF, "$OFFICE/LiberationSerif-Bold.ttf", "英文与西文", bold = true, family = "liberation-serif"),
+            LibraryFont("builtin:liberation-serif-italic", "Liberation Serif 斜", "Times New Roman Italic 同宽", LibraryFont.Category.SERIF, "$OFFICE/LiberationSerif-Italic.ttf", "英文与西文", italic = true, family = "liberation-serif"),
+            LibraryFont("builtin:liberation-serif-bolditalic", "Liberation Serif 粗斜", "Times New Roman Bold Italic 同宽", LibraryFont.Category.SERIF, "$OFFICE/LiberationSerif-BoldItalic.ttf", "英文与西文", bold = true, italic = true, family = "liberation-serif"),
+            LibraryFont("builtin:caladea", "Caladea", "Cambria 同宽", LibraryFont.Category.SERIF, "$OFFICE/Caladea-Regular.ttf", "英文与西文", family = "caladea"),
+            LibraryFont("builtin:caladea-bold", "Caladea 粗", "Cambria Bold 同宽", LibraryFont.Category.SERIF, "$OFFICE/Caladea-Bold.ttf", "英文与西文", bold = true, family = "caladea"),
+            LibraryFont("builtin:gentium", "Gentium Book Basic", "Gentium Book Basic", LibraryFont.Category.SERIF, "$OFFICE/GenBkBasR.ttf", "英文与西文", family = "gentium"),
+            LibraryFont("builtin:liberation-mono", "Liberation Mono", "Courier New 同宽", LibraryFont.Category.MONO, "$OFFICE/LiberationMono-Regular.ttf", "英文与代码", family = "liberation-mono"),
+            LibraryFont("builtin:liberation-mono-bold", "Liberation Mono 粗", "Courier New Bold 同宽", LibraryFont.Category.MONO, "$OFFICE/LiberationMono-Bold.ttf", "英文与代码", bold = true, family = "liberation-mono"),
+            LibraryFont("builtin:math", "Noto Sans Math", "数学符号", LibraryFont.Category.SYMBOL, "fonts/editor/NotoSansMath-Regular.ttf", "数学符号与希腊字母", family = "math"),
+            LibraryFont("builtin:opensymbol", "OpenSymbol", "符号", LibraryFont.Category.SYMBOL, "$OFFICE/opens___.ttf", "符号与箭头", family = "opensymbol"),
         )
+
+    /** The same family with [bold] / [italic] set, when the library has it. */
+    fun variant(id: String, bold: Boolean, italic: Boolean): LibraryFont? {
+        val f = find(id) ?: return null
+        return all.firstOrNull { it.family == f.family && it.bold == bold && it.italic == italic }
+    }
 
     fun isBuiltIn(id: String) = id.startsWith("builtin:")
 
@@ -101,9 +117,11 @@ object NativeFontLibrary {
         val name = item.font.lowercase()
         val bold = "bold" in name || "black" in name || "heavy" in name || "hei" in name && "bold" in name
         val kai = "kai" in name || "楷" in name
+        val fang = "fang" in name || "仿宋" in name
         val wanted =
             when {
                 kai && han -> listOf("builtin:kai")
+                fang && han -> listOf("builtin:fangsong", "builtin:serif-sc")
                 han && item.serif -> if (bold) listOf("builtin:serif-sc-bold") else listOf("builtin:serif-sc")
                 han -> if (bold) listOf("builtin:sans-sc-bold", "CJK") else listOf("CJK")
                 item.monospace -> listOf("builtin:liberation-mono")
