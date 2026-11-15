@@ -126,7 +126,7 @@ class NativeEditorUiTest {
 
         // 3. Recolour the selection.
         val t1 = System.nanoTime()
-        compose.onNodeWithTag("native-edit-color").performClick()
+        compose.onNodeWithTag("native-edit-color").performScrollTo().performClick()
         compose.onNodeWithTag("native-color-蓝").performClick()
         waitText("native-edit-status") { it.contains("2 处修改") }
         timing.put("recolorToPreviewMs", (System.nanoTime() - t1) / 1_000_000)
@@ -183,7 +183,7 @@ class NativeEditorUiTest {
         shot("09-list-all")
         compose.onNodeWithText("在页面上编辑").performClick()
         waitText("native-edit-count") { it.contains("3 个对象") }
-        compose.onNodeWithTag("native-edit-bigger").performClick()
+        compose.onNodeWithTag("native-edit-bigger").performScrollTo().performClick()
         compose.waitUntil(15000) { runCatching { text("native-edit-message").contains("字号放大") }.getOrDefault(false) }
         shot("10-bigger")
 

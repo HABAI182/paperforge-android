@@ -35,7 +35,7 @@ class ReaderSelectionFlowTest {
     fun nativeHandlesColumnCopyLineMarksAndRegionalOcrStayOnSource() {
         val repo = app.repository
         val proof = File(app.cacheDir, "reader-selection-proof").apply { mkdirs() }
-        val source = File(proof, "source.pdf")
+        val source = File(proof, "source-${System.currentTimeMillis()}.pdf") // unique: registerPdf reuses a document by path, with its old drafts
         PDDocument().use { pdf ->
             val first = PDPage(PDRectangle(400f, 600f))
             pdf.addPage(first)
