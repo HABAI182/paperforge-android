@@ -1,0 +1,122 @@
+package cn.paperforge.app.pdf
+
+import android.content.Context
+import java.io.InputStream
+import java.security.MessageDigest
+
+/** A font the editor offers without importing. */
+data class LibraryFont(
+    val id: String,
+    val nameZh: String,
+    val nameEn: String,
+    val category: Category,
+    val asset: String,
+    /** What it covers, shown in the picker. */
+    val coverage: String,
+    val bold: Boolean = false,
+    val italic: Boolean = false,
+) {
+    enum class Category(val label: String) {
+        SANS("黑体 · 无衬线"),
+        SERIF("宋体 · 衬线"),
+        SCRIPT("楷体 · 手写"),
+        MONO("等宽"),
+        SYMBOL("数学与符号"),
+    }
+
+    val cjk
+        get() = coverage.startsWith("简") || coverage.startsWith("繁")
+}
+
+/**
+ * Built-in fonts for native text editing. Chinese fonts ship in `fonts/editor`; Latin office fonts come from the
+ * full package's office runtime (`unpack/user/fonts`) and are listed only when present.
+ */
+object NativeFontLibrary {
+    private const val OFFICE = "unpack/user/fonts"
+
+    val all: List<LibraryFont> =
+        listOf(
+            LibraryFont("CJK", "思源黑体（常规）", "Noto Sans SC", LibraryFont.Category.SANS, "fonts/PaperForgeCJK-Regular.ttf", "简体全字库 + 英文"),
+            LibraryFont("builtin:sans-sc-bold", "思源黑体（粗）", "Noto Sans SC Bold", LibraryFont.Category.SANS, "fonts/editor/NotoSansSC-Bold.ttf", "简体常用字（GB2312）+ 英文", bold = true),
+            LibraryFont("builtin:serif-sc", "思源宋体（常规）", "Noto Serif SC", LibraryFont.Category.SERIF, "fonts/editor/NotoSerifSC-Regular.ttf", "简体常用字（GB2312）+ 英文"),
+            LibraryFont("builtin:serif-sc-bold", "思源宋体（粗）", "Noto Serif SC Bold", LibraryFont.Category.SERIF, "fonts/editor/NotoSerifSC-Bold.ttf", "简体常用字（GB2312）+ 英文", bold = true),
+            LibraryFont("builtin:kai", "PaperForge 楷体", "PaperForge Kai (LXGW WenKai)", LibraryFont.Category.SCRIPT, "fonts/editor/PaperForgeKai-Regular.ttf", "简体常用字（GB2312）+ 英文"),
+            LibraryFont("builtin:sans-tc", "思源黑体 繁體", "Noto Sans TC", LibraryFont.Category.SANS, "fonts/editor/NotoSansTC-Regular.ttf", "繁體常用字（Big5 一級）+ 英文"),
+            LibraryFont("builtin:liberation-sans", "Liberation Sans", "Arial 同宽", LibraryFont.Category.SANS, "$OFFICE/LiberationSans-Regular.ttf", "英文与西文"),
+            LibraryFont("builtin:liberation-sans-bold", "Liberation Sans 粗体", "Arial Bold 同宽", LibraryFont.Category.SANS, "$OFFICE/LiberationSans-Bold.ttf", "英文与西文", bold = true),
+            LibraryFont("builtin:carlito", "Carlito", "Calibri 同宽", LibraryFont.Category.SANS, "$OFFICE/Carlito-Regular.ttf", "英文与西文"),
+            LibraryFont("builtin:liberation-serif", "Liberation Serif", "Times New Roman 同宽", LibraryFont.Category.SERIF, "$OFFICE/LiberationSerif-Regular.ttf", "英文与西文"),
+            LibraryFont("builtin:liberation-serif-bold", "Liberation Serif 粗体", "Times New Roman Bold 同宽", LibraryFont.Category.SERIF, "$OFFICE/LiberationSerif-Bold.ttf", "英文与西文", bold = true),
+            LibraryFont("builtin:liberation-serif-italic", "Liberation Serif 斜体", "Times New Roman Italic 同宽", LibraryFont.Category.SERIF, "$OFFICE/LiberationSerif-Italic.ttf", "英文与西文", italic = true),
+            LibraryFont("builtin:caladea", "Caladea", "Cambria 同宽", LibraryFont.Category.SERIF, "$OFFICE/Caladea-Regular.ttf", "英文与西文"),
+            LibraryFont("builtin:gentium", "Gentium Book Basic", "Gentium Book Basic", LibraryFont.Category.SERIF, "$OFFICE/GenBkBasR.ttf", "英文与西文"),
+            LibraryFont("builtin:liberation-mono", "Liberation Mono", "Courier New 同宽", LibraryFont.Category.MONO, "$OFFICE/LiberationMono-Regular.ttf", "英文与代码"),
+            LibraryFont("builtin:math", "Noto Sans Math", "数学符号", LibraryFont.Category.SYMBOL, "fonts/editor/NotoSansMath-Regular.ttf", "数学符号与希腊字母"),
+            LibraryFont("builtin:opensymbol", "OpenSymbol", "符号", LibraryFont.Category.SYMBOL, "$OFFICE/opens___.ttf", "符号与箭头"),
+        )
+
+    fun isBuiltIn(id: String) = id.startsWith("builtin:")
+
+    fun find(id: String) = all.firstOrNull { it.id == id }
+
+    private val present = mutableMapOf<String, Boolean>()
+
+    fun available(context: Context): List<LibraryFont> =
+        all.filter { font ->
+            synchronized(present) {
+                present.getOrPut(font.asset) {
+                    runCatching { context.assets.open(font.asset).close() }.isSuccess
+                }
+            }
+        }
+
+    /** The font file of a built-in id, or null for any other id. */
+    fun open(context: Context, id: String): InputStream? =
+        if (!isBuiltIn(id)) null
+        else context.assets.open(requireNotNull(find(id)) { "字体不可用：$id" }.asset)
+
+    /** Content version of the built-in fonts [ids] use, for staged jobs. */
+    fun version(context: Context, ids: Collection<String>): String {
+        val used = ids.mapNotNull { id -> find(id) }.sortedBy { it.id }
+        if (used.isEmpty()) return "original-or-imported"
+        val hash = MessageDigest.getInstance("SHA-256")
+        val buffer = ByteArray(65536)
+        for (font in used) {
+            hash.update(font.id.toByteArray())
+            context.assets.open(font.asset).use { stream ->
+                while (true) {
+                    val n = stream.read(buffer)
+                    if (n < 0) break
+                    hash.update(buffer, 0, n)
+                }
+            }
+        }
+        return hash.digest().joinToString("") { "%02x".format(it) }
+    }
+
+    /** A reasonable built-in stand-in when the original (subset) font lacks characters. */
+    fun substitute(context: Context, item: NativePdfEditor.TextObject, text: String): LibraryFont? {
+        val han = text.any { Character.UnicodeScript.of(it.code) == Character.UnicodeScript.HAN }
+        val name = item.font.lowercase()
+        val bold = "bold" in name || "black" in name || "heavy" in name || "hei" in name && "bold" in name
+        val kai = "kai" in name || "楷" in name
+        val wanted =
+            when {
+                kai && han -> listOf("builtin:kai")
+                han && item.serif -> if (bold) listOf("builtin:serif-sc-bold") else listOf("builtin:serif-sc")
+                han -> if (bold) listOf("builtin:sans-sc-bold", "CJK") else listOf("CJK")
+                item.monospace -> listOf("builtin:liberation-mono")
+                item.serif ->
+                    if (bold) listOf("builtin:liberation-serif-bold", "builtin:serif-sc-bold")
+                    else listOf("builtin:liberation-serif", "builtin:serif-sc")
+                "calibri" in name -> listOf("builtin:carlito", "CJK")
+                "cambria" in name -> listOf("builtin:caladea", "builtin:serif-sc")
+                else ->
+                    if (bold) listOf("builtin:liberation-sans-bold", "builtin:sans-sc-bold")
+                    else listOf("builtin:liberation-sans", "CJK")
+            } + "CJK"
+        val ready = available(context)
+        return wanted.firstNotNullOfOrNull { id -> ready.firstOrNull { it.id == id } }
+    }
+}

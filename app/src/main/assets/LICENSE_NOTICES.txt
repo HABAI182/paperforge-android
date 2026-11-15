@@ -43,6 +43,19 @@ Licensed under the SIL Open Font License 1.1 (licenses/NotoSansSC-OFL.txt).
 The derivative fixes weight at 400 and canonicalizes duplicate Unicode cmap
 aliases for reliable PDF copy/search. Source: google/fonts/ofl/notosanssc.
 
+PDF editor fonts (assets/fonts/editor), all SIL Open Font License 1.1, subset to GB2312 (simplified) or Big5
+level 1 (traditional) plus Latin, punctuation, Greek and maths symbols; variable fonts fixed at weight 400/700:
+- Noto Serif SC Regular/Bold, Copyright 2012 Google Inc. (licenses/NotoSerifSC-OFL.txt); google/fonts/ofl/notoserifsc.
+- Noto Sans SC Bold, from Noto Sans SC as above (licenses/NotoSansSC-OFL.txt).
+- Noto Sans TC Regular, Copyright 2014-2021 Adobe, Reserved Font Name 'Source' (licenses/NotoSansTC-OFL.txt);
+  google/fonts/ofl/notosanstc.
+- Noto Sans Math Regular, Copyright 2022 The Noto Project Authors (licenses/NotoSansMath-OFL.txt).
+- PaperForge Kai Regular is a renamed subset of LXGW WenKai Regular, Copyright 2021-2026 LXGW, with Reserved Font
+  Names '霞鹜', '霞鶩', '落霞孤鹜', '落霞孤鶩' and 'LXGW', and Klee One, Copyright 2020 The Klee Project Authors
+  (licenses/PaperForgeKai-LXGWWenKai-OFL.txt). Renamed because the subset is a Modified Version.
+In the full package the editor also offers the office runtime's Liberation, Carlito, Caladea, Gentium and OpenSymbol
+fonts, which are bundled there under their own licences.
+
 
 v0.4 directly adapts DocQuadLetterbox.java, DocQuadScore.java and DocQuadPostprocessor.java from MakeACopy (Christian Kierdorf), fixed revision 01bebd394b9dd6f3a692f28aea7c0638085eb4da, Apache-2.0. Package names changed, Lombok and runner-specific overloads removed; original copyright headers retained. The unmodified DocQuadNet-256 ORT inference artifact is bundled under the upstream NOTICE's explicit Apache-2.0 model grant. Full LICENSE/NOTICE, training-provenance caveats and hashes travel in assets/licenses/MakeACopy-* and assets/docquad/provenance.json. Model training overlap and inherited dataset terms are not independently certified.
 

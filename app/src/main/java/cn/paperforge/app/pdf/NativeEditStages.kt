@@ -37,18 +37,7 @@ object NativeEditStages {
             "请选择要修改的对象"
         }
         val fontVersion =
-            if (changes.any { it.font == "CJK" }) {
-                val hash = MessageDigest.getInstance("SHA-256")
-                context.assets.open("fonts/PaperForgeCJK-Regular.ttf").use { stream ->
-                    val buffer = ByteArray(65536)
-                    while (true) {
-                        val n = stream.read(buffer)
-                        if (n < 0) break
-                        hash.update(buffer, 0, n)
-                    }
-                }
-                hash.digest().joinToString("") { "%02x".format(it) }
-            } else "original-or-imported"
+            NativeFontLibrary.version(context, changes.flatMap { it.fontIds }.map { it.first }.distinct())
         val folder =
             File(output.parentFile, "native-patches-${UUID.randomUUID()}").apply { mkdirs() }
         val part = File(output.path + ".part")
@@ -60,7 +49,7 @@ object NativeEditStages {
                 currentCoroutineContext().ensureActive()
                 require(number >= 0) { "页码无效" }
                 val rows = JSONArray(selected.map { it.json() })
-                val signature = "native-stream-patch-v1:$sourceHash:$number:$fontVersion:$rows"
+                val signature = "native-stream-patch-v2:$sourceHash:$number:$fontVersion:$rows"
                 val bundle =
                     stages.file("native-edit-page-$number", signature, "zip") { destination ->
                         val patch = File(folder, "patch.pdf")
