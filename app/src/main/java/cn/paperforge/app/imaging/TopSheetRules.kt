@@ -198,9 +198,22 @@ object TopSheetRules {
         val coverageNeeded = ScanConfig.float("ruleEndsLineCoverage", .6f)
         val from = (.1 * w).toInt()
         val to = (.9 * w).toInt()
+        // A rule on a curved notebook page bows by a few pixels across the warped page, so no single pixel row stays on
+        // it: the owner's open-notebook photos of 2026-11-15 read as 1 and 5 lines and were never checked for a pile
+        // edge. Rule energy within +-tolerance rows counts for the row. Only vertical, so the gaps between the words of
+        // a text row still break it (receipts stay unruled).
+        val tolerance = ScanConfig.int("ruleEndsLineTolerance", 2).coerceIn(0, 6)
         val long = BooleanArray(h) { y ->
             var hit = 0
-            for (x in from until to) if ((values[y * w + x].toInt() and 255) > tau) hit++
+            for (x in from until to) {
+                var on = false
+                for (yy in max(0, y - tolerance)..minOf(h - 1, y + tolerance))
+                    if ((values[yy * w + x].toInt() and 255) > tau) {
+                        on = true
+                        break
+                    }
+                if (on) hit++
+            }
             hit >= coverageNeeded * (to - from)
         }
         // Adjacent long rows are one line's thickness: each line is the middle of its run of rows.
