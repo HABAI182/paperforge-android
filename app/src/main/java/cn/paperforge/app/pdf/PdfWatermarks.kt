@@ -155,30 +155,12 @@ object PdfWatermarks {
                         }
                     }
                 }
-                for (mark in scan.texts) {
-                    val page = pdf.getPage(mark.page)
-                    if (stripText(pdf, page, mark)) continue
-                    PDPageContentStream(
-                            pdf,
-                            page,
-                            PDPageContentStream.AppendMode.APPEND,
-                            true,
-                            true,
-                        )
-                        .use { content ->
-                            content.setNonStrokingColor(paint[0], paint[1], paint[2])
-                            val pad = 2f
-                            content.addRect(
-                                mark.left - pad,
-                                mark.bottom - pad,
-                                max(1f, mark.right - mark.left + pad * 2),
-                                max(1f, mark.top - mark.bottom + pad * 2),
-                            )
-                            content.fill()
-                        }
-                }
+                // Text stains are removed from the content stream or left alone; covering them with paint would
+                // only hide them while the text stays in the file.
+                var textsRemoved = 0
+                for (mark in scan.texts) if (stripText(pdf, pdf.getPage(mark.page), mark)) textsRemoved++
                 pdf.save(part)
-                val report = Report(stripped, scan.texts.size, pdf.numberOfPages)
+                val report = Report(stripped, textsRemoved, pdf.numberOfPages)
                 check(part.renameTo(output)) { "无法保存副本" }
                 return report
             }

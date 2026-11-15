@@ -226,6 +226,19 @@ object DocumentWatermarks {
                             options.optBoolean("background", true),
                         )
                         .removed
+            } else if (input.extension.equals("pdf", true) && mode == "OBJECTS") {
+                // Structural: chosen watermark objects are deleted from the content; nothing is painted over.
+                val ids = options.optJSONArray("candidates")?.let { a -> List(a.length()) { a.getString(it) } }.orEmpty()
+                require(ids.isNotEmpty()) { "请选择要去除的水印" }
+                val pages = options.optJSONArray("pages")?.let { a -> List(a.length()) { a.getInt(it) }.toSet() }
+                count = PdfWatermarkObjects.apply(input, part, ids.toSet(), pages).units
+            } else if (input.extension.equals("pdf", true) && mode == "PIXELS") {
+                // Image restoration of scan pages; text layers and page structure stay.
+                val pages = options.optJSONArray("pages")?.let { a -> List(a.length()) { a.getInt(it) }.toSet() }
+                val region =
+                    options.optJSONArray("region")?.let { a -> FloatArray(4) { a.getDouble(it).toFloat() } }
+                val report = ScanWatermarkRestore.apply(input, part, pages, region, options.optInt("page", 0))
+                count = report.pages
             } else if (input.extension.equals("pdf", true) && mode != "REGION") {
                 count =
                     if (mode == "TEXT")

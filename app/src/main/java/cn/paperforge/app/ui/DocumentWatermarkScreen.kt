@@ -197,6 +197,12 @@ fun DocumentWatermarkScreen(vm: MainViewModel) {
                     }
                 }
             }
+            val pdfSource = source?.takeIf { it.extension.equals("pdf", true) }
+            if (pdfSource != null) {
+                // PDFs: candidates found in the page structure, chosen on the page, previewed, removed as objects.
+                PdfWatermarkPanel(vm, pdfSource, name)
+                return@Column
+            }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("AUTO" to "自动对象", "TEXT" to "指定文字", "REGION" to "框选修复").forEach {
                     (value, label) ->
