@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.input.pointer.pointerInput
@@ -52,6 +53,10 @@ internal fun ReaderSelectionHandles(
     val currentView by rememberUpdatedState(viewport)
     val currentTransform by rememberUpdatedState(transform)
     val change by rememberUpdatedState(onChange)
+    // Handles pop in with a short spring when a selection starts (instantly under reduced motion).
+    val motion = LocalPaperMotion.current
+    val appear = remember(selection.model) { androidx.compose.animation.core.Animatable(if (motion.reduced) 1f else .4f) }
+    LaunchedEffect(appear) { appear.animateTo(1f, motion.lively()) }
     listOf(true to selection.startPoint, false to selection.endPoint).forEach { (start, point) ->
         val tip = selectionTip(point, frame, viewport, transform)
         val latestTip by rememberUpdatedState(tip)
@@ -64,6 +69,11 @@ internal fun ReaderSelectionHandles(
                         IntOffset((tip.x - radius).roundToInt(), (tip.y - radius / 2).roundToInt())
                     }
                     .size(48.dp)
+                    .graphicsLayer {
+                        scaleX = appear.value
+                        scaleY = appear.value
+                        transformOrigin = androidx.compose.ui.graphics.TransformOrigin(.5f, .25f)
+                    }
                     .testTag(if (start) "reader-selection-start" else "reader-selection-end")
                     .semantics { contentDescription = if (start) "拖动选择起点" else "拖动选择终点" }
                     .pointerInput(selection.model.page, start) {

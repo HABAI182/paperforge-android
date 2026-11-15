@@ -126,7 +126,14 @@ fun PaperForgeTheme(forceDarkSystemBars: Boolean = false, content: @Composable (
                     large = RoundedCornerShape(20.dp),
                     extraLarge = RoundedCornerShape(28.dp),
                 ),
-            content = content,
+            content = {
+                // Press feedback for plain clickables: ripple plus a short spring (none under reduced motion).
+                CompositionLocalProvider(
+                    androidx.compose.foundation.LocalIndication provides
+                        PaperPressIndication(androidx.compose.material3.ripple(), reducedMotion),
+                    content = content,
+                )
+            },
         )
     }
 }

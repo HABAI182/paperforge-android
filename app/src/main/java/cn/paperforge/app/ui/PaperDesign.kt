@@ -29,6 +29,16 @@ data class PaperMotion(val reduced: Boolean = false) {
 
     val panelMs
         get() = if (reduced) 0 else 280
+
+    /** A light spring with slight overshoot for things that appear (bars, handles); a snap under reduced motion. */
+    fun <T> lively(): androidx.compose.animation.core.FiniteAnimationSpec<T> =
+        if (reduced) androidx.compose.animation.core.snap()
+        else androidx.compose.animation.core.spring(dampingRatio = .8f, stiffness = 520f)
+
+    /** A critically damped spring for things that move into place without overshoot. */
+    fun <T> settle(): androidx.compose.animation.core.FiniteAnimationSpec<T> =
+        if (reduced) androidx.compose.animation.core.snap()
+        else androidx.compose.animation.core.spring(dampingRatio = 1f, stiffness = 700f)
 }
 
 val LocalPaperMotion = staticCompositionLocalOf { PaperMotion() }
