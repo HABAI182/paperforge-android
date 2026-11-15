@@ -98,10 +98,20 @@ object SettingKeys {
     val OcrProofreadThreshold = SettingKey.Number("ocrProofreadThreshold", .6f, .3f..0.9f)
     val Searchable = SettingKey.Bool("searchable", false)
     val Paper = SettingKey.Text("paper", "Auto", setOf("Auto", "A4", "A5", "Letter", "ID"))
+    /**
+     * PDF page images (see PdfImageSettings): 输出分辨率, 图像质量 and 无损保存 are independent. Resolution names before
+     * the export redesign (DRAFT, STANDARD, CUSTOM) are still accepted from old backups and rules; the exportImageV1
+     * migration rewrites the stored choice.
+     */
     val Resolution =
-        SettingKey.Text("resolution", "STANDARD", setOf("DRAFT", "STANDARD", "HIGH", "CUSTOM"))
+        SettingKey.Text(
+            "resolution",
+            "ORIGINAL",
+            setOf("ORIGINAL", "HIGH", "MEDIUM", "SMALL", "DRAFT", "STANDARD", "CUSTOM"),
+        )
     val CustomDpi = SettingKey.Number("customDpi", 300f, 72f..600f)
-    val Quality = SettingKey.Number("quality", 86f, 40f..100f)
+    val Quality = SettingKey.Number("quality", 85f, 30f..100f)
+    val LosslessImages = SettingKey.Bool("losslessImages", false)
     val Theme =
         SettingKey.Text(
             "theme",
@@ -184,6 +194,7 @@ object SettingKeys {
             Resolution,
             CustomDpi,
             Quality,
+            LosslessImages,
             Theme,
             Accent,
             DynamicColor,

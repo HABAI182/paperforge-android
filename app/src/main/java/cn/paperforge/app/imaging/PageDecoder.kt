@@ -95,7 +95,9 @@ object PageDecoder {
                     roi.height(),
                     max(sides.first, sides.second),
                     target,
-                    ScanConfig.int("maxDecodePixels", 18_000_000).toLong(),
+                    // PDF export 原始 / 无损 renders at the page's own pixels and is never sampled down.
+                    if (target >= cn.paperforge.app.pdf.PdfImageSettings.NATIVE_EDGE) Long.MAX_VALUE
+                    else ScanConfig.int("maxDecodePixels", 18_000_000).toLong(),
                 )
                 .let { if (bounds.outMimeType == "image/png") it.copy(sample = pngSample(it.sample)) else it }
         val decoder = BitmapRegionDecoder.newInstance(file.path, false)

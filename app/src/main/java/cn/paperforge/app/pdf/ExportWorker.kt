@@ -137,6 +137,7 @@ class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                             data.getString("paper"),
                             data.getString("resolution"),
                             data.getInt("quality", 90),
+                            data.getBoolean("lossless", false),
                             data.getBoolean("searchable", false),
                             if (data.getBoolean("searchable", false)) PdfTextLayer.VERSION else "",
                             request?.signature.orEmpty(),
@@ -172,7 +173,8 @@ class ExportWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                         data.getBoolean("searchable", false),
                         data.getString("resolution") ?: "STANDARD",
                         engine,
-                        lossless = format != "PDF",
+                        // Image packs are re-encoded from a lossless intermediate; a PDF uses the 无损保存 choice.
+                        lossless = format != "PDF" || data.getBoolean("lossless", false),
                     ) {
                         report(
                             if (format != "PDF") it * 60 / 100

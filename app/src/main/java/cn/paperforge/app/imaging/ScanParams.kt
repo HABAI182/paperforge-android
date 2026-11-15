@@ -71,8 +71,9 @@ object ScanConfig {
         return when (preset) {
             "CUSTOM" ->
                 cn.paperforge.app.UserSettings[SettingKeys.CustomDpi].toInt().coerceIn(72, 600)
-            "DRAFT" -> int("draftDpi", 150)
-            "HIGH" -> int("highDpi", 300)
+            "DRAFT", "SMALL" -> int("draftDpi", 150)
+            // Image packs render pages at this density: ORIGINAL renders at the high density so no page loses pixels.
+            "HIGH", "ORIGINAL" -> int("highDpi", 300)
             else -> int("standardDpi", 220)
         }
     }

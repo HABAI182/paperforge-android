@@ -99,7 +99,8 @@ class ExportPresetsFlowTest {
             val images = export(restored)
             assertTrue(images.name.startsWith("导出预设验收_2_"))
             ZipFile(images).use { zip ->
-                assertEquals(2, zip.size())
+                // Two page images; the archive also carries its images.json manifest (since resumable image packs).
+                assertEquals(2, zip.entries().toList().count { it.name.startsWith("page-") })
                 listOf("page-0001.png", "page-0002.png").forEachIndexed { index, name ->
                     val image =
                         zip.getInputStream(zip.getEntry(name)).use {

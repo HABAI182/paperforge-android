@@ -35,6 +35,27 @@ object OriginalPhoto {
     /** The longest side of the original photo, used to render an Original page at its own resolution. */
     fun nativeEdge(page: PageRow): Int = size(page)?.let { maxOf(it.first, it.second) } ?: 0
 
+    /** The JPEG quality the camera saved the photo with (estimated from its table), or null if unreadable. */
+    fun jpegQuality(page: PageRow): Int? =
+        runCatching {
+                File(page.original).inputStream().use { input ->
+                    // The tables sit in the first few kilobytes, before the image data.
+                    PdfImageSettings.jpegQuality(input.readNBytesCompat(65536))
+                }
+            }
+            .getOrNull()
+
+    private fun java.io.InputStream.readNBytesCompat(limit: Int): ByteArray {
+        val out = java.io.ByteArrayOutputStream()
+        val buffer = ByteArray(8192)
+        while (out.size() < limit) {
+            val n = read(buffer, 0, minOf(buffer.size, limit - out.size()))
+            if (n < 0) break
+            out.write(buffer, 0, n)
+        }
+        return out.toByteArray()
+    }
+
     private fun uprightJpeg(file: File): Boolean {
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeFile(file.path, bounds)

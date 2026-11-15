@@ -224,7 +224,7 @@ fun SettingsScreen(vm: MainViewModel) {
                     }
                 }
             }
-            if (visible("导出 PDF 纸张 分辨率 画质 质量 DPI OCR 文字层 默认", "export")) {
+            if (visible("导出 PDF 纸张 分辨率 画质 质量 图像 压缩 无损 DPI OCR 文字层 默认", "export")) {
                 PreferenceBlock("PDF导出") {
                     SettingToggle("扫描导出默认附带文字层", "searchable", false)
                     SettingChoices(
@@ -233,19 +233,14 @@ fun SettingsScreen(vm: MainViewModel) {
                         "Auto",
                         listOf("Auto" to "原比例", "A4" to "A4", "A5" to "A5", "Letter" to "Letter"),
                     )
-                    SettingChoices(
-                        "默认分辨率",
-                        "resolution",
-                        "STANDARD",
-                        listOf(
-                            "DRAFT" to "草稿",
-                            "STANDARD" to "标准",
-                            "HIGH" to "高清",
-                            "CUSTOM" to "自定义",
-                        ),
-                    )
-                    SettingSlider("自定义分辨率", "customDpi", 300f, 72f..600f, "DPI")
-                    SettingSlider("PDF 图片画质", "quality", 86f, 40f..100f, "")
+                    // 图像与压缩: the same three controls as the export dialog, saved as the defaults.
+                    var image by remember(revision) { mutableStateOf(cn.paperforge.app.model.ScanExportOptions.current().copy(format = "PDF")) }
+                    ExportImageControls(image) { next ->
+                        image = next
+                        UserSettings.set(SettingKeys.Resolution, next.resolution)
+                        UserSettings.set(SettingKeys.Quality, next.quality.toFloat())
+                        UserSettings.set(SettingKeys.LosslessImages, next.lossless)
+                    }
                 }
             }
             if (

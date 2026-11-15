@@ -14,6 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import cn.paperforge.app.MainViewModel
 import cn.paperforge.app.data.ExportDestinations
 import cn.paperforge.app.data.SettingsProfiles
@@ -50,8 +52,8 @@ fun ScanExportDialog(
             )
         }
     var outputName by rememberSaveable(title) { mutableStateOf(title.removeSuffix(".pdf")) }
-    var dpiText by rememberSaveable(options.dpi) { mutableStateOf(options.dpi.toString()) }
-    val dpiValid = dpiText.toIntOrNull()?.let { it in 72..600 } == true
+    // Custom DPI is no longer offered; old presets that had it were mapped to the nearest resolution.
+    val dpiValid = true
     var presetName by rememberSaveable { mutableStateOf("") }
     var presetMenu by remember { mutableStateOf(false) }
     var selectedPreset by rememberSaveable { mutableStateOf("当前设置") }
@@ -98,14 +100,14 @@ fun ScanExportDialog(
                     DropdownMenu(presetMenu, { presetMenu = false }) {
                         listOf(
                                 "日常 PDF" to ScanExportOptions(),
-                                "高清存档 PDF" to ScanExportOptions(resolution = "HIGH", quality = 97),
+                                "高清存档 PDF" to ScanExportOptions(resolution = "ORIGINAL", quality = 95),
                                 "轻量分享 PDF" to
                                     ScanExportOptions(
-                                        resolution = "DRAFT",
-                                        quality = 72,
+                                        resolution = "SMALL",
+                                        quality = 60,
                                         searchable = false,
                                     ),
-                                "无损存档 PDF" to ScanExportOptions(resolution = "HIGH", quality = 100),
+                                "无损存档 PDF" to ScanExportOptions(resolution = "ORIGINAL", quality = 95, lossless = true),
                             )
                             .forEach { (name, value) ->
                                 DropdownMenuItem(
@@ -186,45 +188,7 @@ fun ScanExportDialog(
                             )
                         }
                 }
-                Row(
-                    Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    listOf(
-                            "DRAFT" to "150 dpi",
-                            "STANDARD" to "220 dpi",
-                            "HIGH" to "300 dpi",
-                            "CUSTOM" to "自定 DPI",
-                        )
-                        .forEach { (value, name) ->
-                            FilterChip(
-                                options.resolution == value,
-                                { options = options.copy(resolution = value) },
-                                label = { Text(name) },
-                            )
-                        }
-                }
-                if (options.resolution == "CUSTOM")
-                    OutlinedTextField(
-                        dpiText,
-                        {
-                            dpiText = it
-                            it.toIntOrNull()
-                                ?.takeIf { value -> value in 72..600 }
-                                ?.let { dpi -> options = options.copy(dpi = dpi) }
-                        },
-                        label = { Text("DPI 72–600") },
-                        isError = !dpiValid,
-                        singleLine = true,
-                    )
-                if (options.format != "PNG") {
-                    Text("图像质量 ${options.quality}")
-                    Slider(
-                        options.quality.toFloat(),
-                        { options = options.copy(quality = it.toInt()) },
-                        valueRange = 40f..100f,
-                    )
-                }
+                ExportImageControls(options) { options = it }
                 if (settingsOnly) {
                     OutlinedTextField(
                         options.naming,
@@ -283,7 +247,7 @@ fun ScanExportDialog(
                 }
                 if (notice.isNotBlank()) Text(notice, color = MaterialTheme.colorScheme.primary)
                 Text(
-                    "DPI 决定页面输出尺寸，清晰度仍受源照片限制。PNG 使用无损图像编码。",
+                    "纸张决定页面大小；输出分辨率只决定页面图片的像素，不改变纸张。清晰度仍受源照片限制。",
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
@@ -326,3 +290,95 @@ fun ScanExportDialog(
         },
     )
 }
+
+
+/**
+ * 图像与压缩: the three independent page-image settings of an export (see PdfImageSettings). Shared by the export
+ * dialog and 设置 · PDF 导出, so both show the same choices with the same meaning.
+ */
+@Composable
+internal fun ExportImageControls(options: ScanExportOptions, onChange: (ScanExportOptions) -> Unit) {
+    val pdf = options.format == "PDF"
+    val png = options.format == "PNG"
+    val lossless = pdf && options.lossless
+    Text("图像与压缩", style = MaterialTheme.typography.titleSmall)
+    // 输出分辨率
+    Text("输出分辨率", style = MaterialTheme.typography.labelLarge)
+    Text(
+        if (lossless) "无损保存使用页面的原始像素，此项不适用。"
+        else "调整图片像素尺寸，影响细节与文件大小；不改变纸张尺寸。",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        // A custom density chosen before (or in a saved preset) is shown and kept; it is not offered otherwise.
+        val choices =
+            if (options.resolution == "CUSTOM") exportResolutions + Triple("CUSTOM", "自定", "${options.dpi} dpi")
+            else exportResolutions
+        choices.forEach { (value, name, detail) ->
+            FilterChip(
+                selected = !lossless && cn.paperforge.app.pdf.PdfImageSettings.normalize(options.resolution) == value,
+                onClick = { onChange(options.copy(resolution = value)) },
+                enabled = !lossless,
+                label = {
+                    Column {
+                        Text(name)
+                        Text(detail, style = MaterialTheme.typography.labelSmall)
+                    }
+                },
+            )
+        }
+    }
+    // 图像质量
+    Text("图像质量 ${options.quality}", style = MaterialTheme.typography.labelLarge)
+    Text(
+        when {
+            lossless -> "无损保存不做有损压缩，此项不适用。"
+            png -> "PNG 图片包是无损编码，此项不适用。"
+            else -> "调整有损压缩程度，影响清晰度与文件大小；不改变像素尺寸。练习册页面以减少灰阶压缩，笔画边缘不起噪点；95 及以上为无损。"
+        },
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    val qualityOn = !lossless && !png
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        listOf(95 to "最佳", 85 to "高", 70 to "标准", 50 to "小").forEach { (value, name) ->
+            FilterChip(
+                selected = qualityOn && options.quality == value,
+                onClick = { onChange(options.copy(quality = value)) },
+                enabled = qualityOn,
+                label = { Text("$name $value") },
+            )
+        }
+    }
+    Slider(
+        options.quality.toFloat(),
+        { onChange(options.copy(quality = it.toInt())) },
+        valueRange = 30f..100f,
+        enabled = qualityOn,
+        modifier = Modifier.semantics { contentDescription = "图像质量" },
+    )
+    // 无损保存
+    if (pdf) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("无损保存", style = MaterialTheme.typography.labelLarge)
+                Text(
+                    "避免额外有损压缩，文件通常更大。已压缩或增强过的页面无法找回丢失的信息；未改动的相机原图直接嵌入原文件，逐字节保留。",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Switch(options.lossless, { onChange(options.copy(lossless = it)) }, modifier = Modifier.semantics { contentDescription = "无损保存" })
+        }
+    }
+}
+
+/** Value, name, and what it means in pixels. */
+internal val exportResolutions =
+    listOf(
+        Triple("ORIGINAL", "原始", "页面原有像素"),
+        Triple("HIGH", "高", "长边 ≤3508 px"),
+        Triple("MEDIUM", "中", "长边 ≤2572 px"),
+        Triple("SMALL", "小", "长边 ≤1754 px"),
+    )

@@ -30,7 +30,10 @@ object ScanProcessor {
                     bounds.outHeight,
                     max(bounds.outWidth, bounds.outHeight).toFloat(),
                     maxEdge,
-                    ScanConfig.int("maxDecodePixels", 18_000_000).toLong(),
+                    // A render at the page's own pixels (PDF export 原始 / 无损) is never sampled down: the export
+                    // reports a memory failure instead. Everything else keeps the decode budget.
+                    if (maxEdge >= cn.paperforge.app.pdf.PdfImageSettings.NATIVE_EDGE) Long.MAX_VALUE
+                    else ScanConfig.int("maxDecodePixels", 18_000_000).toLong(),
                 )
                 .sample
                 .let { if (bounds.outMimeType == "image/png") PageDecoder.pngSample(it) else it }
@@ -485,8 +488,10 @@ object ScanProcessor {
                     bitmap.width,
                     bitmap.height,
                 )
+        // 4096 px bounds editor and capture work; a PDF export at the page's own pixels (原始 / 无损) is not bounded.
+        val hardEdge = if (targetEdge >= cn.paperforge.app.pdf.PdfImageSettings.NATIVE_EDGE) Double.MAX_VALUE else 4096.0
         val edge =
-            min(max(sourceW, sourceH) * samplingScale, min(targetEdge.toDouble() * 1.25, 4096.0))
+            min(max(sourceW, sourceH) * samplingScale, min(targetEdge.toDouble() * 1.25, hardEdge))
         var toneSamplingScale = (edge / max(sourceW, sourceH)).toFloat()
         val outW = (if (aspect >= 1) edge else edge * aspect).roundToInt().coerceAtLeast(32)
         val outH = (if (aspect >= 1) edge / aspect else edge).roundToInt().coerceAtLeast(32)

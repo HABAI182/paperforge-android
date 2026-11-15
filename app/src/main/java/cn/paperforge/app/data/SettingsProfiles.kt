@@ -170,6 +170,7 @@ class SettingsProfiles(context: Context) {
                         "resolution",
                         "customDpi",
                         "quality",
+                        "losslessImages",
                         "exportFormat",
                         "exportNaming",
                         "exportDestination",

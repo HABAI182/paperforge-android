@@ -1159,6 +1159,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                                         paper = sharePaper,
                                         quality = shareQuality,
                                         resolution = shareResolution,
+                                        lossless = UserSettings[SettingKeys.LosslessImages],
                                     )
                                 }
                         zip.putNextEntry(
@@ -1417,6 +1418,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 "document" to doc.id,
                 "paper" to options.paper,
                 "quality" to options.quality,
+                "lossless" to options.lossless,
                 "title" to title,
                 "fileName" to options.fileName(title, pages),
                 "searchable" to (options.searchable && options.format == "PDF"),
@@ -1456,6 +1458,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         title: String? = null,
         searchable: Boolean = false,
         resolution: String = "STANDARD",
+        lossless: Boolean = UserSettings[SettingKeys.LosslessImages],
     ) {
         val doc = selected.value ?: return
         if (busy.value) return
@@ -1465,6 +1468,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 "document" to doc.id,
                 "paper" to paper,
                 "quality" to quality,
+                "lossless" to lossless,
                 "title" to (title ?: doc.title),
                 "searchable" to searchable,
                 "resolution" to

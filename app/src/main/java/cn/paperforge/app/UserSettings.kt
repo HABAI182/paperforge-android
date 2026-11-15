@@ -55,6 +55,17 @@ object UserSettings {
         migrateWatermarkShortcut()
         // 强力去背景 (CLEAN) was 练习册 under another name: light pages took the same tone route, and only its PDF
         // pages were greyer. It is merged into 练习册; a stored choice of it, or of the camera's 去透页 mode, moves there.
+        // Export redesign: resolution names are now ORIGINAL / HIGH / MEDIUM / SMALL (DRAFT = SMALL, STANDARD = MEDIUM; a
+        // custom DPI stays as chosen), and lossless storage is its own switch. An explicit choice keeps its pixel
+        // size; no stored choice means the new default, the page's own resolution. Quality 100 was the 无损存档 preset.
+        if (!prefs.getBoolean("exportImageV1", false)) {
+            val edit = prefs.edit().putBoolean("exportImageV1", true)
+            prefs.getString("resolution", null)?.let {
+                edit.putString("resolution", cn.paperforge.app.pdf.PdfImageSettings.normalize(it))
+            }
+            if (prefs.contains("quality") && prefs.getFloat("quality", 85f) >= 100f) edit.putBoolean("losslessImages", true)
+            edit.apply()
+        }
         if (!prefs.getBoolean("cleanMergedV1", false)) {
             val edit = prefs.edit().putBoolean("cleanMergedV1", true)
             if (prefs.getString("filter", "WORKBOOK") == "CLEAN") edit.putString("filter", "WORKBOOK")

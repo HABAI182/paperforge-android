@@ -24,7 +24,10 @@ object ScanPageStages {
         progress: suspend (Int) -> Unit,
     ) {
         require(pages.isNotEmpty()) { "请先添加页面" }
-        val resolved = "DPI:${cn.paperforge.app.imaging.ScanConfig.dpi(resolution)}"
+        // Only a custom density is fixed here; named resolutions go to PdfEngine as they are (rewriting them all to
+        // "DPI:n" turned 原始 into a 300 dpi cap).
+        val resolved =
+            if (resolution == "CUSTOM") "DPI:${cn.paperforge.app.imaging.ScanConfig.dpi(resolution)}" else resolution
         val groups = pages.chunked(if (paper == "ID") 2 else 1)
         val parts = mutableListOf<File>()
         for ((index, group) in groups.withIndex()) {

@@ -111,6 +111,10 @@ class AutoExportWorker(context: Context, params: WorkerParameters) :
                             searchable,
                             resolution,
                             request?.bind(checkNotNull(router)),
+                            // Rules saved before the export redesign had no switch: quality 100 meant lossless.
+                            lossless =
+                                if (settings.has("losslessImages")) settings.optBoolean("losslessImages")
+                                else settings.optInt("quality", 90) >= 100,
                         ) { percent ->
                             DocumentJobs.progress(repo, job, percent / 2, "生成扫描 PDF")
                             setProgress(workDataOf("progress" to percent / 2))

@@ -171,6 +171,9 @@ class LibraryTransferProvider : ContentProvider() {
                                             it,
                                             context = context,
                                             searchable = false,
+                                            quality = cn.paperforge.app.UserSettings[cn.paperforge.app.SettingKeys.Quality].toInt(),
+                                            resolution = cn.paperforge.app.UserSettings[cn.paperforge.app.SettingKeys.Resolution],
+                                            lossless = cn.paperforge.app.UserSettings[cn.paperforge.app.SettingKeys.LosslessImages],
                                         )
                                 }
                             else

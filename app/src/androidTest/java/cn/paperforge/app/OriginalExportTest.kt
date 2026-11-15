@@ -22,8 +22,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * An Original page that is still the camera's photo is exported as the camera saved it, and a cropped Original page
- * keeps the photo's own resolution rather than the export preset's (2572 px for STANDARD).
+ * An Original page that is still the camera's photo is exported as the camera saved it when nothing chosen would change
+ * it (原始 resolution, quality not below the photo's own), and a cropped Original page at 原始 resolution keeps the
+ * photo's own pixels. Other resolutions and qualities apply to Original pages like any other (PdfExportQualityTest).
  */
 @RunWith(AndroidJUnit4::class)
 class OriginalExportTest {
@@ -51,12 +52,12 @@ class OriginalExportTest {
         val page = page(file, Quad.Full)
         assertTrue("an unedited full-frame Original page counts as untouched", OriginalPhoto.untouched(page))
         val pdf = File(context.cacheDir, "original-export.pdf")
-        PdfEngine.scan(listOf(page), pdf, resolution = "STANDARD")
+        PdfEngine.scan(listOf(page), pdf, quality = 100, resolution = "ORIGINAL")
         PDFBoxResourceLoader.init(context)
         PDDocument.load(pdf).use { doc ->
             val res = doc.getPage(0).resources
             val image = res.xObjectNames.map { res.getXObject(it) }.filterIsInstance<PDImageXObject>().single()
-            assertEquals("full width, not the 2572-px preset", 4000, image.width)
+            assertEquals("full width", 4000, image.width)
             assertEquals(3000, image.height)
             val embedded = image.cosObject.createRawInputStream().use { it.readBytes() }
             assertEquals(COSName.DCT_DECODE, image.cosObject.filters)
@@ -70,12 +71,12 @@ class OriginalExportTest {
         val quad = Quad.ordered(listOf(PointN(.1f, .1f), PointN(.9f, .1f), PointN(.9f, .9f), PointN(.1f, .9f)))
         val page = page(file, quad)
         val pdf = File(context.cacheDir, "original-export-crop.pdf")
-        PdfEngine.scan(listOf(page), pdf, resolution = "STANDARD")
+        PdfEngine.scan(listOf(page), pdf, resolution = "ORIGINAL")
         PDFBoxResourceLoader.init(context)
         PDDocument.load(pdf).use { doc ->
             val res = doc.getPage(0).resources
             val image = res.xObjectNames.map { res.getXObject(it) }.filterIsInstance<PDImageXObject>().single()
-            // 80% of 4000 x 3000: about 3200 x 2400, well over the preset's 2572-px long edge.
+            // 80% of 4000 x 3000: about 3200 x 2400, kept at 原始 resolution.
             assertTrue("crop kept at the photo's resolution, was ${image.width}", image.width >= 3100)
         }
     }

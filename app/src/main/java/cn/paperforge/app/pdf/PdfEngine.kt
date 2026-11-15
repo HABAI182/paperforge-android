@@ -72,18 +72,25 @@ object PdfEngine {
                                     cn.paperforge.app.UserSettings[SettingKeys.OcrLanguage] !=
                                         "LATIN",
                                 )
-                    val dpi = cn.paperforge.app.imaging.ScanConfig.dpi(resolution)
-                    val presetEdge = cn.paperforge.app.imaging.ScanConfig.edge(resolution)
-                    // The camera's photo, untouched: embedded as the camera saved it (no resize, no second JPEG).
-                    if (
-                        !lossless &&
-                            resolution != "DRAFT" &&
-                            OriginalPhoto.untouched(page) &&
+                    // Image quality, output resolution and lossless storage are independent (see PdfImageSettings). The
+                    // page's physical size never depends on them: "match the photo" pages are sized at PAGE_DPI with the
+                    // long edge at most A4, as the default 220 dpi export always did.
+                    val dpi = PdfImageSettings.PAGE_DPI
+                    val maxEdge = if (lossless) null else PdfImageSettings.maxEdge(resolution)
+                    // The camera's photo, untouched, is embedded as the camera saved it when nothing asked would change it:
+                    // always for lossless export (that is the original itself), and otherwise when the original resolution
+                    // is kept and the chosen quality is not below the photo's own (re-encoding could only add loss).
+                    val untouched =
+                        OriginalPhoto.untouched(page) &&
                             (layout == null || (layout!!.orientationCorrection == 0 && layout!!.deskewDegrees == 0f))
+                    if (
+                        untouched &&
+                            (lossless ||
+                                (maxEdge == null || maxEdge >= OriginalPhoto.nativeEdge(page)) &&
+                                    quality >= (OriginalPhoto.jpegQuality(page) ?: 100))
                     ) {
                         val (pw, ph) = requireNotNull(OriginalPhoto.size(page))
-                        // The page keeps the physical size the preset gives; only its pixels are the original's.
-                        val fit = minOf(1f, presetEdge.toFloat() / maxOf(pw, ph))
+                        val fit = minOf(1f, PdfImageSettings.PAGE_EDGE.toFloat() / maxOf(pw, ph))
                         val bw = pw * fit
                         val bh = ph * fit
                         val size =
@@ -119,13 +126,30 @@ object PdfEngine {
                         progress((index + 1) * 100 / pages.size)
                         return@forEachIndexed
                     }
-                    // An Original page is the photo itself: rendered at the photo's own resolution, not shrunk
-                    // to the preset (unless DRAFT asks for small files).
-                    val renderEdge =
-                        if (page.filter == "ORIGINAL" && resolution != "DRAFT")
-                            maxOf(presetEdge, OriginalPhoto.nativeEdge(page))
-                        else presetEdge
-                    var bitmap = ScanProcessor.render(page, renderEdge)
+                    // The page is always enhanced at its own pixels (up to a memory cap) and only the finished image is
+                    // area-averaged down to the chosen resolution. Enhancing at the reduced size changed the result, not
+                    // just its pixel count: the 练习册 filter erased faint pencil strokes at 220 dpi that it keeps at the
+                    // page's own resolution. Nothing is enlarged.
+                    // 原始 and 无损 are never capped: if the device cannot hold the page at its own pixels the export
+                    // stops with a clear message instead of quietly writing fewer pixels. 高/中/小 are downscaled anyway,
+                    // so there a failed full-size render is retried at a smaller (still larger than the output) size.
+                    var renderEdge = PdfImageSettings.NATIVE_EDGE
+                    var bitmap =
+                        try {
+                            ScanProcessor.render(page, renderEdge)
+                        } catch (failure: Throwable) {
+                            if (!PdfImageSettings.outOfMemory(failure)) throw failure
+                            val pixels = OriginalPhoto.size(page)?.let { "${it.first}×${it.second}" } ?: "原始"
+                            if (maxEdge == null)
+                                throw IllegalStateException(
+                                    "第 ${index + 1} 页（$pixels 像素）按${if (lossless) "无损保存" else "原始分辨率"}导出超出本机内存，未降低分辨率。请改选“高”分辨率后重试。",
+                                    failure,
+                                )
+                            renderEdge = maxOf(maxEdge, PdfImageSettings.fallbackEdge())
+                            ScanProcessor.render(page, renderEdge)
+                        }
+                    // Rendered at the cap: the page has at least this many pixels.
+                    val capped = maxOf(bitmap.width, bitmap.height) >= renderEdge - 1
                     try {
                         layout
                             ?.takeIf { it.orientationCorrection != 0 }
@@ -157,6 +181,13 @@ object PdfEngine {
                                 old.recycle()
                                 layout = geometry.map(l, true).copy(deskewDegrees = 0f)
                             }
+                        val fullWidth = bitmap.width
+                        val fullHeight = bitmap.height
+                        if (maxEdge != null && maxOf(fullWidth, fullHeight) > maxEdge) {
+                            val old = bitmap
+                            bitmap = PdfImageEncoder.downscale(old, maxEdge)
+                            old.recycle()
+                        }
                         val matched = paper in listOf("Auto", "Original")
                         val size =
                             when (paper) {
@@ -164,9 +195,12 @@ object PdfEngine {
                                 "Letter" -> PDRectangle.LETTER
                                 "Auto",
                                 "Original" -> {
-                                    // Physical size as at the preset, however many pixels the page has.
-                                    val fit = minOf(1f, presetEdge.toFloat() / maxOf(bitmap.width, bitmap.height))
-                                    PDRectangle(bitmap.width * fit * 72f / dpi, bitmap.height * fit * 72f / dpi)
+                                    // Physical size from the page's own pixels at PAGE_DPI, at most A4, whatever the
+                                    // export resolution: a capped render stands for a page at least that large.
+                                    val long = maxOf(fullWidth, fullHeight)
+                                    val full = if (capped) maxOf(long, PdfImageSettings.PAGE_EDGE) else long
+                                    val fit = minOf(full, PdfImageSettings.PAGE_EDGE).toFloat() / long
+                                    PDRectangle(fullWidth * fit * 72f / dpi, fullHeight * fit * 72f / dpi)
                                 }
                                 else -> PDRectangle.A4
                             }
@@ -187,25 +221,20 @@ object PdfEngine {
                         val effectiveDpi =
                             kotlin.math.round(bitmap.width * 72f / w).toInt().coerceAtLeast(1)
                         val image =
-                            if (lossless)
-                                com.tom_roush.pdfbox.pdmodel.graphics.image.LosslessFactory
-                                    .createFromImage(doc, bitmap)
-                            else
-                                PdfImageEncoder.scan(
-                                    doc,
-                                    bitmap,
-                                    if (
-                                        page.filter == "ORIGINAL" &&
-                                            cn.paperforge.app.data.PageResources.metadata(page)
-                                                .has("flatDocument")
-                                    )
-                                        "WORKBOOK"
-                                    else page.filter,
-                                    // An Original page is the photo: a third JPEG generation at the general
-                                    // export quality (86 by default) blurred the detail it is kept for.
-                                    if (page.filter == "ORIGINAL") maxOf(quality, 95) else quality,
-                                    effectiveDpi,
+                            PdfImageEncoder.scan(
+                                doc,
+                                bitmap,
+                                if (
+                                    page.filter == "ORIGINAL" &&
+                                        cn.paperforge.app.data.PageResources.metadata(page)
+                                            .has("flatDocument")
                                 )
+                                    "WORKBOOK"
+                                else page.filter,
+                                quality,
+                                effectiveDpi,
+                                lossless,
+                            )
                         val x = (size.width - w) / 2
                         val y =
                             if (card)
