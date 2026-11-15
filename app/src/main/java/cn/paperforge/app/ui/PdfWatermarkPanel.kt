@@ -57,6 +57,9 @@ internal fun PdfWatermarkPanel(vm: MainViewModel, source: File, name: String) {
     var range by remember(source) { mutableStateOf("") }
     var after by remember(source) { mutableStateOf(false) }
     var picking by remember(source) { mutableStateOf(false) }
+    // Region for repairing a watermark inside a scanned image, drawn on the page.
+    var scanPicking by remember(source) { mutableStateOf(false) }
+    var scanRegion by remember(source, page) { mutableStateOf<OcrRegion?>(null) }
     var draft by remember { mutableStateOf<OcrRegion?>(null) }
     var transform by remember(source, page) { mutableStateOf(PageTransform()) }
     LaunchedEffect(source) {
@@ -154,11 +157,15 @@ internal fun PdfWatermarkPanel(vm: MainViewModel, source: File, name: String) {
                             } else false
                         },
                         edgeTurning = false,
-                        regionPicking = picking && !after,
-                        regionDraft = draft,
+                        regionPicking = (picking || scanPicking) && !after,
+                        regionDraft = draft ?: scanRegion,
                         onRegionSelection = { region, done ->
                             draft = region
-                            if (done) {
+                            if (done && scanPicking) {
+                                scanRegion = region.takeIf { it.width > .01f && it.height > .01f }
+                                draft = null
+                                scanPicking = false
+                            } else if (done) {
                                 val inside = here.filter { (_, u) ->
                                     u.box.size == 4 && u.box[0].x < region.right && u.box[2].x > region.left && u.box[0].y < region.bottom && u.box[2].y > region.top
                                 }.map { it.first.id }.toSet()
@@ -226,20 +233,35 @@ internal fun PdfWatermarkPanel(vm: MainViewModel, source: File, name: String) {
                     Text("删除所选水印，另存副本")
                 }
             }
-            if (scanned > 0) ScanWatermarkSection(vm, source, name, page, count, scanned, found.canModify)
+            if (scanned > 0)
+                ScanWatermarkSection(
+                    vm, source, name, page, count, scanned, found.canModify,
+                    scanRegion?.let { floatArrayOf(it.left, it.top, it.right, it.bottom) },
+                    picking = scanPicking,
+                    onPick = { scanPicking = !scanPicking; picking = false },
+                )
         }
     }
 }
 
 @Composable
-private fun ScanWatermarkSection(vm: MainViewModel, source: File, name: String, page: Int, count: Int, scanned: Int, canModify: Boolean) {
+private fun ScanWatermarkSection(
+    vm: MainViewModel,
+    source: File,
+    name: String,
+    page: Int,
+    count: Int,
+    scanned: Int,
+    canModify: Boolean,
+    region: FloatArray?,
+    picking: Boolean,
+    onPick: () -> Unit,
+) {
     val busy by vm.busy.collectAsState()
     var before by remember { mutableStateOf<Bitmap?>(null) }
     var result by remember { mutableStateOf<Bitmap?>(null) }
     var note by remember { mutableStateOf("") }
     var running by remember { mutableStateOf(false) }
-    var region by remember { mutableStateOf<FloatArray?>(null) }
-    var regionText by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
     DisposableEffect(before, result) { onDispose { before?.recycle(); result?.recycle() } }
     OutlinedCard(Modifier.fillMaxWidth()) {
@@ -252,17 +274,12 @@ private fun ScanWatermarkSection(vm: MainViewModel, source: File, name: String, 
                         "被水印完全遮住的笔画无法恢复，会保持原样，不会编造内容。只替换页面图像，文字层保留。",
                 style = MaterialTheme.typography.bodySmall,
             )
-            if (scanned < 3)
-                OutlinedTextField(
-                    regionText,
-                    {
-                        regionText = it
-                        region = it.split(',', '，').mapNotNull { v -> v.trim().toFloatOrNull()?.div(100f) }.takeIf { v -> v.size == 4 }?.toFloatArray()
-                    },
-                    label = { Text("区域（%）：左, 上, 右, 下，如 20,30,80,60") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(picking, onPick, label = { Text(if (region == null) "在页面上框选水印区域" else "重新框选区域") }, modifier = Modifier.testTag("wm-scan-pick"))
+                if (region != null) Text("已选区域", style = MaterialTheme.typography.labelMedium)
+            }
+            if (scanned < 3 && region == null)
+                Text("这份文件扫描页少于 3 页，请先框选水印所在区域。", style = MaterialTheme.typography.bodySmall)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(
                     onClick = {

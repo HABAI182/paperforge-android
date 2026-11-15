@@ -53,6 +53,8 @@ object PdfWatermarkObjects {
         val area: Float,
         val light: Boolean,
         val tagged: Boolean,
+        /** Drawn inside an `/Artifact` section (header, footer, background), where word processors put watermarks. */
+        val artifact: Boolean = false,
     )
 
     /** Units sharing one signature: what the user sees and chooses. */
@@ -74,6 +76,42 @@ object PdfWatermarkObjects {
     private val pathOps = setOf("m", "l", "c", "v", "y", "h", "re")
     private val clipOps = setOf("W", "W*")
     private val keywords = listOf("watermark", "水印", "draft", "草稿", "confidential", "机密", "sample", "样本", "copy", "副本")
+
+    /** Marks that scanning and conversion apps stamp on their exports. */
+    private val appSignatures =
+        listOf(
+            Regex("camscanner", RegexOption.IGNORE_CASE),
+            Regex("扫描全能王|全能扫描王|扫描王"),
+            Regex("adobe ?scan", RegexOption.IGNORE_CASE),
+            Regex("(microsoft|office) ?lens", RegexOption.IGNORE_CASE),
+            Regex("夸克扫描|夸克|白描|福昕扫描|迅捷|掌上识别|手机扫描"),
+            Regex("scanned (with|by)", RegexOption.IGNORE_CASE),
+            Regex("(genius|tiny|turbo|fast) ?scan(ner)?|scanbot|notebloc|smallpdf|ilovepdf", RegexOption.IGNORE_CASE),
+            Regex("由.{1,12}(创建|生成|扫描)"),
+            Regex("evaluation (copy|version)|trial version|未注册|试用版", RegexOption.IGNORE_CASE),
+        )
+
+    private fun corner(u: Unit): Boolean =
+        u.box.size == 4 && u.area < .04f && (u.box[2].y > .91f || u.box[0].y < .09f)
+
+    /**
+     * Joins consecutive translucent vector shapes drawn one after another (a word-processor watermark exported as
+     * outlines is one shape per letter) into one unit; units are joined only when nothing else is drawn between them.
+     */
+    private fun joinShapes(units: List<Unit>): List<Unit> {
+        val out = mutableListOf<Unit>()
+        for (u in units.sortedBy { it.start }) {
+            val last = out.lastOrNull()
+            if (last != null && last.kind == Kind.VECTOR && u.kind == Kind.VECTOR && last.page == u.page &&
+                last.alpha < .95f && abs(last.alpha - u.alpha) < .01f && abs(last.angle - u.angle) < 3f && u.start > last.end
+            ) {
+                val box = bounds(last.box + u.box)
+                out[out.lastIndex] =
+                    last.copy(signature = "shapes:" + sha((last.signature + u.signature).toByteArray()), end = u.end, box = box, area = area(box), label = "矢量图形（多个）")
+            } else out += u
+        }
+        return out
+    }
 
     private fun sha(bytes: ByteArray) =
         MessageDigest.getInstance("SHA-256").digest(bytes).take(12).joinToString("") { "%02x".format(it) }
@@ -201,7 +239,8 @@ object PdfWatermarkObjects {
         var pathClips = false
 
         fun emit(kind: Kind, signature: String, label: String, box: List<PointN>, s: Int, e: Int, alpha: Float, angle: Float, light: Boolean, tagged: Boolean = false) {
-            out += Unit(number, unitOrdinal++, kind, signature, label, box, s, e, alpha, angle, area(box), light, tagged)
+            val artifact = marked.any { it.tag == "Artifact" && !it.watermark }
+            out += Unit(number, unitOrdinal++, kind, signature, label, box, s, e, alpha, angle, area(box), light, tagged, artifact)
         }
 
         for ((end, token) in tokens.withIndex()) {
@@ -353,7 +392,11 @@ object PdfWatermarkObjects {
     /** Groups units into candidates and scores them. */
     fun candidates(pdf: PDDocument, pageUnits: List<List<Unit>>): List<Candidate> {
         val pages = pdf.numberOfPages
-        val all = pageUnits.flatten()
+        val all = pageUnits.flatMap { joinShapes(it) }
+        val producer = runCatching { pdf.documentInformation?.producer.orEmpty() + " " + pdf.documentInformation?.creator.orEmpty() }.getOrDefault("")
+        val scanApp = producer.contains("intsig", true) || appSignatures.any { it.containsMatchIn(producer) }
+        // Corner text carrying a scanning app's name, per page, for the logo images beside it.
+        val stamps = all.filter { it.kind == Kind.TEXT && corner(it) && appSignatures.any { r -> r.containsMatchIn(it.label) } }
         // Units inside a tagged watermark or layer are represented by that container.
         val containers = all.filter { it.kind in setOf(Kind.TAGGED, Kind.LAYER) }
         val loose = all.filter { u -> u.kind in setOf(Kind.TAGGED, Kind.LAYER, Kind.ANNOTATION) || containers.none { c -> c.page == u.page && u.start >= c.start && u.end <= c.end && c !== u } }
@@ -411,6 +454,43 @@ object PdfWatermarkObjects {
                 if (keyword) {
                     score += .15f
                     reasons += "含水印常用词"
+                }
+                // A scanning app's stamp: its name in a page corner, and the small logo next to it.
+                val signed = first.kind == Kind.TEXT && appSignatures.any { it.containsMatchIn(first.label) }
+                if (signed && units.all(::corner)) {
+                    score += 1f
+                    evidence += 1
+                    reasons += "扫描软件在页角加的标记"
+                } else if (signed) {
+                    score += .4f
+                    evidence += 1
+                    reasons += "扫描软件名称"
+                }
+                val logo =
+                    first.kind == Kind.IMAGE && units.all { u ->
+                        corner(u) && stamps.any { t -> t.page == u.page && abs(t.box[0].x - u.box[2].x) < .2f && abs(t.box[0].y - u.box[0].y) < .06f }
+                    }
+                if (logo) {
+                    score += 1f
+                    evidence += 1
+                    reasons += "扫描软件标记旁的徽标"
+                }
+                if (!signed && !logo && scanApp && units.all(::corner) && first.kind in setOf(Kind.TEXT, Kind.IMAGE)) {
+                    score += .5f
+                    evidence += 1
+                    reasons += "扫描软件导出的页角标记"
+                }
+                // Word and WPS draw their watermark inside the page header: a large pale or translucent figure that
+                // reaches well into the body. A header logo stays near the top edge and is small.
+                val headerFigure =
+                    first.kind != Kind.TAGGED && units.all { u ->
+                        u.artifact && (u.alpha < .95f || u.light) && u.area > .03f && u.box.size == 4 &&
+                            (u.box[0].y + u.box[2].y) / 2 in 0.25f..0.75f && u.box[2].y - u.box[0].y > .1f
+                    }
+                if (headerFigure) {
+                    score += .5f
+                    evidence += 1
+                    reasons += "页眉中的浅色大图形（Word/WPS 水印）"
                 }
                 // Ordinary page furniture: full-page images (scans), horizontal opaque body text, page numbers.
                 val fullPageImage = first.kind == Kind.IMAGE && units.all { it.area > .8f }
@@ -481,8 +561,9 @@ object PdfWatermarkObjects {
         for ((number, list) in chosen.groupBy { it.page }) {
             val page = pdf.getPage(number)
             val tokens = PDFStreamParser(page).apply { parse() }.tokens.toList()
-            // Re-read the page so ranges match this document exactly.
-            val current = units(pdf, number)
+            // Re-read the page so ranges match this document exactly, grouped as candidates() groups them: a
+            // watermark exported as one outline per letter is chosen as one joined unit.
+            val current = units(pdf, number).let { raw -> raw + joinShapes(raw).filter { j -> raw.none { it === j } } }
             val ranges =
                 list.mapNotNull { want -> current.firstOrNull { it.ordinal == want.ordinal && it.signature == want.signature } }
             val annotations = ranges.filter { it.kind == Kind.ANNOTATION }
