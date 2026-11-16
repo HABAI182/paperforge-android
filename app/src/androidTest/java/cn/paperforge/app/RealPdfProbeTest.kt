@@ -88,7 +88,7 @@ class RealPdfProbeTest {
             report.put(file.name, entry)
         }
         File(out, "watermarks.json").writeText(report.toString(1))
-        val marked = setOf("camscanner-en.pdf", "camscanner-zh.pdf", "edge-report.pdf", "word-watermark.pdf")
+        val marked = setOf("camscanner-en.pdf", "camscanner-zh.pdf", "edge-report.pdf", "word-watermark.pdf", "wm-guide.pdf")
         val clean = setOf("word-plain.pdf", "wps-export.pdf", "arxiv-latex.pdf", "form-wrapped.pdf")
         for (name in report.keys()) {
             val e = report.getJSONObject(name)
@@ -177,13 +177,86 @@ class RealPdfProbeTest {
             }
         }
 
-    /** Share of pixels whose grey level differs by more than 24. */
+    /** Share of pixels whose grey level differs by more than 4 (faint watermarks change pixels by only ~20). */
     private fun diff(a: android.graphics.Bitmap, b: android.graphics.Bitmap): Double {
         if (a.width != b.width || a.height != b.height) return 1.0
         val pa = IntArray(a.width * a.height).also { a.getPixels(it, 0, a.width, 0, 0, a.width, a.height) }
         val pb = IntArray(b.width * b.height).also { b.getPixels(it, 0, b.width, 0, 0, b.width, b.height) }
         fun grey(c: Int) = ((c shr 16 and 255) * 3 + (c shr 8 and 255) * 6 + (c and 255)) / 10
-        return pa.indices.count { kotlin.math.abs(grey(pa[it]) - grey(pb[it])) > 24 }.toDouble() / pa.size
+        return pa.indices.count { kotlin.math.abs(grey(pa[it]) - grey(pb[it])) > 4 }.toDouble() / pa.size
+    }
+
+    /** Replaces [count] characters at [at] of [target] in [file] with [text] (a built-in font when needed), saves to [output]. */
+    private fun editLine(file: File, output: File, lines: List<NativePdfEditor.TextObject>, target: NativePdfEditor.TextObject, at: Int, count: Int, text: String): String {
+        val font =
+            runBlocking {
+                NativeEditSession(app, file).use { s ->
+                    s.open()
+                    if (s.missingInOriginal(target.key, text).isEmpty()) null else NativeFontLibrary.substitute(app, target, text)?.id
+                }
+            }
+        val edits =
+            NativeEditOps.replace(emptyList(), lines.associateBy { it.key }, listOf(NativeSegment(target.key, at, at + count)), text) {
+                font?.let { NativeStyle(font = it) }
+            }
+        runBlocking {
+            NativePdfEditor.apply(
+                app, file, output,
+                JSONObject().put("sourceSha256", PdfAssembly.sha256(file)).put("edits", JSONArray(edits.map { it.json() })),
+            )
+        }
+        return target.text.substring(0, at) + text + target.text.substring(at + count)
+    }
+
+    /**
+     * Persistent editing: edit a line, save, reopen the saved file, edit the same line again and another line, save
+     * again. Both generations must read back exactly; the first edit leaves no ghost text; all other lines stay.
+     */
+    @Test
+    fun reEditSavedDocuments() {
+        val dir = File(app.filesDir, "corpus")
+        val out = File(app.filesDir, "corpus-out").apply { mkdirs() }
+        val report = JSONObject()
+        val problems = mutableListOf<String>()
+        fun squash(s: String) = s.replace(" ", "")
+        for (file in dir.listFiles().orEmpty().filter { it.extension == "pdf" }.sortedBy { it.name }) {
+            val entry = JSONObject()
+            runCatching {
+                val original = runBlocking { NativePdfEditor.inspect(file, 0).second }
+                val editable = original.filter { it.editable && it.text.trim().length >= 8 }
+                if (editable.size < 2) return@runCatching entry.put("skipped", "fewer than two editable lines").let { }
+                val a = editable[editable.size / 2]
+                val b = editable.first { it !== a }
+                val han = a.text.any { Character.UnicodeScript.of(it.code) == Character.UnicodeScript.HAN }
+                val first = File(out, "reedit1-" + file.name)
+                val once = editLine(file, first, original, a, a.text.length / 2, 2, if (han) "修订" else "EDIT")
+                val reopened = runBlocking { NativePdfEditor.inspect(first, 0).second }
+                val a2 = reopened.firstOrNull { squash(it.text) == squash(once) } ?: error("first edit not found after reopening")
+                val b2 = reopened.firstOrNull { squash(it.text) == squash(b.text) } ?: error("second line not found after reopening")
+                val second = File(out, "reedit2-" + file.name)
+                // Same line again (characters before the first edit), then the other line, in two saves.
+                val twice = editLine(first, second, reopened, a2, 1, 2, if (han) "再改" else "AGAIN")
+                val reopened2 = runBlocking { NativePdfEditor.inspect(second, 0).second }
+                val b3 = reopened2.firstOrNull { squash(it.text) == squash(b.text) } ?: error("second line lost after the second save")
+                val third = File(out, "reedit3-" + file.name)
+                val other = editLine(second, third, reopened2, b3, 0, 1, if (han) "新" else "N")
+                val final = runBlocking { NativePdfEditor.inspect(third, 0).second }
+                val texts = final.map { squash(it.text) }
+                val expectA = squash(twice)
+                val expectB = squash(other)
+                val untouched = original.filter { it !== a && it !== b }.map { squash(it.text) }.sorted()
+                val rest = texts.toMutableList().apply { remove(expectA); remove(expectB) }.sorted()
+                entry.put("lineA", a.text).put("after", twice).put("lineB", b.text).put("afterB", other)
+                    .put("foundA", expectA in texts).put("foundB", expectB in texts).put("othersUnchanged", rest == untouched)
+                    .put("lines", JSONArray(listOf(original.size, reopened.size, reopened2.size, final.size)))
+                if (expectA !in texts) problems += "${file.name}: re-edited line not found"
+                if (expectB !in texts) problems += "${file.name}: second line edit not found"
+                if (rest != untouched) problems += "${file.name}: other lines changed or ghost text: ${(rest - untouched.toSet()).take(3)}"
+            }.onFailure { entry.put("error", it.toString()); problems += "${file.name}: $it" }
+            report.put(file.name, entry)
+        }
+        File(out, "reedit.json").writeText(report.toString(1))
+        org.junit.Assert.assertTrue(problems.joinToString("\n"), problems.isEmpty())
     }
 
     /**
