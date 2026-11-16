@@ -271,6 +271,80 @@ def desk_objects(scene, rng, quad):
             cv2.ellipse(scene, (int(c[0]), int(c[1])), axes, rng.uniform(0, 180), 0, 360, (30, 30, 35), -1, cv2.LINE_AA)
 
 
+def ruled_notes(rng):
+    """A loose notebook sheet: blue-grey rules edge to edge, a header strip, handwriting on and between rules."""
+    h = rng.randint(480, 700)
+    w = int(h / rng.choice([1.414, 1.33, 1.5, 1.25]))
+    tone = rng.randint(226, 250)
+    sheet = np.full((h, w, 3), (tone - rng.randint(0, 8), tone - rng.randint(0, 5), tone), np.uint8)
+    step = rng.randint(20, 34)
+    rule = (rng.randint(120, 175), rng.randint(115, 165), rng.randint(105, 160))
+    first = rng.randint(int(1.2 * step), int(3.5 * step))
+    for y in range(first, h - 6, step):
+        cv2.line(sheet, (0, y), (w, y + rng.randint(-1, 1)), rule, 1, cv2.LINE_AA)
+    if rng.random() < 0.4:  # a double header rule, as on many exercise books
+        cv2.line(sheet, (0, first - 4), (w, first - 4), rule, 1, cv2.LINE_AA)
+    ink = rng.choice([(30, 30, 35), (90, 40, 20), (20, 20, 120)])
+    for y in range(first - step, h - 10, step):
+        x = rng.randint(6, w // 4)
+        while x < w - 30 and rng.random() > 0.12:
+            x = scenes.scribble(sheet, rng, x, y + step // 2 + rng.randint(-4, 4), rng.uniform(10, 24), ink, rng.choice([1, 2, 2, 3])) + rng.randint(10, 70)
+    if rng.random() < 0.5:  # show-through of the other side's writing
+        ghost = cv2.GaussianBlur(sheet[:, ::-1].astype(np.float32), (0, 0), 1.2)
+        sheet = np.clip(sheet.astype(np.float32) * 0.93 + ghost * 0.07, 0, 255).astype(np.uint8)
+    return sheet
+
+
+def book_spread(rng, h, w):
+    """An open printed book: two dense text pages, page numbers, a soft dark gutter and page-edge shading."""
+    tone = rng.randint(222, 248)
+    page_w = w // 2
+    pages = []
+    for side in range(2):
+        page = np.full((h, page_w, 3), (tone - rng.randint(4, 14), tone - rng.randint(0, 8), tone), np.uint8)
+        page = scenes.typeset(page, rng, (rng.randint(10, 50),) * 3, [])
+        if rng.random() < 0.5:  # a header rule and page number, as in textbooks
+            y = rng.randint(14, 30)
+            cv2.line(page, (12, y), (page_w - 12, y), (60, 60, 60), 1, cv2.LINE_AA)
+        cv2.putText(page, str(rng.randint(10, 400)), (page_w // 2 if rng.random() < 0.5 else page_w - 50, h - 14),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (40, 40, 40), 1, cv2.LINE_AA)
+        pages.append(page)
+    book = np.hstack(pages).astype(np.float32)
+    xx = np.arange(book.shape[1], dtype=np.float32)
+    gutter = np.exp(-((xx - page_w) / rng.uniform(6, 22)) ** 2) * rng.uniform(0.15, 0.45)
+    edge = np.clip(1 - np.minimum(xx, book.shape[1] - 1 - xx) / rng.uniform(20, 60), 0, 1) * rng.uniform(0, 0.12)
+    book *= (1 - gutter - edge)[None, :, None]
+    return np.clip(book, 0, 255).astype(np.uint8)
+
+
+def sheet_on_book(scene, rng, sheet, alpha, pad, quad, top):
+    """The top sheet of loose notes lying on an open printed book, with more sheets of the same notes offset
+    beside and under it (one showing past a side, stack strips past the bottom). Every other surface is paper as
+    white as the top sheet; only the top sheet is labelled."""
+    centre = quad.mean(0)
+    if rng.random() < 0.8:
+        bh, bw = rng.randint(520, 720), rng.randint(700, 980)
+        book = book_spread(rng, bh, bw)
+        grow = rng.uniform(1.3, 2.3)
+        big = centre + (quad - centre) * np.float32([grow * rng.uniform(1.4, 2.0), grow])
+        big = big + np.float32([rng.gauss(0, 40), rng.uniform(-0.25, 0.05) * R])  # the book shows mostly above
+        scenes.paste(scene, book, np.full(book.shape[:2], 255, np.uint8), 0, big, rng, shadow=rng.random() < 0.5)
+    across = quad[1] - quad[0]
+    down = quad[3] - quad[0]
+    for _ in range(rng.choice([1, 1, 2, 3])):
+        same_notes = scenes.same_paper(top, rng) if rng.random() < 0.6 else ruled_notes(rng)
+        u, ua, upad = scenes.curl(cv2.resize(same_notes, (top.shape[1], top.shape[0])), rng)
+        if rng.random() < 0.6:  # a neighbour past a side
+            shift = across * rng.uniform(0.15, 0.7) * rng.choice([-1, 1]) + down * rng.uniform(-0.08, 0.08)
+        else:  # a stack strip past the bottom (or top)
+            shift = down * rng.uniform(0.01, 0.06) * rng.choice([1, 1, 1, -1]) + across * rng.uniform(-0.03, 0.03)
+        scenes.paste(scene, cv2.resize(u, (sheet.shape[1], sheet.shape[0])), cv2.resize(ua, (sheet.shape[1], sheet.shape[0])),
+                     pad, quad + shift, rng, shadow=rng.random() < 0.4)
+    a, _ = scenes.paste(scene, sheet, alpha, pad, quad, rng, shadow=rng.random() < 0.6)
+    subtle_edge(scene, a, rng)
+    return a
+
+
 CASES = ["white-stack", "white-stack", "notebooks", "book", "plain-fold", "white-desk"]
 CROSSERS = False  # crossing objects on other cases; off for sets made before 2026-11-13 (keeps their rebuild exact)
 
@@ -287,9 +361,11 @@ def compositor(rng, photos, pool, textures):
         top = scenes.cover(rng, rng.randint(440, 640), rng.randint(320, 460))
     elif case in ("white-stack", "white-desk"):
         top = rng.choice(textures) if (textures and rng.random() < 0.5) else white_paper((rng.randint(460, 700), rng.randint(320, 500), 3), rng)
+    elif case == "sheet-on-book":
+        top = ruled_notes(rng) if rng.random() < 0.75 else rng.choice(pool)
     else:
         top = rng.choice(pool)
-    if case not in ("book", "book-block") and rng.random() < 0.5:
+    if case not in ("book", "book-block", "sheet-on-book") and rng.random() < 0.5:
         top = fold(top, rng)
     area = rng.choice([rng.uniform(0.15, 0.5), rng.uniform(0.3, 0.85), rng.uniform(0.45, 0.9)])
     if case == "small-clutter":
@@ -302,9 +378,13 @@ def compositor(rng, photos, pool, textures):
         area = rng.uniform(0.06, 0.35)
     elif case == "book-block":
         area = rng.uniform(0.25, 0.85)
+    elif case == "sheet-on-book":
+        area = rng.uniform(0.3, 0.75)
     quad = scenes.place(rng, top.shape, area)
-    sheet, alpha, pad = bend(top, rng)
-    if case == "white-stack":
+    sheet, alpha, pad = scenes.curl(top, rng) if case == "sheet-on-book" else bend(top, rng)
+    if case == "sheet-on-book":
+        a = sheet_on_book(scene, rng, sheet, alpha, pad, quad, top)
+    elif case == "white-stack":
         base = int(np.median(top)) if rng.random() < 0.7 else None
         direction = np.float32([rng.choice([-1, 1, 0]), rng.choice([-1, 1, 0])])
         pivot = quad[rng.randrange(4)]
