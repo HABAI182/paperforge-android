@@ -32,6 +32,8 @@ open class PaperForgeApp : Application(), androidx.work.Configuration.Provider {
         OpenCVLoader.initLocal()
         org.opencv.core.Core.setNumThreads(2)
         cn.paperforge.app.imaging.ScanConfig.load(assets)
+        // Compiles the page pipeline's hot loops before the first scan or import (see ScanWarmUp).
+        cn.paperforge.app.imaging.ScanWarmUp.start()
         repository =
             Repository(
                 this,
