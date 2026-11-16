@@ -17,21 +17,35 @@ import org.opencv.imgproc.Imgproc
  */
 object ScanWarmUp {
     private val started = AtomicBoolean(false)
+    private val done = java.util.concurrent.CountDownLatch(1)
+
+    /**
+     * A real page started while the warm-up still runs waits for it (at most [timeoutMs]): run side by side, both
+     * ran uncompiled and competed for the processor, and the first page of a batch import took 25 s instead of 4.
+     */
+    fun awaitDone(timeoutMs: Long = 8000) {
+        if (!started.get() || Thread.currentThread().name == "scan-warm-up") return
+        runCatching { done.await(timeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS) }
+    }
 
     fun start() {
         if (ScanConfig.int("scanWarmUp", 1) == 0 || !started.compareAndSet(false, true)) return
         Thread({
-            Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
-            // Benchmark runs dump pipeline stages to a shared folder; the warm-up must not add files to it.
-            if (EdgeInkDiagnostics.enabled()) return@Thread
-            val page = syntheticPage()
-            val out = Mat()
             try {
-                runCatching { EnhancePipeline.apply(page, out, "WORKBOOK") }
-                    .onFailure { android.util.Log.w("PaperForgeWarmUp", "warm-up skipped", it) }
+                Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
+                // Benchmark runs dump pipeline stages to a shared folder; the warm-up must not add files to it.
+                if (EdgeInkDiagnostics.enabled()) return@Thread
+                val page = syntheticPage()
+                val out = Mat()
+                try {
+                    runCatching { EnhancePipeline.apply(page, out, "WORKBOOK") }
+                        .onFailure { android.util.Log.w("PaperForgeWarmUp", "warm-up skipped", it) }
+                } finally {
+                    page.release()
+                    out.release()
+                }
             } finally {
-                page.release()
-                out.release()
+                done.countDown()
             }
         }, "scan-warm-up").start()
     }

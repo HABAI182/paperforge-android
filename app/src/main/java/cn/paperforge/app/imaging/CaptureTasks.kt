@@ -334,6 +334,9 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                             )
                         }
                     val file = CaptureTasks.raw(row)
+                    // Where an import's time goes, kept with the page (importTimings): detection, the finish, the
+                    // orientation check.
+                    val startedAt = android.os.SystemClock.elapsedRealtime()
                     var result =
                         CaptureTasks.decodeSlot.withLock {
                             ScanProcessor.detectFile(
@@ -345,6 +348,7 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                             )
                         }
                     currentCoroutineContext().ensureActive()
+                    val detectedAt = android.os.SystemClock.elapsedRealtime()
                     // 书本 mode: the user said this is an open book and which page they want, so the spread is split
                     // here, before anything is published or flattened. 两页 keeps the left page on this task's row
                     // and adds the right page after it below.
@@ -564,7 +568,22 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                             bitmap.recycle()
                         }
                     }
-                    val flatUpright = flat?.let(::upright)
+                    val finishedAt = android.os.SystemClock.elapsedRealtime()
+                    val flatUpright = flat?.let(::upright)?.let { page ->
+                        val now = android.os.SystemClock.elapsedRealtime()
+                        page.copy(
+                            processingMetadata =
+                                JSONObject(page.processingMetadata ?: "{}")
+                                    .put(
+                                        "importTimings",
+                                        JSONObject()
+                                            .put("detectMs", detectedAt - startedAt)
+                                            .put("finishMs", finishedAt - detectedAt)
+                                            .put("orientMs", now - finishedAt),
+                                    )
+                                    .toString()
+                        )
+                    }
                     val rightUpright = rightPage?.let { if (flat != null) upright(it) else it }
                     // Without the finished page (other filters), the crop itself decides.
                     val cropTurn =

@@ -1,5 +1,6 @@
 package cn.paperforge.app.imaging
 
+import kotlinx.coroutines.async
 import android.content.Context
 import android.graphics.Bitmap
 import cn.paperforge.app.data.*
@@ -573,6 +574,7 @@ object FlatDocument {
     ): PageRow {
         val exactFrame = page.hasExactCropFrame()
         val stackFrame = page.detectionMethod?.contains(SheetEdge.VERSION) == true
+        val renderStarted = android.os.SystemClock.elapsedRealtime()
         val rendered =
             ScanProcessor.render(
                 PageResources.sourceAppearance(page)
@@ -583,12 +585,23 @@ object FlatDocument {
         val (source, sourceScale) =
             if (automatic) workSource(rendered, workEdge).also { if (it.first !== rendered) rendered.recycle() }
             else rendered to 1f
+        val renderMs = android.os.SystemClock.elapsedRealtime() - renderStarted
         val folder = repo.folder(page.documentId)
         val key = UUID.randomUUID().toString()
         val input = File(folder, "$key-flat-input.png")
         val output = File(folder, "$key-flat.png")
         val grid = File(folder, "$key.pfgrid.gz")
         var success = false
+        // The working copy is saved while the page is processed, not after: the PNG of a 2400 px colour photo
+        // took 0.3-1.5 s, inside the one-at-a-time finish, so a batch import waited for every one in turn.
+        // Both only read the bitmap; it is recycled after the write has ended either way.
+        ScanWarmUp.awaitDone()
+        val inputWrite =
+            kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).async {
+                val started = android.os.SystemClock.elapsedRealtime()
+                input.outputStream().use { check(source.compress(Bitmap.CompressFormat.PNG, 100, it)) }
+                android.os.SystemClock.elapsedRealtime() - started
+            }
         try {
             val result =
                 process(
@@ -603,6 +616,7 @@ object FlatDocument {
                     sourceScale,
                     stackFrame,
                 )
+            val writeStarted = android.os.SystemClock.elapsedRealtime()
             try {
                 output.outputStream().use {
                     check(result.bitmap.compress(Bitmap.CompressFormat.PNG, 100, it))
@@ -610,7 +624,9 @@ object FlatDocument {
             } finally {
                 result.bitmap.recycle()
             }
-            input.outputStream().use { check(source.compress(Bitmap.CompressFormat.PNG, 100, it)) }
+            val outputWritten = android.os.SystemClock.elapsedRealtime()
+            val inputWriteMs = inputWrite.await()
+            val inputWritten = android.os.SystemClock.elapsedRealtime()
             result.grid.write(grid)
             val metadata =
                 JSONObject(
@@ -635,6 +651,14 @@ object FlatDocument {
                             .put("sourceScale", sourceScale.toDouble())
                             .put("enhancement", ScanConfig.fingerprint())
                             .put("structure", result.diagnostics?.let(::JSONObject))
+                            .put(
+                                "timings",
+                                JSONObject()
+                                    .put("renderMs", renderMs)
+                                    .put("writeOutputMs", outputWritten - writeStarted)
+                                    .put("writeInputMs", inputWriteMs)
+                                    .put("waitInputMs", inputWritten - outputWritten),
+                            )
                             .put("foregroundSha256", if (ai && !automatic) NeuralPaper.SHA else "")
                             .put("ai", ai)
                             .put(
@@ -673,6 +697,8 @@ object FlatDocument {
                 processingMetadata = metadata.toString(),
             )
         } finally {
+            // The working copy reads the bitmap until it is written: wait for it before recycling.
+            kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) { runCatching { inputWrite.await() } }
             source.recycle()
             if (!success) listOf(input, output, grid).forEach { it.delete() }
         }
