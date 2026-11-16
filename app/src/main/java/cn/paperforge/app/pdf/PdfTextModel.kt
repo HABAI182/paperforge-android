@@ -355,15 +355,37 @@ internal class PdfTextModel private constructor(val number: Int, val page: PDPag
             if (proto != null) proto.glyphs += g else protos += Proto(mutableListOf(g), g.direction, off, g.drawnSize)
         }
         // Split each proto line where the gap is wider than a column gutter; order glyphs along the baseline.
+        // A narrower gap also splits when it lines up with gaps on at least two other lines (a column gutter of a
+        // two-column page, table columns): otherwise rows of both columns would read as one line.
+        val sortedProtos = protos.map { p -> p.glyphs.sortedBy { it.origin.x * p.dir.x + it.origin.y * p.dir.y } }
+        data class Gap(val proto: Int, val from: Float, val to: Float)
+        val gaps = mutableListOf<Gap>()
+        for ((pi, sorted) in sortedProtos.withIndex()) {
+            val p = protos[pi]
+            if (abs(p.dir.x) < .999f) continue
+            var lastEnd = Float.NaN
+            for (g in sorted) {
+                val along = g.origin.x * p.dir.x + g.origin.y * p.dir.y
+                if (!lastEnd.isNaN() && along - lastEnd > 1.0f * g.drawnSize) gaps += Gap(pi, lastEnd, along)
+                lastEnd = maxOf(if (lastEnd.isNaN()) along else lastEnd, along + advanceOnPage(g))
+            }
+        }
+        val gutters =
+            gaps.filter { g ->
+                val mid = (g.from + g.to) / 2
+                gaps.filter { o -> o.proto != g.proto && mid > o.from && mid < o.to }.map { it.proto }.distinct().size >= 2
+            }.groupBy { it.proto }
         val segments = mutableListOf<List<Glyph>>()
-        for (p in protos) {
-            val sorted = p.glyphs.sortedBy { it.origin.x * p.dir.x + it.origin.y * p.dir.y }
+        for ((pi, sorted) in sortedProtos.withIndex()) {
+            val p = protos[pi]
+            val splits = gutters[pi].orEmpty()
             var current = mutableListOf<Glyph>()
             var lastEnd = Float.NaN
             for (g in sorted) {
                 val along = g.origin.x * p.dir.x + g.origin.y * p.dir.y
                 val width = advanceOnPage(g)
-                if (current.isNotEmpty() && along - lastEnd > 2.2f * g.drawnSize) {
+                val gutter = current.isNotEmpty() && splits.any { abs(it.to - along) < .01f && along - lastEnd > .5f * g.drawnSize }
+                if (current.isNotEmpty() && (along - lastEnd > 2.2f * g.drawnSize || gutter)) {
                     segments += current
                     current = mutableListOf()
                 }
@@ -457,26 +479,47 @@ internal class PdfTextModel private constructor(val number: Int, val page: PDPag
         val last = glyphs.last()
         val end = last.origin.x * d.x + last.origin.y * d.y + advanceOnPage(last)
         val off = last.origin.x * -d.y + last.origin.y * d.x
+        val first = glyphs.first()
+        val begin = first.origin.x * d.x + first.origin.y * d.y
+        val size = last.drawnSize
         var next = Float.MAX_VALUE
         var blockEnd = end
         var peers = false
+        // Lines starting where this one starts, just above or below: the same column even when a generous line
+        // height kept them out of this line's block.
+        var columnEnd = end
+        var column = false
+        var pageEnd = end
         for (other in lines) {
             if (other === line) continue
             val og = other.glyphs.firstOrNull() ?: continue
             if (abs(og.direction.x * d.x + og.direction.y * d.y) < .999f) continue
+            val ol = other.glyphs.last()
             val oOff = og.origin.x * -d.y + og.origin.y * d.x
             val start = og.origin.x * d.x + og.origin.y * d.y
-            if (abs(oOff - off) < .35f * last.drawnSize && start > end - .5f) next = minOf(next, start)
-            if (other.block == line.block) {
+            val oEnd = ol.origin.x * d.x + ol.origin.y * d.y + advanceOnPage(ol)
+            pageEnd = maxOf(pageEnd, oEnd)
+            if (abs(oOff - off) < .35f * size && start > end - .5f) next = minOf(next, start)
+            // Block peers to the right (another column grouped into the same block) do not widen this line.
+            if (other.block == line.block && start < end) {
                 peers = true
-                val ol = other.glyphs.last()
-                blockEnd = maxOf(blockEnd, ol.origin.x * d.x + ol.origin.y * d.y + advanceOnPage(ol))
+                blockEnd = maxOf(blockEnd, oEnd)
+            }
+            if (abs(start - begin) < size && abs(oOff - off) in .5f * size..4f * size) {
+                column = true
+                columnEnd = maxOf(columnEnd, oEnd)
             }
         }
-        // A paragraph line keeps to its paragraph's right edge (justified columns must not grow into the gutter);
-        // a line on its own may run up to the next text on its baseline.
-        val gapLimit = if (next < Float.MAX_VALUE) next - .3f * last.drawnSize else Float.MAX_VALUE
-        val limit = if (peers) minOf(blockEnd, gapLimit) else if (gapLimit < Float.MAX_VALUE) gapLimit else blockEnd
+        // A paragraph line keeps to its paragraph's (or column's) right edge: justified columns must not grow into
+        // the gutter. A line on its own may run up to the next text on its baseline, or the page's text edge.
+        val gapLimit = if (next < Float.MAX_VALUE) next - .3f * size else Float.MAX_VALUE
+        val limit =
+            when {
+                peers && column -> minOf(blockEnd, columnEnd, gapLimit)
+                peers -> minOf(blockEnd, gapLimit)
+                column -> minOf(columnEnd, gapLimit)
+                else -> minOf(gapLimit, pageEnd)
+            }
         return (limit - end).coerceAtLeast(0f)
     }
 

@@ -153,29 +153,33 @@ internal object PdfLineWriter {
             }
             val erased = chars.subList(firstChar, chars.size).mapNotNull { it.glyph }
             for (g in erased) erasedByOp.getOrPut(g.stream to g.op) { mutableSetOf() } += g
-            fun layout(squeeze: Float): Pair<FloatArray, Float> {
+            val base = charAlong(firstChar)
+            // Natural layout: kept glyphs keep their spacing, shifted by what the new text adds or removes.
+            fun natural(): Pair<FloatArray, Float> {
                 val starts = FloatArray(pieces.size)
                 var shift = 0f
-                var cursor = charAlong(firstChar)
+                var cursor = base
                 for ((k, p) in pieces.withIndex()) {
                     val g = p.glyph
                     val start = if (g != null) p.origAlong + shift else cursor
                     starts[k] = start
-                    val adv = p.advance * if (g == null) squeeze else 1f
-                    cursor = start + adv
-                    shift = if (g != null) shift + adv - model.advanceOnPage(g) else cursor - p.replacedEnd
+                    cursor = start + p.advance
+                    shift = if (g != null) shift + p.advance - model.advanceOnPage(g) else cursor - p.replacedEnd
                 }
                 val end = if (pieces.lastOrNull()?.glyph != null) cursor else maxOf(cursor, lineEnd + shift)
                 return starts to end
             }
-            // Growing into free space on the line is fine; only the part that would hit the next text is squeezed,
-            // and never below 80 % (beyond that the overflow is reported instead).
+            // Growing into free space on the line is fine. Beyond it, the rewritten part of the line (from the first
+            // change to its end, kept glyphs included) is compressed evenly, never below 80 %; beyond that the
+            // overflow is reported. Even compression of the whole part reads better than squeezing only new words,
+            // and it fits what a few inserted characters add to a full justified line.
             val room = model.room(line)
-            val grow = layout(1f).second - lineEnd
-            val excess = grow - room
-            val flexible = pieces.filter { it.glyph == null }.sumOf { it.advance.toDouble() }.toFloat()
+            val (naturalStarts, naturalEnd) = natural()
+            val excess = naturalEnd - lineEnd - room
+            val flexible = naturalEnd - base
             val squeeze = if (edit.fit && excess > .5f && flexible > 0f) ((flexible - excess) / flexible).coerceIn(.8f, 1f) else 1f
-            val (starts, end) = layout(squeeze)
+            val starts = FloatArray(pieces.size) { base + (naturalStarts[it] - base) * squeeze }
+            val end = base + (naturalEnd - base) * squeeze
             // Drawn right after the line's last erased glyph, inside the same text object when the line lives in one
             // stream (reading order kept; the text state is restored afterwards), else after its text object.
             val anchor = erased.lastOrNull() ?: lastGlyph
@@ -214,7 +218,7 @@ internal object PdfLineWriter {
                     lastFont = p.font
                     lastSize = p.tfs
                 }
-                val h = p.horizontal * if (g == null) squeeze else 1f
+                val h = p.horizontal * squeeze
                 if (h != lastH) {
                     op(out, "Tz", COSFloat(h))
                     lastH = h

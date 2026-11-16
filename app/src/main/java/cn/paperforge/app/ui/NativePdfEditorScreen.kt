@@ -196,7 +196,11 @@ fun NativePdfEditorScreen(vm: MainViewModel) {
     /** Checks [next] by rendering this page, then puts it into the draft. */
     fun commit(next: List<NativePdfEditor.Edit>, keep: List<NativeSegment>? = null, done: String = "") {
         val current = draft ?: return
-        if (next == current.edits) return
+        if (next == current.edits) {
+            // Say so instead of closing silently: the user may think the change was applied.
+            if (done.isNotEmpty()) message = "文字没有变化，未作修改"
+            return
+        }
         scope.launch {
             busy = true
             try {
@@ -213,7 +217,7 @@ fun NativePdfEditorScreen(vm: MainViewModel) {
                     listOfNotNull(
                             done.ifEmpty { null },
                             if (squeezed.isNotEmpty())
-                                "为放进原宽度，新文字横向压缩到 ${(squeezed.minOf { it.scale } * 100).roundToInt()}%"
+                                "为放进原宽度，从修改处起的文字横向压缩到 ${(squeezed.minOf { it.scale } * 100).roundToInt()}%"
                             else null,
                             if (overflow) "有文字超出原来的宽度，可能与后面的内容重叠，请检查" else null,
                         )
