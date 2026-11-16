@@ -1,0 +1,255 @@
+{
+ "note": "Components distributed with PaperForge and the license each is used under. Source of truth: LICENSE_NOTICES.txt; full texts in assets/licenses and assets/retouch.",
+ "groups": [
+  {
+   "id": "libraries",
+   "items": [
+    {
+     "name": "AndroidX (Compose, Material 3, CameraX, Room, WorkManager, Activity, Lifecycle, ExifInterface, WindowManager)",
+     "holder": "The Android Open Source Project",
+     "license": "Apache-2.0",
+     "file": "licenses/Apache-2.0.txt",
+     "url": "https://developer.android.com/jetpack/androidx"
+    },
+    {
+     "name": "Kotlin",
+     "holder": "JetBrains s.r.o. and contributors",
+     "license": "Apache-2.0",
+     "file": "licenses/Kotlin-LICENSE.txt",
+     "url": "https://kotlinlang.org"
+    },
+    {
+     "name": "kotlinx.coroutines",
+     "holder": "JetBrains s.r.o. and contributors",
+     "license": "Apache-2.0",
+     "file": "licenses/Coroutines-LICENSE.txt",
+     "url": "https://github.com/Kotlin/kotlinx.coroutines"
+    },
+    {
+     "name": "OpenCV 4.12.0 (with libjpeg-turbo, libpng, libtiff, libwebp, OpenJPEG, zlib, protobuf, flatbuffers, quirc)",
+     "holder": "OpenCV contributors",
+     "license": "Apache-2.0 + bundled notices",
+     "file": "licenses/OpenCV-LICENSE.txt",
+     "extra": [
+      "licenses/OpenCV-libjpeg-turbo.txt",
+      "licenses/OpenCV-libpng.txt",
+      "licenses/OpenCV-libtiff.txt",
+      "licenses/OpenCV-libwebp.txt",
+      "licenses/OpenCV-openjpeg.txt",
+      "licenses/OpenCV-zlib.txt",
+      "licenses/OpenCV-protobuf.txt",
+      "licenses/OpenCV-flatbuffers.txt",
+      "licenses/OpenCV-quirc.txt"
+     ],
+     "url": "https://opencv.org"
+    },
+    {
+     "name": "PdfBox-Android 2.0.27.0 (Apache PDFBox, FontBox)",
+     "holder": "The Apache Software Foundation; Tom Roush",
+     "license": "Apache-2.0",
+     "file": "licenses/PdfBox-LICENSE.txt",
+     "extra": [
+      "licenses/PdfBox-NOTICE.txt"
+     ],
+     "url": "https://github.com/TomRoush/PdfBox-Android"
+    },
+    {
+     "name": "ONNX Runtime Android 1.24.1",
+     "holder": "Microsoft Corporation",
+     "license": "MIT + third-party notices",
+     "file": "licenses/ONNXRuntime-LICENSE.txt",
+     "extra": [
+      "licenses/ONNXRuntime-ThirdPartyNotices.txt"
+     ],
+     "url": "https://onnxruntime.ai"
+    },
+    {
+     "name": "MakeACopy (DocQuad letterbox, score, post-processor; DocQuadNet-256 model)",
+     "holder": "Christian Kierdorf",
+     "license": "Apache-2.0",
+     "file": "licenses/MakeACopy-LICENSE.txt",
+     "extra": [
+      "licenses/MakeACopy-NOTICE.txt"
+     ]
+    },
+    {
+     "name": "PaddleOCR Android SDK",
+     "holder": "PaddlePaddle Authors",
+     "license": "Apache-2.0",
+     "file": "licenses/PaddleOCR-LICENSE.txt",
+     "url": "https://github.com/PaddlePaddle/PaddleOCR"
+    },
+    {
+     "name": "Offline Scanner SDK 0.1.0-rc1",
+     "holder": "its authors",
+     "license": "Apache-2.0",
+     "file": "licenses/OpenAndroidDocScanner-NOTICE.txt"
+    },
+    {
+     "name": "CommonMark Java 0.30.0",
+     "holder": "Robin Stocker",
+     "license": "BSD-2-Clause",
+     "file": "licenses/CommonMark-LICENSE.txt",
+     "url": "https://github.com/commonmark/commonmark-java"
+    },
+    {
+     "name": "jsoup 1.23.2",
+     "holder": "Jonathan Hedley",
+     "license": "MIT",
+     "file": "licenses/jsoup-LICENSE.txt",
+     "url": "https://jsoup.org"
+    },
+    {
+     "name": "Bouncy Castle",
+     "holder": "The Legion of the Bouncy Castle Inc.",
+     "license": "MIT-style (Bouncy Castle Licence)",
+     "file": "licenses/BouncyCastle-LICENSE.html",
+     "url": "https://www.bouncycastle.org"
+    },
+    {
+     "name": "JP2ForAndroid",
+     "holder": "Gemalto s.r.o.",
+     "license": "BSD-2-Clause",
+     "file": "licenses/JP2ForAndroid-LICENSE.txt"
+    },
+    {
+     "name": "OpenJPEG",
+     "holder": "Université catholique de Louvain (UCL) and OpenJPEG contributors",
+     "license": "BSD-2-Clause",
+     "file": "licenses/OpenJPEG-LICENSE.txt",
+     "url": "https://www.openjpeg.org"
+    },
+    {
+     "name": "desugar_jdk_libs_nio 2.1.5",
+     "holder": "Oracle and/or its affiliates; Google",
+     "license": "GPL-2.0 with Classpath Exception",
+     "file": "licenses/DesugarJdk-LICENSE.txt",
+     "extra": [
+      "licenses/DesugarJdk-ASSEMBLY_EXCEPTION.txt",
+      "licenses/DesugarJdk-ADDITIONAL_LICENSE_INFO.txt"
+     ],
+     "url": "https://github.com/google/desugar_jdk_libs"
+    },
+    {
+     "name": "ML Kit Text Recognition (Chinese, Latin) 16.0.1",
+     "holder": "Google",
+     "license": "ML Kit / Google APIs Terms of Service (proprietary)",
+     "url": "https://developers.google.com/ml-kit/terms"
+    }
+   ]
+  },
+  {
+   "id": "fonts",
+   "items": [
+    {
+     "name": "PaperForge CJK Regular (renamed derivative of Noto Sans SC)",
+     "holder": "Adobe; Reserved Font Name 'Source'",
+     "license": "OFL-1.1",
+     "file": "licenses/NotoSansSC-OFL.txt",
+     "url": "https://github.com/google/fonts/tree/main/ofl/notosanssc"
+    },
+    {
+     "name": "Noto Serif SC Regular/Bold",
+     "holder": "Google Inc.",
+     "license": "OFL-1.1",
+     "file": "licenses/NotoSerifSC-OFL.txt",
+     "url": "https://github.com/google/fonts/tree/main/ofl/notoserifsc"
+    },
+    {
+     "name": "Noto Sans SC Bold",
+     "holder": "Adobe; Reserved Font Name 'Source'",
+     "license": "OFL-1.1",
+     "file": "licenses/NotoSansSC-OFL.txt"
+    },
+    {
+     "name": "Noto Sans TC Regular",
+     "holder": "Adobe; Reserved Font Name 'Source'",
+     "license": "OFL-1.1",
+     "file": "licenses/NotoSansTC-OFL.txt",
+     "url": "https://github.com/google/fonts/tree/main/ofl/notosanstc"
+    },
+    {
+     "name": "Noto Sans Math Regular",
+     "holder": "The Noto Project Authors",
+     "license": "OFL-1.1",
+     "file": "licenses/NotoSansMath-OFL.txt"
+    },
+    {
+     "name": "Zhuque Fangsong (朱雀仿宋) Regular v0.212",
+     "holder": "Zhejiang JadeFoci Technology Co. Ltd.",
+     "license": "OFL-1.1",
+     "file": "licenses/ZhuqueFangsong-OFL.txt",
+     "url": "https://github.com/TrionesType/zhuque"
+    },
+    {
+     "name": "PaperForge Kai (renamed subset of LXGW WenKai and Klee One)",
+     "holder": "LXGW; The Klee Project Authors",
+     "license": "OFL-1.1",
+     "file": "licenses/PaperForgeKai-LXGWWenKai-OFL.txt",
+     "url": "https://github.com/lxgw/LxgwWenKai"
+    }
+   ]
+  },
+  {
+   "id": "models",
+   "items": [
+    {
+     "name": "MI-GAN pipeline v2 (imported separately by the user)",
+     "holder": "Picsart AI Research (PAIR)",
+     "license": "MIT",
+     "file": "retouch/LICENSE-MIGAN",
+     "url": "https://github.com/Picsart-AI-Research/MI-GAN"
+    },
+    {
+     "name": "Sub-Pixel CNN 3x super-resolution (ONNX Model Zoo)",
+     "holder": "ONNX Model Zoo contributors",
+     "license": "Apache-2.0",
+     "file": "retouch/LICENSE-SR"
+    },
+    {
+     "name": "DocRes appearance restoration (CVPR 2024)",
+     "holder": "Jiaxin Zhang",
+     "license": "MIT",
+     "file": "retouch/LICENSE-DOCRES",
+     "url": "https://github.com/ZZZHANG-jx/DocRes"
+    },
+    {
+     "name": "Restormer backbone",
+     "holder": "Syed Waqas Zamir and contributors",
+     "license": "MIT",
+     "file": "retouch/LICENSE-RESTORMER",
+     "url": "https://github.com/swz30/Restormer"
+    }
+   ]
+  },
+  {
+   "id": "data",
+   "items": [
+    {
+     "name": "A New Image Dataset for Document Corner Localization (Mendeley Data x3nm4cxr83) — PageNet v2 training",
+     "holder": "its authors",
+     "license": "CC BY 4.0",
+     "url": "https://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+     "name": "SmartDoc 2015 Challenge 1 (Burie et al., ICDAR 2015, Zenodo 1230218) — model selection",
+     "holder": "J.-C. Burie et al.",
+     "license": "CC BY 4.0",
+     "url": "https://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+     "name": "Labeled receipt images (Auad, Alves, Kakizaki, Reis, Silva, Zenodo 13688441) — model selection",
+     "holder": "Auad, Alves, Kakizaki, Reis, Silva",
+     "license": "CC BY 4.0",
+     "url": "https://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+     "name": "COCO val2017 photographs — training backgrounds only, not redistributed",
+     "holder": "COCO Consortium; Flickr contributors",
+     "license": "various Creative Commons",
+     "url": "https://cocodataset.org"
+    }
+   ]
+  }
+ ]
+}

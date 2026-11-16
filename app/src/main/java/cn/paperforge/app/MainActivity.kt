@@ -22,6 +22,8 @@ import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cn.paperforge.app.data.OutputNames
@@ -975,6 +977,9 @@ class MainActivity : ComponentActivity() {
                         text = {
                             Column(Modifier.verticalScroll(rememberScrollState())) {
                                 var showNotices by remember { mutableStateOf(false) }
+                                var showThanks by remember { mutableStateOf(false) }
+                                if (showNotices) OpenSourceLicensesPage { showNotices = false }
+                                if (showThanks) AcknowledgmentsPage { showThanks = false }
                                 Text(
                                     if (
                                         cn.paperforge.app.system.PhoneEngines.integrated(
@@ -1026,22 +1031,15 @@ class MainActivity : ComponentActivity() {
                                     style = MaterialTheme.typography.bodySmall,
                                 )
                                 HorizontalDivider(Modifier.padding(vertical = 12.dp))
-                                TextButton(onClick = { showNotices = !showNotices }) {
-                                    Text(if (showNotices) "收起开源与模型声明" else "开源与模型声明")
+                                // Required attribution and optional thanks are separate pages.
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    OutlinedButton(onClick = { showNotices = true }, modifier = Modifier.testTag("about-open-licenses")) {
+                                        Text(stringResource(R.string.about_licenses))
+                                    }
+                                    OutlinedButton(onClick = { showThanks = true }, modifier = Modifier.testTag("about-open-acknowledgments")) {
+                                        Text(stringResource(R.string.about_acknowledgments))
+                                    }
                                 }
-                                if (showNotices)
-                                    Text(
-                                        remember {
-                                            runCatching {
-                                                    assets
-                                                        .open("LICENSE_NOTICES.txt")
-                                                        .bufferedReader()
-                                                        .use { it.readText() }
-                                                }
-                                                .getOrDefault("见源码 LICENSE_NOTICES.md")
-                                        },
-                                        style = MaterialTheme.typography.bodySmall,
-                                    )
                             }
                         },
                         confirmButton = { TextButton(onClick = { about = false }) { Text("知道了") } },
