@@ -302,9 +302,24 @@ internal object ToneZones {
             // crisp, so the 一 of 插入一个 and the bars of 中 were never seeded and came out as gaps. See [lineSeeds].
             // Ruled paper is thin, and the writing on its other side shows through as lines beside the front's
             // writing: measured against the reference scanner, line seeds there added ten wrong marks for every right one.
-            val lineSeed =
+            val baseLines =
                 if (ruled && ScanConfig.int("toneZonesLineSeedOnRuled", 0) == 0) null
                 else lineSeeds(tidyValues, darkSeeds, rules, width, height, scale, owned)
+            // Small print on ruled pages: a printed line's marks are seeded lines too, drawn the same way.
+            val textLine = if (ruled) textLineSeeds(candidates, rules, seeds, cross, tidyValues, width, height, scale, owned) else null
+            textLine?.let { stats.put("textLinePixels", Core.countNonZero(it.mask)) }
+            val lineSeed = when {
+                textLine == null -> baseLines
+                baseLines == null -> textLine
+                else -> {
+                    Core.bitwise_or(baseLines.mask, textLine.mask, baseLines.mask)
+                    for (i in baseLines.bytes.indices) {
+                        if (textLine.bytes[i] != 0.toByte()) baseLines.bytes[i] = textLine.bytes[i]
+                        if ((textLine.depth[i].toInt() and 255) > (baseLines.depth[i].toInt() and 255)) baseLines.depth[i] = textLine.depth[i]
+                    }
+                    baseLines
+                }
+            }
             if (lineSeed != null) {
                 Core.bitwise_or(seeds, lineSeed.mask, seeds)
                 stats.put("lineSeedPixels", Core.countNonZero(lineSeed.mask))
@@ -1237,6 +1252,159 @@ internal object ToneZones {
                 i++
             }
         }
+    }
+
+    /**
+     * The marks among [candidates] that sit in a printed line: at least `toneZonesTextLineMarks` of them, each a
+     * character's size, alike in size (`toneZonesTextLineSize` at most between neighbours), set along a straight
+     * line parallel to the page's edges (across or down: a photo may be turned) with gaps of at most
+     * `toneZonesTextLineGap` characters, and off that line by at most `toneZonesTextLineDrift` of a character.
+     */
+    private fun printedLines(candidates: List<Int>, table: IntArray, centres: DoubleArray, scale: Float, accept: (List<Int>) -> Boolean = { true }): Set<Int> {
+        val need = ScanConfig.int("toneZonesTextLineMarks", 6)
+        if (need <= 0 || candidates.size < need) return emptySet()
+        val sizeRatio = ScanConfig.float("toneZonesTextLineSize", 2f)
+        val gapLimit = ScanConfig.float("toneZonesTextLineGap", 2.5f)
+        val drift = ScanConfig.float("toneZonesTextLineDrift", .25f)
+        val spread = ScanConfig.float("toneZonesTextLineSpread", 2.5f)
+        val smallest = ScanConfig.float("toneZonesTextLineSmallest", 8f) * scale
+        val largest = 60 * scale
+        val kept = HashSet<Int>()
+        for (down in listOf(false, true)) {
+            // along: the direction the line runs; across: the character's height.
+            fun along(l: Int) = centres[2 * l + if (down) 1 else 0]
+            fun across(l: Int) = centres[2 * l + if (down) 0 else 1]
+            fun extent(l: Int) = table[l * 5 + if (down) Imgproc.CC_STAT_WIDTH else Imgproc.CC_STAT_HEIGHT].toDouble()
+            fun length(l: Int) = table[l * 5 + if (down) Imgproc.CC_STAT_HEIGHT else Imgproc.CC_STAT_WIDTH].toDouble()
+            val marks = candidates.filter { max(extent(it), length(it)) in smallest..largest }.sortedBy { along(it) }
+            val parent = IntArray(marks.size) { it }
+            fun root(i: Int): Int { var r = i; while (parent[r] != r) r = parent[r]; parent[i] = r; return r }
+            for (i in marks.indices) {
+                val a = marks[i]
+                val size = max(extent(a), 1.0)
+                for (j in i + 1 until marks.size) {
+                    val b = marks[j]
+                    val gap = along(b) - along(a) - (length(a) + length(b)) / 2
+                    if (gap > gapLimit * size) break
+                    val other = max(extent(b), 1.0)
+                    if (max(size, other) / min(size, other) > sizeRatio) continue
+                    if (abs(across(b) - across(a)) > drift * max(size, other)) continue
+                    parent[root(j)] = root(i)
+                }
+            }
+            for ((_, group) in marks.indices.groupBy(::root)) {
+                if (group.size < need) continue
+                val labels = group.map { marks[it] }
+                // Straight and along the page: a least-squares line through the centres, nearly level, and every
+                // centre close to it.
+                val xs = labels.map(::along)
+                val ys = labels.map(::across)
+                val mx = xs.average()
+                val my = ys.average()
+                val sxx = xs.sumOf { (it - mx) * (it - mx) }
+                if (sxx <= 0.0) continue
+                val slope = xs.indices.sumOf { (xs[it] - mx) * (ys[it] - my) } / sxx
+                if (abs(slope) > .05) continue
+                val sizes = labels.map { max(extent(it), length(it)) }.sorted()
+                // Print is set in one size: the line's largest mark is at most `toneZonesTextLineSpread` times its smallest.
+                if (sizes.last() / max(sizes.first(), 1.0) > spread) continue
+                val typical = labels.map(::extent).sorted()[labels.size / 2]
+                if (labels.indices.any { abs(ys[it] - (my + slope * (xs[it] - mx))) > drift * typical }) continue
+                // Print is set at a fixed pitch: most gaps between neighbouring centres are a whole number of
+                // character steps (a missing or split character makes two, or half). Writing, and the other side's
+                // writing coming through in rows, is spaced as the hand went. On the owner's worksheet 13 of the
+                // heading's 15 gaps were within `toneZonesTextLinePitchSlack` of a step; on a notebook's
+                // show-through rows 2 or 3 of 6 to 9.
+                val steps = xs.sorted().zipWithNext { a, b -> b - a }
+                val pitch = steps.sorted()[steps.size / 2]
+                if (pitch <= 0.0) continue
+                val slack = ScanConfig.float("toneZonesTextLinePitchSlack", .15f)
+                val onPitch = steps.count { g -> abs(g - max(1L, Math.round(g / pitch)) * pitch) <= slack * pitch }
+                if (onPitch < ScanConfig.float("toneZonesTextLinePitchShare", .7f) * steps.size) continue
+                if (!accept(labels)) continue
+                kept += labels
+                // A character in pieces (the three strokes of 三, a full stop) is smaller than its neighbours and does
+                // not link up; a piece lying within the line's band and its length belongs to the line.
+                val from = xs.min() - typical
+                val to = xs.max() + typical
+                for (other in candidates) {
+                    if (other in kept || max(extent(other), length(other)) > largest) continue
+                    val x = along(other)
+                    if (x < from || x > to) continue
+                    if (abs(across(other) - (my + slope * (x - mx))) <= .5 * typical) kept += other
+                }
+            }
+        }
+        return kept
+    }
+
+    /**
+     * Seeds for a line of small print too pale and soft for any other seed, on ruled pages (elsewhere [lineSeeds]
+     * finds it). The candidate marks away from the rules that hold no seed at all are grouped by [printedLines];
+     * a mark in such a line is seeded whole. On the owner's soft photo of a grid worksheet the printed heading was
+     * all such marks, and went. The other side's writing, coming through, is not set in even lines of one size.
+     */
+    private fun textLineSeeds(
+        candidates: Mat,
+        rules: Mat,
+        seeds: Mat,
+        cross: Mat,
+        tidy: FloatArray,
+        width: Int,
+        height: Int,
+        scale: Float,
+        owned: MutableList<Mat>,
+    ): LineSeeds? {
+        val free = Mat().also(owned::add)
+        Imgproc.dilate(rules, free, cross)
+        Core.subtract(candidates, free, free)
+        val labels = Mat().also(owned::add)
+        val stats = Mat().also(owned::add)
+        val centroids = Mat().also(owned::add)
+        val count = Imgproc.connectedComponentsWithStats(free, labels, stats, centroids, 8, CvType.CV_32S)
+        if (count < 2) return null
+        val table = statsTable(stats, count)
+        val labelValues = IntArray(width * height).also { labels.get(0, 0, it) }
+        val seedBytes = ByteArray(labelValues.size).also { seeds.get(0, 0, it) }
+        val seeded = BooleanArray(count)
+        for (i in labelValues.indices) if (seedBytes[i] != 0.toByte()) seeded[labelValues[i]] = true
+        val centres = DoubleArray(count * 2).also { centroids.get(0, 0, it) }
+        val darkest = FloatArray(count) { 1f }
+        for (i in labelValues.indices) if (tidy[i] < darkest[labelValues[i]]) darkest[labelValues[i]] = tidy[i]
+        // Seeded marks may stand in a line (a character's darker stroke), but most of the line must be unseeded:
+        // a row of the front's own writing is seeded nearly all through and needs nothing from here.
+        val unseededShare = ScanConfig.float("toneZonesTextLineUnseeded", .6f)
+        // And it must be print: the other side's writing sits on the other side's rules, which lie under the
+        // front's, so on thin ruled paper it comes through in rows too. Those rows are specks, paler than print
+        // even in a soft photo: on the owner's worksheet the heading's marks stood out by 0.29 (median), the
+        // show-through rows of a notebook by 0.11. The line's median mark must stand out by
+        // `toneZonesTextLineDepth`.
+        val lineDepth = ScanConfig.float("toneZonesTextLineDepth", .18f)
+        val lines = printedLines((1 until count).toList(), table, centres, scale) { group ->
+            group.count { !seeded[it] } >= unseededShare * group.size &&
+                group.map { 1f - darkest[it] }.sorted()[group.size / 2] >= lineDepth
+        }
+        if (lines.isEmpty()) return null
+        val path = ByteArray(labelValues.size) { if (labelValues[it] in lines) 255.toByte() else 0 }
+        // Drawn as a seeded line is: each pixel as dark as its line middle stands out (see [lineSeeds]).
+        val step = max(2, (ScanConfig.float("toneZonesLineSeedStep", 3f) * photoPixel()).roundToInt())
+        val offsets = intArrayOf(step, step * width, step * (width + 1), step * (width - 1))
+        val depth = ByteArray(labelValues.size)
+        for (y in step until height - step) {
+            var i = y * width + step
+            for (x in step until width - step) {
+                if (path[i] != 0.toByte()) {
+                    var d = 0f
+                    for (o in offsets) d = max(d, min(tidy[i - o], tidy[i + o]) - tidy[i])
+                    depth[i] = (d * 255).roundToInt().coerceIn(0, 255).toByte()
+                }
+                i++
+            }
+        }
+        val mask = Mat().also(owned::add)
+        mask.create(height, width, CvType.CV_8UC1)
+        mask.put(0, 0, path)
+        return LineSeeds(mask, path, depth)
     }
 
     /** Seeded line middles as a mask, its bytes, and how far each stands out (255 = the whole paper). */
