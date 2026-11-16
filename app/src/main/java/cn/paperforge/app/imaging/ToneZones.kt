@@ -393,15 +393,32 @@ internal object ToneZones {
                 val cut = track.level + (1f - track.level) * evidenceShare
                 val weakCut = track.level + (1f - track.level) * (1f - weakShare)
                 val n = track.heights.size
+                // A rule is a line: paper lies just beside it, on one side at least. Beside the sheet's edge a dark
+                // band (the desk, the sheet's shadow, the next page) is as dark as a rule all across, so every track
+                // carried to the frame found "evidence" there and the redraw put a dash on each rule row of a grid,
+                // on the dark strip beyond its margin (worksheet 43 of 2026-11-16). Where the page on both sides,
+                // `toneZonesRuleEvidenceFlank` photo pixels beyond the band, is itself as dark as the rule must be, no
+                // line is seen. A pale rule in a shadow keeps lighter paper beside it.
+                val flank = evidenceBand + max(2, (ScanConfig.float("toneZonesRuleEvidenceFlank", 2f) * scale).roundToInt())
+                val flankCheck = ScanConfig.float("toneZonesRuleEvidenceFlank", 2f) > 0f
+                fun valueAt(along: Int, c: Int) = relative[if (vertical) along * width + c else c * width + along]
+                fun besidePaper(along: Int, c: Int): Boolean {
+                    if (!flankCheck) return true
+                    val lighter = max(
+                        if (c - flank in 0 until limit) valueAt(along, c - flank) else 0f,
+                        if (c + flank in 0 until limit) valueAt(along, c + flank) else 0f,
+                    )
+                    return lighter > cut
+                }
                 val darkest = FloatArray(n) { i ->
                     val along = track.start + i
                     val centre = track.heights[i].roundToInt()
                     var value = Float.MAX_VALUE
                     for (c in centre - 1..centre + 1) {
                         if (c !in 0 until limit) continue
-                        value = min(value, relative[if (vertical) along * width + c else c * width + along])
+                        value = min(value, valueAt(along, c))
                     }
-                    value
+                    if (value > cut || besidePaper(along, centre)) value else 1f
                 }
                 // The track is a smoothed fit, and a slightly curved rule runs a few pixels off it. The rule mask (long
                 // straight thin runs only, never a drawing's slanted strokes or blank paper) within the band that is
@@ -410,8 +427,11 @@ internal object ToneZones {
                     if (darkest[i] <= cut) return@BooleanArray true
                     val along = track.start + i
                     val centre = track.heights[i].roundToInt()
+                    // The dark band beside a sheet is long and thin too, and the rule mask holds it: only a rule pixel
+                    // with paper beside it, across this track, counts.
                     (centre - evidenceBand..centre + evidenceBand).any { c ->
-                        c in 0 until limit && ruleMask[if (vertical) along * width + c else c * width + along] != 0.toByte()
+                        c in 0 until limit && ruleMask[if (vertical) along * width + c else c * width + along] != 0.toByte() &&
+                            besidePaper(along, c)
                     }
                 }
                 fun faint(from: Int, to: Int) = to > from && (from until to).count { darkest[it] <= weakCut } >= weakFill * (to - from)

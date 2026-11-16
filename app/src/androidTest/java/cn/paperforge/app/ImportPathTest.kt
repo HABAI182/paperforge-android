@@ -71,7 +71,14 @@ class ImportPathTest {
             bitmap.recycle()
             assertEquals("page $name was not flattened", "flat-document", page.detectionMethod)
         }
-        File(root, "runs.json").writeText(JSONObject().put("seconds", elapsed).put("pages", rows).toString(1))
+        // The same pages exported as the user exports them (the app's PDF writer, default settings), so the
+        // regression is judged on the PDF and not only on the rendered pages. Timed, as part of the workflow.
+        val exportStarted = System.nanoTime()
+        cn.paperforge.app.pdf.PdfEngine.scan(pages, File(root, "$tag.pdf"), context = app)
+        val exportSeconds = (System.nanoTime() - exportStarted) / 1e9
+        File(root, "runs.json").writeText(
+            JSONObject().put("seconds", elapsed).put("exportSeconds", exportSeconds).put("pages", rows).toString(1)
+        )
         } finally {
             UserSettings.set(SettingKeys.Detector, previousDetector)
         }
