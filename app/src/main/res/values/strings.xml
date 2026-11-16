@@ -8,4 +8,23 @@
     <string name="widget_unlock">解锁并继续阅读</string>
     <string name="widget_locked_description">点击后使用应用的设备验证</string>
     <string name="widget_description">继续上次阅读，或直接扫描新纸张</string>
+    <string name="suffix_annotated">已批注</string>
+    <string name="suffix_edited">已编辑</string>
+    <string name="suffix_watermark_removed">已去水印</string>
+    <string name="about_licenses">开源许可</string>
+    <string name="about_acknowledgments">致谢</string>
+    <string name="licenses_intro">PaperForge 随附以下开源组件、字体、模型与数据。依照各自许可，这里保留其版权与许可声明；点按条目可查看完整文本。</string>
+    <string name="licenses_group_libraries">程序库</string>
+    <string name="licenses_group_fonts">字体</string>
+    <string name="licenses_group_models">模型</string>
+    <string name="licenses_group_data">模型训练与评估数据（署名）</string>
+    <string name="licenses_license">许可：%1$s</string>
+    <string name="licenses_holder">权利人：%1$s</string>
+    <string name="licenses_full_notices">完整声明（LICENSE_NOTICES）</string>
+    <string name="licenses_open_project">项目主页</string>
+    <string name="acknowledgments_intro">感谢在 PaperForge 开发过程中提供帮助的工具与朋友。此处列出仅为表达谢意，不代表任何合作、认可或共同作者关系。</string>
+    <string name="acknowledgments_ai">开发中使用的 AI 工具</string>
+    <string name="acknowledgments_community">提出建议的社区成员</string>
+    <string name="acknowledgments_open_source">同样感谢所有开源项目的作者与贡献者，详见“开源许可”。</string>
+    <string name="close">关闭</string>
 </resources>

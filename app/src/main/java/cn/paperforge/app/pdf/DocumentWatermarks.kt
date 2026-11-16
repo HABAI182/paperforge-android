@@ -194,7 +194,8 @@ object DocumentWatermarks {
         val mode = options.optString("mode", "AUTO")
         var input = source
         val extension = source.extension.lowercase()
-        val title = OutputNames.sourceStem(job.input.getString("name") ?: "文档") + "-已去水印"
+        // In the app's language, never stacked ("-已去水印-已去水印"), unique in the library.
+        val title = DerivedNames.unique(repo, DerivedNames.title(repo.context, job.input.getString("name"), DerivedNames.Kind.WATERMARK_REMOVED))
         if (extension in legacy)
             input =
                 OfficeJobs.convert(
@@ -205,12 +206,14 @@ object DocumentWatermarks {
                     progress(p / 3, d)
                 }
         val output =
-            OutputNames.create(
-                repo,
-                job.row.id,
-                title,
-                if (input.extension.lowercase() in packages) input.extension
-                else if (input.extension.equals("pdf", true)) "pdf" else "png",
+            DerivedNames.freeFile(
+                OutputNames.create(
+                    repo,
+                    job.row.id,
+                    title,
+                    if (input.extension.lowercase() in packages) input.extension
+                    else if (input.extension.equals("pdf", true)) "pdf" else "png",
+                )
             )
         val part = File(output.path + ".part")
         var count = 0

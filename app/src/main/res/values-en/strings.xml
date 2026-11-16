@@ -7,4 +7,23 @@
     <string name="widget_unlock">Unlock and continue</string>
     <string name="widget_locked_description">Tap to verify with your device credentials</string>
     <string name="widget_description">Resume reading or scan a new page</string>
+    <string name="suffix_annotated">Annotated</string>
+    <string name="suffix_edited">Edited</string>
+    <string name="suffix_watermark_removed">No Watermark</string>
+    <string name="about_licenses">Open Source Licenses</string>
+    <string name="about_acknowledgments">Acknowledgments</string>
+    <string name="licenses_intro">PaperForge includes the open-source components, fonts, models and data below. Their copyright and license notices are kept as their licenses require; tap an item for the full text.</string>
+    <string name="licenses_group_libraries">Libraries</string>
+    <string name="licenses_group_fonts">Fonts</string>
+    <string name="licenses_group_models">Models</string>
+    <string name="licenses_group_data">Model training and evaluation data (attribution)</string>
+    <string name="licenses_license">License: %1$s</string>
+    <string name="licenses_holder">Copyright: %1$s</string>
+    <string name="licenses_full_notices">Full notices (LICENSE_NOTICES)</string>
+    <string name="licenses_open_project">Project page</string>
+    <string name="acknowledgments_intro">Thanks to the tools and people who helped while PaperForge was being developed. They are listed only to say thank you; this implies no partnership, endorsement or authorship.</string>
+    <string name="acknowledgments_ai">AI tools used during development</string>
+    <string name="acknowledgments_community">Community members who offered suggestions</string>
+    <string name="acknowledgments_open_source">Thanks as well to the authors and contributors of every open-source project listed under Open Source Licenses.</string>
+    <string name="close">Close</string>
 </resources>
