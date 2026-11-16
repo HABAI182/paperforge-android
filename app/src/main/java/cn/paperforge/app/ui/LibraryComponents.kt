@@ -8,6 +8,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.style.TextOverflow
@@ -132,7 +136,10 @@ fun LibrarySnippet(hit: LibrarySearchHit, query: String, onClick: () -> Unit) {
     }
 }
 
-/** A chip that opens a small menu; shows the chosen value when it is not the default. */
+/**
+ * A chip that opens a small menu and shows the chosen value when it is not the default. An active filter clears with
+ * the small cross inside its own chip ([onClear]); there is no separate clear button to crowd the row.
+ */
 @Composable
 private fun MenuChip(
     label: String,
@@ -141,6 +148,8 @@ private fun MenuChip(
     items: List<Pair<String, String>>,
     selected: String,
     onPick: (String) -> Unit,
+    onClear: (() -> Unit)? = null,
+    leading: androidx.compose.ui.graphics.vector.ImageVector? = null,
     footer: (@Composable ColumnScope.(close: () -> Unit) -> Unit)? = null,
 ) {
     var open by remember { mutableStateOf(false) }
@@ -148,29 +157,65 @@ private fun MenuChip(
         FilterChip(
             active,
             { open = true },
-            label = { Text(label, maxLines = 1) },
-            trailingIcon = { Icon(Icons.Default.ArrowDropDown, null, Modifier.size(18.dp)) },
-            modifier = Modifier.height(32.dp).testTag(tag),
+            label = { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 132.dp)) },
+            leadingIcon = leading?.let { { Icon(it, null, Modifier.size(16.dp)) } },
+            trailingIcon = {
+                if (active && onClear != null)
+                    Icon(
+                        Icons.Default.Close,
+                        "清除$label",
+                        Modifier.size(18.dp).clip(CircleShape).clickable(onClick = onClear).testTag("$tag-clear"),
+                    )
+                else Icon(Icons.Default.ArrowDropDown, null, Modifier.size(18.dp))
+            },
+            modifier = Modifier.heightIn(min = 32.dp).testTag(tag),
         )
-        DropdownMenu(open, { open = false }) {
-            items.forEach { (key, title) ->
-                DropdownMenuItem(
-                    text = { Text(title) },
-                    onClick = {
-                        open = false
-                        onPick(key)
-                    },
-                    trailingIcon = { if (key == selected) Icon(Icons.Default.Check, null, Modifier.size(18.dp)) },
-                )
-            }
-            footer?.invoke(this) { open = false }
-        }
+        LibraryMenu(open, { open = false }, tag, items, selected, onPick, footer)
     }
 }
 
 /**
- * The library's filters in one compact row: type, favourites, folder, tag and order as menu chips (each shows its
- * value when set), saved views, a clear chip when anything is set, and the layout switch at the end.
+ * The menu of a library chip or button. Opens just below its anchor as a raised card with a clear shadow, so it reads
+ * as floating over the page rather than as part of the card beneath; tall lists scroll inside it.
+ */
+@Composable
+private fun LibraryMenu(
+    open: Boolean,
+    onDismiss: () -> Unit,
+    tag: String,
+    items: List<Pair<String, String>>,
+    selected: String,
+    onPick: (String) -> Unit,
+    footer: (@Composable ColumnScope.(close: () -> Unit) -> Unit)? = null,
+) {
+    DropdownMenu(
+        open,
+        onDismiss,
+        modifier = Modifier.heightIn(max = 360.dp).widthIn(min = 168.dp),
+        offset = androidx.compose.ui.unit.DpOffset(0.dp, 6.dp),
+        shape = RoundedCornerShape(14.dp),
+        tonalElevation = 3.dp,
+        shadowElevation = 8.dp,
+    ) {
+        items.forEach { (key, title) ->
+            DropdownMenuItem(
+                text = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                onClick = {
+                    onDismiss()
+                    onPick(key)
+                },
+                trailingIcon = { if (key == selected) Icon(Icons.Default.Check, null, Modifier.size(18.dp)) },
+                modifier = Modifier.testTag("$tag-item-$key"),
+            )
+        }
+        footer?.invoke(this, onDismiss)
+    }
+}
+
+/**
+ * The library's filters in one compact row: type, favourites, folder and tag as chips that show their value when set
+ * and clear with their own cross; they scroll sideways on narrow screens or large text instead of wrapping. The order
+ * and the layout switch stay fixed at the end. Saved views live in the order menu.
  */
 @Composable
 fun LibraryFilterBar(
@@ -194,7 +239,8 @@ fun LibraryFilterBar(
     onDeleteSaved: (String) -> Unit,
     onClear: () -> Unit,
 ) {
-    val active = collection != "ALL" || favorites || folder.isNotBlank() || tag.isNotBlank() || sort != "MODIFIED"
+    // Something worth saving as a view: a filter, or an order other than the default.
+    val savable = collection != "ALL" || favorites || folder.isNotBlank() || tag.isNotBlank() || sort != "MODIFIED"
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Row(
             Modifier.weight(1f).rootSwipeChild().horizontalScroll(rememberScrollState()).testTag("library-filter-bar"),
@@ -208,8 +254,15 @@ fun LibraryFilterBar(
                 libraryCollections,
                 collection,
                 onCollection,
+                onClear = { onCollection("ALL") },
             )
-            FilterChip(favorites, { onFavorites(!favorites) }, label = { Text("收藏") }, modifier = Modifier.height(32.dp))
+            FilterChip(
+                favorites,
+                { onFavorites(!favorites) },
+                label = { Text("收藏") },
+                leadingIcon = if (favorites) ({ Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }) else null,
+                modifier = Modifier.heightIn(min = 32.dp).testTag("filter-favorites"),
+            )
             if (folders.isNotEmpty())
                 MenuChip(
                     if (folder.isBlank()) "文件夹" else folder.substringAfterLast('/'),
@@ -218,6 +271,7 @@ fun LibraryFilterBar(
                     listOf("" to "全部文件夹") + folders.map { it to it },
                     folder,
                     onFolder,
+                    onClear = { onFolder("") },
                 )
             if (tags.isNotEmpty())
                 MenuChip(
@@ -227,29 +281,37 @@ fun LibraryFilterBar(
                     listOf("" to "全部标签") + tags.map { it to "#$it" },
                     tag,
                     onTag,
+                    onClear = { onTag("") },
                 )
-            MenuChip(
-                librarySorts.first { it.first == sort }.second,
-                sort != "MODIFIED",
-                "filter-sort",
-                librarySorts,
-                sort,
-                onSort,
-            ) { close ->
-                HorizontalDivider()
+        }
+        // The order is always one of the choices, so it is a fixed button beside the layout switch rather than a chip
+        // at the end of the scrolling row (off screen on phones): tinted when not the default, never "cleared".
+        var sortOpen by remember { mutableStateOf(false) }
+        Box {
+            IconButton(onClick = { sortOpen = true }, modifier = Modifier.size(40.dp).testTag("filter-sort")) {
+                Icon(
+                    Icons.AutoMirrored.Filled.Sort,
+                    "排序：" + librarySorts.first { it.first == sort }.second,
+                    tint = if (sort != "MODIFIED") MaterialTheme.colorScheme.primary else LocalContentColor.current,
+                )
+            }
+            LibraryMenu(sortOpen, { sortOpen = false }, "filter-sort", librarySorts, sort, onSort) { close ->
+                if (saved.isNotEmpty() || savable) HorizontalDivider(Modifier.padding(vertical = 4.dp))
                 saved.forEach { preset ->
                     DropdownMenuItem(
-                        text = { Text("视图：" + preset.name) },
+                        text = { Text("视图：" + preset.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                         onClick = {
                             close()
                             onSaved(preset)
                         },
                         trailingIcon = {
-                            IconButton(onClick = { onDeleteSaved(preset.name) }) { Icon(Icons.Default.Close, "删除视图 ${preset.name}", Modifier.size(16.dp)) }
+                            IconButton(onClick = { onDeleteSaved(preset.name) }, modifier = Modifier.size(32.dp)) {
+                                Icon(Icons.Default.Close, "删除视图 ${preset.name}", Modifier.size(16.dp))
+                            }
                         },
                     )
                 }
-                if (active)
+                if (savable)
                     DropdownMenuItem(
                         text = { Text("把当前筛选存为视图…") },
                         onClick = {
@@ -258,11 +320,8 @@ fun LibraryFilterBar(
                         },
                     )
             }
-            if (active)
-                AssistChip(onClick = onClear, label = { Text("清除") }, leadingIcon = { Icon(Icons.Default.Close, null, Modifier.size(16.dp)) },
-                    modifier = Modifier.height(32.dp).testTag("filter-clear"))
         }
-        IconButton(onClick = onLayout, modifier = Modifier.size(40.dp)) {
+        IconButton(onClick = onLayout, modifier = Modifier.size(40.dp).testTag("library-layout")) {
             Icon(if (covers) Icons.Default.ViewList else Icons.Default.GridView, if (covers) "切换列表布局" else "切换封面布局")
         }
     }

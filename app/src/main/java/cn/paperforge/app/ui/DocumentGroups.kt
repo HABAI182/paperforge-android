@@ -35,14 +35,15 @@ fun FolderGroupRow(
     onManage: () -> Unit = {},
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Row(Modifier.fillMaxWidth().heightIn(max = 36.dp), verticalAlignment = Alignment.CenterVertically) {
+        // No height cap: with large text the link grows instead of being clipped.
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 "文件夹",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.weight(1f))
-            TextButton(onClick = onManage) { Text("新建 / 管理") }
+            TextButton(onClick = onManage, contentPadding = PaddingValues(horizontal = 8.dp)) { Text("新建 / 管理") }
         }
         LazyRow(
             Modifier.fillMaxWidth().rootSwipeChild().testTag("home-folder-groups"),
