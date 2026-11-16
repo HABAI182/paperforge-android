@@ -246,6 +246,15 @@ fun NativePdfEditorScreen(vm: MainViewModel) {
     var fit by remember { mutableStateOf(true) }
     var leaving by remember { mutableStateOf(false) }
     var originalMissing by remember { mutableStateOf<List<String>?>(null) }
+    // The font manager, opened from the font sheet; the PDF font it was opened for ranks its open alternatives first.
+    var fontManagerFor by remember { mutableStateOf<String?>(null) }
+    fontManagerFor?.let { pdfFont ->
+        FontManagerPage(
+            onDismiss = { fontManagerFor = null },
+            pdfFont = pdfFont.ifBlank { null },
+            onChanged = { scope.launch { fonts = withContext(Dispatchers.IO) { NativeEditFonts.list(vm.repo, doc) } } },
+        )
+    }
 
     val importer =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -611,7 +620,7 @@ fun NativePdfEditorScreen(vm: MainViewModel) {
                     if (id != "ORIGINAL") NativeFontPrefs.use(context, id)
                     restyle(NativeStyle(font = id, fontSha256 = sha), "已更换字体")
                 },
-                onImport = { importer.launch(arrayOf("font/ttf", "application/x-font-ttf", "application/octet-stream")) },
+                onImport = { fontManagerFor = selectedObjects.firstOrNull()?.font.orEmpty() },
                 onDismiss = { sheet = "" },
             )
         "color" ->

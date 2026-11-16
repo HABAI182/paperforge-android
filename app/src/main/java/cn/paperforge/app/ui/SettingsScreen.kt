@@ -12,6 +12,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -72,7 +74,7 @@ fun SettingsScreen(vm: MainViewModel) {
             )
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text("修改自动保存", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
-                if (section != "privacy")
+                if (section != "privacy" && section != "fonts")
                     TextButton(onClick = { resetSection = true }) { Text("恢复本页默认") }
             }
             if (visible("桌面 系统 快捷 扫描 识字 阅读 小组件", "advanced")) SystemEntrypointsSettings()
@@ -224,6 +226,29 @@ fun SettingsScreen(vm: MainViewModel) {
                         )
                     }
                 }
+            }
+            if (visible("字体 字库 下载 导入 TTF OTF 中文字体 编辑 PDF font fonts download import", "fonts")) {
+                val context = LocalContext.current
+                var fontsOpen by remember { mutableStateOf(false) }
+                var fontsRevision by remember { mutableStateOf(0) }
+                val userFonts = remember(fontsRevision) { runCatching { cn.paperforge.app.pdf.FontStore.installed(context).size }.getOrDefault(0) }
+                PreferenceBlock("PDF 编辑字体") {
+                    Text(
+                        "编辑 PDF 文字时，原文件的字体可能没有嵌入或不能改写。可在这里下载开源字体（思源黑体、思源宋体、与 Arial/Times 等宽的 Arimo/Tinos 等），或从手机导入 .ttf 字体。下载经多个来源自动切换，并逐个校验文件。",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(if (userFonts == 0) "尚未添加字体" else "已添加 $userFonts 个字体文件", style = MaterialTheme.typography.bodyMedium)
+                    FilledTonalButton(
+                        onClick = { fontsOpen = true },
+                        modifier = Modifier.fillMaxWidth().testTag("settings-font-manager"),
+                    ) {
+                        Icon(Icons.Default.FontDownload, null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("打开字体管理")
+                    }
+                }
+                if (fontsOpen) FontManagerPage(onDismiss = { fontsOpen = false; fontsRevision++ }, onChanged = { fontsRevision++ })
             }
             if (visible("导出 PDF 纸张 分辨率 画质 质量 图像 压缩 无损 DPI OCR 文字层 默认", "export")) {
                 PreferenceBlock("PDF导出") {

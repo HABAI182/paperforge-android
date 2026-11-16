@@ -1,0 +1,733 @@
+{
+ "version": 1,
+ "repository": "google/fonts",
+ "commit": "cc39c4c2c304bc368c9b7c311ea2bcc6013299fe",
+ "note": "Pinned commit; every source serves these exact bytes. Verify size and git blob SHA-1 (sha1 of 'blob <size>\\0' + data).",
+ "sources": [
+  "https://cdn.jsdelivr.net/gh/google/fonts@{commit}/{path}",
+  "https://fastly.jsdelivr.net/gh/google/fonts@{commit}/{path}",
+  "https://gcore.jsdelivr.net/gh/google/fonts@{commit}/{path}",
+  "https://raw.githubusercontent.com/google/fonts/{commit}/{path}",
+  "https://github.com/google/fonts/raw/{commit}/{path}"
+ ],
+ "families": [
+  {
+   "id": "arimo",
+   "nameZh": "Arimo",
+   "nameEn": "Arimo",
+   "category": "SANS",
+   "coverageZh": "西文，与 Arial 等宽",
+   "coverageEn": "Latin, metric-compatible with Arial",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/arimo/OFL.txt",
+   "replaces": [
+    "arial",
+    "helvetica",
+    "liberationsans"
+   ],
+   "files": [
+    {
+     "name": "Arimo-Italic[wght].ttf",
+     "path": "ofl/arimo/Arimo-Italic[wght].ttf",
+     "size": 543196,
+     "gitSha1": "2d2519e651227ab7c6bb6c9d1722529291a1f626"
+    },
+    {
+     "name": "Arimo[wght].ttf",
+     "path": "ofl/arimo/Arimo[wght].ttf",
+     "size": 496268,
+     "gitSha1": "428b8cb4539e4910832f64384b53ae73de91e423"
+    }
+   ]
+  },
+  {
+   "id": "tinos",
+   "nameZh": "Tinos",
+   "nameEn": "Tinos",
+   "category": "SERIF",
+   "coverageZh": "西文，与 Times New Roman 等宽",
+   "coverageEn": "Latin, metric-compatible with Times New Roman",
+   "license": "OFL-1.1",
+   "licensePath": null,
+   "replaces": [
+    "timesnewroman",
+    "times",
+    "liberationserif"
+   ],
+   "files": [
+    {
+     "name": "Tinos-Bold.ttf",
+     "path": "ofl/tinos/Tinos-Bold.ttf",
+     "size": 597880,
+     "gitSha1": "887fc97a95d30a08190217b6075a5e0a0f92bec7"
+    },
+    {
+     "name": "Tinos-BoldItalic.ttf",
+     "path": "ofl/tinos/Tinos-BoldItalic.ttf",
+     "size": 578976,
+     "gitSha1": "a9abd086816f68d6eb3672f1d0babd1db1807d4a"
+    },
+    {
+     "name": "Tinos-Italic.ttf",
+     "path": "ofl/tinos/Tinos-Italic.ttf",
+     "size": 565016,
+     "gitSha1": "5aed4f3757537bf334ca89dd6893063a3ef9ecc9"
+    },
+    {
+     "name": "Tinos-Regular.ttf",
+     "path": "ofl/tinos/Tinos-Regular.ttf",
+     "size": 521588,
+     "gitSha1": "893a1b525962984481aee5ce275516d384eb4865"
+    }
+   ]
+  },
+  {
+   "id": "cousine",
+   "nameZh": "Cousine",
+   "nameEn": "Cousine",
+   "category": "MONO",
+   "coverageZh": "等宽，与 Courier New 等宽",
+   "coverageEn": "Monospace, metric-compatible with Courier New",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/cousine/OFL.txt",
+   "replaces": [
+    "couriernew",
+    "courier",
+    "liberationmono"
+   ],
+   "files": [
+    {
+     "name": "Cousine-Bold.ttf",
+     "path": "ofl/cousine/Cousine-Bold.ttf",
+     "size": 298048,
+     "gitSha1": "966b5bdb8b94770baa7bb72ac269095946418f80"
+    },
+    {
+     "name": "Cousine-BoldItalic.ttf",
+     "path": "ofl/cousine/Cousine-BoldItalic.ttf",
+     "size": 308292,
+     "gitSha1": "2c8731f8a5ab7aa32b966b162d8dc60993dca8e6"
+    },
+    {
+     "name": "Cousine-Italic.ttf",
+     "path": "ofl/cousine/Cousine-Italic.ttf",
+     "size": 306880,
+     "gitSha1": "e40f400320afdf8ae0d34181e8ac5e98ca51fc14"
+    },
+    {
+     "name": "Cousine-Regular.ttf",
+     "path": "ofl/cousine/Cousine-Regular.ttf",
+     "size": 296856,
+     "gitSha1": "e01ff6f05338a180c65ebadb5617f732d941e961"
+    }
+   ]
+  },
+  {
+   "id": "carlito",
+   "nameZh": "Carlito",
+   "nameEn": "Carlito",
+   "category": "SANS",
+   "coverageZh": "西文，与 Calibri 等宽",
+   "coverageEn": "Latin, metric-compatible with Calibri",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/carlito/OFL.txt",
+   "replaces": [
+    "calibri"
+   ],
+   "files": [
+    {
+     "name": "Carlito-Bold.ttf",
+     "path": "ofl/carlito/Carlito-Bold.ttf",
+     "size": 682468,
+     "gitSha1": "67543b5a1efe4b910317116b02e8e9e01659692e"
+    },
+    {
+     "name": "Carlito-BoldItalic.ttf",
+     "path": "ofl/carlito/Carlito-BoldItalic.ttf",
+     "size": 808508,
+     "gitSha1": "e2c5d8803828d9a3373459d71cf18ec06753cef5"
+    },
+    {
+     "name": "Carlito-Italic.ttf",
+     "path": "ofl/carlito/Carlito-Italic.ttf",
+     "size": 615236,
+     "gitSha1": "8dc3c84edfc8f0b6c6acdbd112abfda827b484ac"
+    },
+    {
+     "name": "Carlito-Regular.ttf",
+     "path": "ofl/carlito/Carlito-Regular.ttf",
+     "size": 628032,
+     "gitSha1": "427b95989fee609ab683d800ad00e22a4b14ecad"
+    }
+   ]
+  },
+  {
+   "id": "caladea",
+   "nameZh": "Caladea",
+   "nameEn": "Caladea",
+   "category": "SERIF",
+   "coverageZh": "西文，与 Cambria 等宽",
+   "coverageEn": "Latin, metric-compatible with Cambria",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/caladea/OFL.txt",
+   "replaces": [
+    "cambria"
+   ],
+   "files": [
+    {
+     "name": "Caladea-Bold.ttf",
+     "path": "ofl/caladea/Caladea-Bold.ttf",
+     "size": 84492,
+     "gitSha1": "a4a9703fbce8958e5dc141a5b498255d9e7a3d97"
+    },
+    {
+     "name": "Caladea-BoldItalic.ttf",
+     "path": "ofl/caladea/Caladea-BoldItalic.ttf",
+     "size": 83356,
+     "gitSha1": "a9bb487022313de900d5c665baf9ebb166d38c84"
+    },
+    {
+     "name": "Caladea-Italic.ttf",
+     "path": "ofl/caladea/Caladea-Italic.ttf",
+     "size": 83780,
+     "gitSha1": "2c910c61f92637fd3ec1332340f14f80a0f82573"
+    },
+    {
+     "name": "Caladea-Regular.ttf",
+     "path": "ofl/caladea/Caladea-Regular.ttf",
+     "size": 81600,
+     "gitSha1": "a490e8f0ee259187614fb36ff3e6fae98dc5b355"
+    }
+   ]
+  },
+  {
+   "id": "noto-sans-sc",
+   "nameZh": "思源黑体 简体（完整）",
+   "nameEn": "Noto Sans SC (full)",
+   "category": "SANS",
+   "coverageZh": "简体中文全字库，可替代微软雅黑、黑体",
+   "coverageEn": "Full Simplified Chinese; stands in for Microsoft YaHei, SimHei",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/notosanssc/OFL.txt",
+   "replaces": [
+    "microsoftyahei",
+    "simhei",
+    "heiti",
+    "dengxian",
+    "pingfang",
+    "notosanssc",
+    "sourcehansans"
+   ],
+   "files": [
+    {
+     "name": "NotoSansSC[wght].ttf",
+     "path": "ofl/notosanssc/NotoSansSC[wght].ttf",
+     "size": 17772300,
+     "gitSha1": "fb0637bafbcd804fe32152370a1225990745b4bc"
+    }
+   ]
+  },
+  {
+   "id": "noto-serif-sc",
+   "nameZh": "思源宋体 简体（完整）",
+   "nameEn": "Noto Serif SC (full)",
+   "category": "SERIF",
+   "coverageZh": "简体中文全字库，可替代宋体",
+   "coverageEn": "Full Simplified Chinese; stands in for SimSun, Songti",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/notoserifsc/OFL.txt",
+   "replaces": [
+    "simsun",
+    "nsimsun",
+    "songti",
+    "stsong",
+    "notoserifsc",
+    "sourcehanserif"
+   ],
+   "files": [
+    {
+     "name": "NotoSerifSC[wght].ttf",
+     "path": "ofl/notoserifsc/NotoSerifSC[wght].ttf",
+     "size": 25125512,
+     "gitSha1": "eab063faf229160a52d3760f5555150e4eb9e5bf"
+    }
+   ]
+  },
+  {
+   "id": "noto-sans-tc",
+   "nameZh": "思源黑体 繁體（完整）",
+   "nameEn": "Noto Sans TC (full)",
+   "category": "SANS",
+   "coverageZh": "繁體中文全字庫",
+   "coverageEn": "Full Traditional Chinese",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/notosanstc/OFL.txt",
+   "replaces": [
+    "microsoftjhenghei",
+    "pmingliu",
+    "mingliu"
+   ],
+   "files": [
+    {
+     "name": "NotoSansTC[wght].ttf",
+     "path": "ofl/notosanstc/NotoSansTC[wght].ttf",
+     "size": 11941968,
+     "gitSha1": "82943579ad39c281212df8f14ac999824694a6ab"
+    }
+   ]
+  },
+  {
+   "id": "noto-serif-tc",
+   "nameZh": "思源宋体 繁體（完整）",
+   "nameEn": "Noto Serif TC (full)",
+   "category": "SERIF",
+   "coverageZh": "繁體中文全字庫",
+   "coverageEn": "Full Traditional Chinese",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/notoseriftc/OFL.txt",
+   "replaces": [
+    "mingliu",
+    "pmingliu"
+   ],
+   "files": [
+    {
+     "name": "NotoSerifTC[wght].ttf",
+     "path": "ofl/notoseriftc/NotoSerifTC[wght].ttf",
+     "size": 16851596,
+     "gitSha1": "f27659681d4141ddc96fe29cccf77e23a3d3b639"
+    }
+   ]
+  },
+  {
+   "id": "lxgw-wenkai-tc",
+   "nameZh": "霞鹜文楷 TC",
+   "nameEn": "LXGW WenKai TC",
+   "category": "SCRIPT",
+   "coverageZh": "楷体风格，繁体为主",
+   "coverageEn": "Kai style, Traditional Chinese first",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/lxgwwenkaitc/OFL.txt",
+   "replaces": [
+    "kaiti",
+    "stkaiti",
+    "dfkai"
+   ],
+   "files": [
+    {
+     "name": "LXGWWenKaiTC-Bold.ttf",
+     "path": "ofl/lxgwwenkaitc/LXGWWenKaiTC-Bold.ttf",
+     "size": 12881104,
+     "gitSha1": "4c48b0882af4edb7b161327ca1726ffe6da3b282"
+    },
+    {
+     "name": "LXGWWenKaiTC-Regular.ttf",
+     "path": "ofl/lxgwwenkaitc/LXGWWenKaiTC-Regular.ttf",
+     "size": 13110528,
+     "gitSha1": "58d7e60237900ffed823f929e13d2b2686483aba"
+    }
+   ]
+  },
+  {
+   "id": "noto-sans-jp",
+   "nameZh": "Noto Sans JP",
+   "nameEn": "Noto Sans JP",
+   "category": "SANS",
+   "coverageZh": "日文",
+   "coverageEn": "Japanese",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/notosansjp/OFL.txt",
+   "replaces": [
+    "msgothic",
+    "yugothic",
+    "meiryo"
+   ],
+   "files": [
+    {
+     "name": "NotoSansJP[wght].ttf",
+     "path": "ofl/notosansjp/NotoSansJP[wght].ttf",
+     "size": 9589900,
+     "gitSha1": "cdd8f083c1f5928ff3361f8cda4d3fc9462cbe89"
+    }
+   ]
+  },
+  {
+   "id": "noto-sans-kr",
+   "nameZh": "Noto Sans KR",
+   "nameEn": "Noto Sans KR",
+   "category": "SANS",
+   "coverageZh": "韩文",
+   "coverageEn": "Korean",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/notosanskr/OFL.txt",
+   "replaces": [
+    "malgungothic",
+    "gulim",
+    "batang"
+   ],
+   "files": [
+    {
+     "name": "NotoSansKR[wght].ttf",
+     "path": "ofl/notosanskr/NotoSansKR[wght].ttf",
+     "size": 10414588,
+     "gitSha1": "b386890ba945e1f39448a6b59f20c5d194f58808"
+    }
+   ]
+  },
+  {
+   "id": "noto-sans",
+   "nameZh": "Noto Sans",
+   "nameEn": "Noto Sans",
+   "category": "SANS",
+   "coverageZh": "西文、希腊文、西里尔文",
+   "coverageEn": "Latin, Greek, Cyrillic",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/notosans/OFL.txt",
+   "replaces": [
+    "segoeui",
+    "verdana",
+    "tahoma"
+   ],
+   "files": [
+    {
+     "name": "NotoSans-Italic[wdth,wght].ttf",
+     "path": "ofl/notosans/NotoSans-Italic[wdth,wght].ttf",
+     "size": 2322640,
+     "gitSha1": "429692da4c3f2751f50bdfab7d0fdb3639717524"
+    },
+    {
+     "name": "NotoSans[wdth,wght].ttf",
+     "path": "ofl/notosans/NotoSans[wdth,wght].ttf",
+     "size": 2049096,
+     "gitSha1": "75575046c015ff623a848096a15779867ba71453"
+    }
+   ]
+  },
+  {
+   "id": "noto-serif",
+   "nameZh": "Noto Serif",
+   "nameEn": "Noto Serif",
+   "category": "SERIF",
+   "coverageZh": "西文、希腊文、西里尔文",
+   "coverageEn": "Latin, Greek, Cyrillic",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/notoserif/OFL.txt",
+   "replaces": [
+    "georgia",
+    "garamond",
+    "palatino",
+    "bookantiqua"
+   ],
+   "files": [
+    {
+     "name": "NotoSerif-Italic[wdth,wght].ttf",
+     "path": "ofl/notoserif/NotoSerif-Italic[wdth,wght].ttf",
+     "size": 2448496,
+     "gitSha1": "0e60f3e9248b524e6c9a28d38fbfc147463b1f5a"
+    },
+    {
+     "name": "NotoSerif[wdth,wght].ttf",
+     "path": "ofl/notoserif/NotoSerif[wdth,wght].ttf",
+     "size": 1887192,
+     "gitSha1": "7664d59c95d6c589f7b15017a218f7a42b93f86d"
+    }
+   ]
+  },
+  {
+   "id": "roboto",
+   "nameZh": "Roboto",
+   "nameEn": "Roboto",
+   "category": "SANS",
+   "coverageZh": "西文",
+   "coverageEn": "Latin",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/roboto/OFL.txt",
+   "replaces": [
+    "roboto"
+   ],
+   "files": [
+    {
+     "name": "Roboto-Italic[wdth,wght].ttf",
+     "path": "ofl/roboto/Roboto-Italic[wdth,wght].ttf",
+     "size": 530944,
+     "gitSha1": "a122c13964daac37f1186a22603a5180d2dba5d6"
+    },
+    {
+     "name": "Roboto[wdth,wght].ttf",
+     "path": "ofl/roboto/Roboto[wdth,wght].ttf",
+     "size": 488584,
+     "gitSha1": "5522a368d9072fd88c299916e61fcff369949061"
+    }
+   ]
+  },
+  {
+   "id": "open-sans",
+   "nameZh": "Open Sans",
+   "nameEn": "Open Sans",
+   "category": "SANS",
+   "coverageZh": "西文",
+   "coverageEn": "Latin",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/opensans/OFL.txt",
+   "replaces": [
+    "opensans"
+   ],
+   "files": [
+    {
+     "name": "OpenSans-Italic[wdth,wght].ttf",
+     "path": "ofl/opensans/OpenSans-Italic[wdth,wght].ttf",
+     "size": 583992,
+     "gitSha1": "6c2997999ce43d4ab5b377b712f2b10aca5e4bc1"
+    },
+    {
+     "name": "OpenSans[wdth,wght].ttf",
+     "path": "ofl/opensans/OpenSans[wdth,wght].ttf",
+     "size": 532636,
+     "gitSha1": "9db85693b027f3b05f6d77471d215f20707127c1"
+    }
+   ]
+  },
+  {
+   "id": "lato",
+   "nameZh": "Lato",
+   "nameEn": "Lato",
+   "category": "SANS",
+   "coverageZh": "西文",
+   "coverageEn": "Latin",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/lato/OFL.txt",
+   "replaces": [
+    "lato"
+   ],
+   "files": [
+    {
+     "name": "Lato-BlackItalic.ttf",
+     "path": "ofl/lato/Lato-BlackItalic.ttf",
+     "size": 698264,
+     "gitSha1": "b3cee668d64c5ae179b7554f315df274055b6d28"
+    },
+    {
+     "name": "Lato-Bold.ttf",
+     "path": "ofl/lato/Lato-Bold.ttf",
+     "size": 656544,
+     "gitSha1": "1d23c7066e095b5bff2c373d4064dc4f33659783"
+    },
+    {
+     "name": "Lato-BoldItalic.ttf",
+     "path": "ofl/lato/Lato-BoldItalic.ttf",
+     "size": 698364,
+     "gitSha1": "a3b8e33229be7db3b6cf59da16226b5c4d834373"
+    },
+    {
+     "name": "Lato-ExtraBold.ttf",
+     "path": "ofl/lato/Lato-ExtraBold.ttf",
+     "size": 613920,
+     "gitSha1": "8612461da3fd4a251a8ba3d76a5be1182b1136b9"
+    },
+    {
+     "name": "Lato-ExtraBoldItalic.ttf",
+     "path": "ofl/lato/Lato-ExtraBoldItalic.ttf",
+     "size": 671876,
+     "gitSha1": "516676f3f7ca16410e96006bcda789ee6ed1a2b9"
+    },
+    {
+     "name": "Lato-ExtraLightItalic.ttf",
+     "path": "ofl/lato/Lato-ExtraLightItalic.ttf",
+     "size": 653640,
+     "gitSha1": "569692ad7050ed5ebf5f48f58e45df7c195ab08b"
+    },
+    {
+     "name": "Lato-Italic.ttf",
+     "path": "ofl/lato/Lato-Italic.ttf",
+     "size": 722900,
+     "gitSha1": "70a870f40ad0be24f2409f3875c8126b55aa41aa"
+    },
+    {
+     "name": "Lato-LightItalic.ttf",
+     "path": "ofl/lato/Lato-LightItalic.ttf",
+     "size": 657552,
+     "gitSha1": "9368e065b7d05a90e8873c08baf0933308877232"
+    },
+    {
+     "name": "Lato-MediumItalic.ttf",
+     "path": "ofl/lato/Lato-MediumItalic.ttf",
+     "size": 694924,
+     "gitSha1": "af296abd8fa1a8ffe9e5e2e1b1f61732a0e02bff"
+    },
+    {
+     "name": "Lato-Regular.ttf",
+     "path": "ofl/lato/Lato-Regular.ttf",
+     "size": 656568,
+     "gitSha1": "0f3d0f837d24834b9b5b0a6b735459c56f5e75c3"
+    },
+    {
+     "name": "Lato-SemiBold.ttf",
+     "path": "ofl/lato/Lato-SemiBold.ttf",
+     "size": 668548,
+     "gitSha1": "3b1bcccc3384aef84a68242e331e1018c8e141e0"
+    },
+    {
+     "name": "Lato-SemiBoldItalic.ttf",
+     "path": "ofl/lato/Lato-SemiBoldItalic.ttf",
+     "size": 697364,
+     "gitSha1": "032b99d39509077f4cacb46cdee858698970f206"
+    },
+    {
+     "name": "Lato-ThinItalic.ttf",
+     "path": "ofl/lato/Lato-ThinItalic.ttf",
+     "size": 608716,
+     "gitSha1": "339d2dcc2e177aad522d05547a91437a6bef1965"
+    }
+   ]
+  },
+  {
+   "id": "source-sans-3",
+   "nameZh": "Source Sans 3",
+   "nameEn": "Source Sans 3",
+   "category": "SANS",
+   "coverageZh": "西文",
+   "coverageEn": "Latin",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/sourcesans3/OFL.txt",
+   "replaces": [
+    "sourcesans",
+    "myriad"
+   ],
+   "files": [
+    {
+     "name": "SourceSans3-Italic[wght].ttf",
+     "path": "ofl/sourcesans3/SourceSans3-Italic[wght].ttf",
+     "size": 395372,
+     "gitSha1": "ee54b36fd07749f63466845ae14d533be06f3c22"
+    },
+    {
+     "name": "SourceSans3[wght].ttf",
+     "path": "ofl/sourcesans3/SourceSans3[wght].ttf",
+     "size": 646340,
+     "gitSha1": "d259aa494fe7117141a2752a998a52c172bbd42b"
+    }
+   ]
+  },
+  {
+   "id": "merriweather",
+   "nameZh": "Merriweather",
+   "nameEn": "Merriweather",
+   "category": "SERIF",
+   "coverageZh": "西文",
+   "coverageEn": "Latin",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/merriweather/OFL.txt",
+   "replaces": [
+    "merriweather"
+   ],
+   "files": [
+    {
+     "name": "Merriweather-Italic[opsz,wdth,wght].ttf",
+     "path": "ofl/merriweather/Merriweather-Italic[opsz,wdth,wght].ttf",
+     "size": 4591168,
+     "gitSha1": "f16120757a8a92cfa12a5fc9a7dcbaa2f8297ab6"
+    },
+    {
+     "name": "Merriweather[opsz,wdth,wght].ttf",
+     "path": "ofl/merriweather/Merriweather[opsz,wdth,wght].ttf",
+     "size": 4628080,
+     "gitSha1": "cb775b80fa0a6f3b2aea114869a7171695b50a62"
+    }
+   ]
+  },
+  {
+   "id": "roboto-mono",
+   "nameZh": "Roboto Mono",
+   "nameEn": "Roboto Mono",
+   "category": "MONO",
+   "coverageZh": "等宽西文",
+   "coverageEn": "Monospace Latin",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/robotomono/OFL.txt",
+   "replaces": [
+    "consolas",
+    "menlo",
+    "robotomono"
+   ],
+   "files": [
+    {
+     "name": "RobotoMono-Italic[wght].ttf",
+     "path": "ofl/robotomono/RobotoMono-Italic[wght].ttf",
+     "size": 196792,
+     "gitSha1": "414a5121f4ca743f0c64e82e22d91e426aa7d432"
+    },
+    {
+     "name": "RobotoMono[wght].ttf",
+     "path": "ofl/robotomono/RobotoMono[wght].ttf",
+     "size": 183700,
+     "gitSha1": "f21d1d716bce3cc756bc618d32be71ce6f733f81"
+    }
+   ]
+  },
+  {
+   "id": "source-code-pro",
+   "nameZh": "Source Code Pro",
+   "nameEn": "Source Code Pro",
+   "category": "MONO",
+   "coverageZh": "等宽西文",
+   "coverageEn": "Monospace Latin",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/sourcecodepro/OFL.txt",
+   "replaces": [
+    "sourcecodepro",
+    "lucidaconsole"
+   ],
+   "files": [
+    {
+     "name": "SourceCodePro-Italic[wght].ttf",
+     "path": "ofl/sourcecodepro/SourceCodePro-Italic[wght].ttf",
+     "size": 174852,
+     "gitSha1": "f4321e7352540d2aa33023e19d9a65c447c5590a"
+    },
+    {
+     "name": "SourceCodePro[wght].ttf",
+     "path": "ofl/sourcecodepro/SourceCodePro[wght].ttf",
+     "size": 212340,
+     "gitSha1": "4d668281b3b2c6d699b5569e49bd60121152125f"
+    }
+   ]
+  },
+  {
+   "id": "zcool-xiaowei",
+   "nameZh": "站酷小薇",
+   "nameEn": "ZCOOL XiaoWei",
+   "category": "SERIF",
+   "coverageZh": "简体中文标题字",
+   "coverageEn": "Simplified Chinese display",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/zcoolxiaowei/OFL.txt",
+   "replaces": [],
+   "files": [
+    {
+     "name": "ZCOOLXiaoWei-Regular.ttf",
+     "path": "ofl/zcoolxiaowei/ZCOOLXiaoWei-Regular.ttf",
+     "size": 6313808,
+     "gitSha1": "2d8731a231f2e6625b32d96b87f84852e24f9d82"
+    }
+   ]
+  },
+  {
+   "id": "ma-shan-zheng",
+   "nameZh": "马善政楷书",
+   "nameEn": "Ma Shan Zheng",
+   "category": "SCRIPT",
+   "coverageZh": "简体中文毛笔楷书",
+   "coverageEn": "Simplified Chinese brush Kai",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/mashanzheng/OFL.txt",
+   "replaces": [],
+   "files": [
+    {
+     "name": "MaShanZheng-Regular.ttf",
+     "path": "ofl/mashanzheng/MaShanZheng-Regular.ttf",
+     "size": 5857936,
+     "gitSha1": "11bbfb9867d70612158229d037e7a5f622bd0e38"
+    }
+   ]
+  }
+ ]
+}

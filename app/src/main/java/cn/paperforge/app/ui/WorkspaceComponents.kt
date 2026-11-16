@@ -51,6 +51,7 @@ internal val settingsSections =
         WorkspaceSection("scan", "扫描与拍摄", "自动拍摄、裁边、画质与增强", Icons.Default.DocumentScanner),
         WorkspaceSection("ocr", "识字与模型", "离线 OCR、语言和版面识别", Icons.Default.Translate),
         WorkspaceSection("export", "导出与文件名", "默认纸张、清晰度、命名与保存位置", Icons.Default.SaveAlt),
+        WorkspaceSection("fonts", "字体管理", "下载开源字体、导入 TTF，用于编辑 PDF", Icons.Default.FontDownload),
         WorkspaceSection("advanced", "高级与系统", "存储、后台、桌面入口与设置备份", Icons.Default.Tune),
         WorkspaceSection("privacy", "隐私与安全", "应用锁、截图与解锁方式", Icons.Default.Lock),
     )

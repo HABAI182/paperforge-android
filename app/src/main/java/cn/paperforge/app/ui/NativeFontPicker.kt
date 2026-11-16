@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -125,7 +126,23 @@ internal fun NativeFontPicker(
         }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(true)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-            Text("选择字体", style = MaterialTheme.typography.titleMedium)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("选择字体", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                // Downloading and importing is one tap away, not hidden below the list.
+                FilledTonalButton(onClick = onImport, contentPadding = PaddingValues(horizontal = 12.dp), modifier = Modifier.height(36.dp).testTag("font-manage")) {
+                    Icon(Icons.Default.Download, null, Modifier.size(16.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("下载或导入字体")
+                }
+            }
+            val alternatives = remember(originalName) { runCatching { cn.paperforge.app.pdf.FontStore.alternatives(context, originalName) }.getOrDefault(emptyList()) }
+            if (alternatives.isNotEmpty())
+                Text(
+                    "原文字体“${originalName.substringAfter('+')}”是商业字体，不能随应用提供；可下载开源替代：" + alternatives.take(3).joinToString("、") { it.nameZh },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
             OutlinedTextField(
                 query,
                 { query = it },
@@ -167,7 +184,7 @@ internal fun NativeFontPicker(
                 if (shown.isEmpty()) item { Text("没有匹配的字体", Modifier.padding(16.dp)) }
                 item {
                     TextButton(onClick = onImport, modifier = Modifier.padding(top = 8.dp)) {
-                        Text("导入其他 TTF 字体…")
+                        Text("下载或导入其他字体…")
                     }
                     Text(
                         "内置中文字体覆盖常用字（GB2312 / Big5 一级）；缺字时会提示，可换用“思源黑体（常规）”（全字库）。",
