@@ -1,7 +1,7 @@
 # Workspace hygiene
 
 The repository's `.gitignore` covers build outputs. The disk fills up from what git never sees. Audit of 2026-11-16:
-27.4 GB were regenerable clutter (log: `work/round9/cleanup-log.txt`).
+27.0 GB were regenerable clutter (log: `work/round9/cleanup-log.txt`).
 
 ## Where things go
 - **Round work**: `work/roundN/` (inputs, device outputs, comparison images, the round report). One folder per round,
