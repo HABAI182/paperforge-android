@@ -108,6 +108,12 @@ object FontStore {
         return catalog(context).families.filter { (have[it.id] ?: 0) >= it.files.size }.map { it.id }.toSet()
     }
 
+    /** The name recorded when [file] was imported or downloaded, without opening the font. */
+    fun recordedName(file: File): String? =
+        File(file.parentFile, file.nameWithoutExtension + ".json").takeIf { it.isFile }
+            ?.let { runCatching { JSONObject(it.readText()).optString("name") }.getOrNull() }
+            ?.takeIf { it.isNotBlank() }
+
     fun delete(context: Context, sha256: String) {
         File(folder(context), "$sha256.ttf").delete()
         File(folder(context), "$sha256.json").delete()
@@ -152,6 +158,10 @@ object FontStore {
             val name = embeddable(part)
             val sha = PdfAssembly.sha256(part)
             val target = File(folder, "$sha.ttf")
+            // The same font already in the store (downloaded, or imported before) keeps its record: overwriting it
+            // made a downloaded family look half-installed and lost its licence.
+            if (target.exists() && File(folder, "$sha.json").isFile)
+                return installed(context).firstOrNull { it.sha256 == sha } ?: Installed(target, sha, name, null, null, "import")
             if (!target.exists()) check(part.renameTo(target)) { "无法保存字体" }
             record(target, name, null, null, "import", null)
             return Installed(target, sha, name, null, null, "import")
@@ -166,7 +176,12 @@ object FontStore {
      * Downloads every file of [family], each from the first source that delivers the catalog's exact bytes. [progress]
      * gets (bytes done, bytes total, source host). Throws with a readable reason when no source works.
      */
-    suspend fun download(context: Context, family: Family, progress: (Long, Long, String) -> Unit): List<Installed> {
+    suspend fun download(
+        context: Context,
+        family: Family,
+        sources: List<String> = catalog(context).sources,
+        progress: (Long, Long, String) -> Unit,
+    ): List<Installed> {
         if (!canDownload(context)) throw Refused("这个版本不含联网功能，不能下载字体。可从手机导入 .ttf 字体文件。")
         val catalog = catalog(context)
         val folder = folder(context)
@@ -176,7 +191,7 @@ object FontStore {
         for (entry in family.files) {
             val failures = ArrayList<String>()
             var got: Installed? = null
-            for (template in catalog.sources) {
+            for (template in sources) {
                 currentCoroutineContext().ensureActive()
                 val url = template.replace("{commit}", catalog.commit).replace("{path}", entry.path)
                 val host = runCatching { URL(url).host }.getOrDefault(url)
@@ -230,7 +245,7 @@ object FontStore {
                     part.delete()
                 }
             }
-            installed += got ?: throw Refused("无法下载 ${entry.name}。已尝试 ${catalog.sources.size} 个来源：" + failures.joinToString("；").take(300) + "。请检查网络后重试，或导入本地字体。")
+            installed += got ?: throw Refused("无法下载 ${entry.name}。已尝试 ${sources.size} 个来源：" + failures.joinToString("；").take(300) + "。请检查网络后重试，或导入本地字体。")
             done += entry.size
         }
         return installed

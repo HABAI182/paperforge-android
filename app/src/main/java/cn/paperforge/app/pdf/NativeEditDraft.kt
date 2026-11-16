@@ -132,9 +132,15 @@ object NativeEditFonts {
                 NativeFontChoice("CJK", "PaperForge 中英字体"),
             )
         for (file in files) {
-            val sha = PdfAssembly.sha256(file)
-            if (choices.none { it.id == sha })
-                choices += NativeFontChoice(sha, name(file), file.path, sha)
+            // Fonts in the store are named by their SHA-256 and carry their name in a record beside them
+            // (FontStore): a downloaded CJK font is 17-25 MB, and hashing and parsing each one every time
+            // the picker opened stalled it. Other files are hashed and read as before.
+            val stored = file.parentFile == folder && file.nameWithoutExtension.matches(Regex("[0-9a-f]{64}"))
+            val sha = if (stored) file.nameWithoutExtension else PdfAssembly.sha256(file)
+            if (choices.none { it.id == sha }) {
+                val recorded = if (stored) FontStore.recordedName(file) else null
+                choices += NativeFontChoice(sha, recorded ?: name(file), file.path, sha)
+            }
         }
         return choices
     }
