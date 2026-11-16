@@ -32,11 +32,15 @@ class RealEditorUiTest {
     private fun shot(dir: File, name: String) {
         repeat(3) {
             compose.waitForIdle()
-            val image = runCatching { compose.onRoot().captureToImage().asAndroidBitmap() }.getOrNull()
-            if (image != null) {
-                File(dir, "$name.png").outputStream().use { image.compress(Bitmap.CompressFormat.PNG, 100, it) }
-                return
+            // With a sheet or dialog open there are several window roots: capture each.
+            val roots = runCatching { compose.onAllNodes(isRoot()).fetchSemanticsNodes().size }.getOrDefault(0)
+            var saved = 0
+            for (i in 0 until roots) {
+                val image = runCatching { compose.onAllNodes(isRoot())[i].captureToImage().asAndroidBitmap() }.getOrNull() ?: continue
+                File(dir, if (i == 0) "$name.png" else "$name-window$i.png").outputStream().use { image.compress(Bitmap.CompressFormat.PNG, 100, it) }
+                saved++
             }
+            if (saved > 0) return
             Thread.sleep(400)
         }
     }
@@ -136,9 +140,18 @@ class RealEditorUiTest {
         val replacement = if (han) "修订" else "EDIT"
         val expected = lineA.text.substring(0, at) + replacement + lineA.text.substring(at + 2)
         compose.onNodeWithTag("native-edit-field").performTextReplacement(expected)
+        // The sheet's state must hold the new text before 应用 (a fast tap could otherwise apply the old text).
+        compose.waitUntil(10000) {
+            runCatching {
+                compose.onNodeWithTag("native-edit-field").fetchSemanticsNode().config[SemanticsProperties.EditableText].text == expected
+            }.getOrDefault(false)
+        }
+        compose.waitForIdle()
+        val applied = System.nanoTime()
         compose.onNodeWithTag("native-edit-apply").performClick()
-        waitText(dir, "native-edit-message", 30000) { it.contains("已修改文字") || it.contains("新文字改用") }
-        summary.put("retype", text("native-edit-message"))
+        shot(dir, "04a-applying")
+        waitText(dir, "native-edit-message", 60000) { it.contains("已修改文字") || it.contains("新文字改用") }
+        summary.put("retype", text("native-edit-message")).put("retypeMs", (System.nanoTime() - applied) / 1_000_000)
         shot(dir, "04-retyped")
 
         // 4. Bold line B.

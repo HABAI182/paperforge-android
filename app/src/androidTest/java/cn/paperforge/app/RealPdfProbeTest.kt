@@ -3,6 +3,7 @@ package cn.paperforge.app
 import androidx.test.core.app.ApplicationProvider
 import cn.paperforge.app.pdf.*
 import java.io.File
+import kotlin.math.abs
 import kotlinx.coroutines.runBlocking
 import org.json.JSONArray
 import org.json.JSONObject
@@ -101,6 +102,69 @@ class RealPdfProbeTest {
         }
     }
 
+    /**
+     * Inserting text into a full-width paragraph line must keep it inside its column (squeezed), or report the
+     * overflow: it may never silently run into the gutter or the next column. Writes widen.json and widened-*.pdf.
+     */
+    @Test
+    fun widenParagraphLines() {
+        val dir = File(app.filesDir, "corpus")
+        val out = File(app.filesDir, "corpus-out").apply { mkdirs() }
+        val report = JSONObject()
+        val problems = mutableListOf<String>()
+        for (file in dir.listFiles().orEmpty().filter { it.extension == "pdf" }.sortedBy { it.name }) {
+            val entry = JSONObject()
+            runCatching {
+                val lines = runBlocking { NativePdfEditor.inspect(file, 0).second }.filter { it.units.isNotEmpty() }
+                fun left(o: NativePdfEditor.TextObject) = o.units.minOf { it.left }
+                fun right(o: NativePdfEditor.TextObject) = o.units.maxOf { it.right }
+                // A full-width paragraph line: another line starts and ends where it does.
+                val full =
+                    lines.filter { o ->
+                        o.editable && o.text.trim().length >= 16 &&
+                            lines.any { p -> p !== o && abs(left(p) - left(o)) < .01f && abs(right(p) - right(o)) < .01f }
+                    }
+                val target = full.getOrNull(full.size / 2) ?: return@runCatching entry.put("skipped", "no full-width paragraph line").let { }
+                val han = target.text.any { Character.UnicodeScript.of(it.code) == Character.UnicodeScript.HAN }
+                val insert = if (han) "修订修订" else "EDIT EDIT"
+                val at = target.text.length / 2
+                val font =
+                    runBlocking {
+                        NativeEditSession(app, file).use { s ->
+                            s.open()
+                            if (s.missingInOriginal(target.key, insert).isEmpty()) null else NativeFontLibrary.substitute(app, target, insert)?.id
+                        }
+                    }
+                val edits =
+                    NativeEditOps.replace(emptyList(), lines.associateBy { it.key }, listOf(NativeSegment(target.key, at, at)), insert) {
+                        font?.let { NativeStyle(font = it) }
+                    }
+                val output = File(out, "widened-" + file.name)
+                val result =
+                    runBlocking {
+                        NativePdfEditor.apply(
+                            app, file, output,
+                            JSONObject().put("sourceSha256", PdfAssembly.sha256(file)).put("edits", JSONArray(edits.map { it.json() })),
+                        )
+                    }
+                val outcome = result.getJSONArray("edits").getJSONObject(0)
+                val expected = target.text.substring(0, at) + insert + target.text.substring(at)
+                val after = runBlocking { NativePdfEditor.inspect(output, 0).second }
+                val edited = after.firstOrNull { it.text.replace(" ", "") == expected.replace(" ", "") }
+                val overflow = outcome.optBoolean("overflow")
+                val grewBy = edited?.let { right(it) - right(target) } ?: Float.NaN
+                entry.put("line", target.text).put("found", edited != null).put("rightBefore", right(target).toDouble())
+                    .put("rightAfter", edited?.let { right(it).toDouble() }).put("grewBy", grewBy.toDouble())
+                    .put("scale", outcome.optDouble("actualHorizontalScale")).put("overflow", overflow)
+                if (edited == null) problems += "${file.name}: edited line not found"
+                else if (grewBy > .004f && !overflow) problems += "${file.name}: grew ${"%.3f".format(grewBy)} of the page width without reporting overflow"
+            }.onFailure { entry.put("error", it.toString()); problems += "${file.name}: $it" }
+            report.put(file.name, entry)
+        }
+        File(out, "widen.json").writeText(report.toString(1))
+        org.junit.Assert.assertTrue(problems.joinToString("\n"), problems.isEmpty())
+    }
+
     private fun render(file: File, page: Int): android.graphics.Bitmap =
         android.os.ParcelFileDescriptor.open(file, android.os.ParcelFileDescriptor.MODE_READ_ONLY).use { fd ->
             android.graphics.pdf.PdfRenderer(fd).use { r ->
@@ -137,6 +201,27 @@ class RealPdfProbeTest {
                 val lines = runBlocking { NativePdfEditor.inspect(file, 0).second }
                 val candidates = lines.filter { it.editable && it.text.trim().length >= 8 }
                 val target = candidates.getOrNull(candidates.size / 2) ?: error("no editable line")
+                // Geometry the line writer uses to decide how much the line may grow.
+                com.tom_roush.pdfbox.pdmodel.PDDocument.load(file).use { pdf ->
+                    val model = PdfTextModel.read(pdf, 0)
+                    val line = model.lines.firstOrNull { it.index == target.index } ?: model.lines.firstOrNull { it.text == target.text }
+                    if (line != null) {
+                        val g = line.glyphs
+                        entry.put(
+                            "geometry",
+                            JSONObject()
+                                .put("room", model.room(line).toDouble())
+                                .put("drawnSize", g.last().drawnSize.toDouble())
+                                .put("first", "${g.first().origin.x},${g.first().origin.y}")
+                                .put("last", "${g.last().origin.x},${g.last().origin.y}")
+                                .put("lastAdvance", model.advanceOnPage(g.last()).toDouble())
+                                .put("direction", "${g.first().direction.x},${g.first().direction.y}")
+                                .put("block", line.block)
+                                .put("blockLines", model.lines.count { it.block == line.block })
+                                .put("lineCount", model.lines.size),
+                        )
+                    }
+                }
                 val at = target.text.length / 2
                 val replacement = if (target.text.any { Character.UnicodeScript.of(it.code) == Character.UnicodeScript.HAN }) "修订" else "EDIT"
                 val font =
