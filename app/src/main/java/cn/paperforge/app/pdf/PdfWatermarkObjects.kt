@@ -36,6 +36,7 @@ object PdfWatermarkObjects {
         TAGGED("标记的水印"),
         LAYER("水印图层"),
         ANNOTATION("水印批注"),
+        OVERLAY("半透明叠加图片"),
     }
 
     /** One unit on one page. [box] is in normalised displayed page coordinates. */
@@ -121,8 +122,95 @@ object PdfWatermarkObjects {
         var fillAlpha: Float = 1f,
         var strokeAlpha: Float = 1f,
         var fill: Float = 0f,
+        /** The fill colour is this pattern (`/Pattern cs /P1 scn`), else null. */
+        var fillPattern: COSName? = null,
     ) {
-        fun copy() = GState(ctm.clone(), fillAlpha, strokeAlpha, fill)
+        fun copy() = GState(ctm.clone(), fillAlpha, strokeAlpha, fill, fillPattern)
+    }
+
+    /** Alpha of an image's soft mask: the most opaque value (0-1) and the share of pixels that show at all. */
+    private class Faint(val maxAlpha: Float, val coverage: Float, val images: Int)
+
+    private fun maskStats(image: PDImageXObject): Faint? {
+        val mask = runCatching { image.softMask }.getOrNull() ?: return null
+        val n = mask.width * mask.height
+        if (n <= 0) return null
+        val bytes =
+            if (mask.bitsPerComponent == 8)
+                runCatching { mask.stream.createInputStream().use { it.readBytes() } }.getOrNull()?.takeIf { it.size >= n }
+            else null
+        var max = 0
+        var shown = 0
+        if (bytes != null) {
+            for (i in 0 until n) {
+                val v = bytes[i].toInt() and 255
+                if (v > 0) shown++
+                if (v > max) max = v
+            }
+            return Faint(max / 255f, shown.toFloat() / n, 1)
+        }
+        val bmp = runCatching { mask.image }.getOrNull() ?: return null
+        val step = max(1, sqrt(bmp.width * bmp.height / 250_000.0).toInt())
+        var seen = 0
+        for (y in 0 until bmp.height step step) for (x in 0 until bmp.width step step) {
+            val v = bmp.getPixel(x, y) and 255
+            seen++
+            if (v > 0) shown++
+            if (v > max) max = v
+        }
+        return Faint(max / 255f, shown.toFloat() / max(1, seen), 1)
+    }
+
+    /** A faint overlay: never more than 35 % opaque, or sparse and at most half opaque (text drawn as pixels). */
+    private fun Faint.isOverlay() = images > 0 && (maxAlpha <= .35f || coverage < .2f && maxAlpha <= .5f)
+
+    private val fillOps = setOf("f", "F", "f*", "B", "B*", "b", "b*")
+
+    /**
+     * What a pattern or form draws, when it draws nothing but masked images (directly, through forms or nested
+     * patterns): their combined alpha statistics. Null when it draws anything else (paths, text, opaque images).
+     */
+    private fun overlayContent(tokens: List<Any>, resources: PDResources?, depth: Int): Faint? {
+        if (depth > 3) return null
+        var maxAlpha = 0f
+        var coverage = 0f
+        var images = 0
+        var pattern: COSName? = null
+        var start = 0
+        for ((end, t) in tokens.withIndex()) {
+            if (t !is Operator) continue
+            val args = tokens.subList(start, end)
+            start = end + 1
+            val f: Faint? =
+                when (t.name) {
+                    "scn", "sc" -> { pattern = args.lastOrNull() as? COSName; null }
+                    "cs" -> { if ((args.firstOrNull() as? COSName)?.name != "Pattern") pattern = null; null }
+                    "Do" ->
+                        when (val x = runCatching { resources?.getXObject(args[0] as COSName) }.getOrNull()) {
+                            is PDImageXObject -> maskStats(x) ?: return null
+                            is PDFormXObject ->
+                                overlayContent(PDFStreamParser(x).apply { parse() }.tokens.toList(), x.resources, depth + 1) ?: return null
+                            else -> return null
+                        }
+                    in fillOps -> pattern?.let { patternOverlay(resources, it, depth + 1) } ?: return null
+                    in showOps, "S", "s", "sh", "BI" -> return null
+                    else -> null
+                }
+            if (f != null) {
+                maxAlpha = max(maxAlpha, f.maxAlpha)
+                coverage = max(coverage, f.coverage)
+                images += f.images
+            }
+        }
+        return Faint(maxAlpha, coverage, images)
+    }
+
+    private fun patternOverlay(resources: PDResources?, name: COSName, depth: Int): Faint? {
+        val pattern =
+            runCatching { resources?.getPattern(name) }.getOrNull() as? com.tom_roush.pdfbox.pdmodel.graphics.pattern.PDTilingPattern
+                ?: return null
+        val tokens = runCatching { PDFStreamParser(pattern).apply { parse() }.tokens.toList() }.getOrNull() ?: return null
+        return overlayContent(tokens, pattern.resources, depth)
     }
 
     private fun luminance(op: String, values: List<Float>): Float? =
@@ -256,7 +344,11 @@ object PdfWatermarkObjects {
                     state?.nonStrokingAlphaConstant?.let { g.fillAlpha = it }
                     state?.strokingAlphaConstant?.let { g.strokeAlpha = it }
                 }
-                "g", "rg", "k", "sc", "scn" -> luminance(name, args.mapNotNull { (it as? COSNumber)?.floatValue() })?.let { g.fill = 1 - it }
+                "g", "rg", "k", "sc", "scn" -> {
+                    g.fillPattern = if (name == "scn" || name == "sc") args.lastOrNull() as? COSName else null
+                    luminance(name, args.mapNotNull { (it as? COSNumber)?.floatValue() })?.let { g.fill = 1 - it }
+                }
+                "cs" -> if ((args.firstOrNull() as? COSName)?.name != "Pattern") g.fillPattern = null
                 "BT" -> {
                     textStart = start
                     textBuffer = StringBuilder()
@@ -292,7 +384,16 @@ object PdfWatermarkObjects {
                 in clipOps -> pathClips = true
                 in paintOps, "n" -> {
                     // A path that also clips stays: removing the clip would change what is drawn after it.
-                    if (name != "n" && !pathClips && pathStart >= 0 && pathPoints.isNotEmpty()) {
+                    val overlay =
+                        if (name in fillOps && g.fillPattern != null && !pathClips && pathStart >= 0)
+                            patternOverlay(resources, g.fillPattern!!, 0)?.takeIf { it.isOverlay() }
+                        else null
+                    if (overlay != null && pathPoints.isNotEmpty()) {
+                        // A pattern that only lays faint masked images over the page: a background watermark (CSS
+                        // background-image in browser exports, tiled stamp images).
+                        val box = bounds(pathPoints)
+                        emit(Kind.OVERLAY, "overlay:pattern", "整页背景图案中的半透明图片", box, pathStart, end, overlay.maxAlpha, 0f, true)
+                    } else if (name != "n" && !pathClips && pathStart >= 0 && pathPoints.isNotEmpty()) {
                         val box = bounds(pathPoints)
                         val signature = "path:" + sha(tokens.subList(pathStart, end + 1).joinToString(" ") { t -> (t as? COSNumber)?.let { "%.1f".format(it.floatValue()) } ?: t.toString() }.toByteArray())
                         emit(Kind.VECTOR, signature, "矢量图形", box, pathStart, end, min(g.fillAlpha, g.strokeAlpha), angle(g.ctm), g.fill < .45f)
@@ -314,8 +415,13 @@ object PdfWatermarkObjects {
                     val box = bounds(corners)
                     when (obj) {
                         is PDImageXObject -> {
-                            val raw = runCatching { obj.cosObject.createRawInputStream().use { it.readBytes() } }.getOrDefault(ByteArray(0))
-                            emit(Kind.IMAGE, "image:" + sha(raw), "图片 ${obj.width}×${obj.height}", box, start, end, g.fillAlpha, angle(g.ctm), false)
+                            val faint = if (area(box) > .2f) maskStats(obj)?.takeIf { it.isOverlay() } else null
+                            if (faint != null)
+                                emit(Kind.OVERLAY, "overlay:image", "大面积半透明叠加图片", box, start, end, faint.maxAlpha * g.fillAlpha, angle(g.ctm), true)
+                            else {
+                                val raw = runCatching { obj.cosObject.createRawInputStream().use { it.readBytes() } }.getOrDefault(ByteArray(0))
+                                emit(Kind.IMAGE, "image:" + sha(raw), "图片 ${obj.width}×${obj.height}", box, start, end, g.fillAlpha, angle(g.ctm), false)
+                            }
                         }
                         is PDFormXObject -> {
                             val raw = runCatching { obj.cosObject.createRawInputStream().use { it.readBytes() } }.getOrDefault(ByteArray(0))
@@ -479,6 +585,12 @@ object PdfWatermarkObjects {
                     score += .5f
                     evidence += 1
                     reasons += "扫描软件导出的页角标记"
+                }
+                // Faint masked images laid over (or under) the whole page, directly or through a tiling pattern.
+                if (first.kind == Kind.OVERLAY) {
+                    score += 1f
+                    evidence += 1
+                    reasons += "覆盖整页的半透明图片（最不透明处 ${(units.maxOf { it.alpha } * 100).roundToInt()}%），常见于网页导出的水印"
                 }
                 // Word and WPS draw their watermark inside the page header: a large pale or translucent figure that
                 // reaches well into the body. A header logo stays near the top edge and is small.
