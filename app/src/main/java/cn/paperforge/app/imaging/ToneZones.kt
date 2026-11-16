@@ -304,7 +304,7 @@ internal object ToneZones {
             // writing: measured against the reference scanner, line seeds there added ten wrong marks for every right one.
             val baseLines =
                 if (ruled && ScanConfig.int("toneZonesLineSeedOnRuled", 0) == 0) null
-                else lineSeeds(tidyValues, darkSeeds, rules, width, height, scale, owned)
+                else lineSeeds(tidyValues, darkSeeds, rules, width, height, scale, owned, relative)
             // Small print on ruled pages: a printed line's marks are seeded lines too, drawn the same way.
             val textLine = if (ruled) textLineSeeds(candidates, rules, seeds, cross, tidyValues, width, height, scale, owned) else null
             textLine?.let { stats.put("textLinePixels", Core.countNonZero(it.mask)) }
@@ -1407,6 +1407,145 @@ internal object ToneZones {
         return LineSeeds(mask, path, depth)
     }
 
+    /** A straight line's width at half its depth (pixels) and its depth, from profiles across it. */
+    private class LineShape(val width: Float, val depth: Float)
+
+    private fun sample(values: FloatArray, width: Int, height: Int, x: Float, y: Float): Float {
+        val x0 = x.toInt().coerceIn(0, width - 2)
+        val y0 = y.toInt().coerceIn(0, height - 2)
+        val fx = (x - x0).coerceIn(0f, 1f)
+        val fy = (y - y0).coerceIn(0f, 1f)
+        val i = y0 * width + x0
+        return (values[i] * (1 - fx) + values[i + 1] * fx) * (1 - fy) + (values[i + width] * (1 - fx) + values[i + width + 1] * fx) * fy
+    }
+
+    /**
+     * The shape of the line along [seg]: profiles across it at up to 40 places where [on] marks it (gaps of a dashed
+     * line are skipped), each centred on its own darkest point, averaged. Null when it is not measurable.
+     */
+    private fun lineShape(values: FloatArray, on: ByteArray?, width: Int, height: Int, seg: IntArray): LineShape? {
+        val dx = (seg[2] - seg[0]).toFloat()
+        val dy = (seg[3] - seg[1]).toFloat()
+        val length = kotlin.math.hypot(dx, dy)
+        if (length < 8f) return null
+        val ux = dx / length
+        val uy = dy / length
+        val reach = 24 // half-pixel steps either side: 12 px
+        val sum = FloatArray(2 * reach + 1)
+        var used = 0
+        val profile = FloatArray(4 * reach + 1)
+        val places = min(16, (length / 2).toInt())
+        for (k in 0 until places) {
+            val t = (k + .5f) * length / places
+            val cx = seg[0] + ux * t
+            val cy = seg[1] + uy * t
+            if (cx < 12 || cy < 12 || cx >= width - 12 || cy >= height - 12) continue
+            if (on != null && on[cy.roundToInt() * width + cx.roundToInt()] == 0.toByte()) continue
+            for (j in profile.indices) {
+                val o = (j - 2 * reach) * .5f
+                profile[j] = sample(values, width, height, cx - uy * o, cy + ux * o)
+            }
+            // Centre on the darkest point within 2 px of the fitted line.
+            var m = 2 * reach
+            for (j in 2 * reach - 4..2 * reach + 4) if (profile[j] < profile[m]) m = j
+            for (j in sum.indices) sum[j] += profile[m - reach + j]
+            used++
+        }
+        if (used < 5) return null
+        for (j in sum.indices) sum[j] /= used
+        // Width and depth within 8 px of the middle (paper further out is lit differently); the twin search below
+        // looks out to 12 px.
+        val inner = 16
+        val ends = (sum.copyOfRange(reach - inner, reach - inner + 5).toList() + sum.copyOfRange(reach + inner - 4, reach + inner + 1).toList()).sorted()
+        val base = (ends[4] + ends[5]) / 2
+        val low = sum[reach]
+        val depth = base - low
+        if (depth <= .01f) return null
+        val half = low + depth / 2
+        var l = reach
+        while (l > reach - inner && sum[l - 1] <= half) l--
+        var r = reach
+        while (r < reach + inner && sum[r + 1] <= half) r++
+        // A twin within 12 px, between half and twice as deep: a printed double rule. The other side's lines come
+        // alone; a pair of like lines is the front's (a notebook's faint double margin rule had two lines 9 px
+        // apart, each as pale and as wide as show-through). Not measured, so kept. A much deeper line beside it,
+        // such as a grid line next to the other side's line, is no twin.
+        // A twin is a line of its own: a dip at least half this line's depth below the paper that rises between them.
+        for (j in 1 until sum.size - 1) {
+            if (j in l - 1..r + 1 || sum[j] > half || base - sum[j] > 2 * depth) continue
+            if (sum[j] > sum[j - 1] || sum[j] > sum[j + 1]) continue
+            val between = if (j < l) sum.copyOfRange(j, l).max() else sum.copyOfRange(r + 1, j + 1).max()
+            if (between - sum[j] >= .5f * depth) return null
+        }
+        return LineShape((r - l + 1) * .5f, depth)
+    }
+
+    /** True when the line middles along [seg] mostly stand out by [limit] or more: measuring its shape can wait. */
+    private fun standsOut(middleDepth: ByteArray, width: Int, seg: IntArray, limit: Float): Boolean {
+        val steps = 12
+        var deep = 0
+        var seen = 0
+        for (k in 0 until steps) {
+            val t = (k + .5f) / steps
+            val x = (seg[0] + (seg[2] - seg[0]) * t).roundToInt()
+            val y = (seg[1] + (seg[3] - seg[1]) * t).roundToInt()
+            val at = y * width + x
+            if (at !in middleDepth.indices) continue
+            val d = middleDepth[at].toInt() and 255
+            if (d == 0) continue
+            seen++
+            if (d >= 2 * limit * 255) deep++
+        }
+        return seen > 0 && deep * 3 >= seen * 2
+    }
+
+    /**
+     * How wide the page's own thin dark lines are (pixels at half depth), as the reference that the camera and
+     * focus set. Measured where 24 evenly spaced rows and columns cross the long thin lines ([lines]), across each
+     * line, on [values]: the median over crossings at least 0.25 deep. Null with fewer than 20 such crossings.
+     */
+    private fun thinLineWidth(values: FloatArray, lines: Mat, width: Int, height: Int): Float? {
+        val mask = ByteArray(width * height).also { lines.get(0, 0, it) }
+        val widths = ArrayList<Float>()
+        val reach = 8
+        val profile = FloatArray(2 * reach + 1)
+        fun measure(across: Boolean, fixed: Int, limit: Int) {
+            var c = reach
+            while (c < limit - reach) {
+                val at = if (across) fixed * width + c else c * width + fixed
+                if (mask[at] == 0.toByte()) { c++; continue }
+                // The darkest pixel of this crossing, within 3 px.
+                var best = c
+                for (k in c..min(limit - reach - 1, c + 3)) {
+                    val v = values[if (across) fixed * width + k else k * width + fixed]
+                    if (v < values[if (across) fixed * width + best else best * width + fixed]) best = k
+                }
+                for (j in profile.indices) {
+                    val k = best - reach + j
+                    profile[j] = values[if (across) fixed * width + k else k * width + fixed]
+                }
+                val ends = (profile.take(4) + profile.takeLast(4)).sorted()
+                val base = (ends[3] + ends[4]) / 2
+                val depth = base - profile[reach]
+                if (depth >= .25f) {
+                    val half = profile[reach] + depth / 2
+                    var l = reach
+                    while (l > 0 && profile[l - 1] <= half) l--
+                    var r = reach
+                    while (r < profile.size - 1 && profile[r + 1] <= half) r++
+                    widths += (r - l + 1).toFloat()
+                }
+                c = best + reach // past this line
+            }
+        }
+        for (k in 1..24) {
+            measure(true, k * height / 25, width)
+            measure(false, k * width / 25, height)
+        }
+        if (widths.size < 20) return null
+        return widths.sorted()[widths.size / 2]
+    }
+
     /** Seeded line middles as a mask, its bytes, and how far each stands out (255 = the whole paper). */
     private class LineSeeds(val mask: Mat, val bytes: ByteArray, val depth: ByteArray)
 
@@ -1419,7 +1558,7 @@ internal object ToneZones {
      * page of a book photographed slightly out of focus: the step of 3 found its thin horizontals whole, where 2
      * found them in pieces. Off when the depth is 0.
      */
-    private fun lineSeeds(tidy: FloatArray, darkSeeds: Mat, longLines: Mat, width: Int, height: Int, scale: Float, owned: MutableList<Mat>): LineSeeds? {
+    private fun lineSeeds(tidy: FloatArray, darkSeeds: Mat, longLines: Mat, width: Int, height: Int, scale: Float, owned: MutableList<Mat>, relative: FloatArray = tidy): LineSeeds? {
         val minDepth = ScanConfig.float("toneZonesLineSeedDepth", .08f)
         if (minDepth <= 0f) return null
         val ceiling = ScanConfig.float("toneZonesLineSeedCeiling", .85f)
@@ -1498,11 +1637,25 @@ internal object ToneZones {
                 val seg = IntArray(4)
                 val grid = if (ScanConfig.int("toneZonesStraightGrid", 0) != 0) gridAngles(darkSeeds, minimum, scale, owned) else DoubleArray(0)
                 val gridTolerance = ScanConfig.float("toneZonesStraightGridTolerance", 2f)
+                // A line from the other side of the sheet reaches the camera through the paper, which spreads it and
+                // pales it: on the owner's worksheet the other side's projection lines were 1.4-1.6 times as wide as
+                // the front's printed grid in the same photo and stood out by 0.075, where a drawing's faint pencil
+                // construction lines were as wide as its other thin lines (0.9-1.0), its fine printed lines at most
+                // 1.17 and the paler rows of a printed grid 1.33. A straight line wider than `toneZonesThroughWidth`
+                // times the page's own thin dark lines is not kept as a line, unless it stands out by
+                // `toneZonesThroughDepth` or more (a notebook's faint second margin rule stood out by 0.155).
+                val thinWidth = if (ScanConfig.float("toneZonesThroughWidth", 1.4f) > 0f) thinLineWidth(relative, longLines, width, height) else null
+                val throughWidth = ScanConfig.float("toneZonesThroughWidth", 1.4f)
+                val throughDepth = ScanConfig.float("toneZonesThroughDepth", .15f)
                 for (r in 0 until segments.rows()) {
                     segments.get(r, 0, seg)
                     if (grid.isNotEmpty()) {
                         val angle = angleOf(seg)
                         if (grid.any { g -> abs(((angle - g + 270.0) % 180.0) - 90.0) <= gridTolerance }) continue
+                    }
+                    if (thinWidth != null && !standsOut(looseDepth, width, seg, throughDepth)) {
+                        val shape = lineShape(relative, loose, width, height, seg)
+                        if (shape != null && shape.depth < throughDepth && shape.width >= throughWidth * thinWidth) continue
                     }
                     Imgproc.line(onLine, Point(seg[0].toDouble(), seg[1].toDouble()), Point(seg[2].toDouble(), seg[3].toDouble()), Scalar(255.0), 3)
                 }
