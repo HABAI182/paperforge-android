@@ -1385,15 +1385,59 @@ internal object ToneZones {
                 group.map { 1f - darkest[it] }.sorted()[group.size / 2] >= lineDepth
         }
         if (lines.isEmpty()) return null
-        val path = ByteArray(labelValues.size) { if (labelValues[it] in lines) 255.toByte() else 0 }
+        // The page's print, now known, says what print looks like in this photo: how dark, how thick its strokes,
+        // how large. A lone mark that matches it is print too: on the owner's worksheet the circled ① and ② stood
+        // as dark as the heading (0.28 and 0.37 against its lower quartile 0.27) with strokes as thick (5.7 and 5.1
+        // against its 4.7 median), where the page's show-through stood out by under 0.2 with 2 px strokes.
+        // `toneZonesPrintSingles` 0 turns this off.
+        val printed = HashSet(lines)
+        if (ScanConfig.int("toneZonesPrintSingles", 1) != 0) {
+            val members = lines.toList()
+            val perimeter = IntArray(count)
+            for (y in 1 until height - 1) {
+                var i = y * width + 1
+                for (x in 1 until width - 1) {
+                    val l = labelValues[i]
+                    if (l != 0 && (labelValues[i - 1] != l || labelValues[i + 1] != l || labelValues[i - width] != l || labelValues[i + width] != l)) perimeter[l]++
+                    i++
+                }
+            }
+            fun stroke(l: Int) = 2f * table[l * 5 + Imgproc.CC_STAT_AREA] / max(1, perimeter[l])
+            fun size(l: Int) = max(table[l * 5 + Imgproc.CC_STAT_WIDTH], table[l * 5 + Imgproc.CC_STAT_HEIGHT])
+            val depths = members.map { 1f - darkest[it] }.sorted()
+            val strokes = members.map(::stroke).sorted()
+            val sizes = members.map(::size).sorted()
+            val minDepth = depths[depths.size / 4]
+            val maxStroke = 1.2f * strokes[strokes.size * 3 / 4]
+            val maxSize = 1.5f * sizes.last()
+            val minSize = ScanConfig.float("toneZonesTextLineSmallest", 8f) * scale
+            val singles = ArrayList<Int>()
+            for (l in 1 until count) {
+                // A seeded lone mark can still go as short and isolated in the ghost rules; this keeps it too.
+                if (l in printed) continue
+                val sz = size(l)
+                if (sz < minSize || sz > maxSize) continue
+                if (1f - darkest[l] >= minDepth && stroke(l) <= maxStroke) singles += l
+            }
+            // Lone symbols beside print are few. When more marks match than the lines themselves hold, the "print"
+            // was the other side's printed lines coming through, and what matched is more of it: on a notebook with
+            // strong, sharp show-through of a printed page 443 marks matched lines of 10-14 marks; on the
+            // worksheet, 13 matched lines of 24. Then none is kept.
+            if (singles.size <= members.size) printed += singles
+        }
+        val path = ByteArray(labelValues.size) { if (labelValues[it] in printed) 255.toByte() else 0 }
         // Drawn as a seeded line is: each pixel as dark as its line middle stands out (see [lineSeeds]).
         val step = max(2, (ScanConfig.float("toneZonesLineSeedStep", 3f) * photoPixel()).roundToInt())
         val offsets = intArrayOf(step, step * width, step * (width + 1), step * (width - 1))
         val depth = ByteArray(labelValues.size)
+        val core = ScanConfig.float("toneZonesFaintCore", .55f)
         for (y in step until height - step) {
             var i = y * width + step
             for (x in step until width - step) {
-                if (path[i] != 0.toByte()) {
+                // A lone mark with a dark core keeps its own drawing and is only protected from the ghost rules:
+                // drawn as a line, a page number came out bolder than it was. Pale ones (the circled ① ②) need the
+                // line drawing to come out whole.
+                if (path[i] != 0.toByte() && !(labelValues[i] !in lines && darkest[labelValues[i]] < core)) {
                     var d = 0f
                     for (o in offsets) d = max(d, min(tidy[i - o], tidy[i + o]) - tidy[i])
                     depth[i] = (d * 255).roundToInt().coerceIn(0, 255).toByte()
