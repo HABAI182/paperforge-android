@@ -687,6 +687,8 @@ internal object ToneZones {
             if (ScanConfig.int("toneZonesPinholes", 1) != 0) fillPinholes(output, width, height)
             if (ruled && scale >= ScanConfig.float("toneZonesSpeckScale", 1.5f))
                 dropDrawnSpecks(output, tidyValues, lineSeed?.bytes, width, height, scale, targetPaper, stats, owned)
+            if (ruled && ScanConfig.int("toneZonesEdgeStubs", 1) != 0)
+                stats.put("edgeStubs", dropEdgeStubs(output, drawnAcross, width, height, targetPaper.toFloat(), owned))
             lap("drawRules")
             when (channels) {
                 1 -> page.put(0, 0, output)
@@ -1432,7 +1434,13 @@ internal object ToneZones {
                 if (it == 0) return@BooleanArray false
                 val size = table[it * 5 + Imgproc.CC_STAT_AREA]
                 val span = max(table[it * 5 + Imgproc.CC_STAT_WIDTH], table[it * 5 + Imgproc.CC_STAT_HEIGHT])
-                !(core[it] >= 3 || sure[it] >= .2 * size || (loose[it] >= .2 * size && span >= longSpan) || span >= anySpan)
+                // Length alone used to keep any mark: the other side's drawing comes through as a pale line broken into
+                // pieces, the short pieces went as show-through and the long ones stayed, so the line came out dashed
+                // (worksheets 43/47 of 2026-11-15/16). A long mark now needs some of it at least as dark as the
+                // long-faint cut, as pencil and faint print have; one that is paler than that all along goes with its
+                // pieces.
+                val spanKeeps = span >= anySpan && loose[it] >= ScanConfig.float("toneZonesFaintSpanLoose", .05f) * size
+                !(core[it] >= 3 || sure[it] >= .2 * size || (loose[it] >= .2 * size && span >= longSpan) || spanKeeps)
             }
         // Pencil comes in groups, while the lightest part of a word can read as show-through. So a light
         // mark beside a sure faint mark stays. Marks beside dark pen do not get this: show-through often
@@ -1935,6 +1943,61 @@ internal object ToneZones {
         val bytes = ByteArray(labelValues.size).also { keep.get(0, 0, it) }
         for (i in labelValues.indices) if (stray[labelValues[i]]) bytes[i] = 0
         keep.put(0, 0, bytes)
+    }
+
+    /**
+     * Rule stubs at the sheet's left and right edges: the rule ends of the sheets beneath a pile, or of the facing page
+     * across a gutter, that the crop takes in. The top sheet's own rules are redrawn as tracks; what is left of the
+     * others is a short thin mark at a rule's height touching the frame, one per rule (the owner's pages 41-46 of
+     * 2026-11-15/16). A dark component is cleared to paper only when it lies in the outer 5 % of the width, reaches
+     * the frame (within 1.2 % of the width), is at most a third of a rule spacing tall and wide no more than the strip,
+     * sits within 30 % of a spacing of a rule's height, and touches no redrawn rule: page numbers and margin writing are
+     * taller, writing that reaches in is wider, and a rule running to the edge is one component with its redrawn line.
+     * Returns the number of cleared components.
+     */
+    private fun dropEdgeStubs(output: ByteArray, tracks: List<RuleTrack>, width: Int, height: Int, paper: Float, owned: MutableList<Mat>): Int {
+        if (tracks.size < 6) return 0
+        val rows = tracks.map { it.heights[it.heights.size / 2] }.sorted()
+        val gaps = rows.zipWithNext { a, b -> b - a }.filter { it > 2f }.sorted()
+        if (gaps.size < 4) return 0
+        val spacing = gaps[gaps.size / 2]
+        val strip = (.05f * width).toInt()
+        val touch = max(3, (.012f * width).toInt())
+        val dark = (paper * .6f).toInt()
+        val mask = Mat(height, width, CvType.CV_8U).also(owned::add)
+        mask.put(0, 0, ByteArray(output.size) { i -> if ((output[i].toInt() and 255) < dark) 1 else 0 })
+        val labels = Mat().also(owned::add)
+        val stats = Mat().also(owned::add)
+        val centroids = Mat().also(owned::add)
+        val count = Imgproc.connectedComponentsWithStats(mask, labels, stats, centroids, 8, CvType.CV_32S)
+        if (count <= 1) return 0
+        val table = statsTable(stats, count)
+        // Height of the nearest rule at column x: the track's own height inside it, its end height beyond.
+        fun ruleNear(x: Int, y: Float): Boolean =
+            tracks.any { t ->
+                val k = (x - t.start).coerceIn(0, t.heights.size - 1)
+                abs(t.heights[k] - y) <= .3f * spacing
+            }
+        val clear = BooleanArray(count)
+        var cleared = 0
+        for (c in 1 until count) {
+            val left = table[c * 5]
+            val top = table[c * 5 + 1]
+            val w = table[c * 5 + 2]
+            val h = table[c * 5 + 3]
+            val atLeft = left <= touch && left + w <= strip
+            val atRight = left + w >= width - touch && left >= width - strip
+            if (!atLeft && !atRight) continue
+            if (h > max(3f, spacing / 3f)) continue
+            if (!ruleNear(if (atLeft) left + w else left, top + h / 2f)) continue
+            clear[c] = true
+            cleared++
+        }
+        if (cleared == 0) return 0
+        val label = IntArray(output.size).also { labels.get(0, 0, it) }
+        val tone = paper.roundToInt().coerceIn(0, 255).toByte()
+        for (i in output.indices) if (clear[label[i]]) output[i] = tone
+        return cleared
     }
 
     private fun statsTable(stats: Mat, count: Int) = IntArray(count * 5).also { stats.get(0, 0, it) }

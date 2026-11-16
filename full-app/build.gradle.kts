@@ -88,6 +88,7 @@ android.sourceSets.getByName("main") {
     java.srcDir(rootProject.file("app/src/main/java"))
     res.srcDir(rootProject.file("app/src/main/res"))
     assets.srcDir(rootProject.file("app/src/main/assets"))
+    baselineProfiles.srcDir(rootProject.file("app/src/main/baselineProfiles"))
     manifest.srcFile(generatedManifest)
 }
 tasks.named("preBuild") { dependsOn(prepareFullManifest) }

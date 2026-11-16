@@ -1,0 +1,10 @@
+# Baseline profile: compiled ahead of time when the app is installed (profileinstaller writes it on sideloaded and
+# store installs alike). Without it ART interprets PaperForge's own Kotlin pixel loops on the first pages after an
+# install or update; on the emulator the first page of a batch took 2x as long (tz.ratio 1.2 s vs 0.13 s on later
+# pages, 2026-11-16). The rules cover the scan pipeline and the PDF engine.
+HSPLcn/paperforge/app/imaging/**;->**(**)**
+HSPLcn/paperforge/app/pdf/**;->**(**)**
+HSPLcn/paperforge/app/model/**;->**(**)**
+Lcn/paperforge/app/imaging/**;
+Lcn/paperforge/app/pdf/**;
+Lcn/paperforge/app/model/**;
