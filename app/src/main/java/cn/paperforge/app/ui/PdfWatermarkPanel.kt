@@ -38,6 +38,9 @@ internal fun parsePages(text: String, count: Int): Set<Int> =
         .filter { it in 0 until count }
         .toSet()
 
+/** One "after" preview: its own file and renderer session, or why it could not be made. */
+private class PreviewState(val session: PdfSession?, val file: File?, val removed: Int, val error: String?)
+
 /**
  * PDF watermark removal: detected candidates outlined on the page, tap or drag to choose, a scope, a preview of the
  * real result, and a separate output file. Object removal and scan-image restoration are kept apart.
@@ -84,32 +87,48 @@ internal fun PdfWatermarkPanel(vm: MainViewModel, source: File, name: String) {
     }
     val found = scan
     val count = found?.pages ?: 1
+    var originalError by remember(source) { mutableStateOf<String?>(null) }
     val original by
         produceState<PdfSession?>(null, source) {
-            value = withContext(Dispatchers.IO) { runCatching { PdfSession(source) }.getOrNull() }
+            val opened = withContext(Dispatchers.IO) { runCatching { PdfSession(source) } }
+            opened.exceptionOrNull()?.let { originalError = "无法显示原页：" + (it.message ?: it.javaClass.simpleName) }
+            value = opened.getOrNull()
+            awaitDispose { value?.close() }
         }
-    DisposableEffect(original) { onDispose { original?.close() } }
-    // Preview: this page with the chosen objects removed.
-    val previewFile = remember(source) { File(context.cacheDir, "wm-preview-${UUID.randomUUID()}.pdf") }
-    DisposableEffect(previewFile) { onDispose { previewFile.delete() } }
+    // Preview: this page with the chosen objects removed. Every preview is written to a file of its own and opened in
+    // a session of its own; the previous one is closed and deleted only after it has left the screen. A shared file
+    // rewritten under an open renderer was what showed "这一页暂时无法显示". A preview made obsolete while it is still
+    // being written (page or choice changed) is discarded, never shown.
     var removedHere by remember { mutableIntStateOf(0) }
-    val previewed by
-        produceState<PdfSession?>(null, source, page, chosen, after) {
-            if (!after) {
-                value = null
+    val preview by
+        produceState<PreviewState?>(null, source, page, chosen, after) {
+            if (!after) return@produceState
+            delay(150)
+            val file = File(context.cacheDir, "wm-preview-${UUID.randomUUID()}.pdf")
+            val ready =
+                withContext(NonCancellable + Dispatchers.IO) {
+                    runCatching {
+                            val removed = PdfWatermarkObjects.preview(source, file, page, chosen).units
+                            PreviewState(PdfSession(file), file, removed, null)
+                        }
+                        .getOrElse { e ->
+                            file.delete()
+                            PreviewState(null, null, 0, "预览生成失败：" + (e.message ?: e.javaClass.simpleName))
+                        }
+                }
+            if (!isActive) {
+                ready.session?.close()
+                ready.file?.delete()
                 return@produceState
             }
-            delay(150)
-            value =
-                withContext(Dispatchers.IO) {
-                    runCatching {
-                            removedHere = PdfWatermarkObjects.preview(source, previewFile, page, chosen).units
-                            PdfSession(previewFile)
-                        }
-                        .getOrNull()
-                }
+            removedHere = ready.removed
+            value = ready
+            awaitDispose {
+                ready.session?.close()
+                ready.file?.delete()
+            }
         }
-    DisposableEffect(previewed) { onDispose { previewed?.close() } }
+    val previewed = preview?.session
     val candidates = found?.candidates.orEmpty()
     val here = candidates.flatMap { c -> c.units.filter { it.page == page }.map { c to it } }
 
@@ -133,8 +152,11 @@ internal fun PdfWatermarkPanel(vm: MainViewModel, source: File, name: String) {
                 FilterChip(picking, { picking = !picking }, label = { Text("框选") }, enabled = !after)
             }
             val session = if (after) previewed else original
-            Box(Modifier.fillMaxWidth().height(440.dp)) {
-                if (session != null)
+            val failure = if (after) preview?.error else originalError
+            Box(Modifier.fillMaxWidth().height(440.dp).testTag(if (after) "wm-view-after" else "wm-view-original")) {
+                if (failure != null)
+                    Text(failure, color = MaterialTheme.colorScheme.error, modifier = Modifier.align(Alignment.Center).padding(16.dp).testTag("wm-preview-error"))
+                else if (session != null)
                     ReaderPage(
                         session,
                         if (after) 0 else page,
