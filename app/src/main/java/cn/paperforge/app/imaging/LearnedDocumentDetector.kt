@@ -157,8 +157,17 @@ object LearnedDocumentDetector {
     ): DetectionResult {
         val result = detectRaw(source, preview, engineOverride)
         // PageNet already separates the top sheet of a pile.
-        return if (preview || result.method.startsWith("pagenet")) result
-        else PrimaryPaperFrame.refine(source, result)
+        val framed = if (preview || result.method.startsWith("pagenet")) result else PrimaryPaperFrame.refine(source, result)
+        if (preview) return framed
+        // A ruled top sheet on other white paper (an open book, more sheets beside and below): its own rules and
+        // edges bound it more tightly than any surface detector. Inward only; see [RuledSheetBounds].
+        val quad = framed.quad ?: return framed
+        val ruled = runCatching { RuledSheetBounds.refine(source, quad) }.getOrNull() ?: return framed
+        return framed.copy(
+            quad = ruled.quad,
+            method = framed.method + "+" + RuledSheetBounds.VERSION,
+            notes = framed.notes + mapOf("ruledBoundsSides" to ruled.sides),
+        )
     }
 
     private fun detectRaw(source: Mat, preview: Boolean, engineOverride: String?): DetectionResult {
