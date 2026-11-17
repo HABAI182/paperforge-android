@@ -85,6 +85,11 @@ internal fun ReaderPage(
     onSelectStart: ((PointN) -> Boolean)? = null,
     onSelectDrag: (PointN) -> Unit = {},
     onSelectEnd: () -> Unit = {},
+    /**
+     * Draws [hits] as thin outlines instead of filled highlights. The watermark screen marks candidates this way: a
+     * filled highlight over a page-sized watermark tinted the whole "original" yellow.
+     */
+    outlineHits: Boolean = false,
 ) {
     var renderAttempt by remember(session, index) { mutableIntStateOf(0) }
     // Kept while the text fades out, so the switch back to the scan is as smooth as the switch to text.
@@ -133,7 +138,13 @@ internal fun ReaderPage(
         }
         return
     }
-    val dimensions = remember(session, index) { session.dimensions(index) }
+    // A session closed while this page was still on screen (a preview replaced under it) must not take the screen
+    // down: reading its size threw during composition. It shows the waiting state until the new session arrives.
+    val dimensions = remember(session, index) { runCatching { session.dimensions(index) }.getOrNull() }
+    if (dimensions == null) {
+        Box(Modifier.fillMaxWidth().height(320.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+        return
+    }
     val imageRegions by
         produceState(emptyList<List<PointN>>(), session, index, preserveImageColor, tone == 0) {
             value =
@@ -677,14 +688,20 @@ internal fun ReaderPage(
                     }
                     hits.forEach { hit ->
                         val p = viewport.view(PointN(hit.left, hit.top))
-                        drawRect(
-                            Color(0x88FFD54F),
-                            Offset(p.x * size.width, p.y * size.height),
+                        val at = Offset(p.x * size.width, p.y * size.height)
+                        val extent =
                             Size(
                                 (hit.right - hit.left) / viewport.width * size.width,
                                 (hit.bottom - hit.top) / viewport.height * size.height,
-                            ),
-                        )
+                            )
+                        if (outlineHits)
+                            drawRect(
+                                Color(0xE6D84315),
+                                at,
+                                extent,
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx()),
+                            )
+                        else drawRect(Color(0x88FFD54F), at, extent)
                     }
                 }
             }

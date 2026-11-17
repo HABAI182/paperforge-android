@@ -102,6 +102,9 @@ internal fun PdfWatermarkPanel(vm: MainViewModel, source: File, name: String) {
     var removedHere by remember { mutableIntStateOf(0) }
     val preview by
         produceState<PreviewState?>(null, source, page, chosen, after) {
+            // The state outlives each run: the last preview, its session already closed, was still there when "去除后"
+            // was chosen again, and drawing it crashed the app. Each run starts empty and empties it before closing.
+            value = null
             if (!after) return@produceState
             delay(150)
             val file = File(context.cacheDir, "wm-preview-${UUID.randomUUID()}.pdf")
@@ -124,6 +127,7 @@ internal fun PdfWatermarkPanel(vm: MainViewModel, source: File, name: String) {
             removedHere = ready.removed
             value = ready
             awaitDispose {
+                value = null
                 ready.session?.close()
                 ready.file?.delete()
             }
@@ -147,7 +151,7 @@ internal fun PdfWatermarkPanel(vm: MainViewModel, source: File, name: String) {
                 style = MaterialTheme.typography.bodyMedium,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                FilterChip(!after, { after = false }, label = { Text("原页（标出候选）") })
+                FilterChip(!after, { after = false }, label = { Text("原页（标出候选）") }, modifier = Modifier.testTag("wm-original"))
                 FilterChip(after, { after = true }, label = { Text("去除后") }, modifier = Modifier.testTag("wm-after"))
                 FilterChip(picking, { picking = !picking }, label = { Text("框选") }, enabled = !after)
             }
@@ -170,6 +174,7 @@ internal fun PdfWatermarkPanel(vm: MainViewModel, source: File, name: String) {
                             },
                         onTransform = { transform = it },
                         onTap = {},
+                        outlineHits = true,
                         onLinkTap = { p ->
                             val hit = here.filter { it.second.box.size == 4 && p.x in it.second.box[0].x..it.second.box[2].x && p.y in it.second.box[0].y..it.second.box[2].y }
                                 .minByOrNull { it.second.area }?.first

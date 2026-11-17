@@ -3,6 +3,7 @@ package cn.paperforge.app
 import android.graphics.Bitmap
 import android.net.Uri
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.lifecycle.ViewModelProvider
@@ -46,7 +47,7 @@ class WatermarkPreviewUiTest {
         try {
             compose.waitUntil(ms) {
                 check(!failureShown()) { "$label: preview failed" }
-                compose.onAllNodes(hasTestTag("reader-viewport-0").or(hasTestTag("reader-viewport-1")).or(hasTestTag("reader-viewport-2"))
+                compose.onAllNodes(SemanticsMatcher("a rendered reader page") { it.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.TestTag)?.startsWith("reader-viewport-") == true }
                         .and(hasAnyAncestor(hasTestTag(view))), useUnmergedTree = true)
                     .fetchSemanticsNodes().isNotEmpty()
             }
@@ -99,5 +100,58 @@ class WatermarkPreviewUiTest {
             compose.waitForIdle()
         }
         File(out, "timing.json").writeText(report.toString(1))
+    }
+
+    /**
+     * The crash: switching between the original and "去除后" again and again, with page turns between. Each switch
+     * must render a page; afterwards the original must show the page's own colours (no yellow over it).
+     */
+    @Test
+    fun rapidSwitchingDoesNotCrashAndOriginalKeepsItsColours() {
+        val vm = ViewModelProvider(compose.activity)[MainViewModel::class.java]
+        val report = JSONObject()
+        for (name in listOf("camscanner-zh.pdf", "wm-guide.pdf", "word-watermark.pdf")) {
+            val file = File(app.filesDir, "corpus/$name")
+            assertTrue("push $name to files/corpus first", file.exists())
+            val stem = name.substringBefore('.')
+            compose.runOnIdle {
+                vm.watermarkInput.value = Uri.fromFile(file)
+                vm.screen.value = "document-watermarks"
+            }
+            compose.waitUntil(60000) { compose.onAllNodesWithTag("wm-after", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
+            rendered("wm-view-original", "$stem-start")
+            val t0 = System.nanoTime()
+            repeat(25) { round ->
+                compose.onNodeWithTag("wm-after", useUnmergedTree = true).performScrollTo().performClick()
+                Thread.sleep(if (round % 3 == 0) 30 else 160)
+                compose.onNodeWithTag("wm-original", useUnmergedTree = true).performScrollTo().performClick()
+                Thread.sleep(if (round % 4 == 0) 20 else 120)
+                check(!failureShown()) { "$stem: failure shown at round $round" }
+                if (round % 5 == 4) {
+                    val next = compose.onAllNodes(hasText("下一页").and(hasClickAction()).and(isEnabled()))
+                    val prev = compose.onAllNodes(hasText("上一页").and(hasClickAction()).and(isEnabled()))
+                    runCatching { (if (next.fetchSemanticsNodes().isNotEmpty()) next[0] else prev[0]).performScrollTo().performClick() }
+                }
+            }
+            rendered("wm-view-original", "$stem-end-original")
+            compose.onNodeWithTag("wm-after", useUnmergedTree = true).performScrollTo().performClick()
+            rendered("wm-view-after", "$stem-end-after")
+            compose.onNodeWithTag("wm-original", useUnmergedTree = true).performScrollTo().performClick()
+            rendered("wm-view-original", "$stem-colour")
+            // The paper of the original must stay neutral: on the brightest half of its pixels, blue as high as red.
+            compose.waitForIdle()
+            Thread.sleep(400)
+            val image = compose.onNodeWithTag("wm-view-original", useUnmergedTree = true).captureToImage().asAndroidBitmap()
+            File(out, "$stem-original-colour.png").outputStream().use { image.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            val pixels = IntArray(image.width * image.height).also { image.getPixels(it, 0, image.width, 0, 0, image.width, image.height) }
+            val bright = pixels.filter { (it shr 16 and 255) + (it shr 8 and 255) + (it and 255) > 600 }
+            val red = bright.map { it shr 16 and 255 }.average()
+            val blue = bright.map { it and 255 }.average()
+            report.put(stem, JSONObject().put("switches", 50).put("ms", (System.nanoTime() - t0) / 1_000_000).put("paperRed", red).put("paperBlue", blue))
+            assertTrue("$stem: the original's paper is tinted (red ${"%.1f".format(red)} vs blue ${"%.1f".format(blue)})", red - blue < 12)
+            compose.runOnIdle { vm.screen.value = "home" }
+            compose.waitForIdle()
+        }
+        File(out, "switching.json").writeText(report.toString(1))
     }
 }
