@@ -1,7 +1,7 @@
 # Publishes a verified, signed PaperForge build as a GitHub Release with the authenticated GitHub CLI, then checks
 # what was published the way users and the in-app updater see it.
 #
-#   scripts/publish_release.ps1 -Version 2.0.1 -Assets <folder from build_distribution.py> -Notes <release notes .md>
+#   scripts/publish_release.ps1 -Version 2.1.0 -Assets <folder from build_distribution.py> -Notes <release notes .md>
 #
 # Run it only after the full device/unit suite passed and the signed release was built from the commit the tag
 # points to. It never overwrites anything: it stops if the release already exists (drafts included), never deletes

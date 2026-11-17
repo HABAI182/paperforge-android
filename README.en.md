@@ -4,7 +4,7 @@
 
 PaperForge is an open-source Android document scanner and PDF workbench. It scans with the camera, crops and flattens pages, removes shadows and show-through, recognises text, reads and annotates PDFs, and converts formats. Scanning and recognition run on the phone. There are no accounts, ads or subscriptions.
 
-**Current version: v2.0.1.** Requires Android 8.0 or later on a 64-bit ARM phone.
+**Current version: v2.1.0.** Requires Android 8.0 or later on a 64-bit ARM phone.
 
 [Download](https://github.com/HABAI182/paperforge-android/releases/latest) · [Changelog](CHANGELOG.en.md) · [Install and update](docs/INSTALL.md) · [Provenance and licences](docs/PROVENANCE.md)
 
@@ -25,21 +25,21 @@ PaperForge is an open-source Android document scanner and PDF workbench. It scan
   - Check for updates in the app. When GitHub is unreliable, downloads fall back to mirrors.
   - Every download is checked against its SHA-256 and its signature.
 
+## Highlights of v2.1.0
+
+- More accurate flattening of book pages: handwritten notes, short code lines and rows of fractions no longer twist the printed lines beside them.
+- Paper cleanup: lines showing through from the back are no longer kept as rules, and small print and lone symbols such as ①② are kept more completely.
+- PDF text editing on the page itself: press and drag to select. When a font lacks some characters, only those use a matching font and the rest keep the original. The font panel docks below the page, so you see each choice as you try it.
+- Font manager: 63 openly licensed fonts to download (Chinese, Japanese, Korean, Latin, handwriting, calligraphy, monospace and more), from whichever source is reachable.
+- Watermark removal handles more scan-app stamps, Word header watermarks and tiled image watermarks. Switching the preview quickly no longer crashes, and the original no longer looks yellow.
+- Library: status tags such as "Edited" and "Watermark removed", and the full file name can be viewed and copied.
+
 ## Highlights of v2.0.1
 
 - Original-mode exports keep all the detail the camera captured. An unedited full page uses the camera's JPEG as is, and a cropped page keeps the photo's resolution.
 - Photos save at JPEG quality 97 and the camera's highest 4:3 resolution. Where the phone offers its own capture enhancement (HDR, night), PaperForge uses it.
 - A redesigned crop magnifier: it stays clear of your finger, marks the point with a crosshair and adds arrow-key nudges.
 - Edge finding: PageNet v3 finds the top sheet of a stack, and outlines whole multi-colour covers.
-
-## Highlights of v2.0.0
-
-- Once the phone is still, the camera outline shows the final crop, and it moves smoothly.
-- A new navigation, card and editor layout, with smoother page transitions and expanding cards.
-- Page detection uses PageNet, a model trained by this project, checked against the photo's real paper edges.
-- Engineering drawings keep their construction lines, dashes and sketches. On ruled paper, strokes no longer break where they cross a rule.
-- Covers and colour pictures keep their colour. Manual crops can extend past the old page edge.
-- Updates can download from mirrors and resume interrupted downloads.
 
 See the [changelog](CHANGELOG.en.md) for everything, including known limitations.
 
@@ -51,7 +51,7 @@ Interface screenshots are from an emulator.
 
 ## Download and install
 
-1. Download `PaperForge-2.0.1-full-arm64-v8a.apk` from the [releases page](https://github.com/HABAI182/paperforge-android/releases/latest).
+1. Download `PaperForge-2.1.0-full-arm64-v8a.apk` from the [releases page](https://github.com/HABAI182/paperforge-android/releases/latest).
 2. Optionally check it against `SHA256SUMS.txt` on the same page.
 3. Allow installs from unknown sources. Installing over an older PaperForge keeps your documents.
 

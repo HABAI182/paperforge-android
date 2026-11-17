@@ -21,7 +21,7 @@ import org.junit.runner.RunWith
  * offers nothing once that version is installed.
  *
  * Runs only when given the release to expect:
- * `-e repo HABAI182/paperforge-android -e versionCode 20042 -e versionName 2.0.1 -e previousCode 20036
+ * `-e repo HABAI182/paperforge-android -e versionCode 20043 -e versionName 2.1.0 -e previousCode 20042
  *  -e sha256 <hex> -e bytes <n>`
  * plus, for a device without internet access, `-e served <dir>`: a folder on the device holding the published
  * data fetched elsewhere, byte for byte — `releases.json` (the API's release list), `assets/<id>` (each listed

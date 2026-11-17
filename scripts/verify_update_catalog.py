@@ -23,7 +23,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--fixtures", type=pathlib.Path, required=True)
     parser.add_argument("--json-jar", type=pathlib.Path, required=True)
-    parser.add_argument("--legacy-ref", default="v2.0.0")
+    parser.add_argument("--legacy-ref", default="v2.0.1")
+    parser.add_argument("--new", default="2.1.0", help="version just published")
+    parser.add_argument("--old", default="2.0.1", help="the release before it")
     parser.add_argument("--output", type=pathlib.Path, required=True)
     args = parser.parse_args()
     repo = pathlib.Path(__file__).resolve().parents[1]
@@ -38,11 +40,11 @@ def main():
         raw = path.read_bytes()
         data = json.loads(raw.decode("utf-8-sig"))
         manifests[data["versionName"]] = (raw, data)
-    new_bytes, new = manifests["2.0.1"]
-    old_bytes, old = manifests["2.0.0"]
+    new_bytes, new = manifests[args.new]
+    old_bytes, old = manifests[args.old]
     assert new["versionCode"] > old["versionCode"]
     new_artifact = new["artifacts"][0]
-    newest_release = next(r for r in releases if r["tag_name"] == "v2.0.1")
+    newest_release = next(r for r in releases if r["tag_name"] == "v" + args.new)
     published_apk = next(a for a in newest_release["assets"] if a["name"] == new_artifact["file"])
     assert new_artifact["bytes"] == published_apk["size"]
     assert "sha256:" + new_artifact["sha256"] == published_apk["digest"]
@@ -53,7 +55,7 @@ def main():
                 assets[asset["id"]] = manifests[release["tag_name"].removeprefix("v")][0]
 
     state = {"scenario": "fresh", "requests": []}
-    older_releases = json.dumps([r for r in releases if r["tag_name"] != "v2.0.1"]).encode()
+    older_releases = json.dumps([r for r in releases if r["tag_name"] != "v" + args.new]).encode()
 
     class Handler(http.server.BaseHTTPRequestHandler):
         def log_message(self, *_):
@@ -157,8 +159,8 @@ fun main(args: Array<String>) = runBlocking {
                     assert candidate["bytes"] == new_artifact["bytes"]
                     assert candidate["fileName"] == new_artifact["file"]
                     if label == "fixed" and scenario != "fresh":
-                        assert "/releases/download/v2.0.1/" in candidate["assetUrl"]
-                        assert all("/releases/download/v2.0.1/" in u for u in candidate["mirrors"])
+                        assert f"/releases/download/v{args.new}/" in candidate["assetUrl"]
+                        assert all(f"/releases/download/v{args.new}/" in u for u in candidate["mirrors"])
                 elif label == "legacy" and scenario in ("stale-api", "mirror", "wrong-distribution"):
                     assert not candidates, (label, scenario, result)
                 elif label == "legacy" and scenario == "development":

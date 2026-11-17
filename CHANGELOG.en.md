@@ -4,6 +4,66 @@
 
 Notes for versions before 2.0.0 are in Chinese in [CHANGELOG.md](CHANGELOG.md).
 
+## 2.1.0 · 2026-11-17
+
+A feature release after 2.0.1 (internal build 20043). It focuses on scan quality, PDF text editing, watermark removal, fonts and the library. Install it over 2.0.1: documents, settings and backups are kept.
+
+### Scanning and image quality
+
+- Book-page flattening: near the spine, the page's bend is estimated from its text lines. A "line" that clearly disagrees with the lines above and below it (a handwritten note in the margin, a short code line, a row of fractions) is now left out, so it no longer twists the printed text beside it. Which pages get flattened is unchanged.
+- A rule is recognised only where paper lies on both sides of it. Straight lines showing through from the back are no longer kept as rules.
+- Small print on ruled pages and lone printed symbols such as ①② are kept more completely. Rule stubs left at the page edge are cleared.
+- A ruled notebook lying on a book, or offset sheets: the top sheet is found by its own rules and edges. A sliver of the facing page and a curved page seam are cut along the seam.
+- Pages photographed sideways or upside down are turned upright from their content, and sideways pages are flattened too.
+- Book mode: left page, right page or both, cut only at a certain gutter. In a two-page spread, the gutter is found from the paper's shadow and splitting is offered.
+- The "强力去背景" filter is merged into "练习册".
+- The page pipeline is prepared before the first page. Importing photos saves the working copy while processing, so imports finish sooner.
+- A new optional detector, "新模型识边（试用）". Settings → 纸张定位 lists the models each engine runs.
+
+### PDF text editing
+
+- The page itself is the editing surface: tap to select a line, press and drag to select several. Editing follows the lines as you see them and splits at column gutters.
+- Change the font, colour, weight and size. Edited text can be edited again.
+- When a font lacks some characters, only those use a similar font and the rest keep the original. Copy and search still return the right text.
+- The font panel docks below the page, so the page stays visible with a live preview while you choose. Done keeps the choice and Cancel restores the original font.
+- The page no longer flashes to a loading state after an edit, undo or redo.
+
+### Fonts
+
+- Font manager: 63 openly licensed fonts to download. They cover Simplified and Traditional Chinese, Japanese, Korean, Latin serif and sans, handwriting, calligraphy and monospace, plus Arabic, Hebrew, Devanagari and Thai. Filter by category, or import your own TTF.
+- Downloads try nine sources, starting with the one that last worked. Fonts download on demand, so the APK does not grow.
+- New built-in fonts, including Zhuque Fangsong, and font families.
+
+### Watermark removal
+
+- PDF watermark objects are removed structurally, and content covered by scanned watermarks is restored.
+- More scan-app stamps, Word header watermarks, tiled faint images and page-sized image watermarks are handled.
+- Preview: switching quickly between original and removed no longer crashes. The original no longer looks yellow, suspected marks are outlined thinly, and the preview matches the export.
+
+### Library, reading and About
+
+- Status tags: "Edited", "Watermark removed", "Annotated" and "PDF/A". They are independent of the file name, several can show at once, and they follow the app language. A watermark-removed copy that is then edited shows both.
+- File names wrap to two lines. The more menu shows the full name at the top, with a copy action.
+- Derived documents (annotated, edited and watermark-removed copies) are named in the app language, without stacked suffixes.
+- A more compact filter bar and document cards. Text editing can be opened from the reader.
+- About: Open Source Licenses and Acknowledgments pages.
+
+### Export, backup and updates
+
+- PDF export: image quality, output resolution and lossless storage are set separately.
+- Backups skip files that no longer exist instead of failing, and a page without its image is never reported as restored.
+- Updates: cached update catalogs are cross-checked, and release downloads are pinned.
+
+### Camera
+
+- After tapping Scan, the camera starts once the opening animation has finished, and the outline is not redrawn every frame while it is still, so opening is smoother.
+- The live outline moves smoothly and leaves no stale outline. A new scan joins the library with its first page. On retake, the new photo shows as soon as its paper is found.
+
+### Known limitations
+
+- On some phones, the first seconds after the camera opens may still drop a few frames.
+- Font sources have not been tested from every region. If one source fails, the next is used automatically.
+
 ## 2.0.1 · 2026-11-10
 
 A revision of 2.0.0 (internal build 20042). It focuses on original-photo detail, manual cropping and automatic edge finding.
