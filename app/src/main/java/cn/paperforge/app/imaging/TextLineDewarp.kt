@@ -140,6 +140,9 @@ internal object TextLineDewarp {
                         list
                     }
                     .sortedBy { it.center }
+            // Whether the page is corrected, and the baseline statistics, still come from every line found; only
+            // the shape of the correction follows the lines that agree with their neighbours (see [consistent]).
+            val shaped = consistent(lines, h)
             val enough =
                 lines.size >= ScanConfig.int("dewarpMinimumLines", 3) &&
                     lines.last().center - lines.first().center > h * .16
@@ -158,11 +161,11 @@ internal object TextLineDewarp {
                 fun offset(line: Ridge) =
                     line.curve * (u * u - 1.0 / 3) +
                         line.slope * u * ScanConfig.float("dewarpSlopeWeight", 1f)
-                val after = lines.indexOfFirst { it.center >= y }
-                if (after == 0) return offset(lines.first())
-                if (after < 0) return offset(lines.last())
-                val a = lines[after - 1]
-                val b = lines[after]
+                val after = shaped.indexOfFirst { it.center >= y }
+                if (after == 0) return offset(shaped.first())
+                if (after < 0) return offset(shaped.last())
+                val a = shaped[after - 1]
+                val b = shaped[after]
                 val t = ((y - a.center) / max(1.0, b.center - a.center)).coerceIn(0.0, 1.0)
                 return offset(a) * (1 - t) + offset(b) * t
             }
@@ -221,6 +224,50 @@ internal object TextLineDewarp {
         } finally {
             owned.forEach(Mat::release)
         }
+    }
+
+    /**
+     * The lines whose shape agrees with the lines around them. A page bends smoothly, so a text line's tilt and
+     * curvature lie between those of the lines above and below it (perspective and curl change them steadily down the
+     * page). Handwriting across the print, a short code line or a row of stacked fractions also forms a wide ink band,
+     * but its fitted tilt and curve are its own; extended across the page they twisted the printed lines beside them.
+     *
+     * Each line's offset curve (at the left edge, middle and right edge) is compared with the one interpolated from
+     * its neighbours above and below; the first and last line, which have one neighbour, are allowed twice as much.
+     * The worst line beyond [h] × dewarpLineConsensus (thumbnail pixels) is left out and the rest compared again,
+     * so one stray band cannot spoil its neighbours' reference. The page there follows the lines that agree.
+     */
+    private fun consistent(lines: List<Ridge>, h: Int): List<Ridge> {
+        val tolerance = h * ScanConfig.float("dewarpLineConsensus", .006f).toDouble()
+        if (tolerance <= 0.0) return lines
+        fun offsets(line: Ridge) = doubleArrayOf(-1.0, 0.0, 1.0).map { u -> line.curve * (u * u - 1.0 / 3) + line.slope * u }
+        val kept = lines.toMutableList()
+        while (kept.size >= 5) {
+            var worst = -1
+            var worstExcess = 1.0
+            for (i in kept.indices) {
+                val reference: List<Double>
+                val allowed: Double
+                if (i in 1 until kept.size - 1) {
+                    val above = kept[i - 1]
+                    val below = kept[i + 1]
+                    val t = (kept[i].center - above.center) / max(1.0, below.center - above.center)
+                    reference = offsets(above).zip(offsets(below)) { a, b -> a * (1 - t) + b * t }
+                    allowed = tolerance
+                } else {
+                    reference = offsets(if (i == 0) kept[1] else kept[kept.size - 2])
+                    allowed = tolerance * 2
+                }
+                val excess = offsets(kept[i]).zip(reference) { a, b -> abs(a - b) }.max() / allowed
+                if (excess > worstExcess) {
+                    worst = i
+                    worstExcess = excess
+                }
+            }
+            if (worst < 0) break
+            kept.removeAt(worst)
+        }
+        return kept
     }
 
     /** Small original least-squares solver with partial pivoting. */
