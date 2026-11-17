@@ -93,18 +93,16 @@ class NativeEditRunsFlowTest {
     }
 
     @Test
-    fun replaceWordUsesSubstituteWhenSubsetLacksGlyphs() {
+    fun replaceWordFillsGlyphsTheSubsetLacks() {
         val input = sample("zh-native-subset.pdf")
         val items = objects(input)
         val target = items.first { it.text.startsWith("矩阵的秩") }
-        // The subset embeds only the glyphs used; new characters are missing from it.
+        // The subset embeds only the glyphs used; new characters are missing from it. The edit no longer fails:
+        // what the subset has keeps the subset, the rest is filled by a built-in font of the same style.
         val runs = NativeTextRuns.replace(NativeTextRuns.initial(target.text), 0, 2, "向量组")
-        val failure = runCatching { save(input, listOf(NativePdfEditor.Edit.of(target, runs)!!), "zh-fail.pdf") }
-        assertTrue("subset font must not print missing glyphs", failure.isFailure)
-        assertTrue(failure.exceptionOrNull()!!.message!!.contains("字形"))
-        val sub = NativeFontLibrary.substitute(app, target, "向量组")!!
-        val fixed = NativeTextRuns.replace(NativeTextRuns.initial(target.text), 0, 2, "向量组", NativeStyle(font = sub.id))
-        val (output, _) = save(input, listOf(NativePdfEditor.Edit.of(target, fixed)!!), "zh-replaced.pdf")
+        val (output, report) = save(input, listOf(NativePdfEditor.Edit.of(target, runs)!!), "zh-replaced.pdf")
+        val fonts = report.getJSONArray("edits").getJSONObject(0).getString("actualFont").split(",").filter { it.isNotBlank() }
+        assertTrue("both the subset and a fill-in font are used: $fonts", fonts.distinct().size >= 2)
         val page = read(output)
         assertTrue(page, page.contains("向量组的秩等于其行阶梯形中非零行的个数"))
         val after = objects(output)
@@ -290,5 +288,35 @@ class NativeEditRunsFlowTest {
         assertTrue(text(output).contains("Standard Arial-like text"))
         val again = objects(output).first { it.index == target.index }
         assertTrue(abs(box(again)!!.x - box(target)!!.x) < .002f)
+    }
+
+    /**
+     * A chosen font that lacks part of the text (a Latin font on a Chinese line): Latin takes the chosen font, Chinese
+     * keeps the line's own font, nothing is refused or lost, and the text reads back the same.
+     */
+    @Test
+    fun chosenFontWithoutChineseKeepsOriginalForChineseCharacters() {
+        val input = sample("mixed-zh-en.pdf")
+        val before = objects(input)
+        val target = before.first { it.text.startsWith("请于") }
+        // A packaged font with Latin letters and digits that lacks 请: Liberation Sans in the full package; in the debug
+        // package, the Traditional Chinese face (it has 于, 年 … but not the simplified 请).
+        val latin =
+            com.tom_roush.pdfbox.pdmodel.PDDocument().use { probe ->
+                NativeFontLibrary.available(app).firstOrNull { f ->
+                    runCatching {
+                        val font = NativeFontLibrary.open(app, f.id)!!.use { com.tom_roush.pdfbox.pdmodel.font.PDType0Font.load(probe, it, true) }
+                        NativePdfEditor.missing(font, "aZ2").isEmpty() && NativePdfEditor.missing(font, "请").isNotEmpty()
+                    }.getOrDefault(false)
+                }
+            }
+        assertTrue("a Latin-only built-in font is packaged", latin != null)
+        val runs = NativeTextRuns.restyle(NativeTextRuns.initial(target.text), 0, target.text.length, NativeStyle(font = latin!!.id))
+        val (output, report) = save(input, listOf(NativePdfEditor.Edit.of(target, runs)!!), "mixed-latin-font.pdf")
+        val fonts = report.getJSONArray("edits").getJSONObject(0).getString("actualFont").split(",").filter { it.isNotBlank() }
+        assertTrue("both fonts used: $fonts", fonts.distinct().size >= 2)
+        
+        assertEquals(read(input), read(output))
+        assertEquals(before.size, objects(output).size)
     }
 }

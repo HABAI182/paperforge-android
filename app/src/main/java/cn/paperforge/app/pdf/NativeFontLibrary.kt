@@ -113,28 +113,34 @@ object NativeFontLibrary {
 
     /** A reasonable built-in stand-in when the original (subset) font lacks characters. */
     fun substitute(context: Context, item: NativePdfEditor.TextObject, text: String): LibraryFont? {
+        val ready = available(context)
+        return fallbackIds(item.font, item.serif, item.monospace, text).firstNotNullOfOrNull { id -> ready.firstOrNull { it.id == id } }
+    }
+
+    /**
+     * Built-in fonts, best match first, that can stand in for a font named [fontName] (its style: kai, fangsong,
+     * serif, bold, monospace) for [text]. Always ends with "CJK", the PaperForge font with Chinese and Latin.
+     */
+    fun fallbackIds(fontName: String, serif: Boolean, monospace: Boolean, text: String): List<String> {
         val han = text.any { Character.UnicodeScript.of(it.code) == Character.UnicodeScript.HAN }
-        val name = item.font.lowercase()
+        val name = fontName.lowercase()
         val bold = "bold" in name || "black" in name || "heavy" in name || "hei" in name && "bold" in name
         val kai = "kai" in name || "楷" in name
         val fang = "fang" in name || "仿宋" in name
-        val wanted =
-            when {
-                kai && han -> listOf("builtin:kai")
-                fang && han -> listOf("builtin:fangsong", "builtin:serif-sc")
-                han && item.serif -> if (bold) listOf("builtin:serif-sc-bold") else listOf("builtin:serif-sc")
-                han -> if (bold) listOf("builtin:sans-sc-bold", "CJK") else listOf("CJK")
-                item.monospace -> listOf("builtin:liberation-mono")
-                item.serif ->
-                    if (bold) listOf("builtin:liberation-serif-bold", "builtin:serif-sc-bold")
-                    else listOf("builtin:liberation-serif", "builtin:serif-sc")
-                "calibri" in name -> listOf("builtin:carlito", "CJK")
-                "cambria" in name -> listOf("builtin:caladea", "builtin:serif-sc")
-                else ->
-                    if (bold) listOf("builtin:liberation-sans-bold", "builtin:sans-sc-bold")
-                    else listOf("builtin:liberation-sans", "CJK")
-            } + "CJK"
-        val ready = available(context)
-        return wanted.firstNotNullOfOrNull { id -> ready.firstOrNull { it.id == id } }
+        return when {
+            kai && han -> listOf("builtin:kai")
+            fang && han -> listOf("builtin:fangsong", "builtin:serif-sc")
+            han && serif -> if (bold) listOf("builtin:serif-sc-bold") else listOf("builtin:serif-sc")
+            han -> if (bold) listOf("builtin:sans-sc-bold", "CJK") else listOf("CJK")
+            monospace -> listOf("builtin:liberation-mono")
+            serif ->
+                if (bold) listOf("builtin:liberation-serif-bold", "builtin:serif-sc-bold")
+                else listOf("builtin:liberation-serif", "builtin:serif-sc")
+            "calibri" in name -> listOf("builtin:carlito", "CJK")
+            "cambria" in name -> listOf("builtin:caladea", "builtin:serif-sc")
+            else ->
+                if (bold) listOf("builtin:liberation-sans-bold", "builtin:sans-sc-bold")
+                else listOf("builtin:liberation-sans", "CJK")
+        }.plus("CJK").distinct()
     }
 }

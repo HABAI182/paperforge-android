@@ -128,26 +128,30 @@ internal object PdfLineWriter {
                     val text = Normalizer.normalize(run.text, Normalizer.Form.NFC)
                     require(text.none { Character.isISOControl(it) }) { "一行只能输入一行文字" }
                     val ref = chars.getOrNull(charIndexAt(origCursor))?.glyph ?: reference
-                    val font = fonts.get(run.font, run.fontSha256, ref.state.font!!)
-                    val lacking = NativePdfEditor.missing(font, text)
-                    require(lacking.isEmpty()) {
-                        val which = if (run.font == NativeRun.ORIGINAL) "原字体（文件只嵌入了用到的字）" else "所选字体"
-                        "${which}缺少「${lacking.take(8).joinToString("")}」的字形，请换用含这些字的字体"
-                    }
-                    val bytes = NativePdfEditor.encode(font, text)
-                    if (font is PDType0Font && run.font != NativeRun.ORIGINAL) {
-                        text.codePoints().toArray().forEach { font.addToSubset(it) }
-                        mapping?.record(font, text)
-                    }
+                    val original = ref.state.font!!
+                    val chosen = fonts.get(run.font, run.fontSha256, original)
+                    // Each character in the chosen font when it has it; else the line's own font, if it does; else a
+                    // built-in font of the same style. A font that lacks a few characters no longer refuses the
+                    // whole edit: the rest of the text keeps the chosen font, and the gaps are filled per character.
+                    val parts = splitByCoverage(text, chosen, run.font == NativeRun.ORIGINAL, original, fonts)
                     val visual = run.size ?: ref.drawnSize
                     val tfs = ref.state.size * visual / ref.drawnSize
-                    var width = 0f
-                    val input = ByteArrayInputStream(bytes)
-                    while (input.available() > 0) width += font.getDisplacement(font.readCode(input)).x * tfs
-                    val pageAdvance = width * ref.state.horizontal / 100f * scaleOf(ref.pageMatrix)
-                    pieces +=
-                        Piece(null, run.copy(text = text), charAlong(charIndexAt(origCursor)), font, bytes, tfs, ref.state.horizontal,
-                            pageAdvance, ref, replacedEnd)
+                    for ((font, part) in parts) {
+                        val bytes = NativePdfEditor.encode(font, part)
+                        // Only a font this edit embeds can grow its subset. The line's own font, read from the file,
+                        // is final; it may serve characters a chosen font lacks, but cannot take new glyphs.
+                        if (font is PDType0Font && font.willBeSubset()) {
+                            part.codePoints().toArray().forEach { font.addToSubset(it) }
+                            mapping?.record(font, part)
+                        }
+                        var width = 0f
+                        val input = ByteArrayInputStream(bytes)
+                        while (input.available() > 0) width += font.getDisplacement(font.readCode(input)).x * tfs
+                        val pageAdvance = width * ref.state.horizontal / 100f * scaleOf(ref.pageMatrix)
+                        pieces +=
+                            Piece(null, run.copy(text = part), charAlong(charIndexAt(origCursor)), font, bytes, tfs, ref.state.horizontal,
+                                pageAdvance, ref, replacedEnd)
+                    }
                     if (nextKept != null) origCursor = maxOf(origCursor, nextKept.origStart)
                 }
             }
@@ -418,5 +422,60 @@ internal object PdfLineWriter {
         val pageTokens = model.streams[0].tokens as MutableList<Any>
         pageTokens[stream.drawnAt - 1] = name
         return copy
+    }
+
+    /**
+     * [text] cut into consecutive pieces, each with the first font that shows all of it: [chosen], then the line's
+     * [original] font (when another was chosen), then built-in fonts of the original's style, then the PaperForge CJK
+     * font. Spaces and combining marks go with the character before them when that font can encode them. Throws only
+     * for characters no font has.
+     */
+    internal fun splitByCoverage(
+        text: String,
+        chosen: PDFont,
+        chosenIsOriginal: Boolean,
+        original: PDFont,
+        fonts: NativePdfEditor.FontCache,
+    ): List<Pair<PDFont, String>> {
+        if (NativePdfEditor.missing(chosen, text).isEmpty()) return listOf(chosen to text)
+        val descriptor = original.fontDescriptor
+        val fallbackIds = NativeFontLibrary.fallbackIds(
+            original.name.orEmpty(), descriptor?.isSerif == true, descriptor?.isFixedPitch == true, text,
+        )
+        val chain = sequence {
+            yield(chosen)
+            if (!chosenIsOriginal) yield(original)
+            for (id in fallbackIds) runCatching { fonts.get(id, "", original) }.getOrNull()?.let { yield(it) }
+        }
+        val known = mutableListOf<PDFont>()
+        fun fontFor(s: String): PDFont? {
+            known.firstOrNull { NativePdfEditor.missing(it, s).isEmpty() }?.let { return it }
+            for (font in chain.drop(known.size)) {
+                known += font
+                if (NativePdfEditor.missing(font, s).isEmpty()) return font
+            }
+            return null
+        }
+        fun encodes(font: PDFont, s: String) = runCatching { NativePdfEditor.encode(font, s) }.isSuccess
+        val out = mutableListOf<Pair<PDFont, StringBuilder>>()
+        val lacking = mutableListOf<String>()
+        var i = 0
+        while (i < text.length) {
+            val cp = text.codePointAt(i)
+            val s = String(Character.toChars(cp))
+            val type = Character.getType(cp)
+            val attaches = Character.isWhitespace(cp) || type == Character.NON_SPACING_MARK.toInt() || type == Character.ENCLOSING_MARK.toInt()
+            val previous = out.lastOrNull()?.first
+            val font =
+                if (attaches && previous != null && encodes(previous, s)) previous
+                else if (Character.isWhitespace(cp)) (listOf(chosen) + known).firstOrNull { encodes(it, s) } ?: fontFor(s)
+                else fontFor(s)
+            if (font == null) lacking += s
+            else if (font === previous) out.last().second.append(s)
+            else out += font to StringBuilder(s)
+            i += Character.charCount(cp)
+        }
+        require(lacking.isEmpty()) { "没有可用的字体能显示「${lacking.distinct().take(8).joinToString("")}」" }
+        return out.map { it.first to it.second.toString() }
     }
 }
