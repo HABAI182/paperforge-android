@@ -33,14 +33,22 @@ $sums = Get-Content (Join-Path $Assets "SHA256SUMS.txt") -Encoding UTF8
 if (-not ($sums -match "^$($artifact.sha256)\s+$([regex]::Escape($apkName))$")) { throw "SHA256SUMS.txt does not list the APK hash" }
 
 # Never overwrite: the release must not exist, and the tag must already be on GitHub at the manifest's commit.
+# gh answers "release not found" on stderr; Windows PowerShell 5.1 turns native stderr into an error record, which
+# "Stop" would make fatal. Native calls therefore run under "Continue" and are judged by their exit code.
+$ErrorActionPreference = "Continue"
 $existing = & $Gh release view $tag --repo $Repo --json tagName 2>$null
-if ($LASTEXITCODE -eq 0 -and $existing) { throw "release $tag already exists; nothing was changed" }
+$viewExit = $LASTEXITCODE
+$ErrorActionPreference = "Stop"
+if ($viewExit -eq 0 -and $existing) { throw "release $tag already exists; nothing was changed" }
 $remoteTag = git ls-remote --tags origin "refs/tags/$tag^{}"
 if (-not $remoteTag) { throw "tag $tag is not on GitHub; push it first" }
 if (-not $remoteTag.StartsWith($manifest.commit)) { throw "tag $tag does not point at the built commit $($manifest.commit)" }
 
-& $Gh release create $tag --repo $Repo --verify-tag --title "PaperForge $tag" --notes-file $Notes --latest @files
-if ($LASTEXITCODE -ne 0) { throw "gh release create failed" }
+$ErrorActionPreference = "Continue"
+& $Gh release create $tag --repo $Repo --verify-tag --title "PaperForge $tag" --notes-file $Notes --latest @files 2>&1 | ForEach-Object { "$_" }
+$createExit = $LASTEXITCODE
+$ErrorActionPreference = "Stop"
+if ($createExit -ne 0) { throw "gh release create failed" }
 
 # What was published: GitHub's digests, then anonymous downloads through the "latest" links the app uses.
 $work = Join-Path ([IO.Path]::GetTempPath()) "paperforge-published-$Version"
