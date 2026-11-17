@@ -143,8 +143,13 @@ class NativeEditorUiTest {
         compose.onNodeWithContentDescription("取消选择").performClick()
         // Double-tap on the text zooms in around the finger, as a user would.
         val zoomAt = point(mid(second, 6), ratio) - bounds.topLeft
-        compose.onNodeWithTag("reader-viewport-0").performTouchInput { doubleClick(zoomAt) }
-        compose.waitUntil(5000) { compose.onNodeWithTag("reader-viewport-0").fetchSemanticsNode().config[PdfViewTransformKey][0] > 1.2f }
+        // A quick double tap. The page takes two taps whose releases are under 280 ms apart; the default test gap (about
+        // 170 ms plus injection time) sometimes stretched past that on a loaded emulator, and the page did not zoom.
+        compose.onNodeWithTag("reader-viewport-0").performTouchInput { doubleClick(zoomAt, delayMillis = 100) }
+        // Polled while zoom re-renders tiles: a moment without the node is "not yet", not a failure.
+        compose.waitUntil(5000) {
+            runCatching { compose.onNodeWithTag("reader-viewport-0").fetchSemanticsNode().config[PdfViewTransformKey][0] > 1.2f }.getOrDefault(false)
+        }
         Thread.sleep(400)
         compose.waitForIdle()
         val zoomed = compose.onNodeWithTag("reader-viewport-0").fetchSemanticsNode().config[PdfViewTransformKey][0]

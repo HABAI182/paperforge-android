@@ -95,10 +95,15 @@ internal fun ReaderPage(
     // Kept while the text fades out, so the switch back to the scan is as smooth as the switch to text.
     var shownTextFile by remember { mutableStateOf(pageTextFile) }
     if (pageTextFile != null) shownTextFile = pageTextFile
+    // The page last drawn. A new session for the same page (the editor's preview after each change, the watermark
+    // screen's original/removed switch) keeps showing it until the new image is ready, instead of dropping to a
+    // spinner for a moment: that flashed the page after every edit and lost a tap made during the swap.
+    var renderedIndex by remember { mutableIntStateOf(-1) }
     val preview by
         produceState<Result<Bitmap>?>(null, session, index, renderAttempt) {
-            value = null
+            if (renderedIndex != index || value?.isFailure == true) value = null
             value = withContext(Dispatchers.IO) { runCatching { session.render(index, 1600) } }
+            renderedIndex = index
         }
     val picking by rememberUpdatedState(regionPicking)
     val pick by rememberUpdatedState(onRegionSelection)
@@ -145,6 +150,7 @@ internal fun ReaderPage(
         Box(Modifier.fillMaxWidth().height(320.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         return
     }
+    val currentDimensions by rememberUpdatedState(dimensions)
     val imageRegions by
         produceState(emptyList<List<PointN>>(), session, index, preserveImageColor, tone == 0) {
             value =
@@ -334,12 +340,14 @@ internal fun ReaderPage(
             }
             .onSizeChanged { rootSize = it }
             .clipToBounds()
-            .pointerInput(session, index) {
+            // Keyed on the page only: a new session for the same page must not restart a gesture in progress.
+            .pointerInput(index) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
                     val view = currentViewport
+                    val size0 = currentDimensions
                     val pageRatio =
-                        dimensions.first.toFloat() * view.width / (dimensions.second * view.height)
+                        size0.first.toFloat() * view.width / (size0.second * view.height)
                     val geometry =
                         ReadingFrame.fit(
                             size.width.toFloat(),

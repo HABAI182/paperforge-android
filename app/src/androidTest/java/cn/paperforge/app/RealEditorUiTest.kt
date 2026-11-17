@@ -150,7 +150,7 @@ class RealEditorUiTest {
         val applied = System.nanoTime()
         compose.onNodeWithTag("native-edit-apply").performClick()
         shot(dir, "04a-applying")
-        waitText(dir, "native-edit-message", 60000) { it.contains("已修改文字") || it.contains("新文字改用") }
+        waitText(dir, "native-edit-message", 60000) { it.contains("已修改文字") || it.contains("补齐") }
         summary.put("retype", text("native-edit-message")).put("retypeMs", (System.nanoTime() - applied) / 1_000_000)
         shot(dir, "04-retyped")
 
