@@ -1,5 +1,8 @@
 package cn.paperforge.app.ui
 
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.SystemClock
@@ -120,6 +123,19 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
     var exposure by remember { mutableFloatStateOf(0f) }
     var light by remember { mutableFloatStateOf(128f) }
     val replacement by vm.replacement.collectAsState()
+    // The camera is bound once the screen's entrance has finished. Binding (three use cases, the photo pipeline at full
+    // size) blocks the main thread for a few hundred milliseconds; started at once it fell inside the 460 ms expansion
+    // from the Scan button, and the transition visibly stuttered. The dark preview for those frames reads as the camera
+    // starting.
+    val expansion = LocalNavigationExpansion.current
+    var entered by remember { mutableStateOf(expansion == null) }
+    LaunchedEffect(expansion) {
+        if (expansion != null) {
+            withTimeoutOrNull(1200) { snapshotFlow { expansion.active }.first { !it } }
+            withFrameNanos {}
+        }
+        entered = true
+    }
     val preview = remember {
         PreviewView(context).apply {
             scaleType = PreviewView.ScaleType.FIT_CENTER
@@ -528,7 +544,7 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
             ) {
                 if (permitted) {
                     AndroidView(factory = { preview }, modifier = Modifier.fillMaxSize())
-                    if (previewSize.width > 0 && previewSize.height > 0)
+                    if (previewSize.width > 0 && previewSize.height > 0 && entered)
                         DisposableEffect(preview, lifecycle, previewSize, displayRotation) {
                             var disposed = false
                             var provider: ProcessCameraProvider? = null
@@ -999,6 +1015,13 @@ fun CameraScreen(vm: MainViewModel, onImport: () -> Unit) {
                     LaunchedEffect(Unit) {
                         var last = 0L
                         while (true) {
+                            // At rest (the outline where the camera last saw the page, or none) wait for the next
+                            // detection instead of asking for a frame every vsync: the endless frame loop kept the
+                            // whole window redrawing beside the camera preview, which showed as steady jank.
+                            if (drawn == overlay?.takeIf { it.size == 4 }) {
+                                snapshotFlow { overlay?.takeIf { it.size == 4 } }.first { it != drawn }
+                                last = 0L
+                            }
                             androidx.compose.runtime.withFrameNanos { now ->
                                 val dt = if (last == 0L) 0f else ((now - last) / 1e9f).coerceIn(0f, .1f)
                                 last = now
