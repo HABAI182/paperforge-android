@@ -7,7 +7,11 @@
   "https://cdn.jsdelivr.net/gh/google/fonts@{commit}/{path}",
   "https://fastly.jsdelivr.net/gh/google/fonts@{commit}/{path}",
   "https://gcore.jsdelivr.net/gh/google/fonts@{commit}/{path}",
+  "https://testingcf.jsdelivr.net/gh/google/fonts@{commit}/{path}",
+  "https://quantil.jsdelivr.net/gh/google/fonts@{commit}/{path}",
+  "https://cdn.jsdmirror.com/gh/google/fonts@{commit}/{path}",
   "https://raw.githubusercontent.com/google/fonts/{commit}/{path}",
+  "https://raw.gitmirror.com/google/fonts/{commit}/{path}",
   "https://github.com/google/fonts/raw/{commit}/{path}"
  ],
  "families": [
@@ -726,6 +730,994 @@
      "path": "ofl/mashanzheng/MaShanZheng-Regular.ttf",
      "size": 5857936,
      "gitSha1": "11bbfb9867d70612158229d037e7a5f622bd0e38"
+    }
+   ]
+  },
+  {
+   "id": "noto-sans-hk",
+   "nameZh": "思源黑体 香港",
+   "nameEn": "Noto Sans HK",
+   "category": "SANS",
+   "coverageZh": "繁體中文（香港）",
+   "coverageEn": "Traditional Chinese (Hong Kong)",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/notosanshk/OFL.txt",
+   "replaces": [
+    "mhei",
+    "microsoftjhenghei"
+   ],
+   "files": [
+    {
+     "name": "NotoSansHK[wght].ttf",
+     "path": "ofl/notosanshk/NotoSansHK[wght].ttf",
+     "size": 11905808,
+     "gitSha1": "8be980031e1297eeba22a783612a377d3c2da57c"
+    }
+   ]
+  },
+  {
+   "id": "noto-serif-hk",
+   "nameZh": "思源宋体 香港",
+   "nameEn": "Noto Serif HK",
+   "category": "SERIF",
+   "coverageZh": "繁體中文（香港）宋體",
+   "coverageEn": "Traditional Chinese (Hong Kong) serif",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/notoserifhk/OFL.txt",
+   "replaces": [
+    "mingliu_hkscs"
+   ],
+   "files": [
+    {
+     "name": "NotoSerifHK[wght].ttf",
+     "path": "ofl/notoserifhk/NotoSerifHK[wght].ttf",
+     "size": 16828640,
+     "gitSha1": "d1bbe703d08fdd694873649a2588a78861ac0f6c"
+    }
+   ]
+  },
+  {
+   "id": "noto-serif-jp",
+   "nameZh": "Noto Serif JP",
+   "nameEn": "Noto Serif JP",
+   "category": "SERIF",
+   "coverageZh": "日文明朝体",
+   "coverageEn": "Japanese Mincho",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/notoserifjp/OFL.txt",
+   "replaces": [
+    "msmincho",
+    "yumincho"
+   ],
+   "files": [
+    {
+     "name": "NotoSerifJP[wght].ttf",
+     "path": "ofl/notoserifjp/NotoSerifJP[wght].ttf",
+     "size": 13574352,
+     "gitSha1": "bd98d809e02880e32f20f1f2a91ef97854f52f57"
+    }
+   ]
+  },
+  {
+   "id": "noto-serif-kr",
+   "nameZh": "Noto Serif KR",
+   "nameEn": "Noto Serif KR",
+   "category": "SERIF",
+   "coverageZh": "韩文明朝体",
+   "coverageEn": "Korean serif",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/notoserifkr/OFL.txt",
+   "replaces": [
+    "batang"
+   ],
+   "files": [
+    {
+     "name": "NotoSerifKR[wght].ttf",
+     "path": "ofl/notoserifkr/NotoSerifKR[wght].ttf",
+     "size": 23795420,
+     "gitSha1": "cc85b383766708c9291f72baeeab05760774f492"
+    }
+   ]
+  },
+  {
+   "id": "lxgw-wenkai-mono-tc",
+   "nameZh": "霞鹜文楷等宽 TC",
+   "nameEn": "LXGW WenKai Mono TC",
+   "category": "SCRIPT",
+   "coverageZh": "等宽楷体",
+   "coverageEn": "Monospaced Kai",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/lxgwwenkaimonotc/OFL.txt",
+   "replaces": [],
+   "files": [
+    {
+     "name": "LXGWWenKaiMonoTC-Bold.ttf",
+     "path": "ofl/lxgwwenkaimonotc/LXGWWenKaiMonoTC-Bold.ttf",
+     "size": 12885112,
+     "gitSha1": "5e3cf0a53800659044a319abc5e74fc44af801bb"
+    },
+    {
+     "name": "LXGWWenKaiMonoTC-Regular.ttf",
+     "path": "ofl/lxgwwenkaimonotc/LXGWWenKaiMonoTC-Regular.ttf",
+     "size": 13122932,
+     "gitSha1": "667c8f44bed79f72a4bd83393d14e1f509c31b7f"
+    }
+   ]
+  },
+  {
+   "id": "long-cang",
+   "nameZh": "龙藏体",
+   "nameEn": "Long Cang",
+   "category": "HAND",
+   "coverageZh": "简体中文行书手写",
+   "coverageEn": "Chinese handwriting",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/longcang/OFL.txt",
+   "replaces": [],
+   "files": [
+    {
+     "name": "LongCang-Regular.ttf",
+     "path": "ofl/longcang/LongCang-Regular.ttf",
+     "size": 5162508,
+     "gitSha1": "363bb08696fe4d3827bd36d3d2fbc028d1205161"
+    }
+   ]
+  },
+  {
+   "id": "zhi-mang-xing",
+   "nameZh": "志莽行书",
+   "nameEn": "Zhi Mang Xing",
+   "category": "HAND",
+   "coverageZh": "简体中文行书",
+   "coverageEn": "Chinese running script",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/zhimangxing/OFL.txt",
+   "replaces": [],
+   "files": [
+    {
+     "name": "ZhiMangXing-Regular.ttf",
+     "path": "ofl/zhimangxing/ZhiMangXing-Regular.ttf",
+     "size": 4063532,
+     "gitSha1": "d037d1f00395175de01de33e62957c30a008a1b1"
+    }
+   ]
+  },
+  {
+   "id": "liu-jian-mao-cao",
+   "nameZh": "流江毛草",
+   "nameEn": "Liu Jian Mao Cao",
+   "category": "HAND",
+   "coverageZh": "简体中文草书",
+   "coverageEn": "Chinese cursive",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/liujianmaocao/OFL.txt",
+   "replaces": [],
+   "files": [
+    {
+     "name": "LiuJianMaoCao-Regular.ttf",
+     "path": "ofl/liujianmaocao/LiuJianMaoCao-Regular.ttf",
+     "size": 4951804,
+     "gitSha1": "f380deef04a5ee6d5af2c6fba60d1613d831c1aa"
+    }
+   ]
+  },
+  {
+   "id": "zcool-qingke-huangyou",
+   "nameZh": "站酷庆科黄油体",
+   "nameEn": "ZCOOL QingKe HuangYou",
+   "category": "DISPLAY",
+   "coverageZh": "简体中文标题字",
+   "coverageEn": "Chinese display",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/zcoolqingkehuangyou/OFL.txt",
+   "replaces": [],
+   "files": [
+    {
+     "name": "ZCOOLQingKeHuangYou-Regular.ttf",
+     "path": "ofl/zcoolqingkehuangyou/ZCOOLQingKeHuangYou-Regular.ttf",
+     "size": 8328684,
+     "gitSha1": "982a3b80143268592f573feb196791fbc2330e17"
+    }
+   ]
+  },
+  {
+   "id": "zcool-kuaile",
+   "nameZh": "站酷快乐体",
+   "nameEn": "ZCOOL KuaiLe",
+   "category": "DISPLAY",
+   "coverageZh": "简体中文活泼标题字",
+   "coverageEn": "Chinese playful display",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/zcoolkuaile/OFL.txt",
+   "replaces": [],
+   "files": [
+    {
+     "name": "ZCOOLKuaiLe-Regular.ttf",
+     "path": "ofl/zcoolkuaile/ZCOOLKuaiLe-Regular.ttf",
+     "size": 1514968,
+     "gitSha1": "3cf6cd927ee910d46875de173efdaac4330e84ac"
+    }
+   ]
+  },
+  {
+   "id": "eb-garamond",
+   "nameZh": "EB Garamond",
+   "nameEn": "EB Garamond",
+   "category": "SERIF",
+   "coverageZh": "西文书籍衬线",
+   "coverageEn": "Latin book serif",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/ebgaramond/OFL.txt",
+   "replaces": [
+    "garamond",
+    "adobegaramond"
+   ],
+   "files": [
+    {
+     "name": "EBGaramond-Italic[wght].ttf",
+     "path": "ofl/ebgaramond/EBGaramond-Italic[wght].ttf",
+     "size": 754468,
+     "gitSha1": "f9ad996001c8ee72fd43b4b8e67c8924b7f615b1"
+    },
+    {
+     "name": "EBGaramond[wght].ttf",
+     "path": "ofl/ebgaramond/EBGaramond[wght].ttf",
+     "size": 851176,
+     "gitSha1": "52d34b86ec20977f222ce37e8158e6b3002c0a31"
+    }
+   ]
+  },
+  {
+   "id": "crimson-pro",
+   "nameZh": "Crimson Pro",
+   "nameEn": "Crimson Pro",
+   "category": "SERIF",
+   "coverageZh": "西文正文衬线",
+   "coverageEn": "Latin text serif",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/crimsonpro/OFL.txt",
+   "replaces": [
+    "minion"
+   ],
+   "files": [
+    {
+     "name": "CrimsonPro-Italic[wght].ttf",
+     "path": "ofl/crimsonpro/CrimsonPro-Italic[wght].ttf",
+     "size": 253176,
+     "gitSha1": "d8fb3a3c3ad32ca5608969654feb002df9dd78f9"
+    },
+    {
+     "name": "CrimsonPro[wght].ttf",
+     "path": "ofl/crimsonpro/CrimsonPro[wght].ttf",
+     "size": 246324,
+     "gitSha1": "b8c1f6da0acbf2cb6d0af49ce89557288c829daa"
+    }
+   ]
+  },
+  {
+   "id": "libre-baskerville",
+   "nameZh": "Libre Baskerville",
+   "nameEn": "Libre Baskerville",
+   "category": "SERIF",
+   "coverageZh": "西文衬线",
+   "coverageEn": "Latin serif",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/librebaskerville/OFL.txt",
+   "replaces": [
+    "baskerville"
+   ],
+   "files": [
+    {
+     "name": "LibreBaskerville-Italic[wght].ttf",
+     "path": "ofl/librebaskerville/LibreBaskerville-Italic[wght].ttf",
+     "size": 167456,
+     "gitSha1": "22a7e0fa0ed2724dd8b592f3f8c0de85f3d3fda1"
+    },
+    {
+     "name": "LibreBaskerville[wght].ttf",
+     "path": "ofl/librebaskerville/LibreBaskerville[wght].ttf",
+     "size": 171900,
+     "gitSha1": "eae4eba83203138da3a3a7603b598b7ebc5a5238"
+    }
+   ]
+  },
+  {
+   "id": "lora",
+   "nameZh": "Lora",
+   "nameEn": "Lora",
+   "category": "SERIF",
+   "coverageZh": "西文衬线",
+   "coverageEn": "Latin serif",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/lora/OFL.txt",
+   "replaces": [],
+   "files": [
+    {
+     "name": "Lora-Italic[wght].ttf",
+     "path": "ofl/lora/Lora-Italic[wght].ttf",
+     "size": 221232,
+     "gitSha1": "e973ccf7e5c69a831090c729a0dc2c592f42f4cc"
+    },
+    {
+     "name": "Lora[wght].ttf",
+     "path": "ofl/lora/Lora[wght].ttf",
+     "size": 212196,
+     "gitSha1": "ee1914c3746140523de2940d267ec2215bd85d5b"
+    }
+   ]
+  },
+  {
+   "id": "pt-serif",
+   "nameZh": "PT Serif",
+   "nameEn": "PT Serif",
+   "category": "SERIF",
+   "coverageZh": "西文、西里尔文衬线",
+   "coverageEn": "Latin and Cyrillic serif",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/ptserif/OFL.txt",
+   "replaces": [],
+   "files": [
+    {
+     "name": "PT_Serif-Web-Bold.ttf",
+     "path": "ofl/ptserif/PT_Serif-Web-Bold.ttf",
+     "size": 339996,
+     "gitSha1": "0483e59fa9d9669c5e98a2b2a1b7cd059db98888"
+    },
+    {
+     "name": "PT_Serif-Web-BoldItalic.ttf",
+     "path": "ofl/ptserif/PT_Serif-Web-BoldItalic.ttf",
+     "size": 337580,
+     "gitSha1": "49d504b59335962a547ef7fa6ba74040ebf3521a"
+    },
+    {
+     "name": "PT_Serif-Web-Italic.ttf",
+     "path": "ofl/ptserif/PT_Serif-Web-Italic.ttf",
+     "size": 375356,
+     "gitSha1": "b690e26058970205f7cb1bcb4434827281a1707c"
+    },
+    {
+     "name": "PT_Serif-Web-Regular.ttf",
+     "path": "ofl/ptserif/PT_Serif-Web-Regular.ttf",
+     "size": 359048,
+     "gitSha1": "5310691a999658437d6db608b9447d606598753e"
+    }
+   ]
+  },
+  {
+   "id": "source-serif-4",
+   "nameZh": "Source Serif 4",
+   "nameEn": "Source Serif 4",
+   "category": "SERIF",
+   "coverageZh": "西文衬线",
+   "coverageEn": "Latin serif",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/sourceserif4/OFL.txt",
+   "replaces": [
+    "sourceserif"
+   ],
+   "files": [
+    {
+     "name": "SourceSerif4-Italic[opsz,wght].ttf",
+     "path": "ofl/sourceserif4/SourceSerif4-Italic[opsz,wght].ttf",
+     "size": 855432,
+     "gitSha1": "ccb969aa6847e1169ff9c8c8bdc28daff6966861"
+    },
+    {
+     "name": "SourceSerif4[opsz,wght].ttf",
+     "path": "ofl/sourceserif4/SourceSerif4[opsz,wght].ttf",
+     "size": 1209508,
+     "gitSha1": "40bbb58cb58e893ad0470f0bb291e096c73d3554"
+    }
+   ]
+  },
+  {
+   "id": "ibm-plex-serif",
+   "nameZh": "IBM Plex Serif",
+   "nameEn": "IBM Plex Serif",
+   "category": "SERIF",
+   "coverageZh": "西文衬线",
+   "coverageEn": "Latin serif",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/ibmplexserif/OFL.txt",
+   "replaces": [
+    "plexserif"
+   ],
+   "files": [
+    {
+     "name": "IBMPlexSerif-Bold.ttf",
+     "path": "ofl/ibmplexserif/IBMPlexSerif-Bold.ttf",
+     "size": 163800,
+     "gitSha1": "e78e43ee5d830a0696c538ff035ea8662725a0a9"
+    },
+    {
+     "name": "IBMPlexSerif-Italic.ttf",
+     "path": "ofl/ibmplexserif/IBMPlexSerif-Italic.ttf",
+     "size": 173004,
+     "gitSha1": "977ec6c4522dcd714bf51e49ec484e096e4f8d7c"
+    },
+    {
+     "name": "IBMPlexSerif-Regular.ttf",
+     "path": "ofl/ibmplexserif/IBMPlexSerif-Regular.ttf",
+     "size": 163068,
+     "gitSha1": "069d26a6c7951cd60811dcd100bdf2e6f39cfcc4"
+    }
+   ]
+  },
+  {
+   "id": "gelasio",
+   "nameZh": "Gelasio",
+   "nameEn": "Gelasio",
+   "category": "SERIF",
+   "coverageZh": "西文，与 Georgia 等宽",
+   "coverageEn": "Latin, metric-compatible with Georgia",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/gelasio/OFL.txt",
+   "replaces": [
+    "georgia"
+   ],
+   "files": [
+    {
+     "name": "Gelasio-Italic[wght].ttf",
+     "path": "ofl/gelasio/Gelasio-Italic[wght].ttf",
+     "size": 174212,
+     "gitSha1": "21e3c87ca4dbf1e298a0b4ce5e31e1fbeb0e7ea4"
+    },
+    {
+     "name": "Gelasio[wght].ttf",
+     "path": "ofl/gelasio/Gelasio[wght].ttf",
+     "size": 168556,
+     "gitSha1": "23711d2fa49ab8c60301f8fd718cc10614db693a"
+    }
+   ]
+  },
+  {
+   "id": "playfair-display",
+   "nameZh": "Playfair Display",
+   "nameEn": "Playfair Display",
+   "category": "DISPLAY",
+   "coverageZh": "西文标题衬线",
+   "coverageEn": "Latin display serif",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/playfairdisplay/OFL.txt",
+   "replaces": [],
+   "files": [
+    {
+     "name": "PlayfairDisplay-Italic[wght].ttf",
+     "path": "ofl/playfairdisplay/PlayfairDisplay-Italic[wght].ttf",
+     "size": 278688,
+     "gitSha1": "94fae1f2853dd325b1a3602370780d154ffc8c89"
+    },
+    {
+     "name": "PlayfairDisplay[wght].ttf",
+     "path": "ofl/playfairdisplay/PlayfairDisplay[wght].ttf",
+     "size": 300724,
+     "gitSha1": "7a09eb71f10622fd083134ac9ed46f59b21bee18"
+    }
+   ]
+  },
+  {
+   "id": "inter",
+   "nameZh": "Inter",
+   "nameEn": "Inter",
+   "category": "SANS",
+   "coverageZh": "西文界面无衬线",
+   "coverageEn": "Latin UI sans",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/inter/OFL.txt",
+   "replaces": [
+    "segoeui",
+    "helveticaneue"
+   ],
+   "files": [
+    {
+     "name": "Inter-Italic[opsz,wght].ttf",
+     "path": "ofl/inter/Inter-Italic[opsz,wght].ttf",
+     "size": 906596,
+     "gitSha1": "c177578428248f08eedcc60e292acc6f414c2167"
+    },
+    {
+     "name": "Inter[opsz,wght].ttf",
+     "path": "ofl/inter/Inter[opsz,wght].ttf",
+     "size": 876576,
+     "gitSha1": "047c92f6e2212473dc436020afed689527076d44"
+    }
+   ]
+  },
+  {
+   "id": "ibm-plex-sans",
+   "nameZh": "IBM Plex Sans",
+   "nameEn": "IBM Plex Sans",
+   "category": "SANS",
+   "coverageZh": "西文无衬线",
+   "coverageEn": "Latin sans",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/ibmplexsans/OFL.txt",
+   "replaces": [
+    "plexsans"
+   ],
+   "files": [
+    {
+     "name": "IBMPlexSans-Italic[wdth,wght].ttf",
+     "path": "ofl/ibmplexsans/IBMPlexSans-Italic[wdth,wght].ttf",
+     "size": 599624,
+     "gitSha1": "35722e5e79e3616407f479ece5c60c39c1efd68f"
+    },
+    {
+     "name": "IBMPlexSans[wdth,wght].ttf",
+     "path": "ofl/ibmplexsans/IBMPlexSans[wdth,wght].ttf",
+     "size": 537244,
+     "gitSha1": "30f837e8b02e8ecddce6cbebc425b1f422392515"
+    }
+   ]
+  },
+  {
+   "id": "work-sans",
+   "nameZh": "Work Sans",
+   "nameEn": "Work Sans",
+   "category": "SANS",
+   "coverageZh": "西文无衬线",
+   "coverageEn": "Latin sans",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/worksans/OFL.txt",
+   "replaces": [],
+   "files": [
+    {
+     "name": "WorkSans-Italic[wght].ttf",
+     "path": "ofl/worksans/WorkSans-Italic[wght].ttf",
+     "size": 336756,
+     "gitSha1": "b114392cc4f8ac63324aee656c2a869cd853abbe"
+    },
+    {
+     "name": "WorkSans[wght].ttf",
+     "path": "ofl/worksans/WorkSans[wght].ttf",
+     "size": 361072,
+     "gitSha1": "588dc07e6904ba80deeefb88ecc41d139d56ebfb"
+    }
+   ]
+  },
+  {
+   "id": "fira-sans",
+   "nameZh": "Fira Sans",
+   "nameEn": "Fira Sans",
+   "category": "SANS",
+   "coverageZh": "西文、希腊文、西里尔文",
+   "coverageEn": "Latin, Greek, Cyrillic",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/firasans/OFL.txt",
+   "replaces": [
+    "firasans"
+   ],
+   "files": [
+    {
+     "name": "FiraSans-Bold.ttf",
+     "path": "ofl/firasans/FiraSans-Bold.ttf",
+     "size": 489720,
+     "gitSha1": "b74386b2d441e1438f761d097a6d7e123288ae95"
+    },
+    {
+     "name": "FiraSans-Italic.ttf",
+     "path": "ofl/firasans/FiraSans-Italic.ttf",
+     "size": 472396,
+     "gitSha1": "1f0b83086ee89e0c7a3f98c08b13431397da5c29"
+    },
+    {
+     "name": "FiraSans-Regular.ttf",
+     "path": "ofl/firasans/FiraSans-Regular.ttf",
+     "size": 456996,
+     "gitSha1": "7544de9cc8d102e1597dac2fb71951c2019a08cd"
+    }
+   ]
+  },
+  {
+   "id": "pt-sans",
+   "nameZh": "PT Sans",
+   "nameEn": "PT Sans",
+   "category": "SANS",
+   "coverageZh": "西文、西里尔文",
+   "coverageEn": "Latin and Cyrillic",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/ptsans/OFL.txt",
+   "replaces": [],
+   "files": [
+    {
+     "name": "PT_Sans-Web-Bold.ttf",
+     "path": "ofl/ptsans/PT_Sans-Web-Bold.ttf",
+     "size": 470240,
+     "gitSha1": "3d4e6fe2f9f5282806cda0553d3ab321605ae37c"
+    },
+    {
+     "name": "PT_Sans-Web-BoldItalic.ttf",
+     "path": "ofl/ptsans/PT_Sans-Web-BoldItalic.ttf",
+     "size": 375204,
+     "gitSha1": "eb61f14b6b07a0e278374a4b551ccca8bd7a21fc"
+    },
+    {
+     "name": "PT_Sans-Web-Italic.ttf",
+     "path": "ofl/ptsans/PT_Sans-Web-Italic.ttf",
+     "size": 436452,
+     "gitSha1": "180a5d68d3f9979aa58d59ff7c775d7aac095573"
+    },
+    {
+     "name": "PT_Sans-Web-Regular.ttf",
+     "path": "ofl/ptsans/PT_Sans-Web-Regular.ttf",
+     "size": 442960,
+     "gitSha1": "83a21b724c47127a95e725b5c6bdfa30fcc1a7be"
+    }
+   ]
+  },
+  {
+   "id": "nunito-sans",
+   "nameZh": "Nunito Sans",
+   "nameEn": "Nunito Sans",
+   "category": "SANS",
+   "coverageZh": "西文圆润无衬线",
+   "coverageEn": "Latin rounded sans",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/nunitosans/OFL.txt",
+   "replaces": [],
+   "files": [
+    {
+     "name": "NunitoSans-Italic[YTLC,opsz,wdth,wght].ttf",
+     "path": "ofl/nunitosans/NunitoSans-Italic[YTLC,opsz,wdth,wght].ttf",
+     "size": 558412,
+     "gitSha1": "5b325adf55fe1e0e99b10a4ef74a205b322e3cd5"
+    },
+    {
+     "name": "NunitoSans[YTLC,opsz,wdth,wght].ttf",
+     "path": "ofl/nunitosans/NunitoSans[YTLC,opsz,wdth,wght].ttf",
+     "size": 571240,
+     "gitSha1": "ccc8565733e7d037ede2c9cc971ceb6375e28733"
+    }
+   ]
+  },
+  {
+   "id": "montserrat",
+   "nameZh": "Montserrat",
+   "nameEn": "Montserrat",
+   "category": "SANS",
+   "coverageZh": "西文几何无衬线",
+   "coverageEn": "Latin geometric sans",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/montserrat/OFL.txt",
+   "replaces": [
+    "gothamrounded",
+    "gotham"
+   ],
+   "files": [
+    {
+     "name": "Montserrat-Italic[wght].ttf",
+     "path": "ofl/montserrat/Montserrat-Italic[wght].ttf",
+     "size": 762376,
+     "gitSha1": "c8b8441744f2092ea8cbeb7b6f881e53bfe9c623"
+    },
+    {
+     "name": "Montserrat[wght].ttf",
+     "path": "ofl/montserrat/Montserrat[wght].ttf",
+     "size": 744936,
+     "gitSha1": "c97aca18592834d8706549c279cb8d5ac5d85f69"
+    }
+   ]
+  },
+  {
+   "id": "caveat",
+   "nameZh": "Caveat",
+   "nameEn": "Caveat",
+   "category": "HAND",
+   "coverageZh": "西文手写",
+   "coverageEn": "Latin handwriting",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/caveat/OFL.txt",
+   "replaces": [],
+   "files": [
+    {
+     "name": "Caveat[wght].ttf",
+     "path": "ofl/caveat/Caveat[wght].ttf",
+     "size": 403648,
+     "gitSha1": "f84acf2ce2d1b3329b194749530dbaec047e6df6"
+    }
+   ]
+  },
+  {
+   "id": "dancing-script",
+   "nameZh": "Dancing Script",
+   "nameEn": "Dancing Script",
+   "category": "HAND",
+   "coverageZh": "西文花体",
+   "coverageEn": "Latin script",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/dancingscript/OFL.txt",
+   "replaces": [],
+   "files": [
+    {
+     "name": "DancingScript[wght].ttf",
+     "path": "ofl/dancingscript/DancingScript[wght].ttf",
+     "size": 133636,
+     "gitSha1": "9f521e7fb357ec9ea9820ebd36a9d7b1f72f2935"
+    }
+   ]
+  },
+  {
+   "id": "kalam",
+   "nameZh": "Kalam",
+   "nameEn": "Kalam",
+   "category": "HAND",
+   "coverageZh": "西文、天城文手写",
+   "coverageEn": "Latin and Devanagari handwriting",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/kalam/OFL.txt",
+   "replaces": [],
+   "files": [
+    {
+     "name": "Kalam-Bold.ttf",
+     "path": "ofl/kalam/Kalam-Bold.ttf",
+     "size": 460896,
+     "gitSha1": "321272d977887fefb4911789a2691d3131d1bcf0"
+    },
+    {
+     "name": "Kalam-Regular.ttf",
+     "path": "ofl/kalam/Kalam-Regular.ttf",
+     "size": 427360,
+     "gitSha1": "0c956a29348e69bff24a1ae8952fd0b42569311c"
+    }
+   ]
+  },
+  {
+   "id": "patrick-hand",
+   "nameZh": "Patrick Hand",
+   "nameEn": "Patrick Hand",
+   "category": "HAND",
+   "coverageZh": "西文手写",
+   "coverageEn": "Latin handwriting",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/patrickhand/OFL.txt",
+   "replaces": [],
+   "files": [
+    {
+     "name": "PatrickHand-Regular.ttf",
+     "path": "ofl/patrickhand/PatrickHand-Regular.ttf",
+     "size": 214772,
+     "gitSha1": "fb45ccdbd344ab7f9f4ae98792521405e48cda3e"
+    }
+   ]
+  },
+  {
+   "id": "indie-flower",
+   "nameZh": "Indie Flower",
+   "nameEn": "Indie Flower",
+   "category": "HAND",
+   "coverageZh": "西文手写",
+   "coverageEn": "Latin handwriting",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/indieflower/OFL.txt",
+   "replaces": [],
+   "files": [
+    {
+     "name": "IndieFlower-Regular.ttf",
+     "path": "ofl/indieflower/IndieFlower-Regular.ttf",
+     "size": 108196,
+     "gitSha1": "547ca58030e8a7de5aca859a11fc00f14511a7ea"
+    }
+   ]
+  },
+  {
+   "id": "jetbrains-mono",
+   "nameZh": "JetBrains Mono",
+   "nameEn": "JetBrains Mono",
+   "category": "MONO",
+   "coverageZh": "等宽西文（代码）",
+   "coverageEn": "Monospace (code)",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/jetbrainsmono/OFL.txt",
+   "replaces": [
+    "jetbrainsmono"
+   ],
+   "files": [
+    {
+     "name": "JetBrainsMono-Italic[wght].ttf",
+     "path": "ofl/jetbrainsmono/JetBrainsMono-Italic[wght].ttf",
+     "size": 191556,
+     "gitSha1": "5210f7350c95eef62d53de85b5953f4d5ff022ec"
+    },
+    {
+     "name": "JetBrainsMono[wght].ttf",
+     "path": "ofl/jetbrainsmono/JetBrainsMono[wght].ttf",
+     "size": 187208,
+     "gitSha1": "aa310be8b717fe3774f9444dd89d5f4101cc6d10"
+    }
+   ]
+  },
+  {
+   "id": "ibm-plex-mono",
+   "nameZh": "IBM Plex Mono",
+   "nameEn": "IBM Plex Mono",
+   "category": "MONO",
+   "coverageZh": "等宽西文",
+   "coverageEn": "Monospace Latin",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/ibmplexmono/OFL.txt",
+   "replaces": [
+    "plexmono"
+   ],
+   "files": [
+    {
+     "name": "IBMPlexMono-Bold.ttf",
+     "path": "ofl/ibmplexmono/IBMPlexMono-Bold.ttf",
+     "size": 137784,
+     "gitSha1": "17b406d221e7f27179344707bd543fb8470728ac"
+    },
+    {
+     "name": "IBMPlexMono-Italic.ttf",
+     "path": "ofl/ibmplexmono/IBMPlexMono-Italic.ttf",
+     "size": 143920,
+     "gitSha1": "d7f69134614ebdcaa10ebd36b0be1a44a035e157"
+    },
+    {
+     "name": "IBMPlexMono-Regular.ttf",
+     "path": "ofl/ibmplexmono/IBMPlexMono-Regular.ttf",
+     "size": 135580,
+     "gitSha1": "0c9770d5183ba60dc4350d3e011b782a320761ae"
+    }
+   ]
+  },
+  {
+   "id": "fira-mono",
+   "nameZh": "Fira Mono",
+   "nameEn": "Fira Mono",
+   "category": "MONO",
+   "coverageZh": "等宽西文",
+   "coverageEn": "Monospace Latin",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/firamono/OFL.txt",
+   "replaces": [
+    "firamono"
+   ],
+   "files": [
+    {
+     "name": "FiraMono-Bold.ttf",
+     "path": "ofl/firamono/FiraMono-Bold.ttf",
+     "size": 206488,
+     "gitSha1": "9af565927dce4cd2378543a350bddfc3e23ecb16"
+    },
+    {
+     "name": "FiraMono-Medium.ttf",
+     "path": "ofl/firamono/FiraMono-Medium.ttf",
+     "size": 173428,
+     "gitSha1": "034b63756c7579e3dbe22f358633e906a2cb6a1b"
+    },
+    {
+     "name": "FiraMono-Regular.ttf",
+     "path": "ofl/firamono/FiraMono-Regular.ttf",
+     "size": 174596,
+     "gitSha1": "558bb75d35fdf1e6105142bd6e7de1193f1feff7"
+    }
+   ]
+  },
+  {
+   "id": "noto-sans-mono",
+   "nameZh": "Noto Sans Mono",
+   "nameEn": "Noto Sans Mono",
+   "category": "MONO",
+   "coverageZh": "等宽，多语言",
+   "coverageEn": "Monospace, multilingual",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/notosansmono/OFL.txt",
+   "replaces": [],
+   "files": [
+    {
+     "name": "NotoSansMono[wdth,wght].ttf",
+     "path": "ofl/notosansmono/NotoSansMono[wdth,wght].ttf",
+     "size": 1708408,
+     "gitSha1": "07ecc66508b893f34f09d20951039ac9c136f3b5"
+    }
+   ]
+  },
+  {
+   "id": "noto-sans-arabic",
+   "nameZh": "Noto Sans Arabic",
+   "nameEn": "Noto Sans Arabic",
+   "category": "SANS",
+   "coverageZh": "阿拉伯文",
+   "coverageEn": "Arabic",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/notosansarabic/OFL.txt",
+   "replaces": [
+    "arial",
+    "tahoma"
+   ],
+   "files": [
+    {
+     "name": "NotoSansArabic[wdth,wght].ttf",
+     "path": "ofl/notosansarabic/NotoSansArabic[wdth,wght].ttf",
+     "size": 844676,
+     "gitSha1": "f1d01edce4ebaedcbe9a06fc75fec07b304ec3df"
+    }
+   ]
+  },
+  {
+   "id": "noto-naskh-arabic",
+   "nameZh": "Noto Naskh Arabic",
+   "nameEn": "Noto Naskh Arabic",
+   "category": "SERIF",
+   "coverageZh": "阿拉伯文纳斯赫体",
+   "coverageEn": "Arabic Naskh",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/notonaskharabic/OFL.txt",
+   "replaces": [
+    "traditionalarabic",
+    "simplifiedarabic"
+   ],
+   "files": [
+    {
+     "name": "NotoNaskhArabic[wght].ttf",
+     "path": "ofl/notonaskharabic/NotoNaskhArabic[wght].ttf",
+     "size": 307592,
+     "gitSha1": "a8d2867262dc7bb28492ad746de5d56235735c8b"
+    }
+   ]
+  },
+  {
+   "id": "noto-sans-hebrew",
+   "nameZh": "Noto Sans Hebrew",
+   "nameEn": "Noto Sans Hebrew",
+   "category": "SANS",
+   "coverageZh": "希伯来文",
+   "coverageEn": "Hebrew",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/notosanshebrew/OFL.txt",
+   "replaces": [
+    "david",
+    "narkisim"
+   ],
+   "files": [
+    {
+     "name": "NotoSansHebrew[wdth,wght].ttf",
+     "path": "ofl/notosanshebrew/NotoSansHebrew[wdth,wght].ttf",
+     "size": 112640,
+     "gitSha1": "f31f73b8be8086692ff0156544f80975640e5a42"
+    }
+   ]
+  },
+  {
+   "id": "noto-sans-devanagari",
+   "nameZh": "Noto Sans Devanagari",
+   "nameEn": "Noto Sans Devanagari",
+   "category": "SANS",
+   "coverageZh": "天城文（印地文等）",
+   "coverageEn": "Devanagari (Hindi and more)",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/notosansdevanagari/OFL.txt",
+   "replaces": [
+    "mangal"
+   ],
+   "files": [
+    {
+     "name": "NotoSansDevanagari[wdth,wght].ttf",
+     "path": "ofl/notosansdevanagari/NotoSansDevanagari[wdth,wght].ttf",
+     "size": 641944,
+     "gitSha1": "163f04bddc5a96fc523e4080466cac5c588f6594"
+    }
+   ]
+  },
+  {
+   "id": "noto-sans-thai",
+   "nameZh": "Noto Sans Thai",
+   "nameEn": "Noto Sans Thai",
+   "category": "SANS",
+   "coverageZh": "泰文",
+   "coverageEn": "Thai",
+   "license": "OFL-1.1",
+   "licensePath": "ofl/notosansthai/OFL.txt",
+   "replaces": [
+    "angsana",
+    "cordia",
+    "leelawadee"
+   ],
+   "files": [
+    {
+     "name": "NotoSansThai[wdth,wght].ttf",
+     "path": "ofl/notosansthai/NotoSansThai[wdth,wght].ttf",
+     "size": 218652,
+     "gitSha1": "34b48ab6f74867dbfce19410a2f452abef34e3ff"
     }
    ]
   }

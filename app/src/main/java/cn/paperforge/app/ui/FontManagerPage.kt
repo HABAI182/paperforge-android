@@ -44,6 +44,8 @@ fun FontManagerPage(onDismiss: () -> Unit, pdfFont: String? = null, onChanged: (
     val english = false
     var tab by remember { mutableIntStateOf(if (pdfFont != null) 1 else 0) }
     var query by remember { mutableStateOf("") }
+    // Download tab filter: a style, or "CJK" for anything with Chinese, Japanese or Korean.
+    var kind by remember { mutableStateOf<String?>(null) }
     var refresh by remember { mutableIntStateOf(0) }
     var message by remember { mutableStateOf<String?>(null) }
     val installed by produceState(emptyList<FontStore.Installed>(), refresh) { value = withContext(Dispatchers.IO) { FontStore.installed(context) } }
@@ -133,8 +135,19 @@ fun FontManagerPage(onDismiss: () -> Unit, pdfFont: String? = null, onChanged: (
                             item {
                                 Notice("PDF 使用的“${pdfFont!!.substringAfter('+')}”是商业字体，不能随 PaperForge 分发。下面的开源字体与它字形相近或等宽，可下载后用于编辑。")
                             }
+                        item {
+                            androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                val kinds = listOf(null to "全部", "CJK" to "中文", "SANS" to "无衬线", "SERIF" to "衬线", "HAND" to "手写", "SCRIPT" to "楷书/书法", "MONO" to "等宽", "DISPLAY" to "标题")
+                                items(kinds.size) { i ->
+                                    val (key, label) = kinds[i]
+                                    FilterChip(kind == key, { kind = key }, { Text(label) }, modifier = Modifier.testTag("font-kind-${key ?: "all"}"))
+                                }
+                            }
+                        }
+                        fun cjk(f: FontStore.Family) = listOf("中文", "繁", "简", "日文", "韩文").any { it in f.coverageZh }
                         val families = (suggested + catalog?.families.orEmpty().filter { it !in suggested })
                             .filter { matches(it.nameZh, it.nameEn, it.coverageZh, it.coverageEn, *it.replaces.toTypedArray()) }
+                            .filter { f -> when (kind) { null -> true; "CJK" -> cjk(f); else -> f.category == kind } }
                         items(families, key = { "family/" + it.id }) { family ->
                             val have = family.id in installedFamilies
                             val running = progress[family.id]

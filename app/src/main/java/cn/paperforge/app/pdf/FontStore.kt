@@ -186,12 +186,17 @@ object FontStore {
         val catalog = catalog(context)
         val folder = folder(context)
         val total = family.bytes
+        // The source that worked last time is tried first: where one CDN is slow or blocked, the next download does
+        // not wait for it again. Every source is still verified the same way.
+        val prefs = context.getSharedPreferences("font-store", Context.MODE_PRIVATE)
+        val preferred = prefs.getString("preferredHost", null)
+        val ordered = sources.sortedByDescending { t -> preferred != null && runCatching { URL(t.replace("{commit}", "x").replace("{path}", "y")).host }.getOrNull() == preferred }
         var done = 0L
         val installed = ArrayList<Installed>()
         for (entry in family.files) {
             val failures = ArrayList<String>()
             var got: Installed? = null
-            for (template in sources) {
+            for (template in ordered) {
                 currentCoroutineContext().ensureActive()
                 val url = template.replace("{commit}", catalog.commit).replace("{path}", entry.path)
                 val host = runCatching { URL(url).host }.getOrDefault(url)
@@ -233,6 +238,7 @@ object FontStore {
                     val target = File(folder, "$sha.ttf")
                     if (!target.exists()) check(part.renameTo(target)) { "无法保存字体" }
                     record(target, name, family.id, family.license, "download", host)
+                    prefs.edit().putString("preferredHost", host).apply()
                     got = Installed(target, sha, name, family.id, family.license, "download")
                     break
                 } catch (e: CancellationException) {
