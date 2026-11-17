@@ -137,6 +137,34 @@ class PolishScreensUiTest {
         )
     }
 
+    /** Status tags under a document's title, and the whole name in its menu (the list shows two lines at most). */
+    @Test
+    fun libraryShowsStatusTagsAndFullName() {
+        val vm = ViewModelProvider(compose.activity)[MainViewModel::class.java]
+        val title = "2026 年秋季学期高等数学期中考试试卷（含参考答案与评分标准）第二版-已去水印-已编辑"
+        val row = cn.paperforge.app.data.DocumentRow(
+            java.util.UUID.randomUUID().toString(), title, kind = "pdf",
+            statuses = cn.paperforge.app.data.DocumentStatus.encode(listOf(cn.paperforge.app.data.DocumentStatus.WATERMARK_REMOVED, cn.paperforge.app.data.DocumentStatus.EDITED)),
+        )
+        kotlinx.coroutines.runBlocking { app.repository.dao.putDocument(row) }
+        try {
+            compose.runOnIdle {
+                vm.screen.value = "home"
+                vm.homeTab.value = 1
+            }
+            waitTag("library-status-${row.id}", 30000)
+            val tags = compose.onAllNodes(hasAnyAncestor(hasTestTag("library-status-${row.id}")).and(hasText("已去水印").or(hasText("已编辑")).or(hasText("Watermark removed")).or(hasText("Edited"))), useUnmergedTree = true)
+            assertEquals(2, tags.fetchSemanticsNodes().size)
+            shot("library-status-tags")
+            compose.onNodeWithContentDescription("${title}的更多操作", useUnmergedTree = true).performClick()
+            waitTag("library-full-name")
+            compose.onNodeWithTag("library-full-name", useUnmergedTree = true).assertTextEquals(title)
+            shot("library-full-name")
+        } finally {
+            kotlinx.coroutines.runBlocking { app.repository.dao.deleteDocument(row.id) }
+        }
+    }
+
     private fun hasTestTagPrefix(prefix: String) =
         SemanticsMatcher("testTag starts with $prefix") {
             it.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.TestTag)?.startsWith(prefix) == true

@@ -739,6 +739,18 @@ class Repository(val context: Context, val database: PaperDatabase) {
             dao.outputDestination(file.path, uri.toString())
         }
 
+    /**
+     * Gives [document] its source's processing states plus [added]. The source is [source], or the library document
+     * stored at [sourcePath] (a job that only knows the input file).
+     */
+    suspend fun markDerived(document: DocumentRow, added: DocumentStatus, source: DocumentRow? = null, sourcePath: String? = null): DocumentRow {
+        val from = source ?: sourcePath?.let { dao.documentByPath(it) }
+        val states = (from?.let(DocumentStatus::of).orEmpty() + DocumentStatus.of(document) + added)
+        val next = document.copy(statuses = DocumentStatus.encode(states))
+        if (next != document) dao.putDocument(next)
+        return next
+    }
+
     suspend fun registerPdf(file: File, title: String, listed: Boolean = true): DocumentRow =
         database
             .withTransaction {

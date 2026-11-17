@@ -49,6 +49,7 @@ open class PaperForgeApp : Application(), androidx.work.Configuration.Provider {
                         PaperDatabase.Migration8To9,
                         PaperDatabase.Migration9To10,
                         PaperDatabase.Migration10To11,
+                        PaperDatabase.Migration11To12,
                     )
                     .build(),
             )

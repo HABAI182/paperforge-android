@@ -651,6 +651,15 @@ fun HomeScreen(
                 },
                 floatingActionButton = {
                     if (tab < 2 && !selecting && !inTrash) {
+                        // CameraX's provider is set up off the main thread while the list is on screen, so opening the
+                        // camera does less work. No camera is opened here.
+                        val appContext = androidx.compose.ui.platform.LocalContext.current.applicationContext
+                        LaunchedEffect(Unit) {
+                            kotlinx.coroutines.delay(800)
+                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                                runCatching { androidx.camera.lifecycle.ProcessCameraProvider.getInstance(appContext) }
+                            }
+                        }
                         val scanEntry = expansionAction { if (!busy) vm.newScan() }
                         ExtendedFloatingActionButton(
                             onClick = scanEntry.onClick,
@@ -1221,6 +1230,7 @@ fun HomeScreen(
                                                 },
                                                 menu = {
                                                     var menu by remember { mutableStateOf(false) }
+                                                    val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
                                                     if (!selecting)
                                                         Box {
                                                             IconButton(onClick = { menu = true }) {
@@ -1233,6 +1243,22 @@ fun HomeScreen(
                                                                 expanded = menu,
                                                                 onDismissRequest = { menu = false },
                                                             ) {
+                                                                // The whole name, however long: the list shows two lines at most.
+                                                                Text(
+                                                                    doc.title,
+                                                                    style = MaterialTheme.typography.bodyMedium,
+                                                                    modifier = Modifier.widthIn(max = 280.dp).padding(horizontal = 16.dp, vertical = 8.dp).testTag("library-full-name"),
+                                                                )
+                                                                DropdownMenuItem(
+                                                                    text = { Text(androidx.compose.ui.res.stringResource(cn.paperforge.app.R.string.library_copy_name)) },
+                                                                    leadingIcon = { Icon(Icons.Default.ContentCopy, null) },
+                                                                    onClick = {
+                                                                        menu = false
+                                                                        clipboard.setText(androidx.compose.ui.text.AnnotatedString(doc.title))
+                                                                    },
+                                                                    modifier = Modifier.testTag("library-copy-name"),
+                                                                )
+                                                                HorizontalDivider()
                                                                 DropdownMenuItem(
                                                                     text = { Text("重命名") },
                                                                     onClick = {
@@ -1324,12 +1350,22 @@ fun HomeScreen(
                                                         }
                                                 },
                                                 details = {
+                                                    // Two lines in both layouts: one line cut most names right where
+                                                    // they differ. The menu shows the whole name.
                                                     Text(
                                                         (if (doc.favorite) "★ " else "") + doc.title,
-                                                        maxLines = if (covers) 2 else 1,
+                                                        maxLines = 2,
                                                         overflow = TextOverflow.Ellipsis,
                                                         style = MaterialTheme.typography.titleSmall,
+                                                        modifier = Modifier.semantics { contentDescription = doc.title },
                                                     )
+                                                    val states = cn.paperforge.app.data.DocumentStatus.of(doc)
+                                                    if (states.isNotEmpty())
+                                                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(top = 2.dp).testTag("library-status-${doc.id}")) {
+                                                            states.forEach { status ->
+                                                                StatusTag(androidx.compose.ui.res.stringResource(status.label))
+                                                            }
+                                                        }
                                                     // One line of facts: folder (tap to move) · kind · pages · time.
                                                     val facts = factsByDocument[doc.id]
                                                     val when_ =
@@ -1624,4 +1660,22 @@ private fun rememberHomeScroll(vm: MainViewModel, key: String): LazyListState {
         }
     }
     return state
+}
+
+
+/** A small processing-state tag in the library ("已编辑", "已去水印"): tonal, compact, beside the title. */
+@Composable
+internal fun StatusTag(label: String) {
+    Surface(
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(5.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = .75f),
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+    ) {
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1,
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp),
+        )
+    }
 }

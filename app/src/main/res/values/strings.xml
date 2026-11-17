@@ -27,4 +27,11 @@
     <string name="acknowledgments_community">提出建议的社区成员</string>
     <string name="acknowledgments_open_source">同样感谢所有开源项目的作者与贡献者，详见“开源许可”。</string>
     <string name="close">关闭</string>
+    <string name="status_edited">已编辑</string>
+    <string name="status_watermark_removed">已去水印</string>
+    <string name="status_annotated">已批注</string>
+    <string name="status_pdfa">PDF/A</string>
+    <string name="library_full_name">完整名称</string>
+    <string name="library_copy_name">复制文件名</string>
+    <string name="library_name_copied">已复制文件名</string>
 </resources>

@@ -55,6 +55,7 @@ object DocumentCodec {
             put("modified", d.modified)
             put("lastOpened", d.lastOpened)
             put("listed", d.listed)
+            put("statuses", d.statuses)
             put("kind", d.kind)
             put("pdfPath", d.pdfPath ?: JSONObject.NULL)
             put("folder", d.folder)
@@ -76,6 +77,7 @@ object DocumentCodec {
             if (o.isNull("trashedAt")) null else o.getLong("trashedAt"),
             lastOpened = o.optLong("lastOpened", 0),
             listed = o.optBoolean("listed", true),
+            statuses = o.optString("statuses", ""),
         )
 
     private fun nullable(o: JSONObject, key: String) = if (o.isNull(key)) null else o.getString(key)

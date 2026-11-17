@@ -522,7 +522,14 @@ class PdfJobWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                                     // Annotated and text-edited copies are documents of their own, found in the library
                                     // like any other (the source document stays unchanged next to them).
                                     listed = doc == null || mode == "marks" || mode == "native-edit",
-                                )
+                                ).let { row ->
+                                    when {
+                                        mode == "marks" -> repo.markDerived(row, cn.paperforge.app.data.DocumentStatus.ANNOTATED, doc)
+                                        mode == "native-edit" -> repo.markDerived(row, cn.paperforge.app.data.DocumentStatus.EDITED, doc)
+                                        mode == "archive-create" && !archiveRejected -> repo.markDerived(row, cn.paperforge.app.data.DocumentStatus.PDFA, doc)
+                                        else -> row
+                                    }
+                                }
                             origin?.let { metadata ->
                                 val provenance =
                                     File(repo.folder(registered.id), "$originRole.json")

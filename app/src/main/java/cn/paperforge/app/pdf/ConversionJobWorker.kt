@@ -391,14 +391,20 @@ class ConversionJobWorker(context: Context, params: WorkerParameters) :
                         if (job.input.getString("kind") == "SCAN_RETOUCH")
                             RetouchJobs.publish(repo, job, file)
                         if (file.extension == "pdf") {
+                            val clean = job.input.getString("kind") == "DOCUMENT_CLEAN"
                             val registered =
                                 repo.registerPdf(
                                     file,
-                                    "${title.substringBeforeLast('.')} · ${when(job.input.getString("kind")) { "OFFICE" -> "PDF"
+                                    // A watermark-removed copy takes the name it was saved under (DocumentWatermarks: the
+                                    // source name with the localized suffix, never stacked, unique), not "name · 去水印".
+                                    if (clean) file.nameWithoutExtension
+                                    else "${title.substringBeforeLast('.')} · ${when(job.input.getString("kind")) { "OFFICE" -> "PDF"
  "LAYOUT" -> "版面 PDF"
- "DOCUMENT_CLEAN" -> "去水印"
  else -> "文字 PDF" }}",
-                                )
+                                ).let { row ->
+                                    if (clean) repo.markDerived(row, cn.paperforge.app.data.DocumentStatus.WATERMARK_REMOVED, sourcePath = inputs.firstOrNull()?.path)
+                                    else row
+                                }
                             inputs.forEach { input ->
                                 DocumentResources.register(
                                     repo,

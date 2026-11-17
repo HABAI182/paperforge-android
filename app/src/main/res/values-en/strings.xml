@@ -26,4 +26,11 @@
     <string name="acknowledgments_community">Community members who offered suggestions</string>
     <string name="acknowledgments_open_source">Thanks as well to the authors and contributors of every open-source project listed under Open Source Licenses.</string>
     <string name="close">Close</string>
+    <string name="status_edited">Edited</string>
+    <string name="status_watermark_removed">Watermark removed</string>
+    <string name="status_annotated">Annotated</string>
+    <string name="status_pdfa">PDF/A</string>
+    <string name="library_full_name">Full name</string>
+    <string name="library_copy_name">Copy file name</string>
+    <string name="library_name_copied">File name copied</string>
 </resources>

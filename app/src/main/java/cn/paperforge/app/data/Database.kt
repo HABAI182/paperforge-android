@@ -19,6 +19,11 @@ data class DocumentRow(
     val trashedAt: Long? = null,
     @ColumnInfo(defaultValue = "0") val lastOpened: Long = 0,
     @ColumnInfo(defaultValue = "1") val listed: Boolean = true,
+    /**
+     * What has been done to this document, as status codes separated by commas (DocumentStatus): shown as small tags
+     * in the library, independent of the title, so a renamed file keeps them and one document can carry several.
+     */
+    @ColumnInfo(defaultValue = "''") val statuses: String = "",
 )
 
 @Entity(
@@ -300,7 +305,7 @@ interface DocumentDao {
             OutputRow::class,
             LocalTaskRow::class,
         ],
-    version = 11,
+    version = 12,
     exportSchema = true,
 )
 @TypeConverters(TaskConverters::class)
@@ -308,6 +313,12 @@ abstract class PaperDatabase : RoomDatabase() {
     abstract fun dao(): DocumentDao
 
     companion object {
+        val Migration11To12 =
+            object : Migration(11, 12) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL("ALTER TABLE documents ADD COLUMN statuses TEXT NOT NULL DEFAULT ''")
+                }
+            }
         val Migration10To11 =
             object : Migration(10, 11) {
                 override fun migrate(db: SupportSQLiteDatabase) {
