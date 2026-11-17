@@ -246,6 +246,8 @@ fun NativePdfEditorScreen(vm: MainViewModel) {
     var fit by remember { mutableStateOf(true) }
     var leaving by remember { mutableStateOf(false) }
     var originalMissing by remember { mutableStateOf<List<String>?>(null) }
+    // The draft's edits when the font panel opened: "取消" puts them back.
+    var fontStart by remember { mutableStateOf<List<NativePdfEditor.Edit>?>(null) }
     // The font manager, opened from the font sheet; the PDF font it was opened for ranks its open alternatives first.
     var fontManagerFor by remember { mutableStateOf<String?>(null) }
     fontManagerFor?.let { pdfFont ->
@@ -293,14 +295,13 @@ fun NativePdfEditorScreen(vm: MainViewModel) {
                 }
             var style: NativeStyle? = null
             var note = "已修改文字"
+            // The original font keeps every character it has; only the ones it lacks are drawn in a matching font
+            // (PdfLineWriter). Switching the whole new text to another font changed letters that needed no change.
             if (first != null && (runsAtStart == null || runsAtStart.font == NativeRun.ORIGINAL)) {
                 val lacking = session.missingInOriginal(first.key, clean)
                 if (lacking.isNotEmpty()) {
                     val sub = NativeFontLibrary.substitute(context, originalMap.getValue(first.key), clean)
-                    if (sub != null) {
-                        style = NativeStyle(font = sub.id)
-                        note = "原字体只嵌入了用到的字，缺少「${lacking.take(4).joinToString("")}」，新文字改用「${sub.nameZh}」"
-                    }
+                    note = "原字体缺「${lacking.take(4).joinToString("")}」，这几个字用${sub?.let { "「${it.nameZh}」" } ?: "相近字体"}补齐，其余保持原字体"
                 }
             }
             val next = NativeEditOps.replace(current.edits, originalMap, segments, clean) { style }
@@ -460,6 +461,30 @@ fun NativePdfEditorScreen(vm: MainViewModel) {
                     IconButton(onClick = { message = "" }) { Icon(Icons.Default.Close, "关闭提示") }
                 }
             }
+            // The font panel docks here, under the page, in place of the tools: the page above shows each font as it is
+            // tapped. A modal sheet over the page hid exactly what was being changed.
+            if (sheet == "font" && segments.isNotEmpty()) {
+                BackHandler { sheet = "" }
+                NativeFontPicker(
+                    selectedText,
+                    fonts,
+                    selectedObjects.firstNotNullOfOrNull { o -> edits.firstOrNull { it.key == o.key }?.effectiveRuns?.firstOrNull()?.font } ?: "ORIGINAL",
+                    selectedObjects.firstOrNull()?.font.orEmpty(),
+                    originalMissing,
+                    onPick = { id, sha ->
+                        if (id != "ORIGINAL") NativeFontPrefs.use(context, id)
+                        restyle(NativeStyle(font = id, fontSha256 = sha), "已更换字体")
+                    },
+                    onImport = { fontManagerFor = selectedObjects.firstOrNull()?.font.orEmpty() },
+                    onDone = { sheet = "" },
+                    onCancel = {
+                        sheet = ""
+                        val start = fontStart
+                        if (start != null && start != draft?.edits) commit(start, segments, "已恢复原来的字体")
+                    },
+                )
+                return@Column
+            }
             // The contextual bar: page navigation without a selection, tools with one.
             val hasSelection = segments.isNotEmpty()
             AnimatedContent(
@@ -523,6 +548,7 @@ fun NativePdfEditorScreen(vm: MainViewModel) {
                                     sheet = "text"
                                 }
                                 ToolChip("字体", Icons.Default.FontDownload, canEdit, "native-edit-font") {
+                                    fontStart = draft?.edits
                                     originalMissing = null
                                     scope.launch {
                                         val first = selectedObjects.firstOrNull { originalMap[it.key]?.editable == true }
@@ -608,21 +634,6 @@ fun NativePdfEditorScreen(vm: MainViewModel) {
                     }
                 }
             }
-        "font" ->
-            NativeFontPicker(
-                selectedText,
-                fonts,
-                selectedObjects.firstNotNullOfOrNull { o -> edits.firstOrNull { it.key == o.key }?.effectiveRuns?.firstOrNull()?.font } ?: "ORIGINAL",
-                selectedObjects.firstOrNull()?.font.orEmpty(),
-                originalMissing,
-                onPick = { id, sha ->
-                    sheet = ""
-                    if (id != "ORIGINAL") NativeFontPrefs.use(context, id)
-                    restyle(NativeStyle(font = id, fontSha256 = sha), "已更换字体")
-                },
-                onImport = { fontManagerFor = selectedObjects.firstOrNull()?.font.orEmpty() },
-                onDismiss = { sheet = "" },
-            )
         "color" ->
             ModalBottomSheet(onDismissRequest = { sheet = "" }) {
                 Column(Modifier.fillMaxWidth().padding(16.dp)) {

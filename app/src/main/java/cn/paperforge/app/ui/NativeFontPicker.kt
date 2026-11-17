@@ -96,10 +96,13 @@ internal fun lacking(typeface: Typeface?, text: String): List<String> {
 }
 
 /**
- * Font chooser: search, categories, recently used, live previews with the selected text and a warning for characters
- * a font cannot show. [originalMissing] lists characters the PDF's own font lacks (null: not applicable).
+ * Font chooser, docked under the page instead of covering it: the selected text stays in view and every tap applies
+ * the font at once ([onPick]), so the page shows the result while the user keeps browsing. [onDone] keeps it,
+ * [onCancel] puts back the fonts the selection had when the panel opened. Search, categories, recently used, a live
+ * sample in each font, and a note for characters a font lacks (those keep the original font or a matching one).
+ * [originalMissing] lists characters the PDF's own font lacks (null: not applicable).
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun NativeFontPicker(
     sample: String,
@@ -109,14 +112,15 @@ internal fun NativeFontPicker(
     originalMissing: List<String>?,
     onPick: (id: String, sha256: String) -> Unit,
     onImport: () -> Unit,
-    onDismiss: () -> Unit,
+    onDone: () -> Unit,
+    onCancel: () -> Unit,
 ) {
     val context = LocalContext.current
     val fonts = remember(imported) { pickerFonts(context, imported) }
     val recent = remember { NativeFontPrefs.recent(context) }
     var query by remember { mutableStateOf("") }
     var category by remember { mutableStateOf<String?>(null) }
-    val preview = sample.trim().ifEmpty { "永字八法 Typography 123" }.take(40)
+    val preview = sample.trim().ifEmpty { "永字八法 Typography 123" }.take(24)
     val categories = fonts.map { it.category }.distinct()
     val shown =
         fonts.filter { f ->
@@ -124,38 +128,43 @@ internal fun NativeFontPicker(
                 (query.isBlank() ||
                     listOf(f.nameZh, f.nameEn, f.category, f.coverage).any { it.contains(query.trim(), true) })
         }
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(true)) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+    // About two fifths of the screen at most: the page above stays readable.
+    val maxList = (androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp * .26f).dp.coerceAtLeast(140.dp)
+    Surface(tonalElevation = 4.dp, shadowElevation = 6.dp, modifier = Modifier.fillMaxWidth().testTag("font-dock")) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("选择字体", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                // Downloading and importing is one tap away, not hidden below the list.
-                FilledTonalButton(onClick = onImport, contentPadding = PaddingValues(horizontal = 12.dp), modifier = Modifier.height(36.dp).testTag("font-manage")) {
+                Text("字体", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+                TextButton(onClick = onImport, contentPadding = PaddingValues(horizontal = 8.dp), modifier = Modifier.testTag("font-manage")) {
                     Icon(Icons.Default.Download, null, Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("下载或导入字体")
+                    Text("下载或导入")
                 }
+                TextButton(onClick = onCancel, modifier = Modifier.testTag("font-cancel")) { Text("取消") }
+                FilledTonalButton(onClick = onDone, contentPadding = PaddingValues(horizontal = 14.dp), modifier = Modifier.height(36.dp).testTag("font-done")) { Text("完成") }
             }
             val alternatives = remember(originalName) { runCatching { cn.paperforge.app.pdf.FontStore.alternatives(context, originalName) }.getOrDefault(emptyList()) }
             if (alternatives.isNotEmpty())
                 Text(
-                    "原文字体“${originalName.substringAfter('+')}”是商业字体，不能随应用提供；可下载开源替代：" + alternatives.take(3).joinToString("、") { it.nameZh },
-                    style = MaterialTheme.typography.bodySmall,
+                    "原文字体“${originalName.substringAfter('+')}”是商业字体；可下载开源替代：" + alternatives.take(3).joinToString("、") { it.nameZh },
+                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(top = 4.dp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             OutlinedTextField(
                 query,
                 { query = it },
-                Modifier.fillMaxWidth().padding(top = 8.dp).testTag("font-search"),
+                Modifier.fillMaxWidth().padding(vertical = 4.dp).testTag("font-search"),
                 leadingIcon = { Icon(Icons.Default.Search, null) },
-                placeholder = { Text("搜索：宋体、Times、楷…") },
+                placeholder = { Text("搜索：宋体、Times、楷…", maxLines = 1) },
                 singleLine = true,
+                textStyle = MaterialTheme.typography.bodyMedium,
             )
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(vertical = 8.dp)) {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 item { FilterChip(category == null, { category = null }, { Text("全部") }) }
                 items(categories) { c -> FilterChip(category == c, { category = if (category == c) null else c }, { Text(c) }) }
             }
-            LazyColumn(Modifier.fillMaxWidth().heightIn(max = 520.dp), contentPadding = PaddingValues(bottom = 24.dp)) {
+            LazyColumn(Modifier.fillMaxWidth().heightIn(max = maxList).testTag("font-list"), contentPadding = PaddingValues(vertical = 4.dp)) {
                 if (query.isBlank() && category == null) {
                     item {
                         FontRow(
@@ -165,9 +174,9 @@ internal fun NativeFontPicker(
                             when {
                                 originalMissing == null -> "保留 PDF 中的字形"
                                 originalMissing.isEmpty() -> "所选文字可用原字体显示"
-                                else -> "原字体只嵌入了用到的字，缺少「${originalMissing.take(6).joinToString("")}」"
+                                else -> "原字体缺「${originalMissing.take(6).joinToString("")}」，这几个字用相近字体补齐"
                             },
-                            originalMissing?.isNotEmpty() == true,
+                            false,
                             null,
                             preview,
                             current == "ORIGINAL",
@@ -175,23 +184,13 @@ internal fun NativeFontPicker(
                     }
                     val recents = recent.mapNotNull { id -> fonts.firstOrNull { it.id == id } }
                     if (recents.isNotEmpty()) {
-                        item { Text("最近使用", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 12.dp, bottom = 4.dp)) }
+                        item { Text("最近使用", style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 6.dp, bottom = 2.dp)) }
                         items(recents, key = { "recent-" + it.id }) { f -> PickerRow(f, preview, current, onPick) }
-                        item { Text("全部字体", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 12.dp, bottom = 4.dp)) }
+                        item { Text("全部字体", style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 6.dp, bottom = 2.dp)) }
                     }
                 }
                 items(shown, key = { it.id }) { f -> PickerRow(f, preview, current, onPick) }
-                if (shown.isEmpty()) item { Text("没有匹配的字体", Modifier.padding(16.dp)) }
-                item {
-                    TextButton(onClick = onImport, modifier = Modifier.padding(top = 8.dp)) {
-                        Text("下载或导入其他字体…")
-                    }
-                    Text(
-                        "内置中文字体覆盖常用字（GB2312 / Big5 一级）；缺字时会提示，可换用“思源黑体（常规）”（全字库）。",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+                if (shown.isEmpty()) item { Text("没有匹配的字体，可点“下载或导入”", Modifier.padding(12.dp)) }
             }
         }
     }
@@ -206,8 +205,8 @@ private fun PickerRow(font: PickerFont, preview: String, current: String?, onPic
         font.nameZh,
         font.nameEn,
         if (missing.isEmpty()) "${font.category} · ${font.coverage}"
-        else "缺少「${missing.take(6).joinToString("")}」 · ${font.coverage}",
-        missing.isNotEmpty(),
+        else "缺「${missing.take(6).joinToString("")}」，这几个字保留原字体 · ${font.coverage}",
+        false,
         typeface,
         preview,
         current == font.id,
@@ -230,25 +229,27 @@ private fun FontRow(
         onClick = onClick,
         shape = MaterialTheme.shapes.medium,
         color = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface,
-        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp).testTag("font-$id"),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 1.dp).testTag("font-$id"),
     ) {
-        Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
+        Column(Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f, false))
-                Text("  $subtitle", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(title, style = MaterialTheme.typography.titleSmall, maxLines = 1, modifier = Modifier.widthIn(max = 140.dp), overflow = TextOverflow.Ellipsis)
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    preview,
+                    fontFamily = typeface?.let { FontFamily(it) },
+                    fontSize = 17.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
             }
             Text(
-                preview,
-                fontFamily = typeface?.let { FontFamily(it) },
-                fontSize = 20.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(vertical = 2.dp),
-            )
-            Text(
-                detail,
+                "$subtitle · $detail",
                 style = MaterialTheme.typography.labelSmall,
                 color = if (warn) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }

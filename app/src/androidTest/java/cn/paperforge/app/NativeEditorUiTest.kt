@@ -1,5 +1,6 @@
 package cn.paperforge.app
 
+import androidx.compose.ui.semantics.getOrNull
 import android.graphics.Bitmap
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -161,7 +162,7 @@ class NativeEditorUiTest {
         waitTag("native-edit-field")
         compose.onNodeWithTag("native-edit-field").performTextReplacement("PaperForge 扫描 OCR 文字编辑 v2.1")
         compose.onNodeWithTag("native-edit-apply").performClick()
-        waitText("native-edit-message") { it.contains("已修改文字") || it.contains("新文字改用") }
+        waitText("native-edit-message") { it.contains("已修改文字") || it.contains("补齐") }
         shot("06-retyped")
 
         // 7. Font picker with search and live preview.
@@ -170,9 +171,18 @@ class NativeEditorUiTest {
         shot("07-font-picker")
         compose.onNodeWithTag("font-search").performTextInput("楷")
         waitTag("font-builtin:kai")
+        // The panel is docked under the page: the page stays on screen while fonts are tried.
+        compose.waitUntil(15000) {
+            compose.onAllNodes(SemanticsMatcher("rendered page") { it.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.TestTag)?.startsWith("reader-viewport-") == true }, useUnmergedTree = true)
+                .fetchSemanticsNodes().isNotEmpty()
+        }
         compose.onNodeWithTag("font-builtin:kai").performClick()
         waitText("native-edit-message") { it.contains("已更换字体") }
         shot("08-kai")
+        // Applied live; the panel stays until "完成".
+        compose.onNodeWithTag("font-dock", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("font-done", useUnmergedTree = true).performClick()
+        compose.waitUntil(5000) { compose.onAllNodesWithTag("font-dock", useUnmergedTree = true).fetchSemanticsNodes().isEmpty() }
 
         // 8. List: select all, then make everything bigger in one step.
         compose.onNodeWithContentDescription("取消选择").performClick()
