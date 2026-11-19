@@ -1,7 +1,6 @@
 # Workspace hygiene
 
-The repository's `.gitignore` covers build outputs. The disk fills up from what git never sees. Audit of 2026-11-16:
-27.0 GB were regenerable clutter (log: `work/round9/cleanup-log.txt`).
+Use `scripts/workspace_hygiene.py` to audit regenerable local outputs that Git ignores.
 
 ## Where things go
 - **Round work**: `work/roundN/` (inputs, device outputs, comparison images, the round report). One folder per round,
@@ -16,7 +15,7 @@ The repository's `.gitignore` covers build outputs. The disk fills up from what 
 ## What accumulates, and the check
 `python scripts/workspace_hygiene.py` reports, and with `--apply <category>` removes:
 - `emulator`: the emulator's `-read-only` instances leave temporary overlay disks in `%LOCALAPPDATA%\Temp\AndroidEmulator`
-  at every start (12.8 GB had built up on C:). A running emulator's files are locked and skipped.
+  at startup. A running emulator's files are locked and skipped.
 - `scenes`: scene bins that already carry a `REGENERATE.md`.
 - `worktrees`: build outputs of git worktrees other than the main checkout.
 - `distributions`: `build/distributions` older than 14 days.
