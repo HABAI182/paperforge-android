@@ -30,7 +30,7 @@ open class PaperForgeApp : Application(), androidx.work.Configuration.Provider {
         cn.paperforge.app.imaging.PageNetDetector.initialize(this)
         PDFBoxResourceLoader.init(this)
         OpenCVLoader.initLocal()
-        org.opencv.core.Core.setNumThreads(2)
+        cn.paperforge.app.imaging.OpenCvThreads.initialize()
         cn.paperforge.app.imaging.ScanConfig.load(assets)
         // Compiles the page pipeline's hot loops before the first scan or import (see ScanWarmUp).
         cn.paperforge.app.imaging.ScanWarmUp.start()

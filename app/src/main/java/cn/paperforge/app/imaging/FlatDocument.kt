@@ -430,7 +430,7 @@ object FlatDocument {
         sourceScale: Float = 1f,
         stackFrame: Boolean = false,
     ): Result =
-        withContext(Dispatchers.Default) {
+        OpenCvThreads.finishing { withContext(Dispatchers.Default) {
             val started = android.os.SystemClock.elapsedRealtime()
             if (strength <= 0f)
                 return@withContext Result(
@@ -561,7 +561,7 @@ object FlatDocument {
                     )
                     .toString()
             Result(normalized, shape.grid, shape.lines, shape.algorithm, diagnostics)
-        }
+        } }
 
     suspend fun prepare(
         repo: Repository,
@@ -575,16 +575,18 @@ object FlatDocument {
         val exactFrame = page.hasExactCropFrame()
         val stackFrame = page.detectionMethod?.contains(SheetEdge.VERSION) == true
         val renderStarted = android.os.SystemClock.elapsedRealtime()
-        val rendered =
-            ScanProcessor.render(
-                PageResources.sourceAppearance(page)
-                    .copy(filter = "ORIGINAL", brightness = 0f, contrast = 1f),
-                workEdge,
-            )
-        // The enlarged page is also the saved input, so the geometry replays on the same pixels.
-        val (source, sourceScale) =
+        // The render and enlargement use the finish's OpenCV threads too (see OpenCvThreads).
+        val (source, sourceScale) = OpenCvThreads.finishing {
+            val rendered =
+                ScanProcessor.render(
+                    PageResources.sourceAppearance(page)
+                        .copy(filter = "ORIGINAL", brightness = 0f, contrast = 1f),
+                    workEdge,
+                )
+            // The enlarged page is also the saved input, so the geometry replays on the same pixels.
             if (automatic) workSource(rendered, workEdge).also { if (it.first !== rendered) rendered.recycle() }
             else rendered to 1f
+        }
         val renderMs = android.os.SystemClock.elapsedRealtime() - renderStarted
         val folder = repo.folder(page.documentId)
         val key = UUID.randomUUID().toString()
