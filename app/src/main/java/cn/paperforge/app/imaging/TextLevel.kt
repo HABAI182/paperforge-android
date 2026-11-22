@@ -87,19 +87,10 @@ internal object TextLevel {
             val centres = DoubleArray(bands)
             val angles = MutableList<Double?>(bands) { null }
             val confidence = MutableList(bands) { 0.0 }
-            // The bands are independent: each turns through some fifty angles, so they run side by side on the
-            // filter threads (1.6–1.9 s a page on the emulator one after another). Same angles to the bit.
-            val bandsFound =
-                ParallelFilter.tasks(bands) { k ->
-                    val y0 = (h * (.06 + .88 * k / bands)).roundToInt()
-                    val y1 = (h * (.06 + .88 * (k + 1) / bands)).roundToInt()
-                    val band = ink.submat(y0, y1, x0, x1)
-                    try {
-                        Triple((y0 + y1) / 2.0, if (Core.mean(band).`val`[0] < .01) null else bandAngle(band, range), Unit)
-                    } finally {
-                        band.release()
-                    }
-                }
+            // Every band x angle is independent: all of them are scored side by side on the filter threads (1.6–1.9 s a
+            // page on the emulator one band after another), and each band's best is then picked in order. Same angles
+            // to the bit.
+            val bandsFound = bandAngles(ink, bands, range, x0, x1, h)
             for (k in 0 until bands) {
                 centres[k] = bandsFound[k].first
                 val found = bandsFound[k].second ?: continue
@@ -252,80 +243,101 @@ internal object TextLevel {
     private fun verticalShear(ink: Mat, range: Double, owned: MutableList<Mat>): Pair<Double, Double> {
         val float = Mat().also(owned::add)
         ink.convertTo(float, CvType.CV_32F)
-        val sheared = Mat().also(owned::add)
-        val profile = Mat().also(owned::add)
         val cy = ink.rows() / 2.0
+        // Each shear has its own buffers, so the shears are scored side by side on the filter threads; the best is
+        // still the first highest in order, as before.
         fun score(s: Double): Double {
             val m = Mat(2, 3, CvType.CV_64F)
+            val sheared = Mat()
+            val profile = Mat()
             try {
                 m.put(0, 0, 1.0, s, -s * cy, 0.0, 1.0, 0.0)
                 Imgproc.warpAffine(float, sheared, m, float.size(), Imgproc.INTER_LINEAR or Imgproc.WARP_INVERSE_MAP)
+                Core.reduce(sheared, profile, 0, Core.REDUCE_SUM, CvType.CV_32F)
+                val cols = FloatArray(profile.cols()).also { profile.get(0, 0, it) }
+                var sum = 0.0
+                for (i in 1 until cols.size) {
+                    val d = (cols[i] - cols[i - 1]).toDouble()
+                    sum += d * d
+                }
+                return sum
             } finally {
-                m.release()
+                listOf(m, sheared, profile).forEach(Mat::release)
             }
-            Core.reduce(sheared, profile, 0, Core.REDUCE_SUM, CvType.CV_32F)
-            val cols = FloatArray(profile.cols()).also { profile.get(0, 0, it) }
-            var sum = 0.0
-            for (i in 1 until cols.size) {
-                val d = (cols[i] - cols[i - 1]).toDouble()
-                sum += d * d
-            }
-            return sum
         }
         val coarse = generateSequence(-range) { it + .2 }.takeWhile { it <= range + 1e-9 }.map { tan(Math.toRadians(it)) }.toList()
-        val scores = coarse.map(::score)
+        val scores = ParallelFilter.tasks(coarse.size) { score(coarse[it]) }
         val best = coarse[scores.indices.maxBy { scores[it] }]
         val step = tan(Math.toRadians(.05))
         val fine = (-4..4).map { best + it * step }
-        val fineScores = fine.map(::score)
+        val fineScores = ParallelFilter.tasks(fine.size) { score(fine[it]) }
         val index = fineScores.indices.maxBy { fineScores[it] }
         return fine[index] to fineScores[index] / scores.sorted()[scores.size / 2].coerceAtLeast(1e-9)
     }
 
     /**
-     * The angle, in degrees and positive when lines rise to the right, that makes [band]'s row profile sharpest,
-     * and how much sharper that profile is than the band's typical one.
+     * For each of [bands] horizontal bands of [ink] (columns [x0] to [x1]): its centre row, and unless it is nearly empty,
+     * the angle (degrees, positive when lines rise to the right) that makes its row profile sharpest, and how much
+     * sharper that profile is than the band's typical one. The coarse and the fine angles of all bands are each
+     * scored as one batch on the filter threads.
      */
-    private fun bandAngle(band: Mat, range: Double): Pair<Double, Double> {
-        val turned = Mat()
-        val profile = Mat()
+    private fun bandAngles(ink: Mat, bands: Int, range: Double, x0: Int, x1: Int, h: Int): List<Triple<Double, Pair<Double, Double>?, Unit>> {
+        val rows = (0 until bands).map { k -> (h * (.06 + .88 * k / bands)).roundToInt() to (h * (.06 + .88 * (k + 1) / bands)).roundToInt() }
+        val parts = rows.map { (y0, y1) -> ink.submat(y0, y1, x0, x1) }
         try {
-            return turnedBest(band, range, turned, profile)
+            val used = parts.map { Core.mean(it).`val`[0] >= .01 }
+            val coarse = generateSequence(-range) { it + .2 }.takeWhile { it <= range + 1e-9 }.toList()
+            val coarseJobs = (0 until bands).filter { used[it] }.flatMap { k -> coarse.indices.map { k to it } }
+            val coarseScores = ParallelFilter.tasks(coarseJobs.size) { j -> rowSharpness(parts[coarseJobs[j].first], coarse[coarseJobs[j].second]) }
+            val scoresOf = (0 until bands).associateWith { k -> coarseJobs.indices.filter { coarseJobs[it].first == k }.map { coarseScores[it] } }
+            val fineOf = (0 until bands).filter { used[it] }.associateWith { k ->
+                val scores = scoresOf.getValue(k)
+                val best = coarse[scores.indices.maxBy { scores[it] }]
+                generateSequence(best - .2) { it + .05 }.takeWhile { it <= best + .2 + 1e-9 }.toList()
+            }
+            val fineJobs = fineOf.flatMap { (k, fine) -> fine.indices.map { k to it } }
+            val fineScores = ParallelFilter.tasks(fineJobs.size) { j -> rowSharpness(parts[fineJobs[j].first], fineOf.getValue(fineJobs[j].first)[fineJobs[j].second]) }
+            return (0 until bands).map { k ->
+                val (y0, y1) = rows[k]
+                val found =
+                    if (!used[k]) null
+                    else {
+                        val fine = fineOf.getValue(k)
+                        val scores = fineJobs.indices.filter { fineJobs[it].first == k }.map { fineScores[it] }
+                        val index = scores.indices.maxBy { scores[it] }
+                        val coarseScoresOfBand = scoresOf.getValue(k)
+                        val typical = coarseScoresOfBand.sorted()[coarseScoresOfBand.size / 2].coerceAtLeast(1e-9)
+                        // OpenCV turns counterclockwise for a positive angle, so lines rising to the right were levelled
+                        // by a negative one.
+                        -fine[index] to scores[index] / typical
+                    }
+                Triple((y0 + y1) / 2.0, found, Unit)
+            }
         } finally {
-            turned.release()
-            profile.release()
+            parts.forEach(Mat::release)
         }
     }
 
-    private fun turnedBest(band: Mat, range: Double, turned: Mat, profile: Mat): Pair<Double, Double> {
-        val centre = Point(band.cols() / 2.0, band.rows() / 2.0)
-        fun score(angle: Double): Double {
-            val turn = Imgproc.getRotationMatrix2D(centre, angle, 1.0)
-            try {
-                Imgproc.warpAffine(band, turned, turn, band.size(), Imgproc.INTER_LINEAR)
-            } finally {
-                turn.release()
-            }
+    /** The sharpness of [band]'s row profile turned by [angle] degrees: squared steps between neighbouring row sums. */
+    private fun rowSharpness(band: Mat, angle: Double): Double {
+        val turned = Mat()
+        val profile = Mat()
+        val turn = Imgproc.getRotationMatrix2D(Point(band.cols() / 2.0, band.rows() / 2.0), angle, 1.0)
+        try {
+            Imgproc.warpAffine(band, turned, turn, band.size(), Imgproc.INTER_LINEAR)
             Core.reduce(turned, profile, 1, Core.REDUCE_SUM, CvType.CV_32F)
-            val rows = FloatArray(profile.rows()).also { profile.get(0, 0, it) }
+            val values = FloatArray(profile.rows()).also { profile.get(0, 0, it) }
             var sum = 0.0
-            for (i in 1 until rows.size) {
-                val d = (rows[i] - rows[i - 1]).toDouble()
+            for (i in 1 until values.size) {
+                val d = (values[i] - values[i - 1]).toDouble()
                 sum += d * d
             }
             return sum
+        } finally {
+            listOf(turned, profile, turn).forEach(Mat::release)
         }
-        val coarse = generateSequence(-range) { it + .2 }.takeWhile { it <= range + 1e-9 }.toList()
-        val scores = coarse.map(::score)
-        val best = coarse[scores.indices.maxBy { scores[it] }]
-        val fine = generateSequence(best - .2) { it + .05 }.takeWhile { it <= best + .2 + 1e-9 }.toList()
-        val fineScores = fine.map(::score)
-        val index = fineScores.indices.maxBy { fineScores[it] }
-        val typical = scores.sorted()[scores.size / 2].coerceAtLeast(1e-9)
-        // OpenCV turns counterclockwise for a positive angle, so lines rising to the right were levelled by a
-        // negative one.
-        return -fine[index] to fineScores[index] / typical
     }
+
 
     /**
      * Output-to-input homography, row-major 3 x 3: the line through the page's middle column at [yTop] with angle
