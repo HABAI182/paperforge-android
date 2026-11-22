@@ -31,15 +31,19 @@ object PageNetDetector {
     private const val RECOVER = 320
 
     /** A page network: its asset, the mask threshold it was selected with, and its method tag. */
-    enum class Model(val asset: String, val cutKey: String, val defaultCut: Float, val tag: String) {
+    enum class Model(val asset: String, val cutKey: String, val defaultCut: Float, val tag: String, val xnnpack: Boolean = false) {
         STANDARD("pagenet/pagenet.onnx", "pageNetCut", .15f, "pagenet"),
         // MobileNetV3-Small U-Net x1.5, models-r4/mbv3w15; checkpoint and threshold chosen on real photos.
-        V2("pagenet/pagenet-v2.onnx", "pageNetV2Cut", .3f, "pagenet2"),
+        // XNNPACK: 18.3 -> 14.0 ms median on the OnePlus Ace 5, outputs within 1.1e-4 and 0.0 px crop change on 24
+        // real photos (M0, 2026-11-22). Only this model: DocQuad and DocRes were 2.5x and 2.9x slower on XNNPACK.
+        V2("pagenet/pagenet-v2.onnx", "pageNetV2Cut", .3f, "pagenet2", xnnpack = true),
     }
 
     private var context: Context? = null
     private val sessions = HashMap<Model, OrtSession>()
     private val failures = HashMap<Model, String>()
+    /** Models whose XNNPACK session failed to build or run; they stay on the plain CPU session. */
+    private val xnnpackFailed = HashSet<Model>()
     private val environment by lazy { OrtEnvironment.getEnvironment() }
 
     fun initialize(context: Context) {
@@ -51,11 +55,48 @@ object PageNetDetector {
             return it
         }
         val bytes = checkNotNull(context).assets.open(model.asset).use { it.readBytes() }
+        if (usesXnnpack(model))
+            try {
+                return OrtSession.SessionOptions().use { options ->
+                    options.setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT)
+                    options.setInterOpNumThreads(1)
+                    // XNNPACK has its own pool; ORT's stays at one thread, so two threads in all, as on the CPU.
+                    options.setIntraOpNumThreads(1)
+                    options.addConfigEntry("session.intra_op.allow_spinning", "0")
+                    options.addXnnpack(mapOf("intra_op_num_threads" to "2"))
+                    environment.createSession(bytes, options).also { sessions[model] = it }
+                }
+            } catch (t: Throwable) {
+                dropXnnpack(model, t)
+            }
         return OrtSession.SessionOptions().use { options ->
             options.setIntraOpNumThreads(2)
             options.setInterOpNumThreads(1)
             options.setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT)
             environment.createSession(bytes, options).also { sessions[model] = it }
+        }
+    }
+
+    private fun usesXnnpack(model: Model) =
+        model.xnnpack && model !in xnnpackFailed && ScanConfig.int("pageNetXnnpack", 1) != 0
+
+    /** Falls back to the CPU session for good: the next [session] call builds it. */
+    private fun dropXnnpack(model: Model, cause: Throwable) {
+        xnnpackFailed += model
+        sessions.remove(model)?.let { runCatching { it.close() } }
+        android.util.Log.w("PaperForgeDetector", "PageNet ${model.name}: XNNPACK unavailable, CPU instead", cause)
+    }
+
+    /** Runs [model]; a failure on the XNNPACK session is retried once on the CPU session. */
+    private fun run(model: Model, tensor: OnnxTensor): OrtSession.Result {
+        val onXnnpack = usesXnnpack(model)
+        val session = session(model)
+        return try {
+            session.run(mapOf("image" to tensor))
+        } catch (t: Throwable) {
+            if (!onXnnpack || model in xnnpackFailed) throw t
+            dropXnnpack(model, t)
+            session(model).run(mapOf("image" to tensor))
         }
     }
 
@@ -93,7 +134,7 @@ object PageNetDetector {
                     longArrayOf(1, 3, INPUT.toLong(), INPUT.toLong()),
                 )
                 .use { tensor ->
-                    session(model).run(mapOf("image" to tensor)).use { output ->
+                    run(model, tensor).use { output ->
                         @Suppress("UNCHECKED_CAST")
                         val logits = output[0].value as Array<Array<Array<FloatArray>>>
                         val channel = logits[0][0]
