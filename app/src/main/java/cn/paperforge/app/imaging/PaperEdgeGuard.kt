@@ -67,138 +67,160 @@ object PaperEdgeGuard {
         // feedback was about. The design rule is "keep rim grey before erasing edge ink".
         val contrast =
             ScanConfig.float("paperEdgeInkContrast", 56f).coerceIn(12f, 120f)
-        val lumaPlane = ByteArray(width * height)
-        val histogram = IntArray(256)
-        val sampleStep = max(1, width * height / 40000)
-        for (y in 0 until height) for (x in 0 until width) {
-            val v = luma(x, y)
-            lumaPlane[y * width + x] = v.toInt().coerceIn(0, 255).toByte()
-            if ((y * width + x) % sampleStep == 0) histogram[v.toInt().coerceIn(0, 255)]++
-        }
-        var seen = 0
+        // The page's paper level and its dark components are needed only once a rim pixel reaches the component test, and
+        // most pages have none: the tone step has already lifted the edges. So they are worked out at the first such pixel,
+        // before anything is changed, which is when the full-page pass used to work them out too.
         var paperLevel = 255
-        val target = max(1, (width * height / sampleStep) * 9 / 10)
-        for (level in 0..255) {
-            seen += histogram[level]
-            if (seen >= target) {
-                paperLevel = level
-                break
+        var labelBytes = IntArray(0)
+        var regions = IntArray(0)
+        var measured = false
+        fun measure() {
+            measured = true
+            val lumaPlane = ByteArray(width * height)
+            val sampleStep = max(1, width * height / 40000)
+            val histogram = IntArray(256)
+            // Every pixel on its own: ranges on the filter threads, the sampled histogram summed per part.
+            for (part in ParallelFilter.ranges(width * height) { from, to ->
+                IntArray(256).also { counts ->
+                    for (i in from until to) {
+                        val v = luma(i % width, i / width)
+                        lumaPlane[i] = v.toInt().coerceIn(0, 255).toByte()
+                        if (i % sampleStep == 0) counts[v.toInt().coerceIn(0, 255)]++
+                    }
+                }
+            }) for (level in 0..255) histogram[level] += part[level]
+            var seen = 0
+            val target = max(1, (width * height / sampleStep) * 9 / 10)
+            for (level in 0..255) {
+                seen += histogram[level]
+                if (seen >= target) {
+                    paperLevel = level
+                    break
+                }
             }
-        }
-        val components = Mat()
-        val labels = Mat()
-        val stats = Mat()
-        val centers = Mat()
-        val labelBytes = IntArray(width * height)
-        val regions: IntArray
-        try {
-            val dark = ByteArray(width * height) {
-                if (lumaPlane[it].toInt() and 255 < paperLevel - 24) 255.toByte() else 0
+            val components = Mat()
+            val labels = Mat()
+            val stats = Mat()
+            val centers = Mat()
+            labelBytes = IntArray(width * height)
+            try {
+                val dark = ByteArray(width * height)
+                ParallelFilter.ranges(dark.size) { from, to ->
+                    for (i in from until to) if (lumaPlane[i].toInt() and 255 < paperLevel - 24) dark[i] = 255.toByte()
+                }
+                components.create(height, width, CvType.CV_8UC1)
+                components.put(0, 0, dark)
+                val count =
+                    Imgproc.connectedComponentsWithStats(
+                        components,
+                        labels,
+                        stats,
+                        centers,
+                        8,
+                        CvType.CV_32S,
+                    )
+                labels.get(0, 0, labelBytes)
+                regions = IntArray(count * 5).also { stats.get(0, 0, it) }
+            } finally {
+                components.release()
+                labels.release()
+                stats.release()
+                centers.release()
             }
-            components.create(height, width, CvType.CV_8UC1)
-            components.put(0, 0, dark)
-            val count =
-                Imgproc.connectedComponentsWithStats(
-                    components,
-                    labels,
-                    stats,
-                    centers,
-                    8,
-                    CvType.CV_32S,
-                )
-            labels.get(0, 0, labelBytes)
-            regions = IntArray(count * 5).also { stats.get(0, 0, it) }
-        } finally {
-            components.release()
-            labels.release()
-            stats.release()
-            centers.release()
         }
 
         var cleaned = 0
-        for (y in 0 until height) {
+        // Only the rim can change: whole rows at the top and bottom, the first and last `ring` columns between, visited in
+        // the same order as a pass over every pixel (each reads only pixels further in, or rim pixels before it).
+        fun visit(x: Int, y: Int) {
             val top = y
             val bottom = height - 1 - y
-            for (x in 0 until width) {
-                val left = x
-                val right = width - 1 - x
-                val distance = minOf(left, right, top, bottom)
-                if (distance >= ring) continue
-                // Move inwards along the nearest edge; at a corner either axis is fine.
-                var stepX = 0
-                var stepY = 0
-                if (distance == left) stepX = 1
-                else if (distance == right) stepX = -1
-                if (stepX == 0) {
-                    if (distance == top) stepY = 1 else if (distance == bottom) stepY = -1
-                }
-                val value = luma(x, y)
-                if (value < inkFloor) continue
-                if (channels == 3) {
-                    val chroma =
-                        maxOf(value(x, y, 0), value(x, y, 1), value(x, y, 2)) -
-                            minOf(value(x, y, 0), value(x, y, 1), value(x, y, 2))
-                    if (chroma > maximumChroma) continue
-                }
-                // Local paper level just inside the ring: the brightest of a few samples, because a
-                // dark rule occupying the whole column must not become the reference.
-                var reference = 0.0
-                for (offset in intArrayOf(probe, probe + ring, probe + step)) {
-                    val sx = (x + stepX * offset).coerceIn(0, width - 1)
-                    val sy = (y + stepY * offset).coerceIn(0, height - 1)
-                    reference = max(reference, luma(sx, sy))
-                }
-                if (reference - value < 8.0) continue
-                // Paper must resume immediately inside: the darkening is confined to the ring.
-                val innerX = (x + stepX * step).coerceIn(0, width - 1)
-                val innerY = (y + stepY * step).coerceIn(0, height - 1)
-                if (luma(innerX, innerY) < reference - 12.0) continue
-                val id = labelBytes[y * width + x]
-                if (id > 0) {
-                    val x0 = regions[id * 5]
-                    val y0 = regions[id * 5 + 1]
-                    val cw = regions[id * 5 + 2]
-                    val ch = regions[id * 5 + 3]
-                    val along = max(cw, ch)
-                    val sideLength = if (stepX != 0) height else width
-                    // A full-edge uniform band is the artefact the guard exists for: it is dark
-                    // along the whole side but never reaches the interior. A page-border ring that
-                    // connects the four sides has a page-sized bounding box, so connectivity is
-                    // checked locally below rather than from the bbox.
-                    val uniformRim = along >= 0.25 * sideLength
-                    // Does the darkness continue inward as a connected stroke? Sample a short
-                    // perpendicular ray just beyond the "paper resumes" distance. Only strong ink
-                    // counts: faint show-through near the edge is exactly what the guard is meant
-                    // to lift, and treating it as a stroke would leave grey bands behind.
-                    val inwardInk = run {
-                        val limit = min(reference - 40.0, 170.0)
-                        var hit = false
-                        for (d in step + 1..step + 3) {
-                            for (o in -2..2) {
-                                val sx = if (stepX != 0) x + stepX * d else x + o
-                                val sy = if (stepY != 0) y + stepY * d else y + o
-                                if (luma(sx, sy) < limit) {
-                                    hit = true
-                                    break
-                                }
+            val left = x
+            val right = width - 1 - x
+            val distance = minOf(left, right, top, bottom)
+            if (distance >= ring) return
+            // Move inwards along the nearest edge; at a corner either axis is fine.
+            var stepX = 0
+            var stepY = 0
+            if (distance == left) stepX = 1
+            else if (distance == right) stepX = -1
+            if (stepX == 0) {
+                if (distance == top) stepY = 1 else if (distance == bottom) stepY = -1
+            }
+            val value = luma(x, y)
+            if (value < inkFloor) return
+            if (channels == 3) {
+                val chroma =
+                    maxOf(value(x, y, 0), value(x, y, 1), value(x, y, 2)) -
+                        minOf(value(x, y, 0), value(x, y, 1), value(x, y, 2))
+                if (chroma > maximumChroma) return
+            }
+            // Local paper level just inside the ring: the brightest of a few samples, because a
+            // dark rule occupying the whole column must not become the reference.
+            var reference = 0.0
+            for (offset in intArrayOf(probe, probe + ring, probe + step)) {
+                val sx = (x + stepX * offset).coerceIn(0, width - 1)
+                val sy = (y + stepY * offset).coerceIn(0, height - 1)
+                reference = max(reference, luma(sx, sy))
+            }
+            if (reference - value < 8.0) return
+            // Paper must resume immediately inside: the darkening is confined to the ring.
+            val innerX = (x + stepX * step).coerceIn(0, width - 1)
+            val innerY = (y + stepY * step).coerceIn(0, height - 1)
+            if (luma(innerX, innerY) < reference - 12.0) return
+            if (!measured) measure()
+            val id = labelBytes[y * width + x]
+            if (id > 0) {
+                val x0 = regions[id * 5]
+                val y0 = regions[id * 5 + 1]
+                val cw = regions[id * 5 + 2]
+                val ch = regions[id * 5 + 3]
+                val along = max(cw, ch)
+                val sideLength = if (stepX != 0) height else width
+                // A full-edge uniform band is the artefact the guard exists for: it is dark
+                // along the whole side but never reaches the interior. A page-border ring that
+                // connects the four sides has a page-sized bounding box, so connectivity is
+                // checked locally below rather than from the bbox.
+                val uniformRim = along >= 0.25 * sideLength
+                // Does the darkness return inward as a connected stroke? Sample a short
+                // perpendicular ray just beyond the "paper resumes" distance. Only strong ink
+                // counts: faint show-through near the edge is exactly what the guard is meant
+                // to lift, and treating it as a stroke would leave grey bands behind.
+                val inwardInk = run {
+                    val limit = min(reference - 40.0, 170.0)
+                    var hit = false
+                    for (d in step + 1..step + 3) {
+                        for (o in -2..2) {
+                            val sx = if (stepX != 0) x + stepX * d else x + o
+                            val sy = if (stepY != 0) y + stepY * d else y + o
+                            if (luma(sx, sy) < limit) {
+                                hit = true
+                                break
                             }
-                            if (hit) break
                         }
-                        hit
+                        if (hit) break
                     }
-                    // Ink that reaches the interior (a stroke, a rule, a glyph) is never a rim.
-                    if (inwardInk) continue
-                    // A short, clearly dark run at the very edge is a stroke tip or a rule end.
-                    // Only a low-contrast or full-edge uniform ring is removable.
-                    if (paperLevel - value >= contrast && !uniformRim) continue
+                    hit
                 }
-                // Scale every channel to the local paper level so hue is preserved.
-                val scale = reference / max(1.0, value)
-                for (c in 0 until channels) {
-                    val lifted = (value(x, y, c) * scale).roundToInt().coerceIn(0, 255)
-                    pixels[y * stride + x * channels + c] = lifted.toByte()
-                }
-                cleaned++
+                // Ink that reaches the interior (a stroke, a rule, a glyph) is never a rim.
+                if (inwardInk) return
+                // A short, clearly dark run at the very edge is a stroke tip or a rule end.
+                // Only a low-contrast or full-edge uniform ring is removable.
+                if (paperLevel - value >= contrast && !uniformRim) return
+            }
+            // Scale every channel to the local paper level so hue is preserved.
+            val scale = reference / max(1.0, value)
+            for (c in 0 until channels) {
+                val lifted = (value(x, y, c) * scale).roundToInt().coerceIn(0, 255)
+                pixels[y * stride + x * channels + c] = lifted.toByte()
+            }
+            cleaned++
+        }
+        for (y in 0 until height) {
+            if (y < ring || height - 1 - y < ring) for (x in 0 until width) visit(x, y)
+            else {
+                for (x in 0 until min(ring, width)) visit(x, y)
+                for (x in max(ring, width - ring) until width) visit(x, y)
             }
         }
         if (cleaned > 0) destination.put(0, 0, pixels)
