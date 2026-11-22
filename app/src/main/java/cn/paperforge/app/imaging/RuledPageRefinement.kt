@@ -155,6 +155,8 @@ object RuledPageRefinement {
         val ink = mat()
         val narrow = mat()
         val broad = mat()
+        var lapStart = System.nanoTime()
+        fun lap(name: String) = System.nanoTime().let { StepTimes.add("ru.$name", it - lapStart); lapStart = it }
         try {
             when (source.channels()) {
                 4 -> Imgproc.cvtColor(source, gray, Imgproc.COLOR_RGBA2GRAY)
@@ -180,15 +182,16 @@ object RuledPageRefinement {
             val paper = ByteArray(raw.size)
             small.get(0, 0, raw)
             background.get(0, 0, paper)
-            val inkValues =
-                FloatArray(raw.size) { index ->
+            val inkValues = FloatArray(raw.size)
+            ParallelFilter.ranges(raw.size) { from, to ->
+                for (index in from until to) inkValues[index] =
                     255f -
                         min(
                             255f,
                             (raw[index].toInt() and 255) * 255f /
                                 max(20, paper[index].toInt() and 255),
                         )
-                }
+            }
             ink.create(height, width, CvType.CV_32FC1)
             ink.put(0, 0, inkValues)
             Imgproc.GaussianBlur(ink, narrow, Size(0.0, 0.0), 8.0, .7)
@@ -197,7 +200,8 @@ object RuledPageRefinement {
             val low = FloatArray(raw.size)
             narrow.get(0, 0, ridge)
             broad.get(0, 0, low)
-            for (i in ridge.indices) ridge[i] = max(0f, ridge[i] - low[i])
+            ParallelFilter.ranges(ridge.size) { from, to -> for (i in from until to) ridge[i] = max(0f, ridge[i] - low[i]) }
+            lap("ridge")
             val profile =
                 FloatArray(height) { y ->
                     var sum = 0f
@@ -230,19 +234,22 @@ object RuledPageRefinement {
             val xs = (step until width - step step step).toList()
             if (xs.size < 6) return null
             val bins =
-                Array(xs.size) { column ->
+                ParallelFilter.tasks(xs.size) { column ->
                     FloatArray(height) { y ->
                         var sum = 0f
                         for (x in xs[column] - 7..xs[column] + 7) sum += ridge[y * width + x]
                         sum / 15
                     }
                 }
+            lap("bins")
             val targets = mutableListOf<Float>()
             val curves = mutableListOf<FloatArray>()
             val rawCurves = mutableListOf<FloatArray>()
             val minimumSupport = ScanConfig.float("ruledMinimumSupport", .82f)
             var maximumShift = 0f
-            for (seed in chosen.sorted()) {
+            class Track(val target: Float, val curve: FloatArray, val raw: FloatArray)
+            // One rule followed from its seed; null when it is not a usable rule. Reads only shared arrays.
+            fun track(seed: Int): Track? {
                 val radius = (spacing * .8f).roundToInt()
                 val start = max(3, seed - radius)
                 val end = min(height - 3, seed + radius + 1)
@@ -309,13 +316,9 @@ object RuledPageRefinement {
                     path.indices
                         .count { bins[it][start + path[it]] >= max(2f, profile[seed] * .25f) }
                         .toFloat() / path.size
-                if (support < minimumSupport) continue
-                val pathMat = mat()
-                val smoothed = mat()
-                pathMat.create(1, path.size, CvType.CV_32FC1)
-                pathMat.put(
-                    0,
-                    0,
+                if (support < minimumSupport) return null
+                // The sub-pixel heights, as the 1 x n float Mat they once went through held them.
+                val observed =
                     FloatArray(path.size) { column ->
                         val y = path[column] + start
                         val before = bins[column][y - 1]
@@ -331,10 +334,7 @@ object RuledPageRefinement {
                                 (.5f * (before - after) / denominator).coerceIn(-.5f, .5f)
                             else 0f
                         y + subpixel * ScanConfig.float("ruledSubpixel", 1f)
-                    },
-                )
-                val observed = FloatArray(path.size)
-                pathMat.get(0, 0, observed)
+                    }
                 // The path is followed across the whole page, also where the rule is not there. On a grid printed
                 // beside drawings it ran on along the drawings' slanted edges, and the map then bent the drawings
                 // to "straighten" a rule that never crossed them. The rule's own extent is the longest run of
@@ -367,7 +367,7 @@ object RuledPageRefinement {
                         c = last + 1
                     }
                     val minimumSpan = ScanConfig.float("ruledEvidenceMinimumSpan", .45f)
-                    if (bestFrom < 0 || (bestTo - bestFrom + 1) < minimumSpan * path.size) continue
+                    if (bestFrom < 0 || (bestTo - bestFrom + 1) < minimumSpan * path.size) return null
                     for (k in 0 until bestFrom) observed[k] = observed[bestFrom]
                     for (k in bestTo + 1 until observed.size) observed[k] = observed[bestTo]
                 }
@@ -397,9 +397,16 @@ object RuledPageRefinement {
                     }
                 val inkThreshold = max(5f, inkOnLine.sorted()[inkOnLine.size / 2] * .3f)
                 if (inkOnLine.count { it > inkThreshold }.toFloat() / inkOnLine.size < .65f)
-                    continue
+                    return null
                 val middle = curve.slice((width * .3f).toInt() until (width * .7f).toInt()).sorted()
-                val target = middle[middle.size / 2]
+                return Track(middle[middle.size / 2], curve, expand(observed))
+            }
+            // Seeds are followed in parallel; which rules are kept is still decided in seed order.
+            val seeds = chosen.sorted()
+            for (found in ParallelFilter.tasks(seeds.size) { track(seeds[it]) }) {
+                if (found == null) continue
+                val curve = found.curve
+                val target = found.target
                 if (
                     curves.isNotEmpty() &&
                         curve.indices.any { curve[it] - curves.last()[it] < spacing * .4f }
@@ -407,27 +414,29 @@ object RuledPageRefinement {
                     continue
                 targets += target
                 curves += curve
-                rawCurves += expand(observed)
+                rawCurves += found.raw
                 maximumShift = max(maximumShift, curve.maxOf { abs(it - target) })
             }
+            lap("track")
             // A real narrow fold is shared by several neighboring rules. Restore that
             // observed detail; isolated glyph-induced wiggles stay smoothed away.
             val smoothCurves = curves.map { it.copyOf() }
             val sharedFold = ScanConfig.float("ruledSharedFold", .9f)
-            for (i in curves.indices) for (x in 0 until width) {
-                val residuals =
-                    (max(0, i - 2)..min(curves.lastIndex, i + 2))
-                        .map { rawCurves[it][x] - smoothCurves[it][x] }
-                        .sorted()
-                if (residuals.size < 3) continue
-                val middle = residuals[residuals.size / 2]
-                val agreement =
-                    residuals.count {
-                        it * middle > 0f &&
-                            abs(it) >= abs(middle) * .4f &&
-                            abs(it) <= abs(middle) * 2.5f
-                    }
-                if (agreement >= 3) curves[i][x] += middle * sharedFold
+            ParallelFilter.tasks(curves.size) { i ->
+                val from = max(0, i - 2)
+                val residuals = FloatArray(min(curves.lastIndex, i + 2) - from + 1)
+                if (residuals.size >= 3) for (x in 0 until width) {
+                    for (k in residuals.indices) residuals[k] = rawCurves[from + k][x] - smoothCurves[from + k][x]
+                    residuals.sort()
+                    val middle = residuals[residuals.size / 2]
+                    val agreement =
+                        residuals.count {
+                            it * middle > 0f &&
+                                abs(it) >= abs(middle) * .4f &&
+                                abs(it) <= abs(middle) * 2.5f
+                        }
+                    if (agreement >= 3) curves[i][x] += middle * sharedFold
+                }
             }
             // Paper displacement varies smoothly down the page. A fraction bar or a glyph
             // must not bend just one tracked rule. Robust local vertical regression removes
@@ -436,9 +445,9 @@ object RuledPageRefinement {
             if (coherence > 0f && curves.size >= 6) {
                 val observed = curves.map { it.copyOf() }
                 val neighbors = min(7, curves.size)
-                val slopes = FloatArray(neighbors * (neighbors - 1) / 2)
-                val offsets = FloatArray(neighbors)
-                for (i in curves.indices) {
+                ParallelFilter.tasks(curves.size) { i ->
+                    val slopes = FloatArray(neighbors * (neighbors - 1) / 2)
+                    val offsets = FloatArray(neighbors)
                     val first = (i - neighbors / 2).coerceIn(0, curves.size - neighbors)
                     for (x in 0 until width) {
                         var count = 0
@@ -461,6 +470,7 @@ object RuledPageRefinement {
                     }
                 }
             }
+            lap("surface")
             maximumShift =
                 curves.indices.maxOfOrNull { i -> curves[i].maxOf { abs(it - targets[i]) } } ?: 0f
             if (curves.size < ScanConfig.int("ruledMinimumLines", 6)) return null
