@@ -109,6 +109,17 @@ internal object ParallelFilter {
         }
     }
 
+    /**
+     * [body] over bands of rows [from, to) of a [height] x [width] image, one band per filter thread. For per-pixel
+     * work that writes only its own rows the result is the same to the bit as one pass. Small images, `parallelLoops`
+     * 0 and calls from a filter thread run as one band on the caller.
+     */
+    fun rowBands(height: Int, width: Int, body: (Int, Int) -> Unit) {
+        val parts =
+            if (height.toLong() * width < ScanConfig.int("parallelLoopsMinPixels", 250_000)) 1 else min(threads, max(1, height))
+        tasks(parts) { k -> body((height.toLong() * k / parts).toInt(), (height.toLong() * (k + 1) / parts).toInt()) }
+    }
+
     /** GaussianBlur with a computed kernel size, as `Size(0.0, 0.0)` gives. */
     fun gaussian(source: Mat, destination: Mat, sigmaX: Double, sigmaY: Double = 0.0) {
         val reach = ceil(4 * max(sigmaX, sigmaY)).toInt() + 2

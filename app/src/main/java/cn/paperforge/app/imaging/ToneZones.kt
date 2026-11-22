@@ -189,7 +189,9 @@ internal object ToneZones {
             // Dark-capture interlock: a page whose paper is itself far below white is not a
             // rendered workbook page and must not be remapped to paper white.
             val fieldHistogram = IntArray(256)
-            for (value in fieldValues) fieldHistogram[value.roundToInt().coerceIn(0, 255)]++
+            for (part in ParallelFilter.ranges(fieldValues.size) { from, to ->
+                IntArray(256).also { counts -> for (i in from until to) counts[fieldValues[i].roundToInt().coerceIn(0, 255)]++ }
+            }) for (v in 0 until 256) fieldHistogram[v] += part[v]
             // The brighter part decides: half a page in deep shadow is still a page with white paper.
             val fieldPaper = percentile(fieldHistogram, fieldValues.size, .75f)
             val stats =
@@ -217,10 +219,10 @@ internal object ToneZones {
                 return last.get()
             }
             val grayBytes = ByteArray(width * height).also { gray.get(0, 0, it) }
-            val raw =
-                FloatArray(grayBytes.size) {
-                    (grayBytes[it].toInt() and 255) / max(1f, fieldValues[it])
-                }
+            val raw = FloatArray(grayBytes.size)
+            ParallelFilter.ranges(raw.size) { from, to ->
+                for (i in from until to) raw[i] = (grayBytes[i].toInt() and 255) / max(1f, fieldValues[i])
+            }
             val ratio = mat()
             ratio.create(height, width, CvType.CV_32FC1)
             ratio.put(0, 0, raw)
@@ -232,17 +234,10 @@ internal object ToneZones {
             // pale pieces, which then went as show-through and left the stroke dashed.
             val relative = if (ScanConfig.int("toneZonesDecideTidy", 0) != 0) tidyValues else raw
             lap("ratio")
+            // 255 where `relative` < cut, compared in OpenCV on the float32 Mat that holds the same values.
+            val relativeMat = if (relative === raw) ratio else tidied
             fun threshold(cut: Float) =
-                mat().also { mask ->
-                    mask.create(height, width, CvType.CV_8UC1)
-                    mask.put(
-                        0,
-                        0,
-                        ByteArray(relative.size) {
-                            if (relative[it] < cut) 255.toByte() else 0.toByte()
-                        },
-                    )
-                }
+                mat().also { mask -> Core.compare(relativeMat, Scalar(cut.toDouble()), mask, Core.CMP_LT) }
             val candidates = threshold(candidateCut)
             val cross =
                 Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(3.0, 3.0)).also(owned::add)
@@ -284,16 +279,14 @@ internal object ToneZones {
             val softValues = FloatArray(relative.size).also { softened.get(0, 0, it) }
             val faintCut = ScanConfig.float("toneZonesFaintCut", .88f)
             val crispness = ScanConfig.float("toneZonesCrisp", .08f)
+            // raw < faintCut and soft - raw > crispness, on the float32 Mats (the same IEEE subtraction).
             val crisp = mat()
-            crisp.create(height, width, CvType.CV_8UC1)
-            crisp.put(
-                0,
-                0,
-                ByteArray(relative.size) {
-                    if (raw[it] < faintCut && softValues[it] - raw[it] > crispness) 255.toByte()
-                    else 0.toByte()
-                },
-            )
+            val sharpness = mat()
+            Core.subtract(softened, ratio, sharpness)
+            Core.compare(sharpness, Scalar(crispness.toDouble()), crisp, Core.CMP_GT)
+            val belowFaint = mat()
+            Core.compare(ratio, Scalar(faintCut.toDouble()), belowFaint, Core.CMP_LT)
+            Core.bitwise_and(crisp, belowFaint, crisp)
             dropSmall(crisp, max(2, (6 * scale * scale).roundToInt()), owned)
             lap("crisp")
             val darkSeeds = mat().also(seeds::copyTo)
@@ -1620,24 +1613,26 @@ internal object ToneZones {
         val straightDepth = min(minDepth, ScanConfig.float("toneZonesStraightDepth", .05f))
         val loose = ByteArray(tidy.size)
         val looseDepth = ByteArray(tidy.size)
-        for (y in step until height - step) {
-            var i = y * width + step
-            for (x in step until width - step) {
-                val centre = tidy[i]
-                if (centre < max(ceiling, straightCeiling)) {
-                    var d = 0f
-                    for (o in offsets) d = max(d, min(tidy[i - o], tidy[i + o]) - centre)
-                    if (d > straightDepth) {
-                        val byte = (d * 255).roundToInt().coerceAtMost(255).toByte()
-                        loose[i] = 255.toByte()
-                        looseDepth[i] = byte
-                        if (centre < ceiling && d > minDepth) {
-                            path[i] = 255.toByte()
-                            depth[i] = byte
+        ParallelFilter.rowBands(height - 2 * step, width) { from, to ->
+            for (y in step + from until step + to) {
+                var i = y * width + step
+                for (x in step until width - step) {
+                    val centre = tidy[i]
+                    if (centre < max(ceiling, straightCeiling)) {
+                        var d = 0f
+                        for (o in offsets) d = max(d, min(tidy[i - o], tidy[i + o]) - centre)
+                        if (d > straightDepth) {
+                            val byte = (d * 255).roundToInt().coerceAtMost(255).toByte()
+                            loose[i] = 255.toByte()
+                            looseDepth[i] = byte
+                            if (centre < ceiling && d > minDepth) {
+                                path[i] = 255.toByte()
+                                depth[i] = byte
+                            }
                         }
                     }
+                    i++
                 }
-                i++
             }
         }
         val pathMat = Mat().also(owned::add)
@@ -1656,14 +1651,20 @@ internal object ToneZones {
         val longBytes = ByteArray(tidy.size).also { longLines.get(0, 0, it) }
         val labelValues = IntArray(tidy.size).also { labels.get(0, 0, it) }
         val nearInk = BooleanArray(count)
-        for (i in labelValues.indices) if (labelValues[i] != 0 && (zoneBytes[i] != 0.toByte() || longBytes[i] != 0.toByte())) nearInk[labelValues[i]] = true
+        for (part in ParallelFilter.ranges(labelValues.size) { from, to ->
+            BooleanArray(count).also { seen ->
+                for (i in from until to) if (labelValues[i] != 0 && (zoneBytes[i] != 0.toByte() || longBytes[i] != 0.toByte())) seen[labelValues[i]] = true
+            }
+        }) for (label in 0 until count) if (part[label]) nearInk[label] = true
         val kept = BooleanArray(count) {
             it != 0 && nearInk[it] && max(table[it * 5 + Imgproc.CC_STAT_WIDTH], table[it * 5 + Imgproc.CC_STAT_HEIGHT]) >= length
         }
-        for (i in labelValues.indices) {
-            if (!kept[labelValues[i]]) {
-                path[i] = 0
-                depth[i] = 0
+        ParallelFilter.ranges(labelValues.size) { from, to ->
+            for (i in from until to) {
+                if (!kept[labelValues[i]]) {
+                    path[i] = 0
+                    depth[i] = 0
+                }
             }
         }
         // Straight lines, faint or dashed: line middles that lie on a long straight run, gaps allowed, are kept
@@ -1711,11 +1712,13 @@ internal object ToneZones {
                 ParallelFilter.dilate(darkSeeds, besideInk, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(reach, reach)).also(owned::add))
                 val besideBytes = ByteArray(tidy.size).also { besideInk.get(0, 0, it) }
                 val strictByte = (minDepth * 255).roundToInt()
-                for (i in onBytes.indices) {
-                    if (onBytes[i] != 0.toByte() && loose[i] != 0.toByte() &&
-                        (besideBytes[i] == 0.toByte() || (looseDepth[i].toInt() and 255) > strictByte)) {
-                        path[i] = 255.toByte()
-                        if ((looseDepth[i].toInt() and 255) > (depth[i].toInt() and 255)) depth[i] = looseDepth[i]
+                ParallelFilter.ranges(onBytes.size) { from, to ->
+                    for (i in from until to) {
+                        if (onBytes[i] != 0.toByte() && loose[i] != 0.toByte() &&
+                            (besideBytes[i] == 0.toByte() || (looseDepth[i].toInt() and 255) > strictByte)) {
+                            path[i] = 255.toByte()
+                            if ((looseDepth[i].toInt() and 255) > (depth[i].toInt() and 255)) depth[i] = looseDepth[i]
+                        }
                     }
                 }
             }
@@ -1803,14 +1806,23 @@ internal object ToneZones {
         val sure = IntArray(count)
         val loose = IntArray(count)
         val mid = IntArray(count)
-        for (i in labelValues.indices) {
-            val label = labelValues[i]
-            if (label == 0) continue
-            val value = relative[i]
-            if (value < midCut) mid[label]++
-            if (value < coreCut) core[label]++
-            if (value < sureCut) sure[label]++
-            if (value < longCut) loose[label]++
+        for (part in ParallelFilter.ranges(labelValues.size) { from, to ->
+            val counts = Array(4) { IntArray(count) }
+            for (i in from until to) {
+                val label = labelValues[i]
+                if (label == 0) continue
+                val value = relative[i]
+                if (value < midCut) counts[0][label]++
+                if (value < coreCut) counts[1][label]++
+                if (value < sureCut) counts[2][label]++
+                if (value < longCut) counts[3][label]++
+            }
+            counts
+        }) for (label in 0 until count) {
+            mid[label] += part[0][label]
+            core[label] += part[1][label]
+            sure[label] += part[2][label]
+            loose[label] += part[3][label]
         }
         val longSpan = ScanConfig.int("toneZonesFaintLongSpan", 30) * scale
         val anySpan = ScanConfig.int("toneZonesFaintSpan", 60) * scale
@@ -1841,17 +1853,25 @@ internal object ToneZones {
         if (rescue > 0f && anchor.any { it }) {
             val anchors = Mat().also(owned::add)
             anchors.create(grown.rows(), grown.cols(), CvType.CV_8UC1)
-            anchors.put(0, 0, ByteArray(relative.size) { if (anchor[labelValues[it]]) 255.toByte() else 0.toByte() })
+            anchors.put(0, 0, labelMask(labelValues) { anchor[it] })
             val radius = (2 * ScanConfig.int("toneZonesFaintRescueReach", 30) * scale + 1).toDouble()
             Imgproc.dilate(anchors, anchors, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(radius, radius)).also(owned::add))
             val near = ByteArray(relative.size).also { anchors.get(0, 0, it) }
             val light = IntArray(count)
             val beside = BooleanArray(count)
-            for (i in labelValues.indices) {
-                val label = labelValues[i]
-                if (label == 0) continue
-                if (relative[i] < rescue) light[label]++
-                if (near[i] != 0.toByte()) beside[label] = true
+            for (part in ParallelFilter.ranges(labelValues.size) { from, to ->
+                val partLight = IntArray(count)
+                val partBeside = BooleanArray(count)
+                for (i in from until to) {
+                    val label = labelValues[i]
+                    if (label == 0) continue
+                    if (relative[i] < rescue) partLight[label]++
+                    if (near[i] != 0.toByte()) partBeside[label] = true
+                }
+                partLight to partBeside
+            }) for (label in 0 until count) {
+                light[label] += part.first[label]
+                if (part.second[label]) beside[label] = true
             }
             for (label in 1 until count) {
                 if (ghost[label] && beside[label] && light[label] >= .2 * table[label * 5 + Imgproc.CC_STAT_AREA]) ghost[label] = false
@@ -1884,12 +1904,16 @@ internal object ToneZones {
         if (anyInk.any { it }) {
             val notInk = Mat().also(owned::add)
             notInk.create(grown.rows(), grown.cols(), CvType.CV_8UC1)
-            notInk.put(0, 0, ByteArray(relative.size) { if (anyInk[labelValues[it]]) 0 else 255.toByte() })
+            notInk.put(0, 0, labelMask(labelValues) { !anyInk[it] })
             val distance = Mat().also(owned::add)
             Imgproc.distanceTransform(notInk, distance, Imgproc.DIST_L2, 3)
             val distances = FloatArray(relative.size).also { distance.get(0, 0, it) }
             val nearest = FloatArray(count) { Float.MAX_VALUE }
-            for (i in labelValues.indices) if (distances[i] < nearest[labelValues[i]]) nearest[labelValues[i]] = distances[i]
+            for (part in ParallelFilter.ranges(labelValues.size) { from, to ->
+                FloatArray(count) { Float.MAX_VALUE }.also { least ->
+                    for (i in from until to) if (distances[i] < least[labelValues[i]]) least[labelValues[i]] = distances[i]
+                }
+            }) for (label in 0 until count) if (part[label] < nearest[label]) nearest[label] = part[label]
             val farAway = ScanConfig.int("toneZonesIsolatedAway", 40) * scale
             val longSpanLimit = ScanConfig.int("toneZonesIsolatedSpan", 45) * scale
             val paleShare = ScanConfig.float("toneZonesIsolatedPale", .5f)
@@ -1917,17 +1941,21 @@ internal object ToneZones {
         }
         // A mark with a seeded line in it is a stroke, however pale, so it stays: see [lineSeeds].
         val lined = BooleanArray(count)
-        if (lineSeeds != null) for (i in labelValues.indices) if (lineSeeds[i] != 0.toByte()) lined[labelValues[i]] = true
+        if (lineSeeds != null) for (part in ParallelFilter.ranges(labelValues.size) { from, to ->
+            BooleanArray(count).also { seen -> for (i in from until to) if (lineSeeds[i] != 0.toByte()) seen[labelValues[i]] = true }
+        }) for (label in 0 until count) if (part[label]) lined[label] = true
         for (label in 1 until count) if (lined[label]) ghost[label] = false
         // A lined mark is drawn on the narrow curve, with its centre line on top: crisp, where the faint curve
         // drew a blurred stroke's halo grey.
-        for (i in labelValues.indices) {
-            val label = labelValues[i]
-            if (label != 0 && core[label] < 3 && !lined[label]) faint[i] = true
+        ParallelFilter.ranges(labelValues.size) { from, to ->
+            for (i in from until to) {
+                val label = labelValues[i]
+                if (label != 0 && core[label] < 3 && !lined[label]) faint[i] = true
+            }
         }
         if (ghost.none { it }) return faint
         val bytes = ByteArray(relative.size).also { grown.get(0, 0, it) }
-        for (i in labelValues.indices) if (ghost[labelValues[i]]) bytes[i] = 0
+        ParallelFilter.ranges(labelValues.size) { from, to -> for (i in from until to) if (ghost[labelValues[i]]) bytes[i] = 0 }
         grown.put(0, 0, bytes)
         return faint
     }
@@ -1958,11 +1986,21 @@ internal object ToneZones {
     /** The ratio of the rule pixels near each pixel; 1 where there are none. */
     private fun ruleLevel(relative: FloatArray, rules: Mat, width: Int, height: Int, scale: Float, owned: MutableList<Mat>): FloatArray {
         val bytes = ByteArray(relative.size).also { rules.get(0, 0, it) }
-        val weight = FloatArray(relative.size) { if (bytes[it] != 0.toByte()) 1f else 0f }
-        val level = FloatArray(relative.size) { if (bytes[it] != 0.toByte()) relative[it] else 0f }
+        val weight = FloatArray(relative.size)
+        val level = FloatArray(relative.size)
+        ParallelFilter.ranges(relative.size) { from, to ->
+            for (i in from until to) if (bytes[i] != 0.toByte()) {
+                weight[i] = 1f
+                level[i] = relative[i]
+            }
+        }
         val sigma = max(8.0, ScanConfig.float("toneZonesRuleWindow", 60f) * scale.toDouble())
         val (values, shares) = spread(level, weight, width, height, sigma, owned)
-        return FloatArray(relative.size) { if (shares[it] > 1e-5f) values[it] / shares[it] else 1f }
+        val result = FloatArray(relative.size)
+        ParallelFilter.ranges(result.size) { from, to ->
+            for (i in from until to) result[i] = if (shares[i] > 1e-5f) values[i] / shares[i] else 1f
+        }
+        return result
     }
 
     /**
@@ -1983,21 +2021,31 @@ internal object ToneZones {
         var inkCount = 0
         val weightValues = FloatArray(relative.size)
         val levelValues = FloatArray(relative.size)
-        for (i in relative.indices) {
-            if (relative[i] < inkCut) {
-                weightValues[i] = 1f
-                levelValues[i] = relative[i]
-                histogram[(relative[i] * 255f).roundToInt().coerceIn(0, 255)]++
-                inkCount++
+        for (part in ParallelFilter.ranges(relative.size) { from, to ->
+            IntArray(256).also { counts ->
+                for (i in from until to) {
+                    if (relative[i] < inkCut) {
+                        weightValues[i] = 1f
+                        levelValues[i] = relative[i]
+                        counts[(relative[i] * 255f).roundToInt().coerceIn(0, 255)]++
+                    }
+                }
             }
+        }) for (v in 0 until 256) {
+            histogram[v] += part[v]
+            inkCount += part[v]
         }
         val pageLevel = if (inkCount > 100) percentile(histogram, inkCount, .5f) / 255f else .45f
         val (levels, shares) = spread(levelValues, weightValues, width, height, sigma, owned)
-        return FloatArray(relative.size) {
-            val share = shares[it]
-            val trust = (share / .01f).coerceIn(0f, 1f)
-            depth * (trust * levels[it] / max(share, 1e-4f) + (1f - trust) * pageLevel)
+        val floor = FloatArray(relative.size)
+        ParallelFilter.ranges(floor.size) { from, to ->
+            for (i in from until to) {
+                val share = shares[i]
+                val trust = (share / .01f).coerceIn(0f, 1f)
+                floor[i] = depth * (trust * levels[i] / max(share, 1e-4f) + (1f - trust) * pageLevel)
+            }
         }
+        return floor
     }
 
     /**
@@ -2038,22 +2086,43 @@ internal object ToneZones {
             val b = pixels[3 * i + 2].toInt() and 255
             return r >= 70 && r >= g && g > b && (r - b) >= warmSaturation * r
         }
+        // Only marks wholly in the outer band are judged below, so only their pixels are counted.
+        val inBand = BooleanArray(count) { label ->
+            if (label == 0) return@BooleanArray false
+            val x0 = table[label * 5 + Imgproc.CC_STAT_LEFT]
+            val y0 = table[label * 5 + Imgproc.CC_STAT_TOP]
+            val x1 = x0 + table[label * 5 + Imgproc.CC_STAT_WIDTH]
+            val y1 = y0 + table[label * 5 + Imgproc.CC_STAT_HEIGHT]
+            x1 <= width * band ||
+                x0 >= width * (1 - band) ||
+                y1 <= height * band ||
+                y0 >= height * (1 - band)
+        }
         val area = IntArray(count)
         val warm = IntArray(count)
         val saturated = IntArray(count)
         val heavy = IntArray(count)
-        for (i in labelValues.indices) {
-            val label = labelValues[i]
-            if (label == 0) continue
-            area[label]++
-            if (thickBytes[i] != 0.toByte()) heavy[label]++
-            if (colour != null) {
-                val r = colour[3 * i].toInt() and 255
-                val g = colour[3 * i + 1].toInt() and 255
-                val b = colour[3 * i + 2].toInt() and 255
-                if (warmAt(i)) warm[label]++
-                if (max(r, max(g, b)) - min(r, min(g, b)) >= (if (exact) 25 else 40)) saturated[label]++
+        for (part in ParallelFilter.ranges(labelValues.size) { from, to ->
+            val counts = Array(4) { IntArray(count) }
+            for (i in from until to) {
+                val label = labelValues[i]
+                if (!inBand[label]) continue
+                counts[0][label]++
+                if (thickBytes[i] != 0.toByte()) counts[1][label]++
+                if (colour != null) {
+                    val r = colour[3 * i].toInt() and 255
+                    val g = colour[3 * i + 1].toInt() and 255
+                    val b = colour[3 * i + 2].toInt() and 255
+                    if (warmAt(i)) counts[2][label]++
+                    if (max(r, max(g, b)) - min(r, min(g, b)) >= (if (exact) 25 else 40)) counts[3][label]++
+                }
             }
+            counts
+        }) for (label in 0 until count) {
+            area[label] += part[0][label]
+            heavy[label] += part[1][label]
+            warm[label] += part[2][label]
+            saturated[label] += part[3][label]
         }
         val drop = BooleanArray(count)
         for (label in 1 until count) {
@@ -2061,12 +2130,7 @@ internal object ToneZones {
             val y0 = table[label * 5 + Imgproc.CC_STAT_TOP]
             val x1 = x0 + table[label * 5 + Imgproc.CC_STAT_WIDTH]
             val y1 = y0 + table[label * 5 + Imgproc.CC_STAT_HEIGHT]
-            val inBand =
-                x1 <= width * band ||
-                    x0 >= width * (1 - band) ||
-                    y1 <= height * band ||
-                    y0 >= height * (1 - band)
-            if (!inBand) continue
+            if (!inBand[label]) continue
             val touches = x0 <= 1 || y0 <= 1 || x1 >= width - 1 || y1 >= height - 1
             val total = area[label].toFloat()
             // Right at the frame, colour means desk or a neighbouring scrap even when it stops short of the
@@ -2093,15 +2157,17 @@ internal object ToneZones {
         val strip = if (exact) ScanConfig.float("toneZonesExactStrip", .006f) else ScanConfig.float("toneZonesEdgeStrip", .04f)
         val stripX = (width * strip).toInt()
         val stripY = (height * strip).toInt()
-        for (i in labelValues.indices) {
-            if (drop[labelValues[i]]) {
-                keepBytes[i] = 0
-                continue
+        ParallelFilter.ranges(labelValues.size) { from, to ->
+            for (i in from until to) {
+                if (drop[labelValues[i]]) {
+                    keepBytes[i] = 0
+                    continue
+                }
+                val x = i % width
+                val y = i / width
+                if (x >= stripX && x < width - stripX && y >= stripY && y < height - stripY) continue
+                if (thickBytes[i] != 0.toByte() || warmAt(i)) keepBytes[i] = 0
             }
-            val x = i % width
-            val y = i / width
-            if (x >= stripX && x < width - stripX && y >= stripY && y < height - stripY) continue
-            if (thickBytes[i] != 0.toByte() || warmAt(i)) keepBytes[i] = 0
         }
         keep.put(0, 0, keepBytes)
         if (colour != null) dropWarmBlobs(keep, thick, thin, ::warmAt, owned)
@@ -2396,11 +2462,14 @@ internal object ToneZones {
         val table = statsTable(stats, count)
         val keep = BooleanArray(count) { it != 0 && table[it * 5 + Imgproc.CC_STAT_AREA] >= minimum }
         val labelValues = IntArray(mask.rows() * mask.cols()).also { labels.get(0, 0, it) }
-        mask.put(
-            0,
-            0,
-            ByteArray(labelValues.size) { if (keep[labelValues[it]]) 255.toByte() else 0.toByte() },
-        )
+        mask.put(0, 0, labelMask(labelValues) { keep[it] })
+    }
+
+    /** 255 where [chosen] holds for the pixel's label, else 0; per pixel on the filter threads. */
+    private inline fun labelMask(labelValues: IntArray, crossinline chosen: (Int) -> Boolean): ByteArray {
+        val out = ByteArray(labelValues.size)
+        ParallelFilter.ranges(out.size) { from, to -> for (i in from until to) if (chosen(labelValues[i])) out[i] = 255.toByte() }
+        return out
     }
 
     /**
@@ -2450,11 +2519,7 @@ internal object ToneZones {
         val labelValues = IntArray(candidates.rows() * candidates.cols()).also { labels.get(0, 0, it) }
         val result = Mat().also(owned::add)
         result.create(candidates.rows(), candidates.cols(), CvType.CV_8UC1)
-        result.put(
-            0,
-            0,
-            ByteArray(labelValues.size) { if (long[labelValues[it]]) 255.toByte() else 0.toByte() },
-        )
+        result.put(0, 0, labelMask(labelValues) { long[it] })
         return result
     }
 
