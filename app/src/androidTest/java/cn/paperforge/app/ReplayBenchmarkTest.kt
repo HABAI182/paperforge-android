@@ -107,5 +107,8 @@ class ReplayBenchmarkTest {
             .put("peakJavaMb", peakJava.get() / 1048576.0)
             .put("peakPssMb", peakPss.get() / 1048576.0)
         File(out, "replay.json").writeText(report.toString(1))
+        // The app's own folders are closed to adb's shell user (rwxrws---): open this run's results so they can be pulled.
+        generateSequence(out) { it.parentFile }.takeWhile { it != base }.forEach { it.setReadable(true, false); it.setExecutable(true, false) }
+        out.listFiles().orEmpty().forEach { it.setReadable(true, false) }
     }
 }
