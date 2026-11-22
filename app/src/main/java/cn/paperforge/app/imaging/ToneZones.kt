@@ -1856,7 +1856,7 @@ internal object ToneZones {
             anchors.create(grown.rows(), grown.cols(), CvType.CV_8UC1)
             anchors.put(0, 0, labelMask(labelValues) { anchor[it] })
             val radius = (2 * ScanConfig.int("toneZonesFaintRescueReach", 30) * scale + 1).toDouble()
-            Imgproc.dilate(anchors, anchors, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(radius, radius)).also(owned::add))
+            ParallelFilter.dilate(anchors, anchors, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(radius, radius)).also(owned::add))
             val near = ByteArray(relative.size).also { anchors.get(0, 0, it) }
             val light = IntArray(count)
             val beside = BooleanArray(count)
