@@ -228,25 +228,33 @@ object RuledSheetBounds {
         Imgproc.morphologyEx(small, hat, Imgproc.MORPH_BLACKHAT, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, Size(5.0, 5.0)).also(owned::add))
         val f = Mat().also(owned::add)
         hat.convertTo(f, CvType.CV_32F)
-        val turned = Mat().also(owned::add)
-        val sums = Mat().also(owned::add)
+        // -30 to +30 degrees in half-degree steps (exact in binary, as the running sum was). Each turn is scored on its
+        // own on the filter threads; the best is then picked in the same order, so ties resolve as before.
+        val angles = DoubleArray(121) { -30.0 + .5 * it }
+        val scores =
+            ParallelFilter.tasks(angles.size) { k ->
+                val turned = Mat()
+                val sums = Mat()
+                val m = Imgproc.getRotationMatrix2D(Point(f.cols() / 2.0, f.rows() / 2.0), angles[k], 1.0)
+                try {
+                    Imgproc.warpAffine(f, turned, m, f.size())
+                    DoubleArray(2) { dim ->
+                        Core.reduce(turned, sums, dim xor 1, Core.REDUCE_SUM, CvType.CV_32F)
+                        val v = FloatArray(sums.rows() * sums.cols()).also { sums.get(0, 0, it) }
+                        var sq = 0.0
+                        var tot = 0.0
+                        for (x in v) { sq += x.toDouble() * x; tot += x }
+                        if (tot > 0) sq / (tot * tot) * v.size else 0.0
+                    }
+                } finally {
+                    listOf(turned, sums, m).forEach(Mat::release)
+                }
+            }
         var best = 0.0
         var bestScore = -1.0
-        var a = -30.0
-        while (a <= 30.0) {
-            val m = Imgproc.getRotationMatrix2D(Point(f.cols() / 2.0, f.rows() / 2.0), a, 1.0)
-            Imgproc.warpAffine(f, turned, m, f.size())
-            m.release()
-            for (dim in 0..1) {
-                Core.reduce(turned, sums, dim xor 1, Core.REDUCE_SUM, CvType.CV_32F)
-                val v = FloatArray(sums.rows() * sums.cols()).also { sums.get(0, 0, it) }
-                var sq = 0.0
-                var tot = 0.0
-                for (x in v) { sq += x.toDouble() * x; tot += x }
-                val score = if (tot > 0) sq / (tot * tot) * v.size else 0.0
-                if (score > bestScore) { bestScore = score; best = a }
-            }
-            a += .5
+        for (k in angles.indices) for (dim in 0..1) {
+            val score = scores[k][dim]
+            if (score > bestScore) { bestScore = score; best = angles[k] }
         }
         return best
     }
