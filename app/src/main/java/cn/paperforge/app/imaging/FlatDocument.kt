@@ -599,7 +599,7 @@ object FlatDocument {
         val inputWrite =
             kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).async {
                 val started = android.os.SystemClock.elapsedRealtime()
-                input.outputStream().use { check(source.compress(Bitmap.CompressFormat.PNG, 100, it)) }
+                WorkingPng.write(source, input)
                 android.os.SystemClock.elapsedRealtime() - started
             }
         try {
@@ -618,9 +618,7 @@ object FlatDocument {
                 )
             val writeStarted = android.os.SystemClock.elapsedRealtime()
             try {
-                output.outputStream().use {
-                    check(result.bitmap.compress(Bitmap.CompressFormat.PNG, 100, it))
-                }
+                WorkingPng.write(result.bitmap, output)
             } finally {
                 result.bitmap.recycle()
             }
