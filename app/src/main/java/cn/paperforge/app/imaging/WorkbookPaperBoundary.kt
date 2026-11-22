@@ -39,6 +39,10 @@ internal object WorkbookPaperBoundary {
         val selected = mat()
         val expanded = mat()
         val mask = mat()
+        // Sub-step times for the page's diagnostics (a clock read each when nothing records them).
+        val timing = if (paperTone) "wpbTone." else "wpb."
+        var lapStart = System.nanoTime()
+        fun lap(name: String) = System.nanoTime().let { StepTimes.add(timing + name, it - lapStart); lapStart = it }
         try {
             val scale =
                 min(
@@ -76,6 +80,7 @@ internal object WorkbookPaperBoundary {
             )
             Imgproc.medianBlur(localField, localField, window)
             val illumination = ByteArray(w * h * 3).also { localField.get(0, 0, it) }
+            lap("field")
             val margin = ScanConfig.float("workbookBoundaryMargin", .10f).coerceIn(.03f, .12f)
             val values = ByteArray(w * h)
             val weakColour = ByteArray(w * h)
@@ -86,7 +91,8 @@ internal object WorkbookPaperBoundary {
             val weakBlue = ScanConfig.float("workbookSkinWeakBlue", 12f)
             val darkRatio = ScanConfig.float("workbookBoundaryDarkRatio", .65f)
             val weakRatio = ScanConfig.float("workbookBoundaryWeakRatio", .88f)
-            for (y in 0 until h) for (x in 0 until w) {
+            // Every pixel is classified on its own, so row bands on the filter threads give the same bytes.
+            ParallelFilter.rowBands(h, w) { top, bottom -> for (y in top until bottom) for (x in 0 until w) {
                 val i = (y * w + x) * 3
                 val r = pixels[i].toInt() and 255
                 val g = pixels[i + 1].toInt() and 255
@@ -131,7 +137,8 @@ internal object WorkbookPaperBoundary {
                         (illumination[i + 2].toInt() and 255)) / 4f
                 if (luma < localPaper * weakRatio && maxOf(r, g, b) - minOf(r, g, b) < 65)
                     weakNeutral[y * w + x] = 255.toByte()
-            }
+            } }
+            lap("classify")
             candidate.create(h, w, CvType.CV_8UC1)
             // Opening is applied ONLY to an exterior hypothesis, never to text/ink pixels.
             val size = max(3, (short * .009f).roundToInt() or 1)
@@ -181,17 +188,30 @@ internal object WorkbookPaperBoundary {
                 val labels = IntArray(w * h).also { ids.get(0, 0, it) }
                 val central = IntArray(count)
                 val whites = IntArray(count)
-                for (i in labels.indices) if (
-                    (0..2).all { (pixels[i * 3 + it].toInt() and 255) >= 250 }
-                )
-                    whites[labels[i]]++
-                for (y in 0 until h) for (x in 0 until w) if (
-                    x >= w * margin &&
-                        x < w * (1 - margin) &&
-                        y >= h * margin &&
-                        y < h * (1 - margin)
-                )
-                    central[labels[y * w + x]]++
+                // Counted per part of the page and added up: integer counts, the same in any order.
+                for ((partWhites, partCentral) in ParallelFilter.ranges(labels.size) { from, to ->
+                    val ownWhites = IntArray(count)
+                    val ownCentral = IntArray(count)
+                    for (i in from until to) {
+                        if ((pixels[i * 3].toInt() and 255) >= 250 && (pixels[i * 3 + 1].toInt() and 255) >= 250 &&
+                            (pixels[i * 3 + 2].toInt() and 255) >= 250
+                        )
+                            ownWhites[labels[i]]++
+                        val y = i / w
+                        val x = i - y * w
+                        if (
+                            x >= w * margin &&
+                                x < w * (1 - margin) &&
+                                y >= h * margin &&
+                                y < h * (1 - margin)
+                        )
+                            ownCentral[labels[i]]++
+                    }
+                    ownWhites to ownCentral
+                }) for (id in 0 until count) {
+                    whites[id] += partWhites[id]
+                    central[id] += partCentral[id]
+                }
                 val accepted = BooleanArray(count)
                 for (id in 1 until count) {
                     val x = regions[id * 5]
@@ -304,6 +324,7 @@ internal object WorkbookPaperBoundary {
                                 )
                         )
             }
+            lap("classes")
             var shadowCorrection: Mat? = null
             if (fingers.any { it != 0.toByte() }) {
                 if (refineFinger && ScanConfig.int("workbookFingerGraphCut", 0) != 0) {
@@ -395,7 +416,9 @@ internal object WorkbookPaperBoundary {
             // strip of desk. PageNet says what is not the sheet; a shadow on the sheet stays sheet.
             // This is OR-ed in after the stroke veto on purpose: printed text on the page underneath
             // must not be protected as if it were content.
+            lap("fill")
             val frame = PageNetDetector.exterior(rgb)
+            lap("exterior")
             if (chosen.none { it != 0.toByte() } && frame == null) return null
             trace.put("selectedPixels", chosen.count { it != 0.toByte() })
             for (y in 0 until h) {
@@ -427,7 +450,8 @@ internal object WorkbookPaperBoundary {
                 val window =
                     max(15, (min(rgb.cols(), rgb.rows()) * .05f).roundToInt() or 1)
                         .coerceAtMost(61)
-                Imgproc.medianBlur(gray, baseline, window)
+                // In strips on the filter threads, each with rows past the window's reach: the same bytes.
+                ParallelFilter.strips(gray, baseline, window / 2 + 1) { a, b -> Imgproc.medianBlur(a, b, window) }
                 val contrast =
                     ScanConfig.float("workbookBoundaryStrokeContrast", 26f).coerceIn(12f, 80f)
                 // Every stroke is protected here, up to the page edge. Printed text from a page
@@ -451,6 +475,7 @@ internal object WorkbookPaperBoundary {
                 Core.bitwise_and(mask, strokeMat, mask)
                 trace.put("strokeProtectedPixels", count)
             }
+            lap("veto")
             if (frame != null) {
                 Core.bitwise_or(mask, frame, mask)
                 trace.put(
@@ -466,6 +491,7 @@ internal object WorkbookPaperBoundary {
             EdgeInkDiagnostics.dump("03c-boundary-mask", mask)
             exteriorMask?.let { mask.copyTo(it) }
             return rgb.clone().also { result ->
+                lap("frame")
                 shadowCorrection?.let { gains ->
                     val full = mat()
                     val floating = mat()
@@ -522,6 +548,7 @@ internal object WorkbookPaperBoundary {
                     }
                     result.put(0, 0, outBytes)
                 }
+                lap("compose")
             }
         } finally {
             owned.forEach(Mat::release)
