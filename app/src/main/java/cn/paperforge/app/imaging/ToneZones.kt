@@ -1227,7 +1227,8 @@ internal object ToneZones {
         val ink = ScanConfig.int("toneZonesPinholeInk", 110)
         val source = output.copyOf()
         val around = intArrayOf(-width - 1, -width, -width + 1, -1, 1, width - 1, width, width + 1)
-        for (y in 1 until height - 1) {
+        // Reads only the copy and writes each pixel on its own, so row bands on the filter threads give the same page.
+        ParallelFilter.rowBands(height - 2, width) { from, to -> for (y in from + 1 until to + 1) {
             var i = y * width + 1
             for (x in 1 until width - 1) {
                 if ((source[i].toInt() and 255) > ink) {
@@ -1244,7 +1245,7 @@ internal object ToneZones {
                 }
                 i++
             }
-        }
+        } }
     }
 
     /**
