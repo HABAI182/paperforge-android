@@ -21,6 +21,49 @@ object ScanProcessor {
     val filters = listOf("ORIGINAL", "WORKBOOK", "GRAY")
 
     fun decode(file: File, maxEdge: Int = 2400): Bitmap {
+        val upright = decodeUpright(file, maxEdge)
+        if (max(upright.width, upright.height) <= maxEdge) return upright
+        val source = Mat()
+        val resized = Mat()
+        try {
+            Utils.bitmapToMat(upright, source)
+            val ratio = maxEdge.toDouble() / max(upright.width, upright.height)
+            Imgproc.resize(source, resized, Size(), ratio, ratio, Imgproc.INTER_AREA)
+            return Bitmap.createBitmap(resized.cols(), resized.rows(), Bitmap.Config.ARGB_8888)
+                .also { Utils.matToBitmap(resized, it) }
+        } finally {
+            upright.recycle()
+            source.release()
+            resized.release()
+        }
+    }
+
+    /**
+     * [decode] straight into [into] (RGBA): the same pixels, without turning the shrunk Mat into a bitmap and back
+     * (both copies move the bytes unchanged, so detection sees the same image to the bit).
+     */
+    private fun decodeInto(file: File, maxEdge: Int, into: Mat) {
+        val upright = decodeUpright(file, maxEdge)
+        try {
+            if (max(upright.width, upright.height) <= maxEdge) {
+                Utils.bitmapToMat(upright, into)
+                return
+            }
+            val source = Mat()
+            try {
+                Utils.bitmapToMat(upright, source)
+                val ratio = maxEdge.toDouble() / max(upright.width, upright.height)
+                Imgproc.resize(source, into, Size(), ratio, ratio, Imgproc.INTER_AREA)
+            } finally {
+                source.release()
+            }
+        } finally {
+            upright.recycle()
+        }
+    }
+
+    /** The photo decoded at the sample size [maxEdge] allows and turned upright by its EXIF orientation. */
+    private fun decodeUpright(file: File, maxEdge: Int): Bitmap {
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeFile(file.path, bounds)
         require(bounds.outWidth > 0 && bounds.outHeight > 0) { "无法读取这张图片" }
@@ -63,26 +106,11 @@ object ScanProcessor {
             }
             8 -> m.setRotate(270f)
         }
-        val upright =
-            if (m.isIdentity) bitmap
-            else
-                Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, m, true).also {
-                    if (it !== bitmap) bitmap.recycle()
-                }
-        if (max(upright.width, upright.height) <= maxEdge) return upright
-        val source = Mat()
-        val resized = Mat()
-        try {
-            Utils.bitmapToMat(upright, source)
-            val ratio = maxEdge.toDouble() / max(upright.width, upright.height)
-            Imgproc.resize(source, resized, Size(), ratio, ratio, Imgproc.INTER_AREA)
-            return Bitmap.createBitmap(resized.cols(), resized.rows(), Bitmap.Config.ARGB_8888)
-                .also { Utils.matToBitmap(resized, it) }
-        } finally {
-            upright.recycle()
-            source.release()
-            resized.release()
-        }
+        return if (m.isIdentity) bitmap
+        else
+            Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, m, true).also {
+                if (it !== bitmap) bitmap.recycle()
+            }
     }
 
     /**
@@ -138,12 +166,11 @@ object ScanProcessor {
         }
         // Corners are fractions of the photo, so detection needs no more than this: every stage works at
         // 900-1500 pixels anyway, and a full-size decode only cost time and memory.
-        val image = decode(file, ScanConfig.int("detectDecodeEdge", 2000))
         val mat = Mat()
         return try {
-            Utils.bitmapToMat(image, mat)
+            decodeInto(file, ScanConfig.int("detectDecodeEdge", 2000), mat)
             lap("decode")
-            val detected = detectDecoded(image, mat, previewQuad, reference, detectorOverride, lockReference)
+            val detected = detectDecoded(mat, previewQuad, reference, detectorOverride, lockReference)
             lap("detect")
             // A matched canonical viewfinder frame already passed these same geometry checks. Applying
             // them again at the still resolution silently moves the frame the user just accepted.
@@ -153,7 +180,6 @@ object ScanProcessor {
             framedByRules(mat, outline).also { lap("frame") }
         } finally {
             mat.release()
-            image.recycle()
         }
     }
 
@@ -224,7 +250,6 @@ object ScanProcessor {
     }
 
     private fun detectDecoded(
-        image: Bitmap,
         mat: Mat,
         previewQuad: Quad?,
         reference: CaptureReference?,
@@ -238,8 +263,8 @@ object ScanProcessor {
                         val signature = CameraQualityAnalyzer.analyze(mat, previewQuad)
                         val reason =
                             reference.reason(
-                                image.width,
-                                image.height,
+                                mat.cols(),
+                                mat.rows(),
                                 signature.sceneSignature,
                                 signature.signature,
                             )
