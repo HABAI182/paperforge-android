@@ -18,6 +18,8 @@ dependencies {
     add("debugImplementation", "androidx.compose.ui:ui-tooling")
     add("implementation", "androidx.lifecycle:lifecycle-runtime-compose:2.9.0")
     add("implementation", "androidx.window:window:1.4.0")
+    // Installs app/src/main/baseline-prof.txt on sideloaded installs (no Play cloud profiles).
+    add("implementation", "androidx.profileinstaller:profileinstaller:1.4.0")
     add("androidTestImplementation", "androidx.window:window-testing:1.4.0")
     add("implementation", "androidx.lifecycle:lifecycle-viewmodel-compose:2.9.0")
     add("implementation", "androidx.camera:camera-camera2:1.4.2")

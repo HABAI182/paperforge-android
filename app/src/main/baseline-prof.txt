@@ -1,0 +1,31 @@
+# ART baseline profile (human-readable rules; AGP compiles it into release APKs, profileinstaller installs it).
+# PaperForge ships outside Google Play, so no cloud profile reaches the phone: without these rules the pixel loops of
+# the first pages after an install or update run interpreted or barely JIT-compiled (ScanWarmUp exists for that).
+# Hot (H), startup (S) and post-startup (P) methods; L lines put the classes in the startup dex.
+
+# App startup
+HSPLcn/paperforge/app/PaperForgeApp;->**(**)**
+HSPLcn/paperforge/app/MainActivity;->**(**)**
+HSPLcn/paperforge/app/MainViewModel;->**(**)**
+HSPLcn/paperforge/app/UserSettings;->**(**)**
+HSPLcn/paperforge/app/SettingKeys;->**(**)**
+Lcn/paperforge/app/PaperForgeApp;
+Lcn/paperforge/app/MainActivity;
+Lcn/paperforge/app/MainViewModel;
+
+# Camera capture and gallery import: capture tasks, the page store, the camera screen
+HSPLcn/paperforge/app/data/**;->**(**)**
+HSPLcn/paperforge/app/ui/CameraScreen*;->**(**)**
+HSPLcn/paperforge/app/ui/ScanCaptureModes*;->**(**)**
+
+# Detection, crop, flattening and enhancement (the per-pixel work)
+HSPLcn/paperforge/app/imaging/**;->**(**)**
+HSPLcn/paperforge/app/model/**;->**(**)**
+Lcn/paperforge/app/imaging/**;
+Lcn/paperforge/app/model/**;
+
+# OpenCV's Java side, called for every Mat on these paths
+HSPLorg/opencv/core/**;->**(**)**
+HSPLorg/opencv/imgproc/**;->**(**)**
+HSPLorg/opencv/imgcodecs/**;->**(**)**
+HSPLorg/opencv/android/Utils;->**(**)**
