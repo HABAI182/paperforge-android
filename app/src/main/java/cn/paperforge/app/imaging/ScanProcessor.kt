@@ -81,7 +81,7 @@ object ScanProcessor {
                 )
                 .sample
                 .let { if (bounds.outMimeType == "image/png") PageDecoder.pngSample(it) else it }
-        val bitmap =
+        val decoded =
             BitmapFactory.decodeFile(
                 file.path,
                 BitmapFactory.Options().apply {
@@ -89,6 +89,11 @@ object ScanProcessor {
                     inPreferredConfig = Bitmap.Config.ARGB_8888
                 },
             ) ?: error("图片解码失败")
+        // ARGB_8888 is a preference: a decoder may still hand back another layout (a 16-bit PNG or a 10-bit HEIF as
+        // RGBA_F16 / RGBA_1010102), which OpenCV's bitmapToMat refuses. Such a page is converted to 8 bits here.
+        val bitmap =
+            if (decoded.config == Bitmap.Config.ARGB_8888 || decoded.config == Bitmap.Config.RGB_565) decoded
+            else (decoded.copy(Bitmap.Config.ARGB_8888, false) ?: error("图片解码失败")).also { decoded.recycle() }
         val exif = ExifInterface(file)
         val m = Matrix()
         when (exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1)) {
