@@ -595,13 +595,27 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun importImages(uris: List<Uri>, recognizeFirst: Boolean = false) {
         if (uris.isEmpty()) return
-        perform("正在导入图片") {
+        perform(ImportSummary.progress(0, uris.size)) {
             val doc =
                 selected.value?.takeIf {
                     it.kind == "scan" && screen.value in listOf("editor", "capture")
                 } ?: repo.draftScan()
             selected.value = doc
-            repo.importImages(doc.id, uris)
+            var importedSoFar = 0
+            val outcome =
+                try {
+                    repo.importImages(doc.id, uris) { done, imported, total ->
+                        importedSoFar = imported
+                        progress.value = ImportSummary.progress(done, total)
+                    }
+                } catch (cancelled: CancellationException) {
+                    // Stopped part-way: the photos already in stay, and the user sees them and how many came in.
+                    if (importedSoFar > 0) screen.value = "editor"
+                    messages.trySend(ImportSummary.cancelled(importedSoFar, uris.size))
+                    throw cancelled
+                }
+            ImportSummary.message(outcome)?.let { messages.send(it) }
+            if (outcome.imported == 0) return@perform
             screen.value = "editor"
             if (recognizeFirst) {
                 progress.value = "正在处理页面"

@@ -111,45 +111,73 @@ class Repository(val context: Context, val database: PaperDatabase) {
             }
         }
 
-    suspend fun importImages(id: String, uris: List<Uri>) =
+    /**
+     * Copies the picked photos into scan [id] and queues them for processing, one by one. A photo that cannot be read is
+     * skipped and named in the result; the others still come in. [onProgress] gets (photos done, photos in, in all) after
+     * each one, with how many came in. Cancelling stops before the next photo; those already in stay.
+     */
+    suspend fun importImages(
+        id: String,
+        uris: List<Uri>,
+        onProgress: (done: Int, imported: Int, total: Int) -> Unit = { _, _, _ -> },
+    ): ImportOutcome =
         withContext(Dispatchers.IO) {
-            uris.forEach { uri ->
-                val file = captureFile(id)
-                try {
-                    copyUri(uri, file)
-                    if (uri.authority == "${context.packageName}.library") {
-                        // These are already rendered app pages: preserve framing and avoid a
-                        // second detector/filter pass when reusing them as conversion inputs.
-                        database.withTransaction {
-                            ensureDocument(id)
-                            val position =
-                                maxOf(
-                                    dao.pages(id).maxOfOrNull { it.position } ?: -1,
-                                    dao.reservedCapturePosition(id) ?: -1,
-                                ) + 1
-                            dao.putPage(
-                                PageRow(
-                                    UUID.randomUUID().toString(),
-                                    id,
-                                    position,
-                                    file.path,
-                                    filter = "ORIGINAL",
-                                    detectionMethod = "library-rendered",
+            var imported = 0
+            val failed = mutableListOf<String>()
+            try {
+                uris.forEachIndexed { index, uri ->
+                    coroutineContext.ensureActive()
+                    val file = captureFile(id)
+                    try {
+                        copyUri(uri, file)
+                        if (uri.authority == "${context.packageName}.library") {
+                            // These are already rendered app pages: preserve framing and avoid a
+                            // second detector/filter pass when reusing them as conversion inputs.
+                            database.withTransaction {
+                                ensureDocument(id)
+                                val position =
+                                    maxOf(
+                                        dao.pages(id).maxOfOrNull { it.position } ?: -1,
+                                        dao.reservedCapturePosition(id) ?: -1,
+                                    ) + 1
+                                dao.putPage(
+                                    PageRow(
+                                        UUID.randomUUID().toString(),
+                                        id,
+                                        position,
+                                        file.path,
+                                        filter = "ORIGINAL",
+                                        detectionMethod = "library-rendered",
+                                    )
                                 )
-                            )
-                            dao.touch(id, System.currentTimeMillis())
+                                dao.touch(id, System.currentTimeMillis())
+                            }
+                        } else {
+                            // Never split by a cancel: a prepared task whose photo was then deleted would be left behind.
+                            withContext(kotlinx.coroutines.NonCancellable) {
+                                val task = cn.paperforge.app.imaging.CaptureTasks.prepare(this@Repository, id, null, file = file, galleryImport = true)
+                                cn.paperforge.app.imaging.CaptureTasks.accept(this@Repository, task.id)
+                            }
                         }
-                    } else {
-                        val task = cn.paperforge.app.imaging.CaptureTasks.prepare(this@Repository, id, null, file = file, galleryImport = true)
-                        cn.paperforge.app.imaging.CaptureTasks.accept(this@Repository, task.id)
+                        imported++
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        file.delete()
+                        throw e
+                    } catch (e: Exception) {
+                        file.delete()
+                        android.util.Log.w("PaperForgeImport", "photo ${index + 1} skipped", e)
+                        failed += runCatching { displayName(uri) }.getOrNull()?.takeIf { it != "导入文档" } ?: "第 ${index + 1} 张"
                     }
-                } catch (e: Exception) {
-                    file.delete()
-                    // A draft scan that this import never saved anything into leaves no empty folder either.
-                    if (isPendingScan(id) && dao.document(id) == null) File(root, id).delete()
-                    throw e
+                    onProgress(index + 1, imported, uris.size)
                 }
+            } finally {
+                // A draft scan that this import never saved anything into leaves no empty folder either.
+                if (imported == 0)
+                    withContext(kotlinx.coroutines.NonCancellable) {
+                        if (isPendingScan(id) && dao.document(id) == null) File(root, id).delete()
+                    }
             }
+            ImportOutcome(imported, failed)
         }
 
     suspend fun importPdf(uri: Uri, password: String = ""): DocumentRow =
