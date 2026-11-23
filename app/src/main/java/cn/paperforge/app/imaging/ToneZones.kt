@@ -1807,8 +1807,12 @@ internal object ToneZones {
         val sure = IntArray(count)
         val loose = IntArray(count)
         val mid = IntArray(count)
-        for (part in ParallelFilter.ranges(labelValues.size) { from, to ->
+        // A mark with a seeded line in it is a stroke, however pale, so it stays: see [lineSeeds]. Found in this pass,
+        // which reads every mark pixel anyway, and applied after the ghost tests below.
+        val lined = BooleanArray(count)
+        for ((part, partLined) in ParallelFilter.ranges(labelValues.size) { from, to ->
             val counts = Array(4) { IntArray(count) }
+            val seen = if (lineSeeds != null) BooleanArray(count) else null
             for (i in from until to) {
                 val label = labelValues[i]
                 if (label == 0) continue
@@ -1817,13 +1821,15 @@ internal object ToneZones {
                 if (value < coreCut) counts[1][label]++
                 if (value < sureCut) counts[2][label]++
                 if (value < longCut) counts[3][label]++
+                if (seen != null && lineSeeds!![i] != 0.toByte()) seen[label] = true
             }
-            counts
+            counts to seen
         }) for (label in 0 until count) {
             mid[label] += part[0][label]
             core[label] += part[1][label]
             sure[label] += part[2][label]
             loose[label] += part[3][label]
+            if (partLined != null && partLined[label]) lined[label] = true
         }
         val longSpan = ScanConfig.int("toneZonesFaintLongSpan", 30) * scale
         val anySpan = ScanConfig.int("toneZonesFaintSpan", 60) * scale
@@ -1940,24 +1946,18 @@ internal object ToneZones {
                 if (span < speckSpan && dark[label] < speckCount) ghost[label] = true
             }
         }
-        // A mark with a seeded line in it is a stroke, however pale, so it stays: see [lineSeeds].
-        val lined = BooleanArray(count)
-        if (lineSeeds != null) for (part in ParallelFilter.ranges(labelValues.size) { from, to ->
-            BooleanArray(count).also { seen -> for (i in from until to) if (lineSeeds[i] != 0.toByte()) seen[labelValues[i]] = true }
-        }) for (label in 0 until count) if (part[label]) lined[label] = true
         for (label in 1 until count) if (lined[label]) ghost[label] = false
         // A lined mark is drawn on the narrow curve, with its centre line on top: crisp, where the faint curve
-        // drew a blurred stroke's halo grey.
+        // drew a blurred stroke's halo grey. The same pass clears the ghosts from the grown mask.
+        val bytes = if (ghost.any { it }) ByteArray(relative.size).also { grown.get(0, 0, it) } else null
         ParallelFilter.ranges(labelValues.size) { from, to ->
             for (i in from until to) {
                 val label = labelValues[i]
                 if (label != 0 && core[label] < 3 && !lined[label]) faint[i] = true
+                if (bytes != null && ghost[label]) bytes[i] = 0
             }
         }
-        if (ghost.none { it }) return faint
-        val bytes = ByteArray(relative.size).also { grown.get(0, 0, it) }
-        ParallelFilter.ranges(labelValues.size) { from, to -> for (i in from until to) if (ghost[labelValues[i]]) bytes[i] = 0 }
-        grown.put(0, 0, bytes)
+        if (bytes != null) grown.put(0, 0, bytes)
         return faint
     }
 
