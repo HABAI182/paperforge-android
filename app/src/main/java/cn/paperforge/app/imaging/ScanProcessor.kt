@@ -597,13 +597,17 @@ object ScanProcessor {
         // If ink touches the crop frame, push that side outwards instead of clipping the stroke.
         // The decoded crop keeps a small ring outside the quad so this expansion has real pixels.
         var cropQuad = quad
+        // The bitmap's pixels as a Mat, converted once: ContentCrop only reads them, and the warp below uses the same Mat.
+        var converted: Mat? = null
         if (protectEdgeInk && ContentCrop.enabled()) {
             val probe = Mat()
             try {
                 Utils.bitmapToMat(bitmap, probe)
                 cropQuad = ContentCrop.protect(probe, quad)
-            } finally {
+                converted = probe
+            } catch (e: Throwable) {
                 probe.release()
+                throw e
             }
         }
         val w = bitmap.width.toFloat()
@@ -628,7 +632,7 @@ object ScanProcessor {
         var toneSamplingScale = (edge / max(sourceW, sourceH)).toFloat()
         val outW = (if (aspect >= 1) edge else edge * aspect).roundToInt().coerceAtLeast(32)
         val outH = (if (aspect >= 1) edge / aspect else edge).roundToInt().coerceAtLeast(32)
-        val source = Mat()
+        val source = converted ?: Mat()
         val warped = Mat()
         val rgb = Mat()
         val gray = Mat()
@@ -677,7 +681,7 @@ object ScanProcessor {
         val dstPoints = MatOfPoint2f(*corners)
         val matrix = Imgproc.getPerspectiveTransform(srcPoints, dstPoints)
         try {
-            Utils.bitmapToMat(bitmap, source)
+            if (converted == null) Utils.bitmapToMat(bitmap, source)
             Imgproc.warpPerspective(
                 source,
                 warped,
