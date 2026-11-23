@@ -537,12 +537,10 @@ private fun ThumbnailStrip(
                             Modifier.width(48.dp).padding(3.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            pageBitmap(page, 180)?.let {
-                                Image(
-                                    it.asImageBitmap(),
-                                    "第 ${index + 1} 页",
-                                    Modifier.height(44.dp),
-                                )
+                            Box(Modifier.height(44.dp), contentAlignment = Alignment.Center) {
+                                pageBitmap(page, 180)?.let {
+                                    Image(it.asImageBitmap(), "第 ${index + 1} 页", Modifier.fillMaxHeight())
+                                }
                             }
                             Text("${index + 1}", style = MaterialTheme.typography.labelSmall)
                         }

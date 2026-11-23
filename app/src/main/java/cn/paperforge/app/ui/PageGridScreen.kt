@@ -180,12 +180,11 @@ fun PageGridScreen(vm: MainViewModel) {
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
                             val bitmap = pageBitmap(page, 360)
-                            bitmap?.let {
-                                Image(
-                                    it.asImageBitmap(),
-                                    "页面 $index",
-                                    Modifier.fillMaxWidth().height(145.dp),
-                                )
+                            // The thumbnail's space is held while it renders, so cards keep their height as pages arrive.
+                            Box(Modifier.fillMaxWidth().height(145.dp), contentAlignment = Alignment.Center) {
+                                bitmap?.let {
+                                    Image(it.asImageBitmap(), "页面 $index", Modifier.fillMaxSize())
+                                }
                             }
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Checkbox(

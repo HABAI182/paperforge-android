@@ -43,6 +43,8 @@ data class PagePreview(
     val loading: Boolean = true,
     /** The page and photo [bitmap] was made from. */
     val source: String? = null,
+    /** [bitmap] belongs to [cn.paperforge.app.imaging.ThumbnailCache]: shown, never recycled here. */
+    val cached: Boolean = false,
 )
 
 @Composable
@@ -57,27 +59,18 @@ fun pagePreview(page: PageRow, edge: Int = 1200, original: Boolean = false): Pag
                 else PagePreview(loading = true)
             var generated: Bitmap? = null
             try {
-                withContext(Dispatchers.Default) {
-                    generated =
-                        if (original)
-                            ScanProcessor.decode(
-                                File(PageResources.sourceAppearance(page).original),
-                                edge,
-                            )
-                        else if (edge >= THUMBNAIL_WORK) ScanProcessor.render(page, edge)
-                        else
-                            // The page's look is worked out on enough pixels to hold its lines, then shrunk:
-                            // finished at thumbnail size, thin rules and strokes broke into specks.
-                            ScanProcessor.render(page, THUMBNAIL_WORK).let { full ->
-                                try {
-                                    if (kotlin.math.max(full.width, full.height) <= edge)
-                                        full.copy(Bitmap.Config.ARGB_8888, false)
-                                    else ScanProcessor.shrunk(full, edge)
-                                } finally {
-                                    full.recycle()
-                                }
+                // Small thumbnails come from the shared cache: scrolling a card back into view no longer renders it again.
+                if (edge <= cn.paperforge.app.imaging.ThumbnailCache.maximumEdge) {
+                    val thumbnail =
+                        withContext(Dispatchers.Default) {
+                            cn.paperforge.app.imaging.ThumbnailCache.obtain(page, edge, original) {
+                                renderPreview(page, edge, original)
                             }
+                        }
+                    value = PagePreview(bitmap = thumbnail, loading = false, source = source, cached = true)
+                    return@produceState
                 }
+                withContext(Dispatchers.Default) { generated = renderPreview(page, edge, original) }
                 value = PagePreview(bitmap = generated, loading = false, source = source)
                 generated = null
             } catch (cancelled: kotlinx.coroutines.CancellationException) {
@@ -88,10 +81,26 @@ fun pagePreview(page: PageRow, edge: Int = 1200, original: Boolean = false): Pag
                 generated?.recycle()
             }
         }
-    val ownedPreview = preview.bitmap
+    val ownedPreview = preview.bitmap.takeUnless { preview.cached }
     DisposableEffect(ownedPreview) { onDispose { ownedPreview?.recycle() } }
     return preview
 }
+
+/** What [pagePreview] shows for [page] at [edge]: the plain photo, or the page's look worked out at enough pixels. */
+private fun renderPreview(page: PageRow, edge: Int, original: Boolean): Bitmap =
+    if (original) ScanProcessor.decode(File(PageResources.sourceAppearance(page).original), edge)
+    else if (edge >= THUMBNAIL_WORK) ScanProcessor.render(page, edge)
+    else
+        // The page's look is worked out on enough pixels to hold its lines, then shrunk:
+        // finished at thumbnail size, thin rules and strokes broke into specks.
+        ScanProcessor.render(page, THUMBNAIL_WORK).let { full ->
+            try {
+                if (kotlin.math.max(full.width, full.height) <= edge) full.copy(Bitmap.Config.ARGB_8888, false)
+                else ScanProcessor.shrunk(full, edge)
+            } finally {
+                full.recycle()
+            }
+        }
 
 /**
  * Editor canvas preview backed by [EnhancedPreviewCache].
