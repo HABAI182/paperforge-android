@@ -172,7 +172,7 @@ object StudyNotes {
                                 paragraph("")
                         } +
                         "<w:sectPr/></w:body></w:document>"
-                ZipOutputStream(target.outputStream()).use { zip ->
+                ZipOutputStream(target.outputStream().buffered()).use { zip ->
                     fun entry(name: String, text: String) {
                         zip.putNextEntry(ZipEntry(name))
                         zip.write(text.toByteArray(Charsets.UTF_8))

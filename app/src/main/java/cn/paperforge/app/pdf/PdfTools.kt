@@ -28,7 +28,7 @@ object PdfTools {
         val folder = File(output.parentFile, "split-${UUID.randomUUID()}").apply { mkdirs() }
         try {
             PDDocument.load(input, MemoryUsageSetting.setupTempFileOnly()).use { doc ->
-                ZipOutputStream(output.outputStream()).use { zip ->
+                ZipOutputStream(output.outputStream().buffered()).use { zip ->
                     for (i in 0 until doc.numberOfPages) {
                         val page = File(folder, "page-${i+1}.pdf")
                         PdfEngine.extract(input, "${i+1}", page)
@@ -375,7 +375,7 @@ object PdfTools {
                 java.util.IdentityHashMap<com.tom_roush.pdfbox.cos.COSDictionary, Boolean>()
             )
         try {
-            ZipOutputStream(temporary.outputStream()).use { zip ->
+            ZipOutputStream(temporary.outputStream().buffered()).use { zip ->
                 PDDocument.load(input, MemoryUsageSetting.setupTempFileOnly()).use { doc ->
                     suspend fun walk(resources: PDResources?, page: Int, depth: Int = 0) {
                         if (

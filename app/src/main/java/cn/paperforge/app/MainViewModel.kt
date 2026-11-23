@@ -2122,7 +2122,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             if (files.size == 1) publishOutput(files.first())
             else {
                 val zip = File(repo.exports, "PaperForge-results-${System.currentTimeMillis()}.zip")
-                java.util.zip.ZipOutputStream(zip.outputStream()).use { stream ->
+                java.util.zip.ZipOutputStream(zip.outputStream().buffered()).use { stream ->
                     files.forEach { file ->
                         stream.putNextEntry(java.util.zip.ZipEntry(file.name))
                         file.inputStream().use { it.copyTo(stream) }
@@ -3300,7 +3300,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             val doc = selected.value!!
             val all = repo.dao.pages(doc.id)
             val file = OutputNames.create(repo, UUID.randomUUID().toString(), doc.title, "zip")
-            java.util.zip.ZipOutputStream(file.outputStream()).use { zip ->
+            java.util.zip.ZipOutputStream(file.outputStream().buffered()).use { zip ->
                 all.forEachIndexed { index, page ->
                     currentCoroutineContext().ensureActive()
                     // The camera's photo, untouched, goes out as the camera saved it: no resize, no second JPEG.

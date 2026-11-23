@@ -68,7 +68,7 @@ object PdfTextExport {
                     }
                 require(pages.any { it.isNotEmpty() }) { "文档没有文字层，请先生成可搜索 PDF" }
                 if (kind in listOf("docx", "docx-image")) {
-                    ZipOutputStream(temporary.outputStream()).use { zip ->
+                    ZipOutputStream(temporary.outputStream().buffered()).use { zip ->
                         fun entry(name: String, body: String) {
                             zip.putNextEntry(ZipEntry(name))
                             zip.write(body.toByteArray(Charsets.UTF_8))
