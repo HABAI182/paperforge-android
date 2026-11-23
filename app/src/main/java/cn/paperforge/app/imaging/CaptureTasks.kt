@@ -711,12 +711,17 @@ class CaptureProcessWorker(context: Context, params: WorkerParameters) :
                     }
                 }
                 throw e
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
+                // An Error too (OutOfMemoryError on a very large photo): caught only as Exception, it skipped this path
+                // and left the page at "processing" with no retry until the next app start. Cancellation is handled above.
+                val message =
+                    if (e is Exception) e.message ?: "处理失败，原图已保留"
+                    else "照片过大或内存不足，处理未完成；原图已保留，可在任务中心重试"
                 repo.database.withTransaction {
                     if (repo.dao.task(id)?.workId == this@CaptureProcessWorker.id.toString())
-                        CaptureTasks.fail(repo, id, e.message ?: "处理失败，原图已保留")
+                        CaptureTasks.fail(repo, id, message)
                 }
-                Result.failure(workDataOf("error" to (e.message ?: "处理失败")))
+                Result.failure(workDataOf("error" to message))
             }
         }
 }
