@@ -4,6 +4,29 @@
 
 Notes for versions before 2.0.0 are in Chinese in [CHANGELOG.md](CHANGELOG.md).
 
+## 2.1.1 · 2026-11-26
+
+A maintenance release after 2.1.0 (internal build 20044): faster processing and a sturdier import, with scan results identical to 2.1.0 pixel for pixel. Install it over 2.1.0: documents, settings and backups are kept.
+
+### Faster, same results
+
+- Page processing (paper-edge detection, flattening, paper cleanup) is faster, and every page comes out pixel-identical to 2.1.0. On a OnePlus Ace 5, importing 14 photos at once finished about 10% sooner; the paper-edge check alone went from about 0.18 s to about 0.02 s per page.
+
+### Gallery import
+
+- A photo that cannot be read (only in the cloud, or deleted meanwhile) is skipped and the import goes on. At the end you see "已导入 N 张，M 张无法读取", naming the photos. Before, it stopped the whole import.
+- The progress shows "正在导入图片 i/N".
+- "取消" stops the import before the next photo. The pages already imported stay and open, with a note of how many came in.
+
+### Page thumbnails
+
+- Thumbnails in the page grid, the editor's thumbnail strip and the filter previews are cached, so scrolling back no longer redraws them.
+- A thumbnail's space is held while it is made, so page cards no longer change height as they fill in.
+
+### Failed processing can be retried
+
+- When a photo is too large and processing runs out of memory, the task now fails with "照片过大或内存不足" and keeps the photo; Retry or Retake it in the task centre. Before, the page stayed "processing" until the app was reopened.
+
 ## 2.1.0 · 2026-11-17
 
 A feature release after 2.0.1 (internal build 20043). It focuses on scan quality, PDF text editing, watermark removal, fonts and the library. Install it over 2.0.1: documents, settings and backups are kept.

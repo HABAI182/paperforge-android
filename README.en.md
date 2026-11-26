@@ -4,7 +4,7 @@
 
 PaperForge is an open-source Android document scanner and PDF workbench. It scans with the camera, crops and flattens pages, removes shadows and show-through, recognises text, reads and annotates PDFs, and converts formats. Scanning and recognition run on the phone. There are no accounts, ads or subscriptions.
 
-**Current version: v2.1.0.** Requires Android 8.0 or later on a 64-bit ARM phone.
+**Current version: v2.1.1.** Requires Android 8.0 or later on a 64-bit ARM phone.
 
 [Download](https://github.com/HABAI182/paperforge-android/releases/latest) · [Changelog](CHANGELOG.en.md) · [Install and update](docs/INSTALL.md) · [Provenance and licences](docs/PROVENANCE.md)
 
@@ -51,7 +51,7 @@ Interface screenshots are from an emulator.
 
 ## Download and install
 
-1. Download `PaperForge-2.1.0-full-arm64-v8a.apk` from the [releases page](https://github.com/HABAI182/paperforge-android/releases/latest).
+1. Download `PaperForge-2.1.1-full-arm64-v8a.apk` from the [releases page](https://github.com/HABAI182/paperforge-android/releases/latest).
 2. Optionally check it against `SHA256SUMS.txt` on the same page.
 3. Allow installs from unknown sources. Installing over an older PaperForge keeps your documents.
 

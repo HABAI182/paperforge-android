@@ -4,7 +4,7 @@
 
 PaperForge 是一款开源的 Android 文档扫描与 PDF 工作台：拍照扫描、裁边展平、去阴影去透印、文字识别、PDF 阅读批注和格式转换。扫描与识别在手机本地完成，无账户、无广告、无订阅。
 
-**当前版本：v2.1.0**（Android 8.0 及以上，64 位 ARM 手机）
+**当前版本：v2.1.1**（Android 8.0 及以上，64 位 ARM 手机）
 
 [下载最新版](https://github.com/HABAI182/paperforge-android/releases/latest) · [更新记录](CHANGELOG.md) · [安装与更新说明](docs/INSTALL.md) · [来源与许可](docs/PROVENANCE.md)
 
@@ -44,7 +44,7 @@ PaperForge 是一款开源的 Android 文档扫描与 PDF 工作台：拍照扫�
 
 ## 下载与安装
 
-1. 在 [发布页](https://github.com/HABAI182/paperforge-android/releases/latest) 下载 `PaperForge-2.1.0-full-arm64-v8a.apk`。
+1. 在 [发布页](https://github.com/HABAI182/paperforge-android/releases/latest) 下载 `PaperForge-2.1.1-full-arm64-v8a.apk`。
 2. 可用同页的 `SHA256SUMS.txt` 核对文件。
 3. 安装时允许“安装未知应用”。已安装旧版时直接覆盖安装，文档会保留。
 
